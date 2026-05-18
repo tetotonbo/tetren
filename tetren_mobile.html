@@ -505,12 +505,24 @@ boardCanvas.addEventListener('touchend', e => {
   const dy = t.clientY - swipeStartY;
   const adx = Math.abs(dx), ady = Math.abs(dy);
   if(adx < SWIPE_MIN && ady < SWIPE_MIN) return; // タップは無視
+  // canvasのピクセル比を考慮したBS（実表示サイズ）
+  const rect = boardCanvas.getBoundingClientRect();
+  const displayBS = rect.width / COLS;
   if(adx >= ady){
-    // 左右スワイプ
-    if(dx < 0) moveH(-1); else moveH(1);
+    // 左右スワイプ: 距離÷1セル幅 で移動数を決定
+    const steps = Math.max(1, Math.round(adx / displayBS));
+    const dir = dx < 0 ? -1 : 1;
+    for(let i = 0; i < steps; i++) moveH(dir);
   } else {
     // 上下スワイプ
-    if(dy < 0) hardDrop(); else { softDrop(); draw(); }
+    if(dy < 0){
+      hardDrop();
+    } else {
+      // 下スワイプ: 距離÷1セル高さ でソフトドロップ数を決定
+      const steps = Math.max(1, Math.round(ady / displayBS));
+      for(let i = 0; i < steps; i++) softDrop();
+      draw();
+    }
   }
 });
 boardCanvas.addEventListener('touchcancel',() => { terrainPainting=false; });
