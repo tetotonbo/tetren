@@ -470,16 +470,25 @@ boardCanvas.addEventListener('mouseleave', () => { terrainPainting=false; });
 boardCanvas.addEventListener('contextmenu', e => { if(terrainMode) e.preventDefault(); });
 
 // タッチ操作
+// スワイプ操作用
+let swipeStartX = 0, swipeStartY = 0;
+const SWIPE_MIN = 30; // スワイプ判定の最小距離(px)
+
 boardCanvas.addEventListener('touchstart', e => {
-  if(!terrainMode) return;
   e.preventDefault();
   const t = e.touches[0];
-  const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
-  if(!cell) return;
-  terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
-  terrainPainting = true;
-  applyTerrainAt(cell.col, cell.row);
+  if(terrainMode){
+    const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
+    if(!cell) return;
+    terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
+    terrainPainting = true;
+    applyTerrainAt(cell.col, cell.row);
+  } else {
+    swipeStartX = t.clientX;
+    swipeStartY = t.clientY;
+  }
 }, {passive:false});
+
 boardCanvas.addEventListener('touchmove', e => {
   if(!terrainMode||!terrainPainting) return;
   e.preventDefault();
@@ -487,7 +496,23 @@ boardCanvas.addEventListener('touchmove', e => {
   const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
   if(cell) applyTerrainAt(cell.col, cell.row);
 }, {passive:false});
-boardCanvas.addEventListener('touchend',   () => { terrainPainting=false; });
+
+boardCanvas.addEventListener('touchend', e => {
+  if(terrainMode){ terrainPainting=false; return; }
+  if(gameOver) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - swipeStartX;
+  const dy = t.clientY - swipeStartY;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  if(adx < SWIPE_MIN && ady < SWIPE_MIN) return; // タップは無視
+  if(adx >= ady){
+    // 左右スワイプ
+    if(dx < 0) moveH(-1); else moveH(1);
+  } else {
+    // 上下スワイプ
+    if(dy < 0) hardDrop(); else { softDrop(); draw(); }
+  }
+});
 boardCanvas.addEventListener('touchcancel',() => { terrainPainting=false; });
 
 // ===== 掘り練習 =====
