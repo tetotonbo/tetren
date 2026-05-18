@@ -162,6 +162,16 @@ canvas { display:block; }
       <span style="font-size:9px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
+    <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
+    <div id="dig-info"></div>
+    <div class="di-row" id="diRow" style="display:none;">
+      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
+      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
+      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
+    </div>
+    <button class="side-btn" onclick="startGame()"
+      style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
@@ -232,19 +242,11 @@ canvas { display:block; }
     <div id="colorPaletteWrap"></div>
   </div>
 
-  <!-- 右: NEXT + 掘り練習 + 地形 -->
+  <!-- 右: NEXT -->
   <div class="side-col" id="rightCol">
     <div class="mini-panel" style="padding:5px 3px;">
       <div class="m-lbl">NEXT</div>
       <canvas id="nextCanvas"></canvas>
-    </div>
-    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()">REN<br>モード</button>
-    <button class="side-btn" id="digBtn" onclick="toggleDigMode()">せりあがり</button>
-    <div id="dig-info"></div>
-    <div class="di-row" id="diRow" style="display:none;">
-      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
-      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
     </div>
     <div id="clearMsg"></div>
   </div>
@@ -469,26 +471,131 @@ boardCanvas.addEventListener('mouseup',    () => { terrainPainting=false; });
 boardCanvas.addEventListener('mouseleave', () => { terrainPainting=false; });
 boardCanvas.addEventListener('contextmenu', e => { if(terrainMode) e.preventDefault(); });
 
-// タッチ操作
+// ===== ボードタッチ操作 =====
+let touchStartX=0, touchStartY=0, touchStartTime=0;
+let touchGesture=null; // null|'left'|'right'|'hardDrop'|'hold'|'softDrop'
+let touchLoopTimer=null, touchLongPressTimer=null, touchDasTimer=null;
+let touchPeakX=0;
+
+const SWIPE_H    = 20;  // 左右初動判定距離(px)
+const SWIPE_V    = 50;  // 上下判定距離(px)
+const SWIPE_REV  = 28;  // 方向転換判定距離(px)
+const DAS_DELAY  = 200; // 連続移動開始遅延(ms)
+const LONG_PRESS = 250; // 長押し判定(ms)
+const MOVE_ITV   = 80;  // 連続移動間隔(ms)
+const SOFT_ITV   = 55;  // ソフトドロップ間隔(ms)
+
+function stopTouchLoops(){
+  if(touchLoopTimer){clearInterval(touchLoopTimer);touchLoopTimer=null;}
+  if(touchLongPressTimer){clearTimeout(touchLongPressTimer);touchLongPressTimer=null;}
+  if(touchDasTimer){clearTimeout(touchDasTimer);touchDasTimer=null;}
+}
+
+// 1マス移動 → DAS後に連続移動開始
+function beginHMove(dir, curX){
+  if(touchLoopTimer){clearInterval(touchLoopTimer);touchLoopTimer=null;}
+  if(touchDasTimer){clearTimeout(touchDasTimer);touchDasTimer=null;}
+  touchGesture = dir < 0 ? 'left' : 'right';
+  touchPeakX = curX;
+  if(!gameOver){ moveH(dir); draw(); }
+  touchDasTimer = setTimeout(() => {
+    touchDasTimer = null;
+    touchLoopTimer = setInterval(() => { if(!gameOver){ moveH(dir); draw(); } }, MOVE_ITV);
+  }, DAS_DELAY);
+}
+
 boardCanvas.addEventListener('touchstart', e => {
-  if(!terrainMode) return;
   e.preventDefault();
   const t = e.touches[0];
-  const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
-  if(!cell) return;
-  terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
-  terrainPainting = true;
-  applyTerrainAt(cell.col, cell.row);
+  if(terrainMode){
+    const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
+    if(!cell) return;
+    terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
+    terrainPainting = true;
+    applyTerrainAt(cell.col, cell.row);
+    return;
+  }
+  touchStartX = t.clientX; touchStartY = t.clientY;
+  touchStartTime = Date.now();
+  touchGesture = null;
+  touchPeakX = t.clientX;
+  touchLongPressTimer = setTimeout(() => {
+    if(touchGesture === null && !gameOver){
+      touchGesture = 'softDrop';
+      softDrop(); draw();
+      touchLoopTimer = setInterval(() => { if(!gameOver){ softDrop(); draw(); } }, SOFT_ITV);
+    }
+  }, LONG_PRESS);
 }, {passive:false});
+
 boardCanvas.addEventListener('touchmove', e => {
-  if(!terrainMode||!terrainPainting) return;
   e.preventDefault();
+  if(terrainMode){
+    if(!terrainPainting) return;
+    const t = e.touches[0];
+    const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
+    if(cell) applyTerrainAt(cell.col, cell.row);
+    return;
+  }
+  if(touchGesture === 'hardDrop' || touchGesture === 'hold') return;
   const t = e.touches[0];
-  const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
-  if(cell) applyTerrainAt(cell.col, cell.row);
+  const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+
+  // 長押し中に左右スワイプ → ソフトドロップ解除して移動へ
+  if(touchGesture === 'softDrop'){
+    if(adx >= SWIPE_H && adx > ady){
+      stopTouchLoops();
+      touchGesture = null;
+      beginHMove(dx < 0 ? -1 : 1, t.clientX);
+    }
+    return;
+  }
+
+  // 左右移動中：方向転換チェック
+  if(touchGesture === 'left' || touchGesture === 'right'){
+    const curX = t.clientX;
+    const gdir = touchGesture === 'left' ? -1 : 1;
+    if(gdir < 0 && curX < touchPeakX) touchPeakX = curX;
+    if(gdir > 0 && curX > touchPeakX) touchPeakX = curX;
+    const reversal = gdir < 0 ? curX - touchPeakX : touchPeakX - curX;
+    if(reversal >= SWIPE_REV) beginHMove(-gdir, curX);
+    return;
+  }
+
+  // 初動判定
+  if(adx >= SWIPE_H && adx > ady){
+    // 左右スワイプ：1マス移動 → DASで連続
+    if(touchLongPressTimer){clearTimeout(touchLongPressTimer);touchLongPressTimer=null;}
+    beginHMove(dx < 0 ? -1 : 1, t.clientX);
+  } else if(dy >= SWIPE_V && ady > adx){
+    // 下スワイプ → ハードドロップ
+    stopTouchLoops();
+    touchGesture = 'hardDrop';
+    if(!gameOver) hardDrop();
+  } else if(dy <= -SWIPE_V && ady > adx){
+    // 上スワイプ → ホールド
+    stopTouchLoops();
+    touchGesture = 'hold';
+    if(!gameOver) doHold();
+  }
 }, {passive:false});
-boardCanvas.addEventListener('touchend',   () => { terrainPainting=false; });
-boardCanvas.addEventListener('touchcancel',() => { terrainPainting=false; });
+
+boardCanvas.addEventListener('touchend', e => {
+  if(terrainMode){ terrainPainting = false; return; }
+  stopTouchLoops();
+  // タップ判定：動きが小さく短時間
+  const elapsed = Date.now() - touchStartTime;
+  if(touchGesture === null && elapsed < 300 && !gameOver){
+    const rect = boardCanvas.getBoundingClientRect();
+    const tapX = touchStartX - rect.left;
+    if(tapX >= rect.width / 2) rotate(1); else rotate(-1);
+  }
+  touchGesture = null;
+});
+boardCanvas.addEventListener('touchcancel', () => {
+  stopTouchLoops(); terrainPainting = false; touchGesture = null;
+});
 
 // ===== 掘り練習 =====
 function changeDigInterval(delta){
