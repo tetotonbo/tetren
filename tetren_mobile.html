@@ -150,6 +150,12 @@ canvas { display:block; }
       <span style="font-size:9px;color:#9ca3af;">ゴースト</span>
     </label>
     <label style="display:flex;align-items:center;gap:3px;cursor:pointer;width:100%;">
+      <input type="checkbox" id="axisCheck"
+        onchange="showAxis=this.checked;draw();"
+        style="width:13px;height:13px;">
+      <span style="font-size:9px;color:#9ca3af;">軸表示</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:3px;cursor:pointer;width:100%;">
       <input type="checkbox" id="gravCheck"
         onchange="setGravity(this.checked);"
         style="width:13px;height:13px;">
@@ -303,6 +309,7 @@ let gravityOn = false, gravSpeed = 0;
 let undoStack = [];
 const UNDO_MAX = 50;
 let showGhost = true;
+let showAxis  = false;
 let lastGarbageCol = null;
 let downHeld = false, lastSoftDrop = 0;
 const SOFT_DROP_RATE = 50;
@@ -702,6 +709,25 @@ function drawBoard(){
   if(!gameOver){
     const cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
     for(const[r,c] of cells){const vr=cur.row+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color);}
+  }
+  // 軸表示
+  if(showAxis&&!gameOver){
+    const vr=cur.row-BUF, vc=cur.col;
+    let ax,ay;
+    if(cur.type==='I'){ax=(vc+2)*BS;ay=(vr+2)*BS;}
+    else if(cur.type==='O'){ax=(vc+1)*BS;ay=(vr+1)*BS;}
+    else{ax=(vc+1)*BS+BS/2;ay=(vr+1)*BS+BS/2;}
+    if(ay>=0){
+      boardCtx.save();
+      boardCtx.fillStyle='rgba(0,0,0,0.85)';
+      boardCtx.strokeStyle='rgba(255,255,255,0.9)';
+      boardCtx.lineWidth=1.5;
+      boardCtx.beginPath();
+      boardCtx.arc(ax,ay,5,0,Math.PI*2);
+      boardCtx.fill();
+      boardCtx.stroke();
+      boardCtx.restore();
+    }
   }
 }
 
