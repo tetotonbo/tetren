@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>テト練</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#111827;
+  display:flex; justify-content:center; align-items:flex-start;
+  min-height:100vh; padding:8px 0;
+  font-family:'Arial',sans-serif; color:#eee;
+  user-select:none;
+}
+#wrap { display:flex; gap:12px; align-items:flex-start; }
+.side { display:flex; flex-direction:column; gap:12px; }
+.panel {
+  background:#1f2937; border:1px solid #374151;
+  border-radius:6px; padding:8px;
+}
+.panel-label {
+  font-size:10px; color:#9ca3af; letter-spacing:2px;
+  text-transform:uppercase; margin-bottom:6px;
+}
+.garb-btn {
+  display:block; width:100%; background:#7c3aed; color:#fff;
+  border:none; padding:7px 0; font-size:12px; font-weight:bold;
+  border-radius:6px; cursor:pointer; letter-spacing:0.5px;
+  transition:background .15s;
+}
+.garb-btn:hover { background:#6d28d9; }
+.garb-btn:active { background:#5b21b6; }
+canvas { display:block; }
+#boardCanvas { border:2px solid #374151; border-radius:2px; }
+.stat-row { display:flex; gap:0; text-align:center; }
+.stat-col { flex:1; }
+.stat-col + .stat-col { border-left:1px solid #374151; }
+.stat-val { font-size:20px; font-weight:bold; color:#fff; }
+.step-btn {
+  background:#374151; color:#fff; border:none;
+  width:26px; height:26px; border-radius:4px;
+  font-size:16px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s;
+}
+.step-btn:hover { background:#4b5563; }
+.toggle-btn {
+  display:block; width:100%; border:none; padding:7px 0;
+  font-size:13px; font-weight:bold; border-radius:6px;
+  cursor:pointer; letter-spacing:0.5px; transition:background .15s;
+  color:#fff;
+}
+.speed-row {
+  display:flex; align-items:center; gap:6px; margin-top:6px;
+}
+.speed-val {
+  flex:1; text-align:center; font-size:14px; color:#e2e8f0; line-height:1;
+}
+.speed-unit { font-size:10px; color:#6b7280; }
+.kc-open-btn {
+  display:block; width:100%; border:none; padding:8px 0;
+  font-size:13px; font-weight:bold; border-radius:6px;
+  cursor:pointer; background:#4f46e5; color:#fff;
+  letter-spacing:0.5px; transition:background .15s; margin-top:8px;
+}
+.kc-open-btn:hover { background:#4338ca; }
+/* ===== 操作ボタンパッド ===== */
+.ctrl-pad { width:300px; display:flex; flex-direction:column; gap:6px; }
+.ctrl-row { display:grid; gap:6px; }
+.ctrl-row.r2 { grid-template-columns:repeat(2,1fr); }
+.ctrl-row.r3 { grid-template-columns:repeat(3,1fr); }
+.ctrl-btn {
+  height:64px; background:#1f2937; color:#e5e7eb;
+  border:1px solid #374151; border-radius:10px;
+  font-size:28px; cursor:pointer;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px;
+  user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:background .1s, transform .08s;
+}
+.ctrl-btn:active, .ctrl-btn.pressed {
+  background:#374151; transform:scale(0.93);
+}
+.ctrl-lbl { font-size:10px; color:#6b7280; line-height:1; }
+.ctrl-btn.ctrl-hard {
+  background:#1e3a5f; border-color:#2563eb; color:#93c5fd;
+}
+.ctrl-btn.ctrl-hard:active { background:#1d4ed8; }
+.ctrl-btn.ctrl-hold {
+  background:#2d1b4e; border-color:#7c3aed; color:#c4b5fd;
+}
+.ctrl-btn.ctrl-hold:active { background:#5b21b6; }
+#overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.75);
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center; z-index:10;
+}
+#overlay h1 { font-size:32px; margin-bottom:8px; }
+#overlay .sub { color:#9ca3af; font-size:13px; margin-bottom:20px; text-align:center; line-height:1.8; }
+#startBtn {
+  background:#16a34a; color:#fff; border:none;
+  padding:10px 36px; font-size:16px; border-radius:6px;
+  cursor:pointer; transition:background .2s;
+}
+#startBtn:hover { background:#15803d; }
+/* ===== ライン消去メッセージ ===== */
+#clearMsg {
+  width:116px; text-align:right;
+  pointer-events:none;
+  opacity:0; transition:opacity 1s;
+  white-space:nowrap; margin-top:6px;
+  line-height:1.3;
+}
+#keyconfigModal {
+  position:fixed; inset:0; background:rgba(0,0,0,.8);
+  display:none; justify-content:center; align-items:center; z-index:20;
+}
+#keyconfigBox {
+  background:#1f2937; border:1px solid #4b5563; border-radius:12px;
+  padding:24px 28px; width:480px; max-height:90vh; overflow-y:auto;
+}
+#keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
+#kcHeader {
+  display:flex; align-items:center; margin-bottom:10px;
+  padding:0 4px 8px 4px; border-bottom:1px solid #374151;
+}
+#kcHeader .kc-label { font-size:11px; color:#6b7280; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; }
+#kcHeader .kc-slot-head {
+  font-size:11px; color:#6b7280; font-weight:bold; text-transform:uppercase;
+  letter-spacing:.05em; width:110px; text-align:center;
+}
+.kc-row {
+  display:flex; align-items:center;
+  padding:6px 4px; gap:10px; border-radius:6px;
+}
+.kc-row:nth-child(odd) { background:#111827; }
+.kc-row:nth-child(even) { background:transparent; }
+.kc-label { font-size:14px; color:#e5e7eb; flex:1; min-width:0; }
+.kc-slot { display:flex; align-items:center; gap:4px; width:110px; }
+.kc-key {
+  background:#374151; color:#f9fafb; border:1px solid #6b7280;
+  border-radius:5px; padding:5px 0; font-size:13px; width:82px;
+  text-align:center; cursor:pointer; transition:background .15s;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.kc-key:hover { background:#4b5563; }
+.kc-key.waiting { background:#1e40af; border-color:#60a5fa; color:#bfdbfe; animation:kc-blink .6s infinite; }
+@keyframes kc-blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+.kc-del {
+  background:none; border:1px solid #4b5563; color:#6b7280;
+  font-size:14px; cursor:pointer; padding:2px 5px; border-radius:4px;
+  line-height:1; transition:color .15s, border-color .15s;
+}
+.kc-del:hover { color:#ef4444; border-color:#ef4444; }
+.kc-btns { display:flex; gap:10px; margin-top:18px; }
+.kc-btns button {
+  flex:1; padding:9px 0; border:none; border-radius:7px;
+  font-size:14px; font-weight:bold; cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <!-- 左: HOLD / ゴースト・落下 / 地形操作 -->
+  <div class="side" style="align-items:flex-end;">
+
+    <!-- HOLD -->
+    <div class="panel">
+      <div class="panel-label">HOLD</div>
+      <canvas id="holdCanvas" width="100" height="80"></canvas>
+    </div>
+
+    <!-- ゴースト + 落下設定 -->
+    <div class="panel" style="width:108px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
+                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
+        <input type="checkbox" id="ghostCheck" checked
+          onchange="showGhost=this.checked;draw();"
+          style="width:14px;height:14px;cursor:pointer;">
+        ゴースト
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
+                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
+        <input type="checkbox" id="axisCheck"
+          onchange="showAxis=this.checked;draw();"
+          style="width:14px;height:14px;cursor:pointer;">
+        軸表示
+      </label>
+      <div class="panel-label">落下設定</div>
+      <button id="gravBtn" class="toggle-btn"
+        style="background:#374151;"
+        onclick="if(!gameOver)toggleGravity()">自由落下</button>
+      <div class="speed-row">
+        <button class="step-btn" onclick="changeGravSpeed(-1)">‹</button>
+        <div class="speed-val">
+          <span id="gravSpeedVal">0</span>
+          <span class="speed-unit"> G</span>
+        </div>
+        <button class="step-btn" onclick="changeGravSpeed(+1)">›</button>
+      </div>
+    </div>
+
+    <!-- 地形操作 -->
+    <div class="panel" style="width:108px;">
+      <div class="panel-label">地形操作</div>
+      <button id="terrainBtn" class="garb-btn"
+        style="background:#374151;"
+        onclick="toggleTerrainMode()"
+        title="クリック/ドラッグでブロックを設置・消去">地形編集ロック</button>
+      <div id="colorSection">
+        <div class="panel-label" style="margin-top:8px;">カラー</div>
+        <div id="colorPalette" style="display:grid;grid-template-columns:repeat(4,20px);gap:4px;"></div>
+      </div>
+    </div>
+
+    <!-- ライン消去メッセージ（地形操作パネル下） -->
+    <div id="clearMsg"></div>
+
+  </div>
+
+  <!-- 中央: ボード + 操作パッド -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="position:relative;display:inline-block;">
+      <canvas id="boardCanvas" width="300" height="600"></canvas>
+    </div>
+
+    <!-- 操作ボタンパッド -->
+    <div class="ctrl-pad">
+      <!-- 左右・ソフトドロップ（1段目） -->
+      <div class="ctrl-row r3">
+        <button class="ctrl-btn"
+          onmousedown="if(!gameOver){moveH(-1);startDAS('L')}"
+          onmouseup="stopDAS()" onmouseleave="stopDAS()"
+          ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);startDAS('L')}"
+          ontouchend="stopDAS()"
+          title="左移動">
+          ←<span class="ctrl-lbl">左</span>
+        </button>
+        <button class="ctrl-btn"
+          onmousedown="if(!gameOver)startSoftDropBtn()"
+          onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
+          ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
+          ontouchend="stopSoftDropBtn()"
+          title="ソフトドロップ">
+          ↓<span class="ctrl-lbl">ソフト</span>
+        </button>
+        <button class="ctrl-btn"
+          onmousedown="if(!gameOver){moveH(1);startDAS('R')}"
+          onmouseup="stopDAS()" onmouseleave="stopDAS()"
+          ontouchstart="e.preventDefault();if(!gameOver){moveH(1);startDAS('R')}"
+          ontouchend="stopDAS()"
+          title="右移動">
+          →<span class="ctrl-lbl">右</span>
+        </button>
+      </div>
+      <!-- 回転（2段目） -->
+      <div class="ctrl-row r2">
+        <button class="ctrl-btn"
+          onmousedown="if(!gameOver)rotate(-1)"
+          ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
+          title="反時計回り回転">
+          ↺<span class="ctrl-lbl">左回転</span>
+        </button>
+        <button class="ctrl-btn"
+          onmousedown="if(!gameOver)rotate(1)"
+          ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
+          title="時計回り回転">
+          ↻<span class="ctrl-lbl">右回転</span>
+        </button>
+      </div>
+      <!-- ホールド・ハードドロップ（3段目） -->
+      <div class="ctrl-row r2">
+        <button class="ctrl-btn ctrl-hold"
+          onclick="if(!gameOver)doHold()"
+          title="ホールド">
+          ⇪<span class="ctrl-lbl">HOLD</span>
+        </button>
+        <button class="ctrl-btn ctrl-hard"
+          onclick="if(!gameOver)hardDrop()"
+          title="ハードドロップ">
+          ⬇<span class="ctrl-lbl">HARD DROP</span>
+        </button>
+      </div>
+      <!-- ミノを捨てる・戻す（4段目） -->
+      <div class="ctrl-row r2">
+        <button class="ctrl-btn"
+          onclick="if(!gameOver)discardPiece()"
+          title="現在のミノを捨てて次を出す">
+          🗑<span class="ctrl-lbl">ミノを捨てる</span>
+        </button>
+        <button class="ctrl-btn"
+          onclick="if(!gameOver&&undoStack.length)undo()"
+          title="1手戻す">
+          ↩<span class="ctrl-lbl">戻す</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右: NEXT / スタッツ / 各種設定 -->
+  <div class="side">
+
+    <!-- NEXT -->
+    <div class="panel">
+      <div class="panel-label">NEXT</div>
+      <canvas id="nextCanvas" width="100" height="420"></canvas>
+    </div>
+
+    <!-- LINES -->
+    <div class="panel" style="text-align:center;">
+      <div class="panel-label">LINES</div>
+      <div class="stat-val" id="linesEl">0</div>
+    </div>
+
+    <!-- RENモード -->
+    <div class="panel" style="min-width:116px;">
+      <button id="renModeBtn" class="toggle-btn"
+        style="background:#374151;"
+        onclick="toggleRenMode()">RENモード</button>
+    </div>
+
+    <!-- せりあがり -->
+    <div class="panel" style="min-width:116px;">
+      <div class="panel-label">せりあがり</div>
+      <button class="garb-btn" onclick="if(!gameOver)addGarbage(true)"
+        style="background:#374151;"
+        title="直前の穴と同じ列に競り上がる">同じ穴</button>
+      <button class="garb-btn" onclick="if(!gameOver)addGarbage(false)"
+        style="margin-top:6px;background:#374151;"
+        title="ランダムな列に穴が開いて競り上がる">ランダム穴</button>
+      <button id="digBtn" class="toggle-btn"
+        style="background:#374151;margin-top:6px;"
+        onclick="toggleDigMode()">自動</button>
+      <div class="speed-row">
+        <button class="step-btn" onclick="changeDigInterval(-1)">‹</button>
+        <div class="speed-val">
+          <span id="digIntervalVal">3</span>
+          <span class="speed-unit"> 個ごと</span>
+        </div>
+        <button class="step-btn" onclick="changeDigInterval(+1)">›</button>
+      </div>
+      <div id="digCounter"
+        style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
+    </div>
+
+    <!-- 操作・設定 -->
+    <div class="panel">
+      <button class="kc-open-btn" onclick="openKeyConfig()" style="margin-top:0;">⌨ キーコンフィグ</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="overlay">
+  <h1>テト練（β版）</h1>
+  <button id="startBtn" style="margin-top:16px;">スタート</button>
+  <button onclick="openKeyConfig()"
+    style="margin-top:10px;background:none;border:1px solid #4b5563;color:#9ca3af;
+           padding:6px 20px;border-radius:6px;cursor:pointer;font-size:12px;">
+    ⌨ キーコンフィグ
+  </button>
+</div>
+
+<!-- キーコンフィグモーダル -->
+<div id="keyconfigModal">
+  <div id="keyconfigBox">
+    <h2>⌨ キーコンフィグ</h2>
+    <div id="kcHeader">
+      <span class="kc-label">操作</span>
+      <span class="kc-slot-head">スロット 1</span>
+      <span class="kc-slot-head">スロット 2</span>
+    </div>
+    <div id="kcRows"></div>
+    <div class="kc-btns">
+      <button onclick="resetKeyConfig()"
+        style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+      <button onclick="closeKeyConfig()"
+        style="background:#16a34a;color:#fff;">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 定数 =====
+const COLS = 10, ROWS = 20;
+const BUF  = 4;          // バッファ行数（見えない上部）
+const TROW = ROWS + BUF; // 総行数
+const BS   = 30;         // ブロックサイズ(px)
+const NEXT_SHOW = 5;     // NEXT表示数
+
+// ===== ピース定義 (各回転ステートのセル座標 [行,列] をバウンディングボックス内で定義) =====
+const PIECE_DEF = {
+  I: {
+    color:'#22d3ee',
+    cells:[
+      [[1,0],[1,1],[1,2],[1,3]], // 0
+      [[0,2],[1,2],[2,2],[3,2]], // R
+      [[2,0],[2,1],[2,2],[2,3]], // 2
+      [[0,1],[1,1],[2,1],[3,1]], // L
+    ],
+    spawnCol:3, spawnRow:BUF-1, // I は state0 の実セルが row+1 = BUF
+    kickType:'I',
+  },
+  O: {
+    color:'#facc15',
+    cells:[
+      [[0,0],[0,1],[1,0],[1,1]],
+      [[0,0],[0,1],[1,0],[1,1]],
+      [[0,0],[0,1],[1,0],[1,1]],
+      [[0,0],[0,1],[1,0],[1,1]],
+    ],
+    spawnCol:4, spawnRow:BUF-1,
+    kickType:'O',
+  },
+  T: {
+    color:'#a855f7',
+    cells:[
+      [[0,1],[1,0],[1,1],[1,2]],
+      [[0,1],[1,1],[1,2],[2,1]],
+      [[1,0],[1,1],[1,2],[2,1]],
+      [[0,1],[1,0],[1,1],[2,1]],
+    ],
+    spawnCol:3, spawnRow:BUF-1,
+    kickType:'JLSZT',
+  },
+  S: {
+    color:'#4ade80',
+    cells:[
+      [[0,1],[0,2],[1,0],[1,1]],
+      [[0,1],[1,1],[1,2],[2,2]],
+      [[1,1],[1,2],[2,0],[2,1]],
+      [[0,0],[1,0],[1,1],[2,1]],
+    ],
+    spawnCol:3, spawnRow:BUF-1,
+    kickType:'JLSZT',
+  },
+  Z: {
+    color:'#f87171',
+    cells:[
+      [[0,0],[0,1],[1,1],[1,2]],
+      [[0,2],[1,1],[1,2],[2,1]],
+      [[1,0],[1,1],[2,1],[2,2]],
+      [[0,1],[1,0],[1,1],[2,0]],
+    ],
+    spawnCol:3, spawnRow:BUF-1,
+    kickType:'JLSZT',
+  },
+  J: {
+    color:'#60a5fa',
+    cells:[
+      [[0,0],[1,0],[1,1],[1,2]],
+      [[0,1],[0,2],[1,1],[2,1]],
+      [[1,0],[1,1],[1,2],[2,2]],
+      [[0,1],[1,1],[2,0],[2,1]],
+    ],
+    spawnCol:3, spawnRow:BUF-1,
+    kickType:'JLSZT',
+  },
+  L: {
+    color:'#fb923c',
+    cells:[
+      [[0,2],[1,0],[1,1],[1,2]],
+      [[0,1],[1,1],[2,1],[2,2]],
+      [[1,0],[1,1],[1,2],[2,0]],
+      [[0,0],[0,1],[1,1],[2,1]],
+    ],
+    spawnCol:3, spawnRow:BUF-1,
+    kickType:'JLSZT',
+  },
+};
+
+// ===== SRS Wall Kick テーブル (col_off, row_off) ガイドラインの y-up を y-down 変換済み =====
+const KICKS = {
+  JLSZT: {
+    '0R': [[ 0, 0],[-1, 0],[-1,-1],[ 0,+2],[-1,+2]],
+    'R2': [[ 0, 0],[+1, 0],[+1,+1],[ 0,-2],[+1,-2]],
+    '2L': [[ 0, 0],[+1, 0],[+1,-1],[ 0,+2],[+1,+2]],
+    'L0': [[ 0, 0],[-1, 0],[-1,+1],[ 0,-2],[-1,-2]],
+    'R0': [[ 0, 0],[+1, 0],[+1,+1],[ 0,-2],[+1,-2]],
+    '2R': [[ 0, 0],[-1, 0],[-1,-1],[ 0,+2],[-1,+2]],
+    'L2': [[ 0, 0],[-1, 0],[-1,+1],[ 0,-2],[-1,-2]],
+    '0L': [[ 0, 0],[+1, 0],[+1,-1],[ 0,+2],[+1,+2]],
+  },
+  I: {
+    '0R': [[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],
+    'R2': [[ 0, 0],[-1, 0],[+2, 0],[-1,-2],[+2,+1]],
+    '2L': [[ 0, 0],[+2, 0],[-1, 0],[+2,-1],[-1,+2]],
+    'L0': [[ 0, 0],[+1, 0],[-2, 0],[+1,+2],[-2,-1]],
+    'R0': [[ 0, 0],[+2, 0],[-1, 0],[+2,-1],[-1,+2]],
+    '2R': [[ 0, 0],[+1, 0],[-2, 0],[+1,+2],[-2,-1]],
+    'L2': [[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],
+    '0L': [[ 0, 0],[-1, 0],[+2, 0],[-1,-2],[+2,+1]],
+  },
+  O: { // kick なし
+    '0R':[[0,0]],'R2':[[0,0]],'2L':[[0,0]],'L0':[[0,0]],
+    'R0':[[0,0]],'2R':[[0,0]],'L2':[[0,0]],'0L':[[0,0]],
+  },
+};
+
+const STATE_NAMES = ['0','R','2','L'];
+
+// ===== スコア =====
+const SCORE_TABLE = [0,100,300,500,800];
+
+// ===== おじゃまカラー（terrainColor の初期化より前に定義が必要）=====
+const GARBAGE_COLOR = '#4b5563';
+
+// ===== Canvas & Context =====
+const boardCanvas = document.getElementById('boardCanvas');
+const boardCtx    = boardCanvas.getContext('2d');
+const holdCanvas  = document.getElementById('holdCanvas');
+const holdCtx     = holdCanvas.getContext('2d');
+const nextCanvas  = document.getElementById('nextCanvas');
+const nextCtx     = nextCanvas.getContext('2d');
+
+// ===== ゲーム状態 =====
+let board, cur, holdType, canHold, bag, nextQ;
+let score, level, lines, b2b, gameOver;
+let dropInterval, lastDrop, lockTimer, isLocking;
+let gravityOn = true;    // 自然落下フラグ
+let gravSpeed = 1;       // 落下速度 1〜20G（1G=1行/フレーム @60fps）
+let undoStack = [];     // undoスタック（複数手対応）
+const UNDO_MAX = 50;   // 最大保持数
+let showGhost = true;    // ゴーストピース表示
+let showAxis  = false;   // 軸表示
+let terrainMode = true;  // 地形操作モード（デフォルトON）
+let terrainPainting = false; // ドラッグ中フラグ
+let terrainPaintMode = 'set'; // 'set' or 'erase'
+let terrainColor = GARBAGE_COLOR; // 現在の描画カラー
+let lastGarbageCol = null; // 直前のおじゃまの穴列
+let downHeld = false;     // ↓キー押しっぱなし状態
+let lastSoftDrop = 0;     // ソフトドロップ最終処理時刻
+const SOFT_DROP_RATE = 50; // ソフトドロップ間隔(ms)
+let digMode = false;      // 掘り練習モード
+let digCount = 0;         // 掘り練習モードでのピース設置数
+let digInterval = 3;      // 何個ごとに競り上がるか（1〜20）
+let ren = 0;              // RENコンボカウンター
+let renMode = false;      // 中空けRENモード
+let lastWasRotation = false; // 最後の操作が回転だったか（Tスピン判定用）
+let lastKickIndex = 0;       // 最後に使ったSRSキックのインデックス
+let clearMsgTimer = null;    // メッセージ消去タイマー
+
+// ===== 7種1巡バッグ =====
+function newBag() {
+  const a = ['I','O','T','S','Z','J','L'];
+  for (let i=a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function fillQ() {
+  while (nextQ.length < NEXT_SHOW+1) {
+    const isNew = (bag.length === 0); // バッグ補充タイミング = 新しい巡の先頭
+    if (isNew) bag = newBag();
+    nextQ.push({ type: bag.shift(), newBag: isNew });
+  }
+}
+
+// ===== ピース生成 =====
+function mkPiece(type) {
+  const d = PIECE_DEF[type];
+  return { type, state:0, row:d.spawnRow, col:d.spawnCol };
+}
+function spawn() {
+  fillQ();
+  cur = mkPiece(nextQ.shift().type);
+  canHold = true; // ピース交代のたびにホールド権を回復
+  lastWasRotation = false; // 新ピース出現時にTスピンフラグリセット
+  lastKickIndex = 0;
+  if (!valid(cur, 0, 0, cur.state)) {
+    gameOver = true;
+    setTimeout(() => showOverlay('ゲームオーバー','もう一度'), 100);
+  }
+}
+
+// ===== 衝突判定 =====
+function valid(p, dr, dc, st) {
+  const cells = PIECE_DEF[p.type].cells[st];
+  for (const [r,c] of cells) {
+    const nr = p.row+r+dr, nc = p.col+c+dc;
+    if (nc<0||nc>=COLS||nr>=TROW) return false;
+    if (nr>=0 && board[nr][nc]) return false;
+  }
+  return true;
+}
+
+// ===== ゴーストピース =====
+function ghostRow() {
+  let g = cur.row;
+  while (valid({...cur, row:g+1}, 0, 0, cur.state)) g++;
+  return g;
+}
+
+// ===== 移動 =====
+function moveH(dc) {
+  if (valid(cur, 0, dc, cur.state)) {
+    cur.col += dc;
+    lastWasRotation = false; // 左右移動したら回転フラグをリセット
+    resetLock(); draw();
+  }
+}
+function softDrop() {
+  if (valid(cur, 1, 0, cur.state)) {
+    cur.row++;
+    score++;
+    resetLock(); draw();
+    return true;
+  }
+  return false;
+}
+function hardDrop() {
+  let d=0;
+  while (valid(cur,1,0,cur.state)) { cur.row++; d++; }
+  score += d*2;
+  lock();
+}
+
+// ===== 回転 (SRS) =====
+function rotate(dir) { // dir: 1=CW, -1=CCW
+  const from = cur.state;
+  const to   = (from + (dir===1?1:3)) % 4;
+  const key  = STATE_NAMES[from] + STATE_NAMES[to];
+  const kicks = KICKS[PIECE_DEF[cur.type].kickType][key] || [[0,0]];
+  for (let ki = 0; ki < kicks.length; ki++) {
+    const [dc, dr] = kicks[ki];
+    if (valid(cur, dr, dc, to)) {
+      cur.state = to;
+      cur.row += dr;
+      cur.col += dc;
+      lastWasRotation = true;
+      lastKickIndex = ki;
+      resetLock(); draw(); return;
+    }
+  }
+}
+
+// ===== ホールド =====
+function doHold() {
+  if (holdType === null) {
+    holdType = cur.type;
+    spawn();
+  } else {
+    const t = holdType;
+    holdType = cur.type;
+    cur = mkPiece(t);
+  }
+  lastWasRotation = false;
+  resetLock(); draw();
+}
+
+// ===== ロック =====
+function resetLock() {
+  if (lockTimer) { clearTimeout(lockTimer); lockTimer=null; }
+  isLocking = false;
+}
+function startLock() {
+  if (!isLocking) {
+    isLocking = true;
+    lockTimer = setTimeout(lock, 500);
+  }
+}
+// ===== カラーパレット =====
+const PALETTE_COLORS = [
+  { label:'おじゃま', color: GARBAGE_COLOR },
+  { label:'I',        color: '#22d3ee' },
+  { label:'O',        color: '#facc15' },
+  { label:'T',        color: '#a855f7' },
+  { label:'S',        color: '#4ade80' },
+  { label:'Z',        color: '#f87171' },
+  { label:'J',        color: '#60a5fa' },
+  { label:'L',        color: '#fb923c' },
+];
+
+function initPalette() {
+  const container = document.getElementById('colorPalette');
+  container.innerHTML = '';
+  PALETTE_COLORS.forEach(({ label, color }) => {
+    const btn = document.createElement('button');
+    btn.title = label;
+    btn.dataset.color = color;
+    btn.style.cssText = `
+      width:20px; height:20px; border-radius:3px; border:2px solid transparent;
+      background:${color}; cursor:pointer; padding:0; transition:border-color .1s;
+    `;
+    if (color === terrainColor) btn.style.borderColor = '#fff';
+    btn.addEventListener('click', () => selectTerrainColor(color));
+    container.appendChild(btn);
+  });
+}
+
+function selectTerrainColor(color) {
+  terrainColor = color;
+  document.querySelectorAll('#colorPalette button').forEach(btn => {
+    btn.style.borderColor = btn.dataset.color === color ? '#fff' : 'transparent';
+  });
+}
+
+// ===== 地形操作モード =====
+// terrainMode=true → 編集可（ロックOFF=グレー）, terrainMode=false → 編集不可（ロックON=緑）
+function toggleTerrainMode() {
+  terrainMode = !terrainMode;
+  const btn = document.getElementById('terrainBtn');
+  const cs  = document.getElementById('colorSection');
+  if (terrainMode) {
+    // ロック解除 → 編集可
+    btn.style.background = '#374151'; // グレー
+    boardCanvas.style.cursor = 'crosshair';
+    cs.style.display = '';
+  } else {
+    // ロック → 編集不可
+    btn.style.background = '#16a34a'; // 緑
+    boardCanvas.style.cursor = 'default';
+    terrainPainting = false;
+    cs.style.display = 'none';
+  }
+}
+
+function getTerrainCell(e) {
+  const rect = boardCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const col = Math.floor(x / BS);
+  const row = Math.floor(y / BS) + BUF; // 見えない上部分を加算
+  if (col < 0 || col >= COLS || row < BUF || row >= TROW) return null;
+  return { row, col };
+}
+
+function applyTerrainAt(e) {
+  const cell = getTerrainCell(e);
+  if (!cell) return;
+  const { row, col } = cell;
+  if (terrainPaintMode === 'set') {
+    board[row][col] = terrainColor;
+  } else {
+    board[row][col] = null;
+  }
+  draw();
+}
+
+boardCanvas.addEventListener('mousedown', e => {
+  if (!terrainMode || gameOver) return;
+  e.preventDefault();
+  const cell = getTerrainCell(e);
+  if (!cell) return;
+  // 右クリック or 既にブロックがある場所は消去モード
+  terrainPaintMode = (e.button === 2 || board[cell.row][cell.col]) ? 'erase' : 'set';
+  terrainPainting = true;
+  applyTerrainAt(e);
+});
+
+boardCanvas.addEventListener('mousemove', e => {
+  if (!terrainMode || !terrainPainting || gameOver) return;
+  e.preventDefault();
+  applyTerrainAt(e);
+});
+
+boardCanvas.addEventListener('mouseup', e => {
+  terrainPainting = false;
+});
+
+boardCanvas.addEventListener('mouseleave', e => {
+  terrainPainting = false;
+});
+
+// 右クリックメニューを無効化（地形モード時のみ）
+boardCanvas.addEventListener('contextmenu', e => {
+  if (terrainMode) e.preventDefault();
+});
+
+// ===== 掘り練習モード =====
+function changeDigInterval(delta) {
+  digInterval = Math.min(20, Math.max(1, digInterval + delta));
+  document.getElementById('digIntervalVal').textContent = digInterval;
+  updateDigCounter();
+}
+
+function toggleDigMode() {
+  digMode = !digMode;
+  digCount = 0;
+  const btn = document.getElementById('digBtn');
+  if (digMode) {
+    btn.style.background = '#16a34a'; // 緑 = ON
+    // RENモードを強制OFF
+    if (renMode) {
+      renMode = false;
+      document.getElementById('renModeBtn').style.background = '#374151';
+      for (let r = BUF; r < TROW; r++)
+        for (let c = 0; c < COLS; c++) board[r][c] = null;
+      ren = 0;
+      draw();
+    }
+  } else {
+    btn.style.background = '#374151'; // グレー = OFF
+  }
+  updateDigCounter();
+}
+
+// ===== 中空けRENモード =====
+const REN_WALL_COLS = [0,1,2,7,8,9]; // 常に塞がっている列
+
+function setupRenTerrain() {
+  // 盤面リセット
+  for (let r = 0; r < TROW; r++)
+    for (let c = 0; c < COLS; c++) board[r][c] = null;
+  // 左右3列をすべてグレーで埋める（可視行のみ）
+  for (let r = BUF; r < TROW; r++)
+    for (const c of REN_WALL_COLS) board[r][c] = GARBAGE_COLOR;
+  // 最下行の中央4列：左から3つグレー（▪▪▪▫）
+  board[TROW-1][3] = GARBAGE_COLOR;
+  board[TROW-1][4] = GARBAGE_COLOR;
+  board[TROW-1][5] = GARBAGE_COLOR;
+  // board[TROW-1][6] は null のまま（穴）
+}
+
+function restoreRenWalls() {
+  // ライン消去後も左右3列を維持
+  for (let r = BUF; r < TROW; r++)
+    for (const c of REN_WALL_COLS) board[r][c] = GARBAGE_COLOR;
+}
+
+function toggleRenMode() {
+  renMode = !renMode;
+  const btn = document.getElementById('renModeBtn');
+  if (renMode) {
+    btn.style.background = '#16a34a'; // 緑 = ON
+    // 自動モードを強制OFF
+    if (digMode) {
+      digMode = false;
+      digCount = 0;
+      document.getElementById('digBtn').style.background = '#374151';
+      updateDigCounter();
+    }
+    setupRenTerrain();
+  } else {
+    btn.style.background = '#374151'; // グレー = OFF
+    // 地形クリア（可視行のみ）
+    for (let r = BUF; r < TROW; r++)
+      for (let c = 0; c < COLS; c++) board[r][c] = null;
+    // RENリセット
+    ren = 0;
+  }
+  draw();
+}
+
+function updateDigCounter() {
+  const el = document.getElementById('digCounter');
+  if (!digMode) { el.innerHTML = ''; return; }
+  const next = digInterval - (digCount % digInterval);
+  el.innerHTML =
+    `<span style="font-size:11px;">あと</span><br>` +
+    `<span style="font-size:28px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
+    `<span style="font-size:11px;">個でせりあがり</span>`;
+}
+
+// ===== ミノを捨てる =====
+function discardPiece() {
+  resetLock();
+  spawn(); // 現在のピースを破棄して次を出現させる
+  draw();
+}
+
+// ===== おじゃまブロック競り上がり =====
+function addGarbage(sameHole) {
+  // 穴の列を決定
+  // おじゃまがない or ランダム指定 → ランダム、同じ穴指定かつ直前あり → 同じ列
+  let holeCol;
+  if (sameHole && lastGarbageCol !== null) {
+    holeCol = lastGarbageCol;
+  } else {
+    // ランダム（直前と被っても可）
+    holeCol = Math.floor(Math.random() * COLS);
+  }
+  lastGarbageCol = holeCol;
+
+  // 盤面を1行上にシフト（row0 は消える）
+  board.shift();
+  // 一番下におじゃま行を追加
+  const garbageRow = new Array(COLS).fill(GARBAGE_COLOR);
+  garbageRow[holeCol] = null; // 穴
+  board.push(garbageRow);
+
+  // カレントピースが盤面と重なった場合は1行上へ押し上げ
+  if (!valid(cur, 0, 0, cur.state)) {
+    cur.row--;
+    // それでも重なるなら強制押し上げ（スタック上端に接している場合）
+    while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+  }
+
+  resetLock();
+  draw();
+}
+
+// ===== スナップショット保存 =====
+function saveSnapshot() {
+  undoStack.push({
+    board:    board.map(row => [...row]),
+    cur:      { ...cur },
+    holdType, canHold,
+    bag:      [...bag],
+    nextQ:    [...nextQ],
+    score, level, lines, b2b, dropInterval,
+    digCount,
+  });
+  if (undoStack.length > UNDO_MAX) undoStack.shift(); // 上限超えたら古いものを削除
+}
+
+// ===== Undo =====
+function undo() {
+  if (!undoStack.length) return;
+  const s = undoStack.pop();
+  resetLock();
+  board        = s.board;
+  cur          = mkPiece(s.cur.type); // スポーン位置から再出現
+  holdType     = s.holdType;
+  canHold      = s.canHold;
+  bag          = s.bag;
+  nextQ        = s.nextQ;
+  score        = s.score;
+  level        = s.level;
+  lines        = s.lines;
+  b2b          = s.b2b;
+  dropInterval = s.dropInterval;
+  digCount     = s.digCount;
+  lastDrop     = 0;
+  updUI();
+  updateDigCounter();
+  draw();
+}
+
+// ===== Tスピン判定 =====
+function detectTSpin() {
+  if (cur.type !== 'T' || !lastWasRotation) return null;
+  const r = cur.row, c = cur.col;
+  function isBlocked(row, col) {
+    if (col < 0 || col >= COLS || row >= TROW) return true; // 壁・床
+    if (row < 0) return false;
+    return !!board[row][col];
+  }
+  const corners = [
+    isBlocked(r,   c),    // 0: 左上
+    isBlocked(r,   c+2),  // 1: 右上
+    isBlocked(r+2, c),    // 2: 左下
+    isBlocked(r+2, c+2),  // 3: 右下
+  ];
+  if (corners.filter(Boolean).length < 3) return null;
+  // 各ステートのフロントコーナーインデックス
+  const frontIdx = [[0,1],[1,3],[2,3],[0,2]][cur.state];
+  const frontFilled = frontIdx.filter(i => corners[i]).length;
+  // フロント2つ埋まり or キック5番目(index=4)使用 → フルTスピン
+  if (frontFilled === 2 || lastKickIndex === 4) return 'full';
+  return 'mini';
+}
+
+// ===== クリアメッセージ表示 =====
+function showClearMessage(cleared, tSpin, isB2B, renCount, isPerfect) {
+  if (!cleared && !tSpin && !isPerfect) return;
+  const el = document.getElementById('clearMsg');
+  let mainText = '', mainColor = '#fff';
+
+  if (isPerfect) {
+    mainText = 'PERFECT<br>CLEAR'; mainColor = '#fbbf24';
+  } else if (tSpin) {
+    const base = tSpin === 'mini' ? 'T-SPIN MINI' : 'T-SPIN';
+    const cnt  = ['','SINGLE','DOUBLE','TRIPLE'][cleared] || '';
+    mainText   = cnt ? `${base}<br>${cnt}` : base;
+    mainColor  = tSpin === 'mini' ? '#c4b5fd' : '#a855f7';
+  } else if (cleared === 4) {
+    mainText = 'TETRIS'; mainColor = '#22d3ee';
+  } else {
+    mainText   = ['','1 LINE','2 LINE','3 LINE'][cleared] || `${cleared} LINE`;
+    mainColor  = '#9ca3af';
+  }
+
+  let subs = '';
+  if (isB2B) subs += `<div style="font-size:12px;color:#fbbf24;font-weight:bold;letter-spacing:1px;margin-top:2px;">BACK TO BACK</div>`;
+  if (renCount >= 2) subs += `<div style="font-size:12px;color:#fb923c;font-weight:bold;margin-top:1px;">REN ×${renCount - 1}</div>`;
+
+  el.innerHTML =
+    `<div style="font-size:${isPerfect?'17px':'22px'};font-weight:bold;color:${mainColor};` +
+    `text-shadow:0 2px 10px rgba(0,0,0,0.95);line-height:1.2;">${mainText}</div>` + subs;
+  el.style.opacity = '1';
+  if (clearMsgTimer) clearTimeout(clearMsgTimer);
+  clearMsgTimer = setTimeout(() => { el.style.opacity = '0'; }, 4000);
+}
+
+function lock() {
+  if (lockTimer) { clearTimeout(lockTimer); lockTimer=null; }
+  isLocking = false;
+  saveSnapshot();
+
+  // Tスピン判定（ピース設置前に行う）
+  const tSpin = detectTSpin();
+  lastWasRotation = false;
+
+  const cells = PIECE_DEF[cur.type].cells[cur.state];
+  for (const [r,c] of cells) {
+    const nr=cur.row+r, nc=cur.col+c;
+    if (nr>=0) board[nr][nc] = PIECE_DEF[cur.type].color;
+  }
+  const cleared = clearLines();
+  if (renMode) restoreRenWalls(); // RENモード：壁を常時維持
+
+  // パーフェクトクリア判定
+  const isPerfect = cleared > 0 && board.every(row => row.every(v => !v));
+
+  // REN更新
+  if (cleared > 0) { ren++; } else { ren = 0; }
+
+  addScore(cleared, tSpin, isPerfect);
+
+  // せりあがり自動モード
+  if (digMode) {
+    digCount++;
+    updateDigCounter();
+    if (digCount % digInterval === 0) addGarbage(false);
+  }
+
+  spawn();
+  draw();
+}
+
+// ===== ライン消去 =====
+function clearLines() {
+  let n=0;
+  for (let r=TROW-1; r>=0; r--) {
+    if (board[r].every(v=>v)) {
+      board.splice(r,1);
+      board.unshift(new Array(COLS).fill(null));
+      n++; r++;
+    }
+  }
+  return n;
+}
+
+// ===== スコア計算 =====
+const REN_TBL = [0,100,100,200,200,300,300,400,400,400,400,400];
+const TSPIN_FULL = [400, 800, 1200, 1600];
+const TSPIN_MINI = [100, 200, 400, 0];
+
+function addScore(cleared, tSpin, isPerfect) {
+  // ライン消去なし・Tスピンなし → b2bリセットのみ
+  if (!cleared && !tSpin) { b2b = false; return; }
+
+  const isHard = (cleared === 4) || (tSpin && cleared > 0);
+  const isB2B  = isHard && b2b;
+
+  // 基本スコア
+  let base = 0;
+  if      (tSpin === 'full') base = (TSPIN_FULL[cleared] ?? 0) * level;
+  else if (tSpin === 'mini') base = (TSPIN_MINI[cleared] ?? 0) * level;
+  else                       base = (SCORE_TABLE[cleared] ?? 0) * level;
+  if (isB2B) base = Math.floor(base * 1.5);
+  score += base;
+
+  // RENボーナス
+  if (cleared > 0 && ren >= 1)
+    score += REN_TBL[Math.min(ren, 11)] * level;
+
+  // パーフェクトクリアボーナス
+  if (isPerfect) score += 3500 * level;
+
+  // ライン数・レベル更新
+  if (cleared > 0) {
+    lines += cleared;
+    level = Math.floor(lines / 10) + 1;
+    dropInterval = Math.max(50, 1000 - (level - 1) * 90);
+    b2b = isHard;
+  }
+
+  updUI();
+  showClearMessage(cleared, tSpin, isB2B, ren, isPerfect);
+}
+function updUI() {
+  document.getElementById('linesEl').textContent = lines;
+}
+
+// ===== 描画 =====
+function drawBlock(ctx, c, r, color, alpha=1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // 本体
+  ctx.fillStyle = color;
+  ctx.fillRect(c*BS+1, r*BS+1, BS-2, BS-2);
+  // ハイライト（上・左）
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillRect(c*BS+1, r*BS+1, BS-2, 4);
+  ctx.fillRect(c*BS+1, r*BS+1, 4, BS-2);
+  // シャドウ（下・右）
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(c*BS+1, r*BS+BS-5, BS-2, 4);
+  ctx.fillRect(c*BS+BS-5, r*BS+1, 4, BS-2);
+  ctx.restore();
+}
+
+function drawBoard() {
+  boardCtx.fillStyle = '#0d1117';
+  boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
+  // グリッド線
+  boardCtx.strokeStyle = '#1f2937';
+  boardCtx.lineWidth = 0.5;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++)
+    boardCtx.strokeRect(c*BS, r*BS, BS, BS);
+  // 固定ブロック
+  for (let r=BUF;r<TROW;r++) for (let c=0;c<COLS;c++)
+    if (board[r][c]) drawBlock(boardCtx, c, r-BUF, board[r][c]);
+  // ゴーストピース（showGhost時のみ）
+  if (!gameOver && showGhost) {
+    const gr = ghostRow();
+    const cells = PIECE_DEF[cur.type].cells[cur.state];
+    const color = PIECE_DEF[cur.type].color;
+    for (const [r,c] of cells) {
+      const vr = gr+r-BUF, vc = cur.col+c;
+      if (vr>=0) drawBlock(boardCtx, vc, vr, color, 0.2);
+    }
+  }
+  // カレントピース（常に表示）
+  if (!gameOver) {
+    const cells = PIECE_DEF[cur.type].cells[cur.state];
+    const color = PIECE_DEF[cur.type].color;
+    for (const [r,c] of cells) {
+      const vr = cur.row+r-BUF, vc = cur.col+c;
+      if (vr>=0) drawBlock(boardCtx, vc, vr, color);
+    }
+  }
+  // 軸表示
+  if (showAxis && !gameOver) {
+    const vr = cur.row - BUF;
+    const vc = cur.col;
+    let ax, ay;
+    if (cur.type === 'I') {
+      ax = (vc + 2) * BS; ay = (vr + 2) * BS;
+    } else if (cur.type === 'O') {
+      ax = (vc + 1) * BS; ay = (vr + 1) * BS;
+    } else {
+      ax = (vc + 1) * BS + BS / 2; ay = (vr + 1) * BS + BS / 2;
+    }
+    if (ay >= 0) {
+      boardCtx.save();
+      boardCtx.fillStyle = 'rgba(0,0,0,0.85)';
+      boardCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+      boardCtx.lineWidth = 1.5;
+      boardCtx.beginPath();
+      boardCtx.arc(ax, ay, 5, 0, Math.PI * 2);
+      boardCtx.fill();
+      boardCtx.stroke();
+      boardCtx.restore();
+    }
+  }
+}
+
+function drawMini(ctx, type, yOff, w, h, dim=false) {
+  if (!type) return;
+  const cells = PIECE_DEF[type].cells[0];
+  const color = PIECE_DEF[type].color;
+  const minC = Math.min(...cells.map(c=>c[1]));
+  const maxC = Math.max(...cells.map(c=>c[1]));
+  const minR = Math.min(...cells.map(c=>c[0]));
+  const maxR = Math.max(...cells.map(c=>c[0]));
+  const bw = maxC-minC+1, bh = maxR-minR+1;
+  const bs = 18;
+  const sx = Math.floor((w-bw*bs)/2);
+  const sy = yOff + Math.floor((h-bh*bs)/2);
+  ctx.save();
+  if (dim) ctx.globalAlpha = 0.3;
+  for (const [r,c] of cells) {
+    const px = sx+(c-minC)*bs, py = sy+(r-minR)*bs;
+    ctx.fillStyle = color;
+    ctx.fillRect(px+1,py+1,bs-2,bs-2);
+    ctx.fillStyle='rgba(255,255,255,0.25)';
+    ctx.fillRect(px+1,py+1,bs-2,3);
+    ctx.fillRect(px+1,py+1,3,bs-2);
+  }
+  ctx.restore();
+}
+
+function drawHold() {
+  holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
+  drawMini(holdCtx, holdType, 0, 100, 80, false);
+}
+
+function drawNext() {
+  nextCtx.fillStyle='#0d1117'; nextCtx.fillRect(0,0,100,420);
+  fillQ();
+  for (let i=0;i<NEXT_SHOW;i++) {
+    const item = nextQ[i];
+    // 巡の境目に仕切り（先頭 i=0 は除く）
+    if (item.newBag && i > 0) {
+      const y = i * 84 - 5;
+      nextCtx.save();
+      nextCtx.strokeStyle = 'rgba(129,140,248,0.6)';
+      nextCtx.lineWidth = 1.5;
+      nextCtx.setLineDash([]);
+      nextCtx.beginPath();
+      nextCtx.moveTo(6, y);
+      nextCtx.lineTo(94, y);
+      nextCtx.stroke();
+      nextCtx.restore();
+    }
+    drawMini(nextCtx, item.type, i*84, 100, 84);
+  }
+}
+
+function draw() {
+  drawBoard(); drawHold(); drawNext();
+}
+
+// ===== 落下スピード =====
+function changeGravSpeed(delta) {
+  gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
+  document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+  lastDrop = 0; // タイマーリセット
+}
+
+// ===== 自然落下トグル =====
+function toggleGravity() {
+  gravityOn = !gravityOn;
+  const btn = document.getElementById('gravBtn');
+  if (gravityOn) {
+    btn.style.background = '#16a34a'; // 緑 = ON
+    lastDrop = 0;
+  } else {
+    btn.style.background = '#374151'; // グレー = OFF
+    resetLock();
+  }
+}
+
+// ===== ゲームループ =====
+let rafId;
+function loop(ts) {
+  if (gameOver) return;
+
+  // ↓キー押しっぱなし：ブラウザのキーリピートに頼らずポーリング
+  if (downHeld && ts - lastSoftDrop >= SOFT_DROP_RATE) {
+    softDrop();
+    lastSoftDrop = ts;
+  }
+
+  if (gravityOn) {
+    if (gravSpeed === 0) {
+      // 0G: 時間ベースの自然落下（dropInterval に従う）
+      if (!lastDrop) lastDrop = ts;
+      if (ts - lastDrop >= dropInterval) {
+        if (!valid(cur, 1, 0, cur.state)) { if (!isLocking) startLock(); }
+        else { cur.row++; resetLock(); draw(); }
+        lastDrop = ts;
+      } else if (!valid(cur, 1, 0, cur.state) && !isLocking) {
+        startLock();
+      }
+    } else {
+      // 1G〜20G: フレームベース（毎フレーム gravSpeed 行落とす）
+      let dropped = 0;
+      while (dropped < gravSpeed && valid(cur, 1, 0, cur.state)) {
+        cur.row++;
+        dropped++;
+      }
+      if (dropped > 0) { resetLock(); draw(); }
+      if (!valid(cur, 1, 0, cur.state) && !isLocking) startLock();
+    }
+  }
+  rafId = requestAnimationFrame(loop);
+}
+
+// ===== DAS / ARR =====
+const DAS=167, ARR=33;
+let dasTimer=null, arrTimer=null, heldKey=null;
+// ボタン長押しによるソフトドロップ連続入力
+let softDropBtnTimer=null;
+function startSoftDropBtn() {
+  softDrop();
+  softDropBtnTimer = setInterval(()=>{ if(!gameOver) softDrop(); else stopSoftDropBtn(); }, 50);
+}
+function stopSoftDropBtn() {
+  if(softDropBtnTimer){ clearInterval(softDropBtnTimer); softDropBtnTimer=null; }
+}
+function startDAS(key) {
+  if (heldKey===key) return;
+  stopDAS(); heldKey=key;
+  dasTimer = setTimeout(()=>{
+    if (heldKey!==key) return;
+    arrTimer = setInterval(()=>{ if(heldKey===key) { if(key==='L') moveH(-1); else moveH(1); } }, ARR);
+  }, DAS);
+}
+function stopDAS() {
+  heldKey=null;
+  if(dasTimer){clearTimeout(dasTimer);dasTimer=null;}
+  if(arrTimer){clearInterval(arrTimer);arrTimer=null;}
+}
+
+// ===== キーコンフィグ =====
+const KC_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',         d:[  'ArrowLeft', null        ] },
+  { id:'moveRight',  label:'右移動',         d:[  'ArrowRight',null        ] },
+  { id:'softDrop',   label:'ソフトドロップ', d:[  'ArrowDown', null        ] },
+  { id:'rotateCW',   label:'時計回り回転',   d:[  'ArrowUp',   'KeyX'      ] },
+  { id:'rotateCCW',  label:'反時計回り回転', d:[  'KeyZ',      null        ] },
+  { id:'hardDrop',   label:'ハードドロップ', d:[  'Space',     'KeyC'      ] },
+  { id:'hold',       label:'ホールド',       d:[  'ShiftLeft', 'ShiftRight'] },
+  { id:'discard',    label:'ミノを捨てる',   d:[  'KeyA',      null        ] },
+  { id:'undo',       label:'1手戻す',        d:[  'KeyU',      null        ] },
+  { id:'gravity',    label:'落下トグル',     d:[  'KeyG',      null        ] },
+  { id:'restart',    label:'リスタート',     d:[  'KeyN',      null        ] },
+];
+
+// keyConfig[id] = [key1|null, key2|null]
+let keyConfig = {};
+let kcWaiting = null; // { id, slot }
+
+function initKeyConfig() {
+  // localStorageから復元、なければデフォルト
+  const saved = localStorage.getItem('tetren_keyconfig');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      KC_ACTIONS.forEach(a => {
+        keyConfig[a.id] = Array.isArray(parsed[a.id]) ? parsed[a.id] : [...a.d];
+      });
+      return;
+    } catch(e) {}
+  }
+  KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
+}
+
+function saveKeyConfig() {
+  localStorage.setItem('tetren_keyconfig', JSON.stringify(keyConfig));
+}
+
+function keyDisplayName(code) {
+  if (!code) return '---';
+  const map = {
+    'ArrowLeft':'←','ArrowRight':'→','ArrowUp':'↑','ArrowDown':'↓',
+    'Space':'Space','ShiftLeft':'Shift L','ShiftRight':'Shift R',
+    'Enter':'Enter','Backspace':'BS','Tab':'Tab','Escape':'Esc',
+  };
+  if (map[code]) return map[code];
+  if (code.startsWith('Key'))    return code.slice(3);
+  if (code.startsWith('Digit'))  return code.slice(5);
+  if (code.startsWith('Numpad')) return 'Num'+code.slice(6);
+  return code;
+}
+
+function kcBtnId(id, slot) { return `kc-${id}-${slot}`; }
+
+function renderKcBtn(id, slot) {
+  const btn = document.getElementById(kcBtnId(id, slot));
+  if (!btn) return;
+  const code = keyConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = keyDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+
+function openKeyConfig() {
+  // 待機中があればキャンセル
+  if (kcWaiting) { renderKcBtn(kcWaiting.id, kcWaiting.slot); kcWaiting = null; }
+  const container = document.getElementById('kcRows');
+  container.innerHTML = '';
+  KC_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+
+    // スロット0・1 それぞれにボタン群
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = kcBtnId(a.id, slot);
+      btn.textContent = keyDisplayName(keyConfig[a.id][slot]);
+      if (!keyConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startKeyWait(a.id, slot, btn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'kc-del';
+      delBtn.textContent = '×';
+      delBtn.title = 'クリア';
+      delBtn.onclick = () => { keyConfig[a.id][slot] = null; renderKcBtn(a.id, slot); };
+
+      wrap.appendChild(btn);
+      wrap.appendChild(delBtn);
+      row.appendChild(wrap);
+    });
+
+    container.appendChild(row);
+  });
+  document.getElementById('keyconfigModal').style.display = 'flex';
+}
+
+function closeKeyConfig() {
+  if (kcWaiting) { renderKcBtn(kcWaiting.id, kcWaiting.slot); kcWaiting = null; }
+  saveKeyConfig();
+  document.getElementById('keyconfigModal').style.display = 'none';
+}
+
+function resetKeyConfig() {
+  KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
+  localStorage.removeItem('tetren_keyconfig');
+  openKeyConfig();
+}
+
+function startKeyWait(id, slot, btn) {
+  if (kcWaiting) { renderKcBtn(kcWaiting.id, kcWaiting.slot); }
+  kcWaiting = { id, slot };
+  btn.classList.add('waiting');
+  btn.textContent = 'キーを押して...';
+}
+
+document.addEventListener('keydown', e => {
+  if (!kcWaiting) return;
+  e.preventDefault();
+  if (e.code === 'Escape') {
+    renderKcBtn(kcWaiting.id, kcWaiting.slot);
+    kcWaiting = null;
+    return;
+  }
+  keyConfig[kcWaiting.id][kcWaiting.slot] = e.code;
+  renderKcBtn(kcWaiting.id, kcWaiting.slot);
+  kcWaiting = null;
+}, true);
+
+// キーがアクションにマッチするか（2スロット対応）
+function kcMatch(id, code) {
+  return keyConfig[id][0] === code || keyConfig[id][1] === code;
+}
+
+// ===== キー入力 =====
+document.addEventListener('keydown', e=>{
+  // リスタートはゲームオーバー時も有効
+  if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
+  if (gameOver) return;
+  // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
+  const c = e.code;
+  if      (kcMatch('moveLeft',  c)) { e.preventDefault(); moveH(-1); startDAS('L'); }
+  else if (kcMatch('moveRight', c)) { e.preventDefault(); moveH(+1); startDAS('R'); }
+  else if (kcMatch('softDrop',  c)) {
+    e.preventDefault();
+    if (!downHeld) { downHeld = true; lastSoftDrop = 0; softDrop(); }
+  }
+  else if (kcMatch('rotateCW',  c)) { e.preventDefault(); if (!e.repeat) rotate(1); }
+  else if (kcMatch('rotateCCW', c)) { e.preventDefault(); if (!e.repeat) rotate(-1); }
+  else if (kcMatch('hardDrop',  c)) { e.preventDefault(); hardDrop(); }
+  else if (kcMatch('hold',      c)) { e.preventDefault(); doHold(); }
+  else if (kcMatch('discard',   c)) { e.preventDefault(); discardPiece(); }
+  else if (kcMatch('undo',      c)) { e.preventDefault(); undo(); }
+  else if (kcMatch('gravity',   c)) { e.preventDefault(); toggleGravity(); }
+});
+document.addEventListener('keyup', e=>{
+  if (kcMatch('moveLeft', e.code) || kcMatch('moveRight', e.code)) stopDAS();
+  if (kcMatch('softDrop', e.code)) downHeld = false;
+});
+
+// ===== オーバーレイ =====
+function showOverlay(title, btn) {
+  document.querySelector('#overlay h1').textContent = title;
+  document.getElementById('startBtn').textContent = btn;
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+function startGame() {
+  document.getElementById('overlay').style.display = 'none';
+  cancelAnimationFrame(rafId);
+  // 初期化
+  board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
+  bag=[]; nextQ=[]; holdType=null; canHold=true;
+  score=0; level=1; lines=0; b2b=false; gameOver=false;
+  dropInterval=1000; lastDrop=0; gravityOn=false; undoStack=[]; lastGarbageCol=null;
+  gravSpeed=0;
+  document.getElementById('gravSpeedVal').textContent = 0;
+  downHeld=false; lastSoftDrop=0;
+  digMode=false; digCount=0; updateDigCounter();
+  ren=0; lastWasRotation=false; lastKickIndex=0;
+  if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
+  const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
+  // 地形 → ロック解除（編集可）状態にリセット
+  terrainMode = true;
+  document.getElementById('terrainBtn').style.background = '#374151';
+  document.getElementById('colorSection').style.display = '';
+  boardCanvas.style.cursor = 'crosshair';
+  // 落下 → OFF（グレー）にリセット
+  document.getElementById('gravBtn').style.background = '#374151';
+  // 自動 → OFF（グレー）にリセット
+  document.getElementById('digBtn').style.background = '#374151';
+  // RENモードONならスタート時に地形セット
+  if (renMode) setupRenTerrain();
+  resetLock(); updUI(); fillQ(); spawn(); draw();
+  rafId = requestAnimationFrame(loop);
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+// キーコンフィグ初期化
+initKeyConfig();
+
+// 初期描画
+holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
+nextCtx.fillStyle='#0d1117'; nextCtx.fillRect(0,0,100,420);
+boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,300,600);
+boardCanvas.style.cursor = 'crosshair';
+initPalette();
+</script>
+</body>
+</html>
