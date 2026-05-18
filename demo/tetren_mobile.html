@@ -520,10 +520,19 @@ boardCanvas.addEventListener('touchmove', e => {
     if(cell) applyTerrainAt(cell.col, cell.row);
     return;
   }
-  if(touchGesture === 'softDrop' || touchGesture === 'hardDrop' || touchGesture === 'hold') return;
+  if(touchGesture === 'hardDrop' || touchGesture === 'hold') return;
   const t = e.touches[0];
   const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
   const adx = Math.abs(dx), ady = Math.abs(dy);
+  // 長押し中にスワイプしたらソフトドロップを解除してスワイプに移行
+  if(touchGesture === 'softDrop'){
+    if(adx >= SWIPE_TH && adx > ady){
+      stopTouchLoops();
+      touchGesture = null; // 以降の左右スワイプ処理へ流す
+    } else {
+      return;
+    }
+  }
   if(touchGesture === 'left' || touchGesture === 'right'){
     // 移動中：方向転換を検出
     const curX = t.clientX;
