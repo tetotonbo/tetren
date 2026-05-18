@@ -474,6 +474,7 @@ boardCanvas.addEventListener('contextmenu', e => { if(terrainMode) e.preventDefa
 let touchStartX=0, touchStartY=0, touchStartTime=0;
 let touchGesture=null; // null|'left'|'right'|'hardDrop'|'hold'|'softDrop'
 let touchLoopTimer=null, touchLongPressTimer=null;
+let touchPeakX=0; // 方向転換検出用（現在の方向で最も遠い点）
 
 const SWIPE_TH    = 55;  // スワイプ判定距離(px)
 const LONG_PRESS  = 250; // 長押し判定(ms)
@@ -499,6 +500,7 @@ boardCanvas.addEventListener('touchstart', e => {
   touchStartX = t.clientX; touchStartY = t.clientY;
   touchStartTime = Date.now();
   touchGesture = null;
+  touchPeakX = t.clientX;
   // 長押しタイマー：ソフトドロップ
   touchLongPressTimer = setTimeout(() => {
     if(touchGesture === null && !gameOver){
@@ -522,12 +524,31 @@ boardCanvas.addEventListener('touchmove', e => {
   const t = e.touches[0];
   const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
   const adx = Math.abs(dx), ady = Math.abs(dy);
-  if(touchGesture === 'left' || touchGesture === 'right') return; // 移動中は追加処理不要
+  if(touchGesture === 'left' || touchGesture === 'right'){
+    // 移動中：方向転換を検出
+    const curX = t.clientX;
+    const gestureDir = touchGesture === 'left' ? -1 : 1;
+    // ピーク更新
+    if(gestureDir < 0 && curX < touchPeakX) touchPeakX = curX;
+    if(gestureDir > 0 && curX > touchPeakX) touchPeakX = curX;
+    // ピークから逆方向にSWIPE_TH以上戻ったら方向転換
+    const reversal = gestureDir < 0 ? curX - touchPeakX : touchPeakX - curX;
+    if(reversal >= SWIPE_TH){
+      stopTouchLoops();
+      const newDir = -gestureDir;
+      touchGesture = newDir < 0 ? 'left' : 'right';
+      touchPeakX = curX;
+      if(!gameOver){ moveH(newDir); draw(); }
+      touchLoopTimer = setInterval(() => { if(!gameOver){ moveH(newDir); draw(); } }, MOVE_ITV);
+    }
+    return;
+  }
   if(adx >= SWIPE_TH && adx > ady){
     // 左右スワイプ → 連続移動
     stopTouchLoops();
     const dir = dx < 0 ? -1 : 1;
     touchGesture = dir < 0 ? 'left' : 'right';
+    touchPeakX = t.clientX;
     if(!gameOver){ moveH(dir); draw(); }
     touchLoopTimer = setInterval(() => { if(!gameOver){ moveH(dir); draw(); } }, MOVE_ITV);
   } else if(dy >= SWIPE_TH && ady > adx){
