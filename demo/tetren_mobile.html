@@ -162,6 +162,16 @@ canvas { display:block; }
       <span style="font-size:9px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
+    <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
+    <div id="dig-info"></div>
+    <div class="di-row" id="diRow" style="display:none;">
+      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
+      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
+      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
+    </div>
+    <button class="side-btn" onclick="startGame()"
+      style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
@@ -232,19 +242,11 @@ canvas { display:block; }
     <div id="colorPaletteWrap"></div>
   </div>
 
-  <!-- 右: NEXT + 掘り練習 + 地形 -->
+  <!-- 右: NEXT -->
   <div class="side-col" id="rightCol">
     <div class="mini-panel" style="padding:5px 3px;">
       <div class="m-lbl">NEXT</div>
       <canvas id="nextCanvas"></canvas>
-    </div>
-    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()">REN<br>モード</button>
-    <button class="side-btn" id="digBtn" onclick="toggleDigMode()">せりあがり</button>
-    <div id="dig-info"></div>
-    <div class="di-row" id="diRow" style="display:none;">
-      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
-      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
     </div>
     <div id="clearMsg"></div>
   </div>
