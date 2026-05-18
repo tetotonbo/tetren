@@ -470,25 +470,94 @@ boardCanvas.addEventListener('mouseleave', () => { terrainPainting=false; });
 boardCanvas.addEventListener('contextmenu', e => { if(terrainMode) e.preventDefault(); });
 
 // タッチ操作
+// ===== ボードタッチ操作 =====
+let touchStartX=0, touchStartY=0, touchStartTime=0;
+let touchGesture=null; // null|'left'|'right'|'hardDrop'|'hold'|'softDrop'
+let touchLoopTimer=null, touchLongPressTimer=null;
+
+const SWIPE_TH    = 18;  // スワイプ判定距離(px)
+const LONG_PRESS  = 250; // 長押し判定(ms)
+const MOVE_ITV    = 80;  // 左右移動繰り返し間隔(ms)
+const SOFT_ITV    = 55;  // ソフトドロップ繰り返し間隔(ms)
+
+function stopTouchLoops(){
+  if(touchLoopTimer){clearInterval(touchLoopTimer);touchLoopTimer=null;}
+  if(touchLongPressTimer){clearTimeout(touchLongPressTimer);touchLongPressTimer=null;}
+}
+
 boardCanvas.addEventListener('touchstart', e => {
-  if(!terrainMode) return;
   e.preventDefault();
   const t = e.touches[0];
-  const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
-  if(!cell) return;
-  terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
-  terrainPainting = true;
-  applyTerrainAt(cell.col, cell.row);
+  if(terrainMode){
+    const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
+    if(!cell) return;
+    terrainPaintMode = board[cell.row][cell.col] ? 'erase' : 'set';
+    terrainPainting = true;
+    applyTerrainAt(cell.col, cell.row);
+    return;
+  }
+  touchStartX = t.clientX; touchStartY = t.clientY;
+  touchStartTime = Date.now();
+  touchGesture = null;
+  // 長押しタイマー：ソフトドロップ
+  touchLongPressTimer = setTimeout(() => {
+    if(touchGesture === null && !gameOver){
+      touchGesture = 'softDrop';
+      softDrop(); draw();
+      touchLoopTimer = setInterval(() => { if(!gameOver){ softDrop(); draw(); } }, SOFT_ITV);
+    }
+  }, LONG_PRESS);
 }, {passive:false});
+
 boardCanvas.addEventListener('touchmove', e => {
-  if(!terrainMode||!terrainPainting) return;
   e.preventDefault();
+  if(terrainMode){
+    if(!terrainPainting) return;
+    const t = e.touches[0];
+    const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
+    if(cell) applyTerrainAt(cell.col, cell.row);
+    return;
+  }
+  if(touchGesture === 'softDrop' || touchGesture === 'hardDrop' || touchGesture === 'hold') return;
   const t = e.touches[0];
-  const cell = getTerrainCellFromPoint(t.clientX, t.clientY);
-  if(cell) applyTerrainAt(cell.col, cell.row);
+  const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  if(touchGesture === 'left' || touchGesture === 'right') return; // 移動中は追加処理不要
+  if(adx >= SWIPE_TH && adx > ady){
+    // 左右スワイプ → 連続移動
+    stopTouchLoops();
+    const dir = dx < 0 ? -1 : 1;
+    touchGesture = dir < 0 ? 'left' : 'right';
+    if(!gameOver){ moveH(dir); draw(); }
+    touchLoopTimer = setInterval(() => { if(!gameOver){ moveH(dir); draw(); } }, MOVE_ITV);
+  } else if(dy >= SWIPE_TH && ady > adx){
+    // 下スワイプ → ハードドロップ
+    stopTouchLoops();
+    touchGesture = 'hardDrop';
+    if(!gameOver) hardDrop();
+  } else if(dy <= -SWIPE_TH && ady > adx){
+    // 上スワイプ → ホールド
+    stopTouchLoops();
+    touchGesture = 'hold';
+    if(!gameOver) doHold();
+  }
 }, {passive:false});
-boardCanvas.addEventListener('touchend',   () => { terrainPainting=false; });
-boardCanvas.addEventListener('touchcancel',() => { terrainPainting=false; });
+
+boardCanvas.addEventListener('touchend', e => {
+  if(terrainMode){ terrainPainting = false; return; }
+  stopTouchLoops();
+  // タップ判定：動きが小さく短時間
+  const elapsed = Date.now() - touchStartTime;
+  if(touchGesture === null && elapsed < 300 && !gameOver){
+    const rect = boardCanvas.getBoundingClientRect();
+    const tapX = touchStartX - rect.left;
+    if(tapX >= rect.width / 2) rotate(1); else rotate(-1);
+  }
+  touchGesture = null;
+});
+boardCanvas.addEventListener('touchcancel', () => {
+  stopTouchLoops(); terrainPainting = false; touchGesture = null;
+});
 
 // ===== 掘り練習 =====
 function changeDigInterval(delta){
