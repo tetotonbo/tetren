@@ -1044,7 +1044,7 @@ function addScore(cleared, tSpin, isPerfect) {
   if (!cleared && !tSpin) { return; }
 
   const isHard = (cleared === 4) || (tSpin && cleared > 0);
-  const isB2B  = cleared > 0 && b2b;
+  const isB2B  = isHard && b2b;
 
   // 基本スコア
   let base = 0;
