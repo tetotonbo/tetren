@@ -648,7 +648,7 @@ function addGarbage(sameHole){
 
 // ===== スナップショット =====
 function saveSnapshot(){
-  undoStack.push({board:board.map(r=>[...r]),cur:{...cur},holdType,canHold,bag:[...bag],nextQ:[...nextQ],score,level,lines,b2b,dropInterval,digCount});
+  undoStack.push({board:board.map(r=>[...r]),cur:{...cur},holdType,canHold,bag:[...bag],nextQ:[...nextQ],score,level,lines,b2b,ren,dropInterval,digCount});
   if(undoStack.length>UNDO_MAX) undoStack.shift();
 }
 
@@ -658,7 +658,7 @@ function undo(){
   const s=undoStack.pop(); resetLock();
   board=s.board; cur=mkPiece(s.cur.type); holdType=s.holdType; canHold=s.canHold;
   bag=s.bag; nextQ=s.nextQ; score=s.score; level=s.level; lines=s.lines;
-  b2b=s.b2b; dropInterval=s.dropInterval; digCount=s.digCount; lastDrop=0;
+  b2b=s.b2b; ren=s.ren; dropInterval=s.dropInterval; digCount=s.digCount; lastDrop=0;
   updUI(); updateDigCounter(); draw();
 }
 

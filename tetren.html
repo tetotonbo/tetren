@@ -900,7 +900,7 @@ function saveSnapshot() {
     holdType, canHold,
     bag:      [...bag],
     nextQ:    [...nextQ],
-    score, level, lines, b2b, dropInterval,
+    score, level, lines, b2b, ren, dropInterval,
     digCount,
   });
   if (undoStack.length > UNDO_MAX) undoStack.shift(); // 上限超えたら古いものを削除
@@ -921,6 +921,7 @@ function undo() {
   level        = s.level;
   lines        = s.lines;
   b2b          = s.b2b;
+  ren          = s.ren;
   dropInterval = s.dropInterval;
   digCount     = s.digCount;
   lastDrop     = 0;
