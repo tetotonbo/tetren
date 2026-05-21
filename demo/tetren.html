@@ -1040,8 +1040,8 @@ const TSPIN_FULL = [400, 800, 1200, 1600];
 const TSPIN_MINI = [100, 200, 400, 0];
 
 function addScore(cleared, tSpin, isPerfect) {
-  // ライン消去なし・Tスピンなし → b2bリセットのみ
-  if (!cleared && !tSpin) { b2b = false; return; }
+  // ライン消去なし・Tスピンなし → スコア変動なし（b2bは維持）
+  if (!cleared && !tSpin) { return; }
 
   const isHard = (cleared === 4) || (tSpin && cleared > 0);
   const isB2B  = isHard && b2b;
