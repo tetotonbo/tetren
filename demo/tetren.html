@@ -214,7 +214,18 @@ canvas { display:block; }
       </div>
     </div>
 
-    <!-- ライン消去メッセージ（地形操作パネル下） -->
+    <!-- LINES -->
+    <div class="panel" style="text-align:center;width:108px;">
+      <div class="panel-label">LINES</div>
+      <div class="stat-val" id="linesEl">0</div>
+    </div>
+
+    <!-- キーコンフィグ -->
+    <div class="panel" style="width:108px;">
+      <button class="kc-open-btn" onclick="openKeyConfig()" style="margin-top:0;">⌨ キーコンフィグ</button>
+    </div>
+
+    <!-- ライン消去メッセージ -->
     <div id="clearMsg"></div>
 
   </div>
@@ -307,12 +318,6 @@ canvas { display:block; }
       <canvas id="nextCanvas" width="100" height="420"></canvas>
     </div>
 
-    <!-- LINES -->
-    <div class="panel" style="text-align:center;">
-      <div class="panel-label">LINES</div>
-      <div class="stat-val" id="linesEl">0</div>
-    </div>
-
     <!-- デカミノモード -->
     <div class="panel" style="min-width:116px;">
       <button id="dekaModeBtn" class="toggle-btn"
@@ -349,11 +354,6 @@ canvas { display:block; }
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
-    </div>
-
-    <!-- 操作・設定 -->
-    <div class="panel">
-      <button class="kc-open-btn" onclick="openKeyConfig()" style="margin-top:0;">⌨ キーコンフィグ</button>
     </div>
 
   </div>
