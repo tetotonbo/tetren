@@ -342,29 +342,37 @@ function fillQ() {
   }
 }
 
+// ===== デカリスモード 論理座標定数 =====
+const DEKA_LCOLS = 5;
+const DEKA_LTROW = TROW / 2; // = 12
+
 // ===== ピース生成 =====
-function mkPiece(type){const d=PIECE_DEF[type];return{type,state:0,row:d.spawnRow,col:d.spawnCol};}
+function mkPiece(type){
+  const d=PIECE_DEF[type];
+  if(dekaMode) return{type,state:0,row:BUF/2-1,col:type==='I'?0:1};
+  return{type,state:0,row:d.spawnRow,col:d.spawnCol};
+}
 function spawn(){
   fillQ(); cur=mkPiece(nextQ.shift().type);
-  if(dekaMode) cur.col=cur.type==='I'?1:cur.type==='O'?3:2;
   canHold=true; lastWasRotation=false; lastKickIndex=0;
   if(!valid(cur,0,0,cur.state)){gameOver=true;setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);}
 }
 
-// ===== デカリスモード用セル拡張 =====
-function expandCells(cells){
-  const r=[];
-  for(const[row,col] of cells) r.push([row*2,col*2],[row*2+1,col*2],[row*2,col*2+1],[row*2+1,col*2+1]);
-  return r;
-}
-function getPieceCells(type,state){
-  const cells=PIECE_DEF[type].cells[state];
-  return dekaMode?expandCells(cells):cells;
-}
-
 // ===== 衝突判定 =====
+// デカリスモードでは cur.row/col は論理座標（5×10）
 function valid(p,dr,dc,st){
-  for(const[r,c] of getPieceCells(p.type,st)){
+  const cells=PIECE_DEF[p.type].cells[st];
+  if(dekaMode){
+    for(const[r,c] of cells){
+      const lr=p.row+r+dr,lc=p.col+c+dc;
+      if(lc<0||lc>=DEKA_LCOLS||lr>=DEKA_LTROW) return false;
+      if(lr<0) continue;
+      const ar=lr*2,ac=lc*2;
+      if(board[ar][ac]||board[ar][ac+1]||board[ar+1][ac]||board[ar+1][ac+1]) return false;
+    }
+    return true;
+  }
+  for(const[r,c] of cells){
     const nr=p.row+r+dr,nc=p.col+c+dc;
     if(nc<0||nc>=COLS||nr>=TROW) return false;
     if(nr>=0&&board[nr][nc]) return false;
@@ -376,17 +384,14 @@ function valid(p,dr,dc,st){
 function ghostRow(){let g=cur.row;while(valid({...cur,row:g+1},0,0,cur.state))g++;return g;}
 
 // ===== 移動 =====
-function moveH(dc){const step=dekaMode?dc*2:dc;if(valid(cur,0,step,cur.state)){cur.col+=step;lastWasRotation=false;resetLock();draw();}}
+function moveH(dc){if(valid(cur,0,dc,cur.state)){cur.col+=dc;lastWasRotation=false;resetLock();draw();}}
 function softDrop(){if(valid(cur,1,0,cur.state)){cur.row++;score++;resetLock();draw();return true;}return false;}
 function hardDrop(){let d=0;while(valid(cur,1,0,cur.state)){cur.row++;d++;}score+=d*2;lock();}
 
 // ===== 回転 (SRS) =====
+// デカリスモードでも論理座標なのでSRS通常通り動作
 function rotate(dir){
   const from=cur.state, to=(from+(dir===1?1:3))%4;
-  if(dekaMode){
-    if(valid(cur,0,0,to)){cur.state=to;lastWasRotation=true;lastKickIndex=0;resetLock();draw();}
-    return;
-  }
   const key=STATE_NAMES[from]+STATE_NAMES[to];
   const kicks=KICKS[PIECE_DEF[cur.type].kickType][key]||[[0,0]];
   for(let ki=0;ki<kicks.length;ki++){
@@ -686,8 +691,16 @@ function lock(){
   saveSnapshot();
   const tSpin=detectTSpin();
   lastWasRotation=false;
-  for(const[r,c] of getPieceCells(cur.type,cur.state)){
-    const nr=cur.row+r,nc=cur.col+c; if(nr>=0) board[nr][nc]=PIECE_DEF[cur.type].color;
+  const col_=PIECE_DEF[cur.type].color;
+  if(dekaMode){
+    for(const[r,c] of PIECE_DEF[cur.type].cells[cur.state]){
+      const lr=cur.row+r,lc=cur.col+c;
+      if(lr>=0){const ar=lr*2,ac=lc*2;board[ar][ac]=board[ar][ac+1]=board[ar+1][ac]=board[ar+1][ac+1]=col_;}
+    }
+  } else {
+    for(const[r,c] of PIECE_DEF[cur.type].cells[cur.state]){
+      const nr=cur.row+r,nc=cur.col+c; if(nr>=0) board[nr][nc]=col_;
+    }
   }
   const cleared=clearLines();
   if(renMode) restoreRenWalls();
@@ -700,22 +713,41 @@ function lock(){
 
 // ===== ライン消去 =====
 function clearLines(){
+  if(dekaMode){
+    let n=0;
+    for(let lr=DEKA_LTROW-1;lr>=0;lr--){
+      const ar=lr*2;
+      if(board[ar].every(v=>v)&&board[ar+1].every(v=>v)){
+        board.splice(ar,2);
+        board.unshift(new Array(COLS).fill(null));
+        board.unshift(new Array(COLS).fill(null));
+        n++;lr++;
+      }
+    }
+    return n;
+  }
   let n=0;
   for(let r=TROW-1;r>=0;r--){if(board[r].every(v=>v)){board.splice(r,1);board.unshift(new Array(COLS).fill(null));n++;r++;}}
   return n;
 }
 
 // ===== Tスピン判定 =====
+// デカリスモードでは cur.row/col が論理座標なのでオフセット+2は共通
 function detectTSpin(){
   if(cur.type!=='T'||!lastWasRotation) return null;
   const r=cur.row,c=cur.col;
-  const off=dekaMode?4:2;
   function isBlocked(row,col){
+    if(dekaMode){
+      if(col<0||col>=DEKA_LCOLS||row>=DEKA_LTROW) return true;
+      if(row<0) return false;
+      const ar=row*2,ac=col*2;
+      return !!(board[ar][ac]||board[ar][ac+1]||board[ar+1][ac]||board[ar+1][ac+1]);
+    }
     if(col<0||col>=COLS||row>=TROW) return true;
     if(row<0) return false;
     return !!board[row][col];
   }
-  const corners=[isBlocked(r,c),isBlocked(r,c+off),isBlocked(r+off,c),isBlocked(r+off,c+off)];
+  const corners=[isBlocked(r,c),isBlocked(r,c+2),isBlocked(r+2,c),isBlocked(r+2,c+2)];
   if(corners.filter(Boolean).length<3) return null;
   const frontIdx=[[0,1],[1,3],[2,3],[0,2]][cur.state];
   const frontFilled=frontIdx.filter(i=>corners[i]).length;
@@ -848,21 +880,35 @@ function drawBoard(){
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
   for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) if(board[r][c]) drawBlock(boardCtx,c,r-BUF,board[r][c]);
   if(!gameOver&&showGhost){
-    const gr=ghostRow(),cells=getPieceCells(cur.type,cur.state),color=PIECE_DEF[cur.type].color;
-    for(const[r,c] of cells){const vr=gr+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color,0.2);}
+    const gr=ghostRow(),cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    if(dekaMode){
+      for(const[r,c] of cells){const vr0=(gr+r)*2-BUF,vc0=(cur.col+c)*2;for(let dr=0;dr<2;dr++)for(let dc=0;dc<2;dc++)if(vr0+dr>=0)drawBlock(boardCtx,vc0+dc,vr0+dr,color,0.2);}
+    } else {
+      for(const[r,c] of cells){const vr=gr+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color,0.2);}
+    }
   }
   if(!gameOver){
-    const cells=getPieceCells(cur.type,cur.state),color=PIECE_DEF[cur.type].color;
-    for(const[r,c] of cells){const vr=cur.row+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color);}
+    const cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    if(dekaMode){
+      for(const[r,c] of cells){const vr0=(cur.row+r)*2-BUF,vc0=(cur.col+c)*2;for(let dr=0;dr<2;dr++)for(let dc=0;dc<2;dc++)if(vr0+dr>=0)drawBlock(boardCtx,vc0+dc,vr0+dr,color);}
+    } else {
+      for(const[r,c] of cells){const vr=cur.row+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color);}
+    }
   }
   // 軸表示
   if(showAxis&&!gameOver){
-    const vr=cur.row-BUF, vc=cur.col;
-    const m=dekaMode?2:1;
     let ax,ay;
-    if(cur.type==='I'){ax=(vc+2*m)*BS;ay=(vr+2*m)*BS;}
-    else if(cur.type==='O'){ax=(vc+1*m)*BS;ay=(vr+1*m)*BS;}
-    else{ax=(vc+1*m)*BS+BS*m/2;ay=(vr+1*m)*BS+BS*m/2;}
+    if(dekaMode){
+      const vr2=cur.row*2-BUF,vc2=cur.col*2;
+      if(cur.type==='I'){ax=(vc2+4)*BS;ay=(vr2+4)*BS;}
+      else if(cur.type==='O'){ax=(vc2+2)*BS;ay=(vr2+2)*BS;}
+      else{ax=(vc2+2)*BS+BS;ay=(vr2+2)*BS+BS;}
+    } else {
+      const vr=cur.row-BUF,vc=cur.col;
+      if(cur.type==='I'){ax=(vc+2)*BS;ay=(vr+2)*BS;}
+      else if(cur.type==='O'){ax=(vc+1)*BS;ay=(vr+1)*BS;}
+      else{ax=(vc+1)*BS+BS/2;ay=(vr+1)*BS+BS/2;}
+    }
     if(ay>=0){
       boardCtx.save();
       boardCtx.fillStyle='rgba(0,0,0,0.85)';
