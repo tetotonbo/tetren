@@ -162,6 +162,7 @@ canvas { display:block; }
       <span style="font-size:12px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカリス<br>モード</button>
     <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
     <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
     <div id="dig-info"></div>
@@ -321,6 +322,7 @@ let lastWasRotation = false;
 let lastKickIndex = 0;
 let clearMsgTimer = null;
 let renMode = false;
+let dekaMode = false;
 const REN_WALL_COLS = [0,1,2,7,8,9];
 let terrainMode = false;
 let terrainPainting = false;
@@ -343,14 +345,26 @@ function fillQ() {
 // ===== ピース生成 =====
 function mkPiece(type){const d=PIECE_DEF[type];return{type,state:0,row:d.spawnRow,col:d.spawnCol};}
 function spawn(){
-  fillQ(); cur=mkPiece(nextQ.shift().type); canHold=true;
-  lastWasRotation=false; lastKickIndex=0;
+  fillQ(); cur=mkPiece(nextQ.shift().type);
+  if(dekaMode) cur.col=cur.type==='I'?1:cur.type==='O'?3:2;
+  canHold=true; lastWasRotation=false; lastKickIndex=0;
   if(!valid(cur,0,0,cur.state)){gameOver=true;setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);}
+}
+
+// ===== デカリスモード用セル拡張 =====
+function expandCells(cells){
+  const r=[];
+  for(const[row,col] of cells) r.push([row*2,col*2],[row*2+1,col*2],[row*2,col*2+1],[row*2+1,col*2+1]);
+  return r;
+}
+function getPieceCells(type,state){
+  const cells=PIECE_DEF[type].cells[state];
+  return dekaMode?expandCells(cells):cells;
 }
 
 // ===== 衝突判定 =====
 function valid(p,dr,dc,st){
-  for(const[r,c] of PIECE_DEF[p.type].cells[st]){
+  for(const[r,c] of getPieceCells(p.type,st)){
     const nr=p.row+r+dr,nc=p.col+c+dc;
     if(nc<0||nc>=COLS||nr>=TROW) return false;
     if(nr>=0&&board[nr][nc]) return false;
@@ -369,6 +383,10 @@ function hardDrop(){let d=0;while(valid(cur,1,0,cur.state)){cur.row++;d++;}score
 // ===== 回転 (SRS) =====
 function rotate(dir){
   const from=cur.state, to=(from+(dir===1?1:3))%4;
+  if(dekaMode){
+    if(valid(cur,0,0,to)){cur.state=to;lastWasRotation=true;lastKickIndex=0;resetLock();draw();}
+    return;
+  }
   const key=STATE_NAMES[from]+STATE_NAMES[to];
   const kicks=KICKS[PIECE_DEF[cur.type].kickType][key]||[[0,0]];
   for(let ki=0;ki<kicks.length;ki++){
@@ -668,7 +686,7 @@ function lock(){
   saveSnapshot();
   const tSpin=detectTSpin();
   lastWasRotation=false;
-  for(const[r,c] of PIECE_DEF[cur.type].cells[cur.state]){
+  for(const[r,c] of getPieceCells(cur.type,cur.state)){
     const nr=cur.row+r,nc=cur.col+c; if(nr>=0) board[nr][nc]=PIECE_DEF[cur.type].color;
   }
   const cleared=clearLines();
@@ -689,6 +707,7 @@ function clearLines(){
 
 // ===== Tスピン判定 =====
 function detectTSpin(){
+  if(dekaMode) return null;
   if(cur.type!=='T'||!lastWasRotation) return null;
   const r=cur.row,c=cur.col;
   function isBlocked(row,col){
@@ -773,6 +792,25 @@ function setupRenTerrain(){
 function restoreRenWalls(){
   for(let r=BUF;r<TROW;r++) for(const c of REN_WALL_COLS) board[r][c]=GARBAGE_COLOR;
 }
+function toggleDekaMode(){
+  dekaMode=!dekaMode;
+  const btn=document.getElementById('dekaModeBtn');
+  for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
+  undoStack=[];
+  if(dekaMode){
+    btn.style.background='#b45309';
+    if(renMode){renMode=false;document.getElementById('renModeBtn').style.background='';}
+    if(digMode){
+      digMode=false;digCount=0;
+      document.getElementById('digBtn').textContent='せりあがり';
+      document.getElementById('digBtn').style.cssText='';
+      updateDigCounter();
+    }
+  } else {
+    btn.style.background='';
+  }
+  spawn(); draw();
+}
 function toggleRenMode(){
   renMode=!renMode;
   const btn=document.getElementById('renModeBtn');
@@ -810,20 +848,21 @@ function drawBoard(){
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
   for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) if(board[r][c]) drawBlock(boardCtx,c,r-BUF,board[r][c]);
   if(!gameOver&&showGhost){
-    const gr=ghostRow(),cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    const gr=ghostRow(),cells=getPieceCells(cur.type,cur.state),color=PIECE_DEF[cur.type].color;
     for(const[r,c] of cells){const vr=gr+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color,0.2);}
   }
   if(!gameOver){
-    const cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    const cells=getPieceCells(cur.type,cur.state),color=PIECE_DEF[cur.type].color;
     for(const[r,c] of cells){const vr=cur.row+r-BUF,vc=cur.col+c;if(vr>=0)drawBlock(boardCtx,vc,vr,color);}
   }
   // 軸表示
   if(showAxis&&!gameOver){
     const vr=cur.row-BUF, vc=cur.col;
+    const m=dekaMode?2:1;
     let ax,ay;
-    if(cur.type==='I'){ax=(vc+2)*BS;ay=(vr+2)*BS;}
-    else if(cur.type==='O'){ax=(vc+1)*BS;ay=(vr+1)*BS;}
-    else{ax=(vc+1)*BS+BS/2;ay=(vr+1)*BS+BS/2;}
+    if(cur.type==='I'){ax=(vc+2*m)*BS;ay=(vr+2*m)*BS;}
+    else if(cur.type==='O'){ax=(vc+1*m)*BS;ay=(vr+1*m)*BS;}
+    else{ax=(vc+1*m)*BS+BS*m/2;ay=(vr+1*m)*BS+BS*m/2;}
     if(ay>=0){
       boardCtx.save();
       boardCtx.fillStyle='rgba(0,0,0,0.85)';
