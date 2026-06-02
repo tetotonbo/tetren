@@ -824,6 +824,14 @@ function toggleDigMode() {
       ren = 0;
       draw();
     }
+    // デカミノモードを強制OFF
+    if (dekaMode) {
+      dekaMode = false;
+      document.getElementById('dekaModeBtn').style.background = '#374151';
+      for (let r = BUF; r < TROW; r++)
+        for (let c = 0; c < COLS; c++) board[r][c] = null;
+      spawn(); draw();
+    }
   } else {
     btn.style.background = '#374151'; // グレー = OFF
   }

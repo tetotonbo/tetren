@@ -641,6 +641,13 @@ function toggleDigMode(){
       for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
       ren=0; draw();
     }
+    // デカミノモードを強制OFF
+    if(dekaMode){
+      dekaMode=false;
+      document.getElementById('dekaModeBtn').style.background='';
+      for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
+      spawn(); draw();
+    }
   } else {
     btn.textContent='せりあがり';
     btn.style.cssText='';
