@@ -162,7 +162,7 @@ canvas { display:block; }
       <span style="font-size:12px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
-    <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカリス<br>モード</button>
+    <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
     <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
     <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
     <div id="dig-info"></div>
@@ -342,7 +342,7 @@ function fillQ() {
   }
 }
 
-// ===== デカリスモード 論理座標定数 =====
+// ===== デカミノモード 論理座標定数 =====
 const DEKA_LCOLS = 5;
 const DEKA_LTROW = TROW / 2; // = 12
 
@@ -359,7 +359,7 @@ function spawn(){
 }
 
 // ===== 衝突判定 =====
-// デカリスモードでは cur.row/col は論理座標（5×10）
+// デカミノモードでは cur.row/col は論理座標（5×10）
 function valid(p,dr,dc,st){
   const cells=PIECE_DEF[p.type].cells[st];
   if(dekaMode){
@@ -389,7 +389,7 @@ function softDrop(){if(valid(cur,1,0,cur.state)){cur.row++;score++;resetLock();d
 function hardDrop(){let d=0;while(valid(cur,1,0,cur.state)){cur.row++;d++;}score+=d*2;lock();}
 
 // ===== 回転 (SRS) =====
-// デカリスモードでも論理座標なのでSRS通常通り動作
+// デカミノモードでも論理座標なのでSRS通常通り動作
 function rotate(dir){
   const from=cur.state, to=(from+(dir===1?1:3))%4;
   const key=STATE_NAMES[from]+STATE_NAMES[to];
@@ -732,7 +732,7 @@ function clearLines(){
 }
 
 // ===== Tスピン判定 =====
-// デカリスモードでは cur.row/col が論理座標なのでオフセット+2は共通
+// デカミノモードでは cur.row/col が論理座標なのでオフセット+2は共通
 function detectTSpin(){
   if(cur.type!=='T'||!lastWasRotation) return null;
   const r=cur.row,c=cur.col;

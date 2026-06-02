@@ -313,11 +313,11 @@ canvas { display:block; }
       <div class="stat-val" id="linesEl">0</div>
     </div>
 
-    <!-- デカリスモード -->
+    <!-- デカミノモード -->
     <div class="panel" style="min-width:116px;">
       <button id="dekaModeBtn" class="toggle-btn"
         style="background:#374151;"
-        onclick="toggleDekaMode()">デカリスモード</button>
+        onclick="toggleDekaMode()">デカミノモード</button>
     </div>
 
     <!-- RENモード -->
@@ -544,7 +544,7 @@ let digCount = 0;         // 掘り練習モードでのピース設置数
 let digInterval = 3;      // 何個ごとに競り上がるか（1〜20）
 let ren = 0;              // RENコンボカウンター
 let renMode = false;      // 中空けRENモード
-let dekaMode = false;     // デカリスモード（4倍ミノ）
+let dekaMode = false;     // デカミノモード（4倍ミノ）
 let lastWasRotation = false; // 最後の操作が回転だったか（Tスピン判定用）
 let lastKickIndex = 0;       // 最後に使ったSRSキックのインデックス
 let clearMsgTimer = null;    // メッセージ消去タイマー
@@ -567,7 +567,7 @@ function fillQ() {
 }
 
 // ===== ピース生成 =====
-// デカリスモードでは論理座標でスポーン（5列 / バッファ2行）
+// デカミノモードでは論理座標でスポーン（5列 / バッファ2行）
 function mkPiece(type) {
   const d = PIECE_DEF[type];
   if (dekaMode) {
@@ -591,7 +591,7 @@ function spawn() {
 }
 
 // ===== 衝突判定 =====
-// デカリスモードでは cur.row/col は論理座標（5×10グリッド）
+// デカミノモードでは cur.row/col は論理座標（5×10グリッド）
 // 実際のボード座標 = 論理座標 × 2
 const DEKA_LCOLS = 5;
 const DEKA_LTROW = TROW / 2; // = 12 (バッファ2 + 可視10)
@@ -626,7 +626,7 @@ function ghostRow() {
 
 // ===== 移動 =====
 function moveH(dc) {
-  // デカリスモードでも論理座標で動くので特別処理不要
+  // デカミノモードでも論理座標で動くので特別処理不要
   if (valid(cur, 0, dc, cur.state)) {
     cur.col += dc;
     lastWasRotation = false; // 左右移動したら回転フラグをリセット
@@ -650,7 +650,7 @@ function hardDrop() {
 }
 
 // ===== 回転 (SRS) =====
-// デカリスモードでも論理座標なのでSRSキック通常通り使用
+// デカミノモードでも論理座標なのでSRSキック通常通り使用
 function rotate(dir) { // dir: 1=CW, -1=CCW
   const from = cur.state;
   const to   = (from + (dir===1?1:3)) % 4;
@@ -853,7 +853,7 @@ function restoreRenWalls() {
     for (const c of REN_WALL_COLS) board[r][c] = GARBAGE_COLOR;
 }
 
-// ===== デカリスモード =====
+// ===== デカミノモード =====
 function toggleDekaMode() {
   dekaMode = !dekaMode;
   const btn = document.getElementById('dekaModeBtn');
@@ -991,7 +991,7 @@ function undo() {
 }
 
 // ===== Tスピン判定 =====
-// デカリスモードでは cur.row/col が論理座標なので、コーナーオフセットは通常通り+2
+// デカミノモードでは cur.row/col が論理座標なので、コーナーオフセットは通常通り+2
 // ただし isBlocked は論理座標→実ボード変換が必要
 function detectTSpin() {
   if (cur.type !== 'T' || !lastWasRotation) return null;
@@ -1065,7 +1065,7 @@ function lock() {
 
   const color = PIECE_DEF[cur.type].color;
   if (dekaMode) {
-    // デカリスモード: 論理セルを実際のボードに2×2で書き込む
+    // デカミノモード: 論理セルを実際のボードに2×2で書き込む
     for (const [r,c] of PIECE_DEF[cur.type].cells[cur.state]) {
       const lr = cur.row+r, lc = cur.col+c;
       if (lr >= 0) {
@@ -1105,7 +1105,7 @@ function lock() {
 // ===== ライン消去 =====
 function clearLines() {
   if (dekaMode) {
-    // デカリスモード: 論理行（実際の2行ペア）単位で消去
+    // デカミノモード: 論理行（実際の2行ペア）単位で消去
     let n = 0;
     for (let lr = DEKA_LTROW - 1; lr >= 0; lr--) {
       const ar = lr * 2;
