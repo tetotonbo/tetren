@@ -1175,17 +1175,29 @@ function updUI() {
 function drawBlock(ctx, c, r, color, alpha=1) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  // 本体
   ctx.fillStyle = color;
   ctx.fillRect(c*BS+1, r*BS+1, BS-2, BS-2);
-  // ハイライト（上・左）
   ctx.fillStyle = 'rgba(255,255,255,0.25)';
   ctx.fillRect(c*BS+1, r*BS+1, BS-2, 4);
   ctx.fillRect(c*BS+1, r*BS+1, 4, BS-2);
-  // シャドウ（下・右）
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.fillRect(c*BS+1, r*BS+BS-5, BS-2, 4);
   ctx.fillRect(c*BS+BS-5, r*BS+1, 4, BS-2);
+  ctx.restore();
+}
+// デカミノモード用: 論理セル1つを2BS×2BSの大きなブロックとして描画
+function drawBigBlock(ctx, c, r, color, alpha=1) {
+  const sz = BS * 2;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.fillRect(c*BS+1, r*BS+1, sz-2, sz-2);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillRect(c*BS+1, r*BS+1, sz-2, 6);
+  ctx.fillRect(c*BS+1, r*BS+1, 6, sz-2);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(c*BS+1, r*BS+sz-7, sz-2, 6);
+  ctx.fillRect(c*BS+sz-7, r*BS+1, 6, sz-2);
   ctx.restore();
 }
 
@@ -1198,8 +1210,14 @@ function drawBoard() {
   for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++)
     boardCtx.strokeRect(c*BS, r*BS, BS, BS);
   // 固定ブロック
-  for (let r=BUF;r<TROW;r++) for (let c=0;c<COLS;c++)
-    if (board[r][c]) drawBlock(boardCtx, c, r-BUF, board[r][c]);
+  if (dekaMode) {
+    // デカミノモード: 2×2単位で大きなブロックとして描画
+    for (let r=BUF;r<TROW;r+=2) for (let c=0;c<COLS;c+=2)
+      if (board[r][c]) drawBigBlock(boardCtx, c, r-BUF, board[r][c]);
+  } else {
+    for (let r=BUF;r<TROW;r++) for (let c=0;c<COLS;c++)
+      if (board[r][c]) drawBlock(boardCtx, c, r-BUF, board[r][c]);
+  }
   // ゴーストピース（showGhost時のみ）
   if (!gameOver && showGhost) {
     const gr = ghostRow();
@@ -1208,8 +1226,8 @@ function drawBoard() {
     if (dekaMode) {
       for (const [r,c] of cells) {
         const vr0=(gr+r)*2-BUF, vc0=(cur.col+c)*2;
-        for(let dr=0;dr<2;dr++) for(let dc=0;dc<2;dc++)
-          if(vr0+dr>=0) drawBlock(boardCtx,vc0+dc,vr0+dr,color,0.2);
+        if (vr0+1 >= 0) drawBigBlock(boardCtx, vc0, Math.max(vr0,0), color, 0.2);
+        else if (vr0 >= -1) drawBigBlock(boardCtx, vc0, 0, color, 0.2);
       }
     } else {
       for (const [r,c] of cells) {
@@ -1225,8 +1243,7 @@ function drawBoard() {
     if (dekaMode) {
       for (const [r,c] of cells) {
         const vr0=(cur.row+r)*2-BUF, vc0=(cur.col+c)*2;
-        for(let dr=0;dr<2;dr++) for(let dc=0;dc<2;dc++)
-          if(vr0+dr>=0) drawBlock(boardCtx,vc0+dc,vr0+dr,color);
+        if (vr0 >= -1) drawBigBlock(boardCtx, vc0, Math.max(vr0,0), color);
       }
     } else {
       for (const [r,c] of cells) {
