@@ -619,8 +619,9 @@ function ghostRow() {
 
 // ===== 移動 =====
 function moveH(dc) {
-  if (valid(cur, 0, dc, cur.state)) {
-    cur.col += dc;
+  const step = dekaMode ? dc * 2 : dc;
+  if (valid(cur, 0, step, cur.state)) {
+    cur.col += step;
     lastWasRotation = false; // 左右移動したら回転フラグをリセット
     resetLock(); draw();
   }
@@ -993,19 +994,19 @@ function undo() {
 
 // ===== Tスピン判定 =====
 function detectTSpin() {
-  if (dekaMode) return null; // デカリスモードはTスピン無効
   if (cur.type !== 'T' || !lastWasRotation) return null;
   const r = cur.row, c = cur.col;
+  const off = dekaMode ? 4 : 2; // デカリスモードはコーナーオフセットを2倍
   function isBlocked(row, col) {
     if (col < 0 || col >= COLS || row >= TROW) return true; // 壁・床
     if (row < 0) return false;
     return !!board[row][col];
   }
   const corners = [
-    isBlocked(r,   c),    // 0: 左上
-    isBlocked(r,   c+2),  // 1: 右上
-    isBlocked(r+2, c),    // 2: 左下
-    isBlocked(r+2, c+2),  // 3: 右下
+    isBlocked(r,       c),      // 0: 左上
+    isBlocked(r,       c+off),  // 1: 右上
+    isBlocked(r+off,   c),      // 2: 左下
+    isBlocked(r+off,   c+off),  // 3: 右下
   ];
   if (corners.filter(Boolean).length < 3) return null;
   // 各ステートのフロントコーナーインデックス

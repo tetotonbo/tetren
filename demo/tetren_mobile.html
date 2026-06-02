@@ -376,7 +376,7 @@ function valid(p,dr,dc,st){
 function ghostRow(){let g=cur.row;while(valid({...cur,row:g+1},0,0,cur.state))g++;return g;}
 
 // ===== 移動 =====
-function moveH(dc){if(valid(cur,0,dc,cur.state)){cur.col+=dc;lastWasRotation=false;resetLock();draw();}}
+function moveH(dc){const step=dekaMode?dc*2:dc;if(valid(cur,0,step,cur.state)){cur.col+=step;lastWasRotation=false;resetLock();draw();}}
 function softDrop(){if(valid(cur,1,0,cur.state)){cur.row++;score++;resetLock();draw();return true;}return false;}
 function hardDrop(){let d=0;while(valid(cur,1,0,cur.state)){cur.row++;d++;}score+=d*2;lock();}
 
@@ -707,15 +707,15 @@ function clearLines(){
 
 // ===== Tスピン判定 =====
 function detectTSpin(){
-  if(dekaMode) return null;
   if(cur.type!=='T'||!lastWasRotation) return null;
   const r=cur.row,c=cur.col;
+  const off=dekaMode?4:2;
   function isBlocked(row,col){
     if(col<0||col>=COLS||row>=TROW) return true;
     if(row<0) return false;
     return !!board[row][col];
   }
-  const corners=[isBlocked(r,c),isBlocked(r,c+2),isBlocked(r+2,c),isBlocked(r+2,c+2)];
+  const corners=[isBlocked(r,c),isBlocked(r,c+off),isBlocked(r+off,c),isBlocked(r+off,c+off)];
   if(corners.filter(Boolean).length<3) return null;
   const frontIdx=[[0,1],[1,3],[2,3],[0,2]][cur.state];
   const frontFilled=frontIdx.filter(i=>corners[i]).length;
