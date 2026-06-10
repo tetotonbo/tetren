@@ -862,6 +862,11 @@ function toggleRenMode(){
       document.getElementById('diRow').style.display='none';
       updateDigCounter();
     }
+    // デカミノモードを強制OFF
+    if(dekaMode){
+      dekaMode=false;
+      document.getElementById('dekaModeBtn').style.background='';
+    }
     setupRenTerrain(); draw();
   } else {
     btn.style.background=''; btn.style.borderColor=''; btn.style.color='';

@@ -900,6 +900,11 @@ function toggleRenMode() {
       document.getElementById('digBtn').style.background = '#374151';
       updateDigCounter();
     }
+    // デカミノモードを強制OFF
+    if (dekaMode) {
+      dekaMode = false;
+      document.getElementById('dekaModeBtn').style.background = '#374151';
+    }
     setupRenTerrain();
   } else {
     btn.style.background = '#374151'; // グレー = OFF
