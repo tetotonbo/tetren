@@ -866,6 +866,7 @@ function toggleRenMode(){
     if(dekaMode){
       dekaMode=false;
       document.getElementById('dekaModeBtn').style.background='';
+      spawn();
     }
     setupRenTerrain(); draw();
   } else {

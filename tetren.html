@@ -904,6 +904,7 @@ function toggleRenMode() {
     if (dekaMode) {
       dekaMode = false;
       document.getElementById('dekaModeBtn').style.background = '#374151';
+      spawn(); // 論理座標のピースを通常座標でリスポーン
     }
     setupRenTerrain();
   } else {
