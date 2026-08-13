@@ -264,6 +264,14 @@ body.ppt2-theme #nextCanvas {
         <div class="panel-label" style="margin-top:8px;">カラー</div>
         <div id="colorPalette" style="display:grid;grid-template-columns:repeat(4,20px);gap:4px;"></div>
       </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="garb-btn" style="flex:1;background:#374151;"
+          onclick="if(!gameOver)addGarbage(true)"
+          title="地形を一段せり上げる（直前と同じ穴）">上</button>
+        <button class="garb-btn" style="flex:1;background:#374151;"
+          onclick="if(!gameOver)shiftTerrainDown()"
+          title="地形を強制的に一段下にシフトする">下</button>
+      </div>
     </div>
 
     <!-- LINES -->
@@ -387,20 +395,22 @@ body.ppt2-theme #nextCanvas {
     <!-- せりあがり -->
     <div class="panel" style="min-width:116px;">
       <div class="panel-label">せりあがり</div>
-      <button class="garb-btn" onclick="if(!gameOver)addGarbage(true)"
-        style="background:#374151;"
-        title="直前の穴と同じ列に競り上がる">同じ穴</button>
-      <button class="garb-btn" onclick="if(!gameOver)addGarbage(false)"
-        style="margin-top:6px;background:#374151;"
-        title="ランダムな列に穴が開いて競り上がる">ランダム穴</button>
       <button id="digBtn" class="toggle-btn"
-        style="background:#374151;margin-top:6px;"
-        onclick="toggleDigMode()">自動</button>
+        style="background:#374151;"
+        onclick="toggleDigMode()">スタート</button>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+          <input type="radio" name="digTriggerType" id="digTypeMino"
+            onchange="setDigTriggerType('mino')">ミノごと</label>
+        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+          <input type="radio" name="digTriggerType" id="digTypeTime" checked
+            onchange="setDigTriggerType('time')">秒数</label>
+      </div>
       <div class="speed-row">
         <button class="step-btn" onclick="changeDigInterval(-1)">‹</button>
         <div class="speed-val">
           <span id="digIntervalVal">3</span>
-          <span class="speed-unit"> 個ごと</span>
+          <span class="speed-unit" id="digIntervalUnit"> 秒ごと</span>
         </div>
         <button class="step-btn" onclick="changeDigInterval(+1)">›</button>
       </div>
@@ -408,11 +418,11 @@ body.ppt2-theme #nextCanvas {
         style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
     </div>
 
-    <!-- 地形リセット -->
+    <!-- リセット -->
     <div class="panel" style="min-width:116px;">
       <button class="garb-btn" style="background:#374151;"
         onclick="resetTerrain()"
-        title="盤面のブロックをすべて消してまっさらにする">地形リセット</button>
+        title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
     </div>
 
   </div>
@@ -686,9 +696,12 @@ let lastGarbageCol = null; // 直前のおじゃまの穴列
 let downHeld = false;     // ↓キー押しっぱなし状態
 let lastSoftDrop = 0;     // ソフトドロップ最終処理時刻
 const SOFT_DROP_RATE = 50; // ソフトドロップ間隔(ms)
-let digMode = false;      // 掘り練習モード
-let digCount = 0;         // 掘り練習モードでのピース設置数
-let digInterval = 3;      // 何個ごとに競り上がるか（1〜20）
+let digMode = false;       // 掘り練習モード（自動せりあがりON/OFF）
+let digTriggerType = 'time'; // トリガー種別: 'mino'=ミノごと / 'time'=秒数
+let digCount = 0;          // ミノごとモードでのピース設置数
+let digInterval = 3;       // 何個ごとに競り上がるか（1〜20）
+let timeDigInterval = 3;   // 何秒ごとに競り上がるか（0.5〜60、1秒以下は0.5刻み）
+let timeDigLastTs = 0;     // 秒数モードで直近せりあがりを起こした時刻（ts基準・0=未初期化）
 let ren = 0;              // RENコンボカウンター
 let renMode = false;      // 中空けRENモード
 let dekaMode = false;     // デカミノモード（4倍ミノ）
@@ -956,16 +969,44 @@ boardCanvas.addEventListener('contextmenu', e => {
   if (terrainMode) e.preventDefault();
 });
 
-// ===== 掘り練習モード =====
+// ===== 掘り練習モード（自動せりあがり：ミノごと／秒数）=====
+function updateDigIntervalDisplay() {
+  const isTime = digTriggerType === 'time';
+  document.getElementById('digIntervalVal').textContent = isTime ? timeDigInterval : digInterval;
+  document.getElementById('digIntervalUnit').textContent = isTime ? ' 秒ごと' : ' 個ごと';
+}
+
+function setDigTriggerType(type) {
+  digTriggerType = type;
+  digCount = 0;
+  timeDigLastTs = 0;
+  updateDigIntervalDisplay();
+  updateDigCounter();
+}
+
 function changeDigInterval(delta) {
-  digInterval = Math.min(20, Math.max(1, digInterval + delta));
-  document.getElementById('digIntervalVal').textContent = digInterval;
+  if (digTriggerType === 'time') {
+    // 1秒〜60秒は1秒刻み、1秒からさらに下げる場合は0.5秒まで0.1秒刻みで細かく設定できる
+    if (delta > 0) {
+      timeDigInterval = timeDigInterval < 1
+        ? Math.min(1, +(timeDigInterval + 0.1).toFixed(1))
+        : Math.min(60, timeDigInterval + 1);
+    } else {
+      timeDigInterval = timeDigInterval <= 1
+        ? Math.max(0.5, +(timeDigInterval - 0.1).toFixed(1))
+        : Math.max(1, timeDigInterval - 1);
+    }
+  } else {
+    digInterval = Math.min(20, Math.max(1, digInterval + delta));
+  }
+  updateDigIntervalDisplay();
   updateDigCounter();
 }
 
 function toggleDigMode() {
   digMode = !digMode;
   digCount = 0;
+  timeDigLastTs = 0;
   const btn = document.getElementById('digBtn');
   if (digMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
@@ -1032,7 +1073,7 @@ function toggleDekaMode() {
     }
     // せりあがり自動を強制OFF
     if (digMode) {
-      digMode = false; digCount = 0;
+      digMode = false; digCount = 0; timeDigLastTs = 0;
       document.getElementById('digBtn').style.background = '#374151';
       updateDigCounter();
     }
@@ -1050,7 +1091,7 @@ function toggleRenMode() {
     // 自動モードを強制OFF
     if (digMode) {
       digMode = false;
-      digCount = 0;
+      digCount = 0; timeDigLastTs = 0;
       document.getElementById('digBtn').style.background = '#374151';
       updateDigCounter();
     }
@@ -1072,14 +1113,18 @@ function toggleRenMode() {
   draw();
 }
 
-function updateDigCounter() {
+function updateDigCounter(remainSecOverride) {
   const el = document.getElementById('digCounter');
   if (!digMode) { el.innerHTML = ''; return; }
-  const next = digInterval - (digCount % digInterval);
+  const isTime = digTriggerType === 'time';
+  const next = isTime
+    ? (remainSecOverride !== undefined ? remainSecOverride : timeDigInterval)
+    : digInterval - (digCount % digInterval);
+  const unit = isTime ? '秒' : '個';
   el.innerHTML =
     `<span style="font-size:11px;">あと</span><br>` +
     `<span style="font-size:28px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
-    `<span style="font-size:11px;">個でせりあがり</span>`;
+    `<span style="font-size:11px;">${unit}でせりあがり</span>`;
 }
 
 // ===== ミノを捨てる =====
@@ -1089,12 +1134,9 @@ function discardPiece() {
   draw();
 }
 
-// ===== 地形リセット（可視盤面をすべて消してまっさらにする） =====
+// ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
 function resetTerrain() {
-  for (let r = BUF; r < TROW; r++)
-    for (let c = 0; c < COLS; c++) board[r][c] = null;
-  ren = 0;
-  draw();
+  resetGameState();
 }
 
 // ===== おじゃまブロック競り上がり =====
@@ -1125,6 +1167,13 @@ function addGarbage(sameHole) {
   }
 
   resetLock();
+  draw();
+}
+
+// ===== 地形を強制的に一段下にシフト（addGarbageの逆方向） =====
+function shiftTerrainDown() {
+  board.pop(); // 最下段を削除
+  board.unshift(new Array(COLS).fill(null)); // 最上段に空行を追加
   draw();
 }
 
@@ -1161,6 +1210,7 @@ function undo() {
   dropInterval = s.dropInterval;
   digCount     = s.digCount;
   lastDrop     = 0;
+  timeDigLastTs = 0;
   updUI();
   updateDigCounter();
   draw();
@@ -1220,7 +1270,7 @@ function showClearMessage(cleared, tSpin, isB2B, renCount, isPerfect) {
 
   let subs = '';
   if (isB2B) subs += `<div style="font-size:12px;color:#fbbf24;font-weight:bold;letter-spacing:1px;margin-top:2px;">BACK TO BACK</div>`;
-  if (renCount >= 2) subs += `<div style="font-size:12px;color:#fb923c;font-weight:bold;margin-top:1px;">REN ×${renCount - 1}</div>`;
+  if (renCount >= 2) subs += `<div style="font-size:26px;color:#fb923c;font-weight:bold;margin-top:2px;text-shadow:0 2px 10px rgba(0,0,0,0.95);">REN ×${renCount - 1}</div>`;
 
   el.innerHTML =
     `<div style="font-size:${isPerfect?'17px':'22px'};font-weight:bold;color:${mainColor};` +
@@ -1267,8 +1317,8 @@ function lock() {
 
   addScore(cleared, tSpin, isPerfect);
 
-  // せりあがり自動モード
-  if (digMode) {
+  // せりあがり自動モード（ミノごと）
+  if (digMode && digTriggerType === 'mino') {
     digCount++;
     updateDigCounter();
     if (digCount % digInterval === 0) addGarbage(false);
@@ -1637,6 +1687,20 @@ function loop(ts) {
       if (!valid(cur, 1, 0, cur.state) && !isLocking) startLock();
     }
   }
+
+  // せりあがり自動モード（秒数）
+  if (digMode && digTriggerType === 'time') {
+    if (!timeDigLastTs) timeDigLastTs = ts;
+    const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
+    if (remainMs <= 0) {
+      addGarbage(false);
+      timeDigLastTs = ts;
+      updateDigCounter(timeDigInterval);
+    } else {
+      updateDigCounter(Math.max(0.1, Math.ceil(remainMs / 100) / 10));
+    }
+  }
+
   rafId = requestAnimationFrame(loop);
 }
 
@@ -1842,10 +1906,10 @@ function showOverlay(title, btn) {
   document.getElementById('overlay').style.display = 'flex';
 }
 
-function startGame() {
-  document.getElementById('overlay').style.display = 'none';
-  cancelAnimationFrame(rafId);
-  // 初期化
+// ===== ゲーム状態の初期化（スタート時・リセットボタン共通） =====
+// fullReset=false の場合、せりあがり設定（ON/OFF・トリガー種別・間隔）は現状を維持する
+// （ゲームオーバー後の「もう一度」で設定が消えてしまわないようにするため）
+function resetGameState(fullReset = true) {
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
@@ -1853,7 +1917,14 @@ function startGame() {
   gravSpeed=0;
   document.getElementById('gravSpeedVal').textContent = 0;
   downHeld=false; lastSoftDrop=0;
-  digMode=false; digCount=0; updateDigCounter();
+  digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
+  if (fullReset) {
+    digMode=false;
+    digTriggerType='time'; digInterval=3; timeDigInterval=3;
+    document.getElementById('digBtn').style.background = '#374151';
+    document.getElementById('digTypeTime').checked = true;
+  }
+  updateDigIntervalDisplay(); updateDigCounter();
   ren=0; lastWasRotation=false; lastKickIndex=0;
   if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
@@ -1864,11 +1935,15 @@ function startGame() {
   boardCanvas.style.cursor = 'crosshair';
   // 落下 → OFF（グレー）にリセット
   document.getElementById('gravBtn').style.background = '#374151';
-  // 自動 → OFF（グレー）にリセット
-  document.getElementById('digBtn').style.background = '#374151';
   // RENモードONならスタート時に地形セット
   if (renMode) setupRenTerrain();
   resetLock(); updUI(); fillQ(); spawn(); draw();
+}
+
+function startGame() {
+  document.getElementById('overlay').style.display = 'none';
+  cancelAnimationFrame(rafId);
+  resetGameState(false); // せりあがり設定は維持（ゲームオーバー後の再スタートも含む）
   rafId = requestAnimationFrame(loop);
 }
 
