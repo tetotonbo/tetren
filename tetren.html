@@ -412,12 +412,16 @@ body.ppt2-theme #nextCanvas {
             onchange="setDigTriggerType('time')">秒数</label>
       </div>
       <div class="speed-row">
-        <button class="step-btn" onclick="changeDigInterval(-1)">‹</button>
+        <button class="step-btn"
+          onmousedown="startDigRepeat(-1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
+          ontouchstart="event.preventDefault();startDigRepeat(-1)" ontouchend="stopDigRepeat()">‹</button>
         <div class="speed-val">
           <span id="digIntervalVal">3</span>
           <span class="speed-unit" id="digIntervalUnit"> 秒ごと</span>
         </div>
-        <button class="step-btn" onclick="changeDigInterval(+1)">›</button>
+        <button class="step-btn"
+          onmousedown="startDigRepeat(+1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
+          ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()">›</button>
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
@@ -1022,18 +1026,33 @@ function setDigTriggerType(type) {
   updateDigCounter();
 }
 
+// ステッパーの長押し: 押し続けると連続で変化し、だんだん速くなる
+let digRepeatTimer = null;
+function startDigRepeat(delta) {
+  stopDigRepeat();
+  changeDigInterval(delta);          // まず1回（単押しはこれだけ）
+  let interval = 130;                // 連射の初期間隔(ms)
+  const tick = () => {
+    changeDigInterval(delta);
+    interval = Math.max(25, interval * 0.85);   // 押し続けるほど加速
+    digRepeatTimer = setTimeout(tick, interval);
+  };
+  digRepeatTimer = setTimeout(tick, 400);       // 長押しと判定するまでの待ち
+}
+function stopDigRepeat() {
+  if (digRepeatTimer) { clearTimeout(digRepeatTimer); digRepeatTimer = null; }
+}
+// ボタン外で指を離した場合やウィンドウを離れた場合にも確実に止める
+window.addEventListener('mouseup', stopDigRepeat);
+window.addEventListener('touchend', stopDigRepeat);
+window.addEventListener('blur', stopDigRepeat);
+
 function changeDigInterval(delta) {
   if (digTriggerType === 'time') {
-    // 1秒〜60秒は1秒刻み、1秒からさらに下げる場合は0.5秒まで0.1秒刻みで細かく設定できる
-    if (delta > 0) {
-      timeDigInterval = timeDigInterval < 1
-        ? Math.min(1, +(timeDigInterval + 0.1).toFixed(1))
-        : Math.min(60, timeDigInterval + 1);
-    } else {
-      timeDigInterval = timeDigInterval <= 1
-        ? Math.max(0.5, +(timeDigInterval - 0.1).toFixed(1))
-        : Math.max(1, timeDigInterval - 1);
-    }
+    // 全域を0.1秒刻みで調整する（0.5〜60秒）。
+    // 小数の誤差が溜まらないよう毎回1桁に丸める。
+    const next = +(timeDigInterval + delta * 0.1).toFixed(1);
+    timeDigInterval = Math.min(60, Math.max(0.5, next));
   } else {
     digInterval = Math.min(20, Math.max(1, digInterval + delta));
   }
@@ -1318,6 +1337,19 @@ function showClearMessage(cleared, tSpin, isB2B, renCount, isPerfect) {
   clearMsgTimer = setTimeout(() => { el.style.opacity = '0'; }, 4000);
 }
 
+// ===== ゲームオーバー（ロックアウト）判定 =====
+// 21段目以上 = 見えている20段より上（board の行インデックスが BUF 未満）
+const MID_COL_L = Math.floor((COLS - 4) / 2);        // 真ん中4列の左端（10列なら3）
+const MID_COL_R = MID_COL_L + 3;                     // 同 右端（10列なら6）
+function isLockOut(placed) {
+  const above = ([r]) => r < BUF;
+  // 1) 真ん中4列で21段目以上に少しでも入ったら終了
+  if (placed.some(([r,c]) => r < BUF && c >= MID_COL_L && c <= MID_COL_R)) return true;
+  // 2) ミノ全体が21段目以上に収まってしまったら終了
+  //    （20段目以下にブロックが1つでもあれば、こちらでは終了しない）
+  return placed.every(above);
+}
+
 function lock() {
   if (lockTimer) { clearTimeout(lockTimer); lockTimer=null; }
   isLocking = false;
@@ -1328,6 +1360,7 @@ function lock() {
   lastWasRotation = false;
 
   const color = pieceColor(cur.type);
+  const placed = [];   // 設置したブロックの実座標（ゲームオーバー判定に使う）
   if (dekaMode) {
     // デカミノモード: 論理セルを実際のボードに2×2で書き込む
     for (const [r,c] of PIECE_DEF[cur.type].cells[cur.state]) {
@@ -1336,14 +1369,26 @@ function lock() {
         const ar = lr*2, ac = lc*2;
         board[ar][ac] = board[ar][ac+1] = color;
         board[ar+1][ac] = board[ar+1][ac+1] = color;
+        placed.push([ar,ac],[ar,ac+1],[ar+1,ac],[ar+1,ac+1]);
       }
     }
   } else {
     for (const [r,c] of PIECE_DEF[cur.type].cells[cur.state]) {
       const nr=cur.row+r, nc=cur.col+c;
-      if (nr>=0) board[nr][nc] = color;
+      if (nr>=0) { board[nr][nc] = color; placed.push([nr,nc]); }
     }
   }
+
+  // ゲームオーバー判定（設置位置で決まる。ライン消去より前に見る）
+  // 行インデックス r は下から数えた段数 L と r = TROW - L の関係。
+  // 21段目以上（= 見えている20段より上）は r < BUF。
+  if (placed.length && isLockOut(placed)) {
+    gameOver = true;
+    draw();
+    setTimeout(() => showOverlay('ゲームオーバー','もう一度'), 100);
+    return;
+  }
+
   const cleared = clearLines();
   if (renMode) restoreRenWalls(); // RENモード：壁を常時維持
 
@@ -2033,10 +2078,10 @@ function resetGameState(fullReset = true) {
   downHeld=false; lastSoftDrop=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
   if (fullReset) {
+    // 自動せりあがりは止めるが、間隔の設定値（ミノごと/秒数とその数値）は
+    // 続けて練習できるよう残しておく
     digMode=false;
-    digTriggerType='time'; digInterval=3; timeDigInterval=3;
     document.getElementById('digBtn').style.background = '#374151';
-    document.getElementById('digTypeTime').checked = true;
   }
   updateDigIntervalDisplay(); updateDigCounter();
   ren=0; lastWasRotation=false; lastKickIndex=0;
