@@ -106,6 +106,50 @@ body.ppt2-theme #nextCanvas {
   flex:1; text-align:center; font-size:14px; color:#e2e8f0; line-height:1;
 }
 .speed-unit { font-size:10px; color:#6b7280; }
+/* ===== 地形取り込みダイアログ ===== */
+#importOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
+}
+#importOverlay.open { display:flex; }
+#importPanel {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  width:min(880px, 96vw); max-height:92vh; overflow:auto; padding:16px 18px 18px;
+  box-shadow:0 18px 50px rgba(0,0,0,0.6);
+}
+.imp-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.imp-title { font-size:15px; font-weight:bold; color:#e5e7eb; letter-spacing:1px; }
+.imp-x {
+  background:none; border:none; color:#9ca3af; font-size:22px; line-height:1;
+  cursor:pointer; padding:0 4px;
+}
+.imp-x:hover { color:#fff; }
+#impDrop {
+  border:2px dashed #4b5563; border-radius:10px; padding:26px 18px;
+  text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+  outline:none;
+}
+#impDrop:hover, #impDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
+#impDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
+.imp-drop-main { font-size:14px; color:#e5e7eb; font-weight:bold; }
+.imp-drop-sub  { font-size:11px; color:#9ca3af; margin-top:6px; }
+.imp-btn {
+  background:#374151; color:#fff; border:none; border-radius:6px;
+  padding:8px 14px; font-size:12px; font-weight:bold; cursor:pointer;
+  transition:background .15s;
+}
+.imp-btn:hover { background:#4b5563; }
+.imp-primary { background:#4f46e5; }
+.imp-primary:hover { background:#4338ca; }
+.imp-cols { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.imp-col { flex:1; min-width:260px; }
+.imp-col-narrow { flex:0 0 auto; }
+.imp-label { font-size:10px; color:#9ca3af; letter-spacing:1px; margin-bottom:6px; }
+#impCanvasWrap { line-height:0; }
+#impCanvas { max-width:100%; border-radius:6px; cursor:crosshair; touch-action:none; }
+#impPreview { border:1px solid #374151; border-radius:6px; background:#0d1117; display:block; }
+.imp-hint { font-size:10px; color:#9ca3af; margin-top:6px; line-height:1.6; }
+.imp-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
 .kc-open-btn {
   display:block; width:100%; border:none; padding:8px 0;
   font-size:13px; font-weight:bold; border-radius:6px;
@@ -277,6 +321,9 @@ body.ppt2-theme #nextCanvas {
           onclick="if(!gameOver)shiftTerrainDown()"
           title="地形を強制的に一段下にシフトする">下</button>
       </div>
+      <button class="garb-btn" style="background:#374151;margin-top:6px;"
+        onclick="openImport()"
+        title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
     </div>
 
     <!-- LINES -->
@@ -434,6 +481,42 @@ body.ppt2-theme #nextCanvas {
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
     </div>
 
+  </div>
+</div>
+
+<!-- 地形取り込みダイアログ -->
+<div id="importOverlay">
+  <div id="importPanel">
+    <div class="imp-head">
+      <span class="imp-title">地形取り込み</span>
+      <button class="imp-x" onclick="closeImport()">×</button>
+    </div>
+
+    <div id="impDrop" tabindex="0">
+      <div class="imp-drop-main">ここに画像をドラッグ＆ドロップ</div>
+      <div class="imp-drop-sub">クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）</div>
+    </div>
+    <input type="file" id="impFile" accept="image/*" style="display:none">
+
+    <div id="impWork" style="display:none;">
+      <div class="imp-cols">
+        <div class="imp-col">
+          <div class="imp-label">読み取り範囲（枠をドラッグで調整）</div>
+          <div id="impCanvasWrap"><canvas id="impCanvas"></canvas></div>
+          <div class="imp-hint" id="impDetectMsg"></div>
+        </div>
+        <div class="imp-col imp-col-narrow">
+          <div class="imp-label">読み取り結果</div>
+          <canvas id="impPreview" width="120" height="240"></canvas>
+          <div class="imp-hint" id="impStat"></div>
+        </div>
+      </div>
+      <div class="imp-actions">
+        <button class="imp-btn" onclick="resetImportPick()">別の画像</button>
+        <button class="imp-btn" onclick="autoDetectField()">自動検出しなおす</button>
+        <button class="imp-btn imp-primary" onclick="applyImport()">この地形を取り込む</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1888,6 +1971,624 @@ function stopDAS() {
   if(dasTimer){clearTimeout(dasTimer);dasTimer=null;}
   if(arrTimer){clearInterval(arrTimer);arrTimer=null;}
 }
+
+// ===== 地形取り込み（ぷよテトのスクショから盤面を読む） =====
+// 実機スクショから採寸したミノの代表色。判定はこの色との距離で行う。
+const IMP_REF = {
+  I: [ 76,169,248], O: [248,215, 73], T: [176, 68,180], S: [116,193, 57],
+  Z: [234, 64, 41], J: [ 40, 95,227], L: [239,136, 51],
+};
+const IMP_GARBAGE = [244,244,244];   // おじゃま（白）
+let impImg = null;                   // 読み込んだ画像
+let impRect = null;                  // 盤面として読む範囲 {x,y,w,h}（画像座標）
+let impCells = null;                 // 読み取り結果 [row][col] = 'I'|..|'G'|null（ゴースト・操作中ミノは除く）
+let impGhost = null;                 // ゴーストの読み取り結果 [row][col] = 'I'|..|null
+let impActivePiece = null;           // ゴーストから逆算した操作中ミノ {type,state,row0,col0,foundActive}
+let impHold = null;                  // 読み取ったHOLDのミノ種別
+let impNext = [];                    // 読み取ったNEXTのミノ種別（上から順）
+let impDrag = null;                  // 枠のドラッグ状態
+
+function openImport() {
+  document.getElementById('importOverlay').classList.add('open');
+  resetImportPick();
+}
+function closeImport() {
+  document.getElementById('importOverlay').classList.remove('open');
+  impImg = null; impRect = null; impCells = null; impGhost = null; impActivePiece = null;
+  impHold = null; impNext = [];
+}
+function resetImportPick() {
+  impImg = null; impRect = null; impCells = null; impGhost = null; impActivePiece = null;
+  impHold = null; impNext = [];
+  document.getElementById('impDrop').style.display = '';
+  document.getElementById('impWork').style.display = 'none';
+  document.getElementById('impFile').value = '';
+}
+
+// --- 画像の受け取り（ドラッグ＆ドロップ / ファイル選択 / 貼り付け） ---
+function loadImportImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    impImg = img;
+    document.getElementById('impDrop').style.display = 'none';
+    document.getElementById('impWork').style.display = '';
+    autoDetectField();
+  };
+  img.onerror = () => alert('画像を読み込めませんでした。');
+  img.src = src;
+}
+function loadImportFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const fr = new FileReader();
+  fr.onload = e => loadImportImage(e.target.result);
+  fr.readAsDataURL(file);
+}
+// --- 盤面範囲の自動検出 ---
+// 盤面の背景は暗い。暗い画素のかたまりのうち最大のものを盤面の空き部分とみなし、
+// その左右幅から 10:20（= 1:2）の比率で盤面全体の高さを割り出す。
+function autoDetectField() {
+  if (!impImg) return;
+  const W = impImg.naturalWidth, H = impImg.naturalHeight;
+  const scale = Math.min(1, 480 / Math.max(W, H));
+  const w = Math.max(1, Math.round(W * scale)), h = Math.max(1, Math.round(H * scale));
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d');
+  cx.drawImage(impImg, 0, 0, w, h);
+  const d = cx.getImageData(0, 0, w, h).data;
+
+  // 暗い画素（盤面の空きマス）を拾う。真っ黒に近いHOLD/NEXTの箱は除く。
+  const dark = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const r = d[i*4], g = d[i*4+1], b = d[i*4+2];
+    const mx = Math.max(r,g,b);
+    dark[i] = (mx >= 26 && mx <= 110) ? 1 : 0;
+  }
+  // 連結成分のうち最大のものを探す
+  const seen = new Uint8Array(w * h);
+  let best = null;
+  const stack = new Int32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    if (!dark[i] || seen[i]) continue;
+    let sp = 0, n = 0;
+    let x0 = w, x1 = -1, y0 = h, y1 = -1;
+    stack[sp++] = i; seen[i] = 1;
+    while (sp) {
+      const p = stack[--sp], px = p % w, py = (p / w) | 0;
+      n++;
+      if (px < x0) x0 = px; if (px > x1) x1 = px;
+      if (py < y0) y0 = py; if (py > y1) y1 = py;
+      if (px > 0     && dark[p-1] && !seen[p-1]) { seen[p-1]=1; stack[sp++]=p-1; }
+      if (px < w-1   && dark[p+1] && !seen[p+1]) { seen[p+1]=1; stack[sp++]=p+1; }
+      if (py > 0     && dark[p-w] && !seen[p-w]) { seen[p-w]=1; stack[sp++]=p-w; }
+      if (py < h-1   && dark[p+w] && !seen[p+w]) { seen[p+w]=1; stack[sp++]=p+w; }
+    }
+    if (!best || n > best.n) best = {n, x0, x1, y0, y1};
+  }
+
+  const msg = document.getElementById('impDetectMsg');
+  if (best && best.x1 - best.x0 > w * 0.06) {
+    const fw = (best.x1 - best.x0 + 1) / scale;
+    const fx = best.x0 / scale;
+    const fy = best.y0 / scale;
+    // 盤面は10列×20段なので高さは幅の2倍
+    impRect = { x: fx, y: fy, w: fw, h: fw * 2 };
+    // 画像からはみ出す場合は収める
+    if (impRect.y + impRect.h > H) impRect.y = Math.max(0, H - impRect.h);
+    msg.textContent = '自動検出しました。ズレていたら枠をドラッグ、角で大きさを調整できます。';
+  } else {
+    impRect = { x: W*0.3, y: H*0.1, w: W*0.4, h: W*0.8 };
+    msg.textContent = '自動検出できませんでした。枠を盤面（10列×20段）に合わせてください。';
+  }
+  drawImportCanvas();
+}
+
+// --- 範囲の描画とドラッグ操作 ---
+function drawImportCanvas() {
+  if (!impImg || !impRect) return;
+  const cv = document.getElementById('impCanvas');
+  const maxW = 460;
+  const sc = Math.min(1, maxW / impImg.naturalWidth);
+  cv.width  = Math.round(impImg.naturalWidth  * sc);
+  cv.height = Math.round(impImg.naturalHeight * sc);
+  cv._scale = sc;
+  const c = cv.getContext('2d');
+  c.drawImage(impImg, 0, 0, cv.width, cv.height);
+  const r = { x: impRect.x*sc, y: impRect.y*sc, w: impRect.w*sc, h: impRect.h*sc };
+  // 範囲外を暗く
+  c.save();
+  c.fillStyle = 'rgba(0,0,0,0.55)';
+  c.fillRect(0,0,cv.width,r.y);
+  c.fillRect(0,r.y+r.h,cv.width,cv.height-(r.y+r.h));
+  c.fillRect(0,r.y,r.x,r.h);
+  c.fillRect(r.x+r.w,r.y,cv.width-(r.x+r.w),r.h);
+  // 枠とグリッド
+  c.strokeStyle = '#22d3ee'; c.lineWidth = 2;
+  c.strokeRect(r.x, r.y, r.w, r.h);
+  c.strokeStyle = 'rgba(34,211,238,0.35)'; c.lineWidth = 1;
+  for (let i=1;i<COLS;i++){ const x=r.x+r.w*i/COLS; c.beginPath(); c.moveTo(x,r.y); c.lineTo(x,r.y+r.h); c.stroke(); }
+  for (let i=1;i<ROWS;i++){ const y=r.y+r.h*i/ROWS; c.beginPath(); c.moveTo(r.x,y); c.lineTo(r.x+r.w,y); c.stroke(); }
+  // 角のハンドル
+  c.fillStyle = '#22d3ee';
+  for (const [hx,hy] of [[r.x,r.y],[r.x+r.w,r.y],[r.x,r.y+r.h],[r.x+r.w,r.y+r.h]])
+    c.fillRect(hx-5, hy-5, 10, 10);
+  c.restore();
+  readImportCells();
+}
+
+function impPos(e) {
+  const cv = document.getElementById('impCanvas');
+  const b = cv.getBoundingClientRect();
+  const px = (e.touches ? e.touches[0].clientX : e.clientX) - b.left;
+  const py = (e.touches ? e.touches[0].clientY : e.clientY) - b.top;
+  const sc = cv._scale * (b.width / cv.width);   // CSS縮小も考慮
+  return { x: px / sc, y: py / sc };
+}
+function initImportCanvasEvents() {
+  const cv = document.getElementById('impCanvas');
+  const down = e => {
+    if (!impRect) return;
+    e.preventDefault();
+    const p = impPos(e), r = impRect, t = 14;
+    const near = (a,b) => Math.abs(a-b) < t;
+    let corner = null;
+    if (near(p.x,r.x) && near(p.y,r.y)) corner='tl';
+    else if (near(p.x,r.x+r.w) && near(p.y,r.y)) corner='tr';
+    else if (near(p.x,r.x) && near(p.y,r.y+r.h)) corner='bl';
+    else if (near(p.x,r.x+r.w) && near(p.y,r.y+r.h)) corner='br';
+    if (corner) impDrag = {mode:'resize', corner, start:p, rect:{...r}};
+    else if (p.x>r.x && p.x<r.x+r.w && p.y>r.y && p.y<r.y+r.h)
+      impDrag = {mode:'move', start:p, rect:{...r}};
+  };
+  const move = e => {
+    if (!impDrag) return;
+    e.preventDefault();
+    const p = impPos(e), d = impDrag, o = d.rect;
+    if (d.mode === 'move') {
+      impRect.x = o.x + (p.x - d.start.x);
+      impRect.y = o.y + (p.y - d.start.y);
+    } else {
+      // 縦横比 1:2 を保ったまま角でリサイズ
+      const right = d.corner==='tr'||d.corner==='br';
+      const bottom = d.corner==='bl'||d.corner==='br';
+      let nw = right ? (p.x - o.x) : (o.x + o.w - p.x);
+      nw = Math.max(40, nw);
+      const nh = nw * 2;
+      impRect.w = nw; impRect.h = nh;
+      impRect.x = right ? o.x : (o.x + o.w - nw);
+      impRect.y = bottom ? o.y : (o.y + o.h - nh);
+    }
+    drawImportCanvas();
+  };
+  const up = () => { impDrag = null; };
+  cv.addEventListener('mousedown', down);
+  window.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+  cv.addEventListener('touchstart', down, {passive:false});
+  window.addEventListener('touchmove', move, {passive:false});
+  window.addEventListener('touchend', up);
+}
+
+// --- セルの色を読み取って種類を判定 ---
+// 明るさではなく色の「比率」で参照色と比べる。ブロック上部のツヤや下部の影で
+// 明るさが変わっても、また盤面の背景に絵柄が透けていても、種類の判定はぶれない。
+function classifyImportColor(r, g, b) {
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+  const sat = mx - mn;
+  if (mx < 105 && sat < 60) return null;                  // 暗い = 空きマス
+  // 色みが無く明るい = おじゃま。影の帯で暗くなっても拾えるよう彩度で見る
+  if (sat < 40 && mx > 120) return 'G';
+  const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
+  const [nr,ng,nb] = norm(r,g,b);
+  let best = null, bestD = Infinity;
+  for (const t in IMP_REF) {
+    const [rr,gg,bb] = IMP_REF[t];
+    const [mr,mg,mb] = norm(rr,gg,bb);
+    const d = (nr-mr)*(nr-mr) + (ng-mg)*(ng-mg) + (nb-mb)*(nb-mb);
+    if (d < bestD) { bestD = d; best = t; }
+  }
+  return best;
+}
+
+// ゴースト候補を拾うための、少し緩い判定。
+// ゴーストは半透明なので暗くなり、上の厳しめの判定では空きマス扱いになってしまう。
+// 背景やグリッド線は「色みがほとんど無い（彩度が低い）」ことで区別できるので、
+// 彩度を手がかりにして、薄くても色みの残っているマスだけを拾う。
+// これは候補集めにしか使わず、地形の判定には影響しない。
+function classifyImportGhostColor(r, g, b) {
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+  const sat = mx - mn;
+  if (sat < 28 || mx < 70) return null;        // 背景・グリッド線・黒箱
+  if (mx > 175 && sat < 55) return null;       // 白っぽいものはおじゃま側
+  const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
+  const [nr,ng,nb] = norm(r,g,b);
+  let best = null, bestD = Infinity;
+  for (const t in IMP_REF) {
+    const [rr,gg,bb] = IMP_REF[t];
+    const [mr,mg,mb] = norm(rr,gg,bb);
+    const d = (nr-mr)*(nr-mr) + (ng-mg)*(ng-mg) + (nb-mb)*(nb-mb);
+    if (d < bestD) { bestD = d; best = t; }
+  }
+  return best;
+}
+
+// セル1マス分の判定結果を返す。
+//   type  : ミノ種別 / 'G' / null（色の比率で判定。明るさには影響されない）
+//   level : そのミノ本来の明るさに対する比率。ゴーストは半透明なので小さくなる。
+// level は「セル内の明るい方の画素」を代表値にする。ソリッドなブロックは影の帯が
+// あってもどこかは本来の明るさに達するが、ゴーストはどこも暗いままなので区別できる。
+function readImportCellInfo(ctx, x, y, w, h) {
+  // 種類の判定は、枠線を避けた中央付近の代表色（中央値）で行う
+  const nx = Math.round(x + w*0.30), ny = Math.round(y + h*0.30);
+  const nw = Math.max(1, Math.round(w*0.40)), nh = Math.max(1, Math.round(h*0.40));
+  const np = ctx.getImageData(nx, ny, nw, nh).data;
+  const rs=[],gs=[],bs=[];
+  for (let i=0;i<np.length;i+=4){ rs.push(np[i]); gs.push(np[i+1]); bs.push(np[i+2]); }
+  const med = a => { a.sort((p,q)=>p-q); return a[a.length>>1]; };
+  const mr = med(rs), mg2 = med(gs), mb = med(bs);
+  const type = classifyImportColor(mr, mg2, mb);
+  const ghostType = classifyImportGhostColor(mr, mg2, mb);
+  if (!type && !ghostType) return { type: null, ghostType: null, level: 0 };
+
+  // 明るさは、ツヤの帯も含む広めの範囲から上位20%あたりの値を取る
+  const wx = Math.round(x + w*0.12), wy = Math.round(y + h*0.12);
+  const ww = Math.max(1, Math.round(w*0.76)), wh = Math.max(1, Math.round(h*0.76));
+  const wp = ctx.getImageData(wx, wy, ww, wh).data;
+  const lums = [];
+  for (let i=0;i<wp.length;i+=4) lums.push(wp[i]+wp[i+1]+wp[i+2]);
+  lums.sort((p,q)=>p-q);
+  const bright = lums[Math.min(lums.length-1, Math.floor(lums.length*0.8))];
+  const key = type || ghostType;
+  const ref = (key === 'G') ? IMP_GARBAGE : IMP_REF[key];
+  const refLum = (ref[0]+ref[1]+ref[2]) || 1;
+  return { type, ghostType, level: bright / refLum };
+}
+
+// ゴーストのマス集合（同じ種類4マス）から、ミノ種類・回転状態・アンカー位置を逆算する。
+// cells は [visible行, 列] の配列（ちょうど4マス）。
+function matchPieceShape(type, cells) {
+  if (cells.length !== 4) return null;
+  const key = new Set(cells.map(([r,c]) => r+','+c));
+  const states = PIECE_DEF[type].cells;
+  for (let st = 0; st < states.length; st++) {
+    const shape = states[st];
+    const [r0off, c0off] = shape[0];
+    for (const [gr, gc] of cells) {
+      const row0 = gr - r0off, col0 = gc - c0off;
+      const expect = shape.map(([r,c]) => (row0+r)+','+(col0+c));
+      if (expect.every(k => key.has(k))) return { state: st, row0, col0 };
+    }
+  }
+  return null;
+}
+
+// ゴーストと同じ列・同じ回転状態の実ブロックを、ゴーストより上の行から探す。
+// 見つかった中でゴーストに一番近い行（＝現在の落下位置として最も自然）を返す。
+function findActivePieceRow(type, state, col0, ghostRow0, grid) {
+  const shape = PIECE_DEF[type].cells[state];
+  for (let row0 = ghostRow0 - 1; row0 >= 0; row0--) {
+    let ok = true;
+    for (const [r,c] of shape) {
+      const rr = row0+r, cc = col0+c;
+      if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS || grid[rr][cc] !== type) { ok = false; break; }
+    }
+    if (ok) return row0;
+  }
+  return null;
+}
+
+// ゴーストの候補（暗いマス）から、ゴーストと操作中ミノを確定する。
+// 誤検出で地形が欠けるのを避けるため、候補がちょうどテトリミノの形に
+// なっているときだけゴーストと確定し、そうでなければ地形として残す。
+const IMP_GHOST_LEVEL = 0.78;   // 本来の明るさのこの割合を下回ったらゴースト候補
+
+function detectGhostAndActive(info) {
+  // 種類ごとにゴースト候補を集める。
+  //  ・地形判定では拾えなかったが、薄く色みが残っているマス
+  //  ・地形として拾えたが、本来の明るさよりはっきり暗いマス
+  const cand = {};
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const cell = info[r][c];
+    if (cell.type === 'G') continue;                    // おじゃまは半透明表示されない
+    if (!cell.type && cell.ghostType) {
+      (cand[cell.ghostType] ||= []).push([r,c]);
+    } else if (cell.type && cell.level < IMP_GHOST_LEVEL) {
+      (cand[cell.type] ||= []).push([r,c]);
+    }
+  }
+
+  // 盤面の背景に絵柄が透けていると、その部分も候補に混ざってしまう。
+  // ゴーストは必ず「4マスがつながったテトリミノの形」なので、候補を
+  // 連結したかたまりに分けて、ちょうど4マスで形が一致するものだけを採用する。
+  for (const type in cand) {
+    const set = new Set(cand[type].map(([r,c]) => r+','+c));
+    const seen = new Set();
+    for (const [sr,sc] of cand[type]) {
+      const startKey = sr+','+sc;
+      if (seen.has(startKey)) continue;
+      const group = [];
+      const stack = [[sr,sc]];
+      seen.add(startKey);
+      while (stack.length) {
+        const [r,c] = stack.pop();
+        group.push([r,c]);
+        for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const k = (r+dr)+','+(c+dc);
+          if (set.has(k) && !seen.has(k)) { seen.add(k); stack.push([r+dr, c+dc]); }
+        }
+      }
+      if (group.length !== 4) continue;                 // 4マスでなければゴーストではない
+      const m = matchPieceShape(type, group);
+      if (!m) continue;
+
+      // ゴーストと同じ列・同じ回転で、その上にある「暗くない」同色ブロックを探す
+      const solid = [];
+      for (let r = 0; r < ROWS; r++) {
+        const line = [];
+        for (let c = 0; c < COLS; c++) {
+          const cell = info[r][c];
+          line.push(cell.type && cell.level >= IMP_GHOST_LEVEL ? cell.type : null);
+        }
+        solid.push(line);
+      }
+      const activeRow = findActivePieceRow(type, m.state, m.col0, m.row0, solid);
+      return {
+        ghostCells: group,
+        type, state: m.state, col0: m.col0,
+        row0: activeRow !== null ? activeRow : m.row0,
+        foundActive: activeRow !== null,
+      };
+    }
+  }
+  return null;
+}
+
+// HOLD/NEXTの黒い箱を探して、中に写っているミノの種別を読み取る。
+// ミノは色で一意に決まるので、箱の中で一番多く出た色をその箱のミノとみなす。
+function readImportSideBoxes() {
+  impHold = null; impNext = [];
+  if (!impImg || !impRect) return;
+  const W = impImg.naturalWidth, H = impImg.naturalHeight;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(impImg, 0, 0);
+  const all = ctx.getImageData(0, 0, W, H).data;
+
+  // 盤面の左右それぞれで、ほぼ黒の連結領域を箱として拾う
+  const cell = impRect.w / COLS;
+  const minSide = cell * 1.2;              // 箱として小さすぎるものは除く
+  const findBoxes = (x0, x1) => {
+    x0 = Math.max(0, Math.round(x0)); x1 = Math.min(W, Math.round(x1));
+    const y0 = Math.max(0, Math.round(impRect.y - impRect.h*0.12));
+    const y1 = Math.min(H, Math.round(impRect.y + impRect.h));
+    const bw = x1 - x0, bh = y1 - y0;
+    if (bw <= 0 || bh <= 0) return [];
+    const isBlack = new Uint8Array(bw*bh);
+    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+      const i = ((y+y0)*W + (x+x0))*4;
+      const mx = Math.max(all[i], all[i+1], all[i+2]);
+      isBlack[y*bw+x] = mx < 45 ? 1 : 0;
+    }
+    const seen = new Uint8Array(bw*bh);
+    const stack = new Int32Array(bw*bh);
+    const boxes = [];
+    for (let i = 0; i < bw*bh; i++) {
+      if (!isBlack[i] || seen[i]) continue;
+      let sp = 0, n = 0, ax0 = bw, ax1 = -1, ay0 = bh, ay1 = -1;
+      stack[sp++] = i; seen[i] = 1;
+      while (sp) {
+        const p = stack[--sp], px = p % bw, py = (p/bw)|0;
+        n++;
+        if (px<ax0) ax0=px; if (px>ax1) ax1=px;
+        if (py<ay0) ay0=py; if (py>ay1) ay1=py;
+        if (px>0    && isBlack[p-1]  && !seen[p-1])  { seen[p-1]=1;  stack[sp++]=p-1; }
+        if (px<bw-1 && isBlack[p+1]  && !seen[p+1])  { seen[p+1]=1;  stack[sp++]=p+1; }
+        if (py>0    && isBlack[p-bw] && !seen[p-bw]) { seen[p-bw]=1; stack[sp++]=p-bw; }
+        if (py<bh-1 && isBlack[p+bw] && !seen[p+bw]) { seen[p+bw]=1; stack[sp++]=p+bw; }
+      }
+      const w2 = ax1-ax0+1, h2 = ay1-ay0+1;
+      if (w2 >= minSide && h2 >= minSide)
+        boxes.push({x: ax0+x0, y: ay0+y0, w: w2, h: h2});
+    }
+    return boxes.sort((a,b) => a.y - b.y);
+  };
+
+  // 箱の中で一番多かったミノ色を返す
+  const pieceIn = box => {
+    const mx = Math.round(box.x + box.w*0.15), my = Math.round(box.y + box.h*0.15);
+    const mw = Math.max(1, Math.round(box.w*0.70)), mh = Math.max(1, Math.round(box.h*0.70));
+    const px = ctx.getImageData(mx, my, mw, mh).data;
+    const cnt = {};
+    for (let i = 0; i < px.length; i += 4) {
+      const t = classifyImportColor(px[i], px[i+1], px[i+2]);
+      if (t && t !== 'G') cnt[t] = (cnt[t]||0) + 1;
+    }
+    let best = null, bestN = 0;
+    for (const t in cnt) if (cnt[t] > bestN) { bestN = cnt[t]; best = t; }
+    // 数が少なすぎる場合は空箱とみなす
+    return bestN > mw*mh*0.04 ? best : null;
+  };
+
+  const left  = findBoxes(impRect.x - impRect.w*0.85, impRect.x - impRect.w*0.02);
+  const right = findBoxes(impRect.x + impRect.w*1.02, impRect.x + impRect.w*1.85);
+  if (left.length)  impHold = pieceIn(left[0]);
+  impNext = right.slice(0, NEXT_SHOW).map(pieceIn).filter(Boolean);
+}
+
+function readImportCells() {
+  if (!impImg || !impRect) return;
+  const cv = document.createElement('canvas');
+  cv.width = impImg.naturalWidth; cv.height = impImg.naturalHeight;
+  cv.getContext('2d').drawImage(impImg, 0, 0);
+  const ctx = cv.getContext('2d');
+  const cw = impRect.w / COLS, ch = impRect.h / ROWS;
+
+  // まず全マスを読む（種類＋本来の明るさに対する比率）
+  const info = [];
+  for (let row = 0; row < ROWS; row++) {
+    const line = [];
+    for (let col = 0; col < COLS; col++) {
+      const x = impRect.x + cw*col, y = impRect.y + ch*row;
+      if (x < 0 || y < 0 || x+cw > cv.width || y+ch > cv.height) { line.push({type:null, level:0}); continue; }
+      line.push(readImportCellInfo(ctx, x, y, cw, ch));
+    }
+    info.push(line);
+  }
+
+  // ゴーストと操作中ミノを判定する（形が合ったときだけ確定する）
+  impActivePiece = detectGhostAndActive(info);
+  const ghostSet = new Set();
+  if (impActivePiece) for (const [r,c] of impActivePiece.ghostCells) ghostSet.add(r+','+c);
+  const activeSet = new Set();
+  if (impActivePiece && impActivePiece.foundActive) {
+    for (const [dr,dc] of PIECE_DEF[impActivePiece.type].cells[impActivePiece.state])
+      activeSet.add((impActivePiece.row0+dr)+','+(impActivePiece.col0+dc));
+  }
+
+  // ゴーストと操作中のミノは地形に含めない
+  impCells = []; impGhost = [];
+  let filled = 0;
+  for (let row = 0; row < ROWS; row++) {
+    const line = [], gline = [];
+    for (let col = 0; col < COLS; col++) {
+      const key = row+','+col, t = info[row][col].type;
+      if (ghostSet.has(key))       { line.push(null); gline.push(impActivePiece.type); }
+      else if (activeSet.has(key)) { line.push(null); gline.push(null); }
+      else if (t)                  { line.push(t);    gline.push(null); filled++; }
+      else                         { line.push(null); gline.push(null); }
+    }
+    impCells.push(line);
+    impGhost.push(gline);
+  }
+
+  readImportSideBoxes();
+  drawImportPreview();
+  const activeMsg = impActivePiece
+    ? (impActivePiece.foundActive
+        ? `\n操作中のミノ: ${impActivePiece.type}（ゴーストの真上から検出）`
+        : `\n操作中のミノ: ${impActivePiece.type}（実ブロックは見つからずゴースト位置を使用）`)
+    : `\nゴーストは検出されませんでした（操作中のミノはNEXTの先頭から補います）。`;
+  document.getElementById('impStat').textContent =
+    `ブロック ${filled} 個を認識しました。`
+    + `\nHOLD: ${impHold || 'なし'}　NEXT: ${impNext.length ? impNext.join(' ') : 'なし'}`
+    + activeMsg
+    + (filled === 0 ? '\n枠の位置を合わせてください。' : '');
+}
+function drawImportPreview() {
+  const cv = document.getElementById('impPreview');
+  const c = cv.getContext('2d');
+  const bs = cv.width / COLS;
+  c.fillStyle = '#0d1117'; c.fillRect(0,0,cv.width,cv.height);
+  c.strokeStyle = '#1f2937'; c.lineWidth = 0.5;
+  for (let r=0;r<ROWS;r++) for (let col=0;col<COLS;col++) {
+    const t = impCells && impCells[r] ? impCells[r][col] : null;
+    const g = impGhost && impGhost[r] ? impGhost[r][col] : null;
+    const x = col*bs, y = r*bs;
+    if (t) {
+      c.fillStyle = (t === 'G') ? GARBAGE_COLOR : pieceColor(t);
+      c.fillRect(x+0.5, y+0.5, bs-1, bs-1);
+    } else if (g) {
+      // ゴースト＝地形には含めないマスは、それと分かるよう薄く表示する
+      c.save();
+      c.globalAlpha = 0.35;
+      c.fillStyle = pieceColor(g);
+      c.fillRect(x+0.5, y+0.5, bs-1, bs-1);
+      c.restore();
+      c.strokeRect(x, y, bs, bs);
+    } else {
+      c.strokeRect(x, y, bs, bs);
+    }
+  }
+  // 検出できた「操作中のミノ」に枠を付けて分かるようにする
+  if (impActivePiece) {
+    const shape = PIECE_DEF[impActivePiece.type].cells[impActivePiece.state];
+    c.save();
+    c.strokeStyle = '#facc15'; c.lineWidth = 2;
+    for (const [dr,dc] of shape) {
+      const rr = impActivePiece.row0 + dr, cc = impActivePiece.col0 + dc;
+      if (rr < 0 || rr >= ROWS) continue;
+      c.strokeRect(cc*bs+1, rr*bs+1, bs-2, bs-2);
+    }
+    c.restore();
+  }
+}
+
+// --- 盤面へ反映 ---
+function applyImport() {
+  if (!impCells) return;
+  for (let r = BUF; r < TROW; r++)
+    for (let c = 0; c < COLS; c++) board[r][c] = null;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      const t = impCells[r][c];
+      if (!t) continue;
+      board[BUF + r][c] = (t === 'G') ? GARBAGE_COLOR : pieceColor(t);
+    }
+  ren = 0;
+  // HOLD と NEXT も画像の内容に入れ替える。NEXTは「これから出てくる順」そのまま使う
+  // （今操作中のミノは盤面上のゴーストから検出するので、NEXTからは取らない）。
+  holdType = impHold;
+  canHold = true;
+  if (impNext.length) {
+    bag = [];                                   // 巡の途中状態は引き継がない
+    nextQ = impNext.map(t => ({ type: t, newBag: false }));
+    fillQ();                                    // 表示数に足りない分だけ補う
+  }
+
+  // 操作中のミノ: ゴーストとその真上の実ブロックから種類・回転・位置を復元する。
+  // 検出できなかった場合だけ、従来どおりNEXTの先頭を代わりに使う。
+  let placedActive = false;
+  if (impActivePiece) {
+    const cand = { type: impActivePiece.type, state: impActivePiece.state,
+                   row: impActivePiece.row0 + BUF, col: impActivePiece.col0 };
+    if (valid(cand, 0, 0, cand.state)) {
+      cur = cand;
+      lastWasRotation = false;
+      lastKickIndex = 0;
+      placedActive = true;
+    }
+  }
+  if (!placedActive && impNext.length) {
+    spawn();                                    // フォールバック：NEXT先頭を操作中のミノにする
+  }
+  // 検出や以前の操作中ミノが新しい地形と重なってしまう場合の保険
+  if (!cur || !valid(cur, 0, 0, cur.state)) {
+    spawn();
+  }
+
+  resetLock();
+  closeImport();
+  updUI();
+  draw();
+}
+
+// --- ダイアログの入力まわりを初期化 ---
+(function initImportUI(){
+  const drop = document.getElementById('impDrop');
+  const file = document.getElementById('impFile');
+  drop.addEventListener('click', () => file.click());
+  file.addEventListener('change', e => loadImportFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (dt.files && dt.files[0]) loadImportFile(dt.files[0]);
+  });
+  // ⌘V での貼り付け（ダイアログが開いている間だけ）
+  window.addEventListener('paste', e => {
+    if (!document.getElementById('importOverlay').classList.contains('open')) return;
+    for (const item of e.clipboardData.items) {
+      if (item.type.startsWith('image/')) { loadImportFile(item.getAsFile()); break; }
+    }
+  });
+  document.getElementById('importOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'importOverlay') closeImport();
+  });
+  initImportCanvasEvents();
+})();
 
 // ===== キーコンフィグ =====
 const KC_ACTIONS = [
