@@ -1352,8 +1352,12 @@ function renderDpcGrid() {
     grid.appendChild(btn);
   });
 }
-// 選んだミノをHOLDに入れ、バッグを組み直して現在のミノも出し直す
+// 選んだミノをHOLDに入れ、地形を消してバッグを組み直し、現在のミノも出し直す
 function setDpcHold(type) {
+  // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
+  board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
+  undoStack = []; lastGarbageCol = null; ren = 0;
+  if (renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
   holdType = type;
   bag = []; nextQ = [];
   spawn();          // fillQ() で新しいバッグを引き直し、現在のミノを出し直す
