@@ -157,6 +157,28 @@ body.ppt2-theme #nextCanvas {
   letter-spacing:0.5px; transition:background .15s; margin-top:8px;
 }
 .kc-open-btn:hover { background:#4338ca; }
+/* ===== DPCセットダイアログ ===== */
+#dpcOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
+}
+#dpcOverlay.open { display:flex; }
+#dpcPanel {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  width:min(460px, 94vw); padding:16px 18px 18px;
+  box-shadow:0 18px 50px rgba(0,0,0,0.6);
+}
+#dpcGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.dpc-btn {
+  background:#0d1117; border:1px solid #374151; border-radius:8px;
+  padding:8px 0 6px; cursor:pointer; line-height:0; text-align:center;
+  transition:border-color .12s, background .12s;
+}
+.dpc-btn:hover { border-color:#9ca3af; background:#1b2230; }
+.dpc-name {
+  display:block; line-height:1; margin-top:6px;
+  font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
+}
 /* ===== 操作ボタンパッド ===== */
 .ctrl-pad { width:300px; display:flex; flex-direction:column; gap:6px; }
 .ctrl-row { display:grid; gap:6px; }
@@ -444,6 +466,13 @@ body.ppt2-theme #nextCanvas {
         onclick="toggleRenMode()">RENモード</button>
     </div>
 
+    <!-- DPCセット -->
+    <div class="panel" style="min-width:116px;">
+      <button class="garb-btn" style="background:#374151;"
+        onclick="if(!gameOver)openDpc()"
+        title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
+    </div>
+
     <!-- せりあがり -->
     <div class="panel" style="min-width:116px;">
       <div class="panel-label">せりあがり</div>
@@ -516,6 +545,23 @@ body.ppt2-theme #nextCanvas {
         <button class="imp-btn" onclick="autoDetectField()">自動検出しなおす</button>
         <button class="imp-btn imp-primary" onclick="applyImport()">この地形を取り込む</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
+<div id="dpcOverlay">
+  <div id="dpcPanel">
+    <div class="imp-head">
+      <span class="imp-title">DPCセット</span>
+      <button class="imp-x" onclick="closeDpc()">×</button>
+    </div>
+    <div class="imp-hint" style="margin:0 0 12px;">
+      選んだミノをHOLDした状態にして、ミノの順番を最初から組み直します。
+    </div>
+    <div id="dpcGrid"></div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="closeDpc()">キャンセル</button>
     </div>
   </div>
 </div>
@@ -1272,6 +1318,49 @@ function discardPiece() {
   resetLock();
   spawn(); // 現在のピースを破棄して次を出現させる
   draw();
+}
+
+// ===== DPCセット（選んだミノをHOLDした状態にしてミノ順をリセット） =====
+const DPC_TYPES = ['I','O','T','S','Z','J','L'];
+
+function openDpc() {
+  document.getElementById('dpcOverlay').classList.add('open');
+  renderDpcGrid();
+}
+function closeDpc() {
+  document.getElementById('dpcOverlay').classList.remove('open');
+}
+// ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
+function renderDpcGrid() {
+  const grid = document.getElementById('dpcGrid');
+  grid.innerHTML = '';
+  DPC_TYPES.forEach(type => {
+    const btn = document.createElement('button');
+    btn.className = 'dpc-btn';
+    btn.title = type + 'ミノをHOLDにセットする';
+    const cv = document.createElement('canvas');
+    cv.width = 84; cv.height = 56;
+    const cx = cv.getContext('2d');
+    setupHiDPICanvas(cv, cx);
+    drawMini(cx, type, 0, 84, 56, false, 14);
+    const name = document.createElement('span');
+    name.className = 'dpc-name';
+    name.textContent = type;
+    btn.appendChild(cv);
+    btn.appendChild(name);
+    btn.addEventListener('click', () => setDpcHold(type));
+    grid.appendChild(btn);
+  });
+}
+// 選んだミノをHOLDに入れ、バッグを組み直して現在のミノも出し直す
+function setDpcHold(type) {
+  holdType = type;
+  bag = []; nextQ = [];
+  spawn();          // fillQ() で新しいバッグを引き直し、現在のミノを出し直す
+  canHold = true;
+  resetLock();
+  closeDpc();
+  updUI(); draw();
 }
 
 // ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
@@ -2583,6 +2672,9 @@ function applyImport() {
     for (const item of e.clipboardData.items) {
       if (item.type.startsWith('image/')) { loadImportFile(item.getAsFile()); break; }
     }
+  });
+  document.getElementById('dpcOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'dpcOverlay') closeDpc();
   });
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
