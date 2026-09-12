@@ -468,9 +468,14 @@ body.ppt2-theme #nextCanvas {
 
     <!-- DPCセット -->
     <div class="panel" style="min-width:116px;">
-      <button class="garb-btn" style="background:#374151;"
-        onclick="if(!gameOver)openDpc()"
-        title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
+      <div style="display:flex;gap:6px;">
+        <button class="garb-btn" style="flex:1;background:#374151;"
+          onclick="if(!gameOver)openDpc()"
+          title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
+        <button id="dpcAgainBtn" class="garb-btn" style="flex:0 0 34px;background:#374151;"
+          onclick="if(!gameOver)repeatDpc()"
+          title="前回選んだミノで、もう一度DPCセットします">再</button>
+      </div>
     </div>
 
     <!-- せりあがり -->
@@ -1322,6 +1327,7 @@ function discardPiece() {
 
 // ===== DPCセット（選んだミノをHOLDした状態にしてミノ順をリセット） =====
 const DPC_TYPES = ['I','O','T','S','Z','J','L'];
+let lastDpcType = null;   // 「再」ボタン用：直前にDPCセットで選んだミノ
 
 function openDpc() {
   document.getElementById('dpcOverlay').classList.add('open');
@@ -1354,6 +1360,8 @@ function renderDpcGrid() {
 }
 // 選んだミノをHOLDに入れ、地形を消してバッグを組み直し、現在のミノも出し直す
 function setDpcHold(type) {
+  lastDpcType = type;
+  updateDpcAgainBtn();
   // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   undoStack = []; lastGarbageCol = null; ren = 0;
@@ -1366,6 +1374,21 @@ function setDpcHold(type) {
   closeDpc();
   updUI(); draw();
 }
+// 直前に選んだミノで、もう一度同じセットをやり直す
+function repeatDpc() {
+  if (!lastDpcType) { openDpc(); return; }   // まだ一度も選んでいなければ選択画面を出す
+  setDpcHold(lastDpcType);
+}
+// 「再」ボタンの見た目（未選択のうちは押せなさそうに薄く出す）
+function updateDpcAgainBtn() {
+  const btn = document.getElementById('dpcAgainBtn');
+  if (!btn) return;
+  btn.style.opacity = lastDpcType ? '1' : '0.45';
+  btn.title = lastDpcType
+    ? `前回選んだ ${lastDpcType} ミノで、もう一度DPCセットします`
+    : 'まだミノを選んでいません（押すと選択画面が開きます）';
+}
+updateDpcAgainBtn();
 
 // ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
 function resetTerrain() {
