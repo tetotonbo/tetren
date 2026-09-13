@@ -2729,9 +2729,20 @@ const KC_ACTIONS = [
 let keyConfig = {};
 let kcWaiting = null; // { id, slot }
 
+// プライベートウィンドウやサイトデータをブロックした設定では localStorage の
+// 読み書き自体が例外になる。そこで落ちるとページの初期化が止まってしまうので、
+// 保存周りはすべて例外を握りつぶして「保存できないだけ」で動くようにする。
+function loadStoredKeyConfig() {
+  try {
+    return localStorage.getItem('tetren_keyconfig');
+  } catch(e) {
+    return null;   // 保存領域が使えない環境 → デフォルトで動かす
+  }
+}
+
 function initKeyConfig() {
   // localStorageから復元、なければデフォルト
-  const saved = localStorage.getItem('tetren_keyconfig');
+  const saved = loadStoredKeyConfig();
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -2745,7 +2756,9 @@ function initKeyConfig() {
 }
 
 function saveKeyConfig() {
-  localStorage.setItem('tetren_keyconfig', JSON.stringify(keyConfig));
+  try {
+    localStorage.setItem('tetren_keyconfig', JSON.stringify(keyConfig));
+  } catch(e) {}   // 保存できなくてもキー設定はこのセッション中は有効
 }
 
 function keyDisplayName(code) {
@@ -2823,7 +2836,7 @@ function closeKeyConfig() {
 
 function resetKeyConfig() {
   KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
-  localStorage.removeItem('tetren_keyconfig');
+  try { localStorage.removeItem('tetren_keyconfig'); } catch(e) {}
   openKeyConfig();
 }
 
