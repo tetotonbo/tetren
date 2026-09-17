@@ -3,16 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>テト練</title>
+<title>テト練 | ブラウザで遊べる無料のテトリス練習ツール</title>
+<meta name="description" content="テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
+<link rel="canonical" href="https://tetotonbo.github.io/tetren/">
+<link rel="icon" href="/tetren/favicon.png" type="image/png">
+<meta name="theme-color" content="#111827">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="テト練">
+<meta property="og:title" content="テト練 | ブラウザで遊べる無料のテトリス練習ツール">
+<meta property="og:description" content="テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
+<meta property="og:url" content="https://tetotonbo.github.io/tetren/">
+<meta property="og:image" content="https://tetotonbo.github.io/tetren/favicon.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "テト練",
+  "url": "https://tetotonbo.github.io/tetren/",
+  "description": "テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web ブラウザ",
+  "inLanguage": "ja",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+}
+</script>
 <script>
+  // 端末に合わせて自動で振り分ける。JSが動かない環境では下のリンクから選べる。
   if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
     location.replace('tetren_mobile.html');
   } else {
     location.replace('tetren.html');
   }
 </script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#111827; color:#e5e7eb;
+    font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+    line-height:1.8; padding:40px 20px;
+  }
+  main { max-width:640px; margin:0 auto; }
+  h1 { font-size:28px; letter-spacing:2px; margin-bottom:4px; }
+  .sub { color:#9ca3af; font-size:13px; margin-bottom:24px; }
+  p { margin-bottom:20px; }
+  .links { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .links a {
+    background:#4f46e5; color:#fff; text-decoration:none;
+    padding:12px 24px; border-radius:8px; font-weight:bold;
+  }
+  .links a:hover { background:#4338ca; }
+  h2 { font-size:16px; margin-bottom:8px; color:#d1d5db; }
+  ul { margin:0 0 20px 20px; color:#9ca3af; font-size:14px; }
+</style>
 </head>
 <body>
-<p style="font-family:sans-serif;text-align:center;margin-top:40px;color:#888;">読み込み中...</p>
+<main>
+  <h1>テト練</h1>
+  <div class="sub">ブラウザで遊べる無料のテトリス練習ツール</div>
+
+  <p>
+    テト練は、インストール不要でブラウザから使えるテトリスの練習ツールです。
+    好きな地形を作って同じ場面を何度でも繰り返せるので、苦手な形や決まった手順を集中して練習できます。
+  </p>
+
+  <div class="links">
+    <a href="tetren.html">PC版を開く</a>
+    <a href="tetren_mobile.html">スマホ版を開く</a>
+  </div>
+
+  <h2>できること</h2>
+  <ul>
+    <li>地形編集 — 盤面をクリックしてブロックを置く／消す、色も選べる</li>
+    <li>地形取り込み — ぷよぷよテトリスのスクリーンショットから盤面を読み取る</li>
+    <li>せりあがり — ミノ数や秒数を指定して自動でおじゃまを積み上げる</li>
+    <li>落下速度 — 0G（落ちない）から20G（1フレームで最下段）まで調整</li>
+    <li>1手戻す — 置いたミノを取り消してやり直す</li>
+    <li>DPCセット — 好きなミノをホールドした状態からツモを引き直す</li>
+    <li>RENモード / デカミノモード</li>
+    <li>ぷよテト風の見た目、ゴースト表示、軸表示、キーコンフィグ</li>
+  </ul>
+
+  <p style="color:#6b7280;font-size:13px;">
+    自動で移動しない場合は、上のリンクから開いてください。
+  </p>
+</main>
 </body>
 </html>
