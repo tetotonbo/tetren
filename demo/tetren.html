@@ -28,6 +28,19 @@ body {
   border-radius:6px; cursor:pointer; letter-spacing:0.5px;
   transition:background .15s;
 }
+/* モード枠の3ボタン（デカミノ/REN/DPCセット）は押しやすいよう背を高く・間隔広めに。
+   高さは固定にして、和文/欧文でボタンの高さがずれないようにする */
+.mode-buttons > * + * { margin-top:10px; }
+.mode-buttons .toggle-btn,
+.mode-buttons .garb-btn {
+  height:44px; padding:0; white-space:nowrap;
+  display:flex; align-items:center; justify-content:center;
+}
+.mode-buttons .btn-group .garb-btn:last-child { font-size:19px; }
+/* DPCセットと「再」を地続きの1コントロールに見せる（再がDPCセットの機能だと分かるように） */
+.btn-group { display:flex; border-radius:6px; overflow:hidden; }
+.btn-group .garb-btn { border-radius:0; }
+.btn-group .garb-btn + .garb-btn { border-left:1px solid #4b5563; }
 .garb-btn:hover { background:#6d28d9; }
 .garb-btn:active { background:#5b21b6; }
 canvas { display:block; }
@@ -452,19 +465,21 @@ body.ppt2-theme #nextCanvas {
     <!-- モード（デカミノ / REN / DPCセット） -->
     <div class="panel" style="min-width:116px;">
       <div class="panel-label">モード</div>
-      <button id="dekaModeBtn" class="toggle-btn"
-        style="background:#374151;"
-        onclick="toggleDekaMode()">デカミノ</button>
-      <button id="renModeBtn" class="toggle-btn"
-        style="background:#374151;margin-top:6px;"
-        onclick="toggleRenMode()">REN</button>
-      <div style="display:flex;gap:6px;margin-top:6px;">
-        <button class="garb-btn" style="flex:1;background:#374151;"
-          onclick="if(!gameOver)openDpc()"
-          title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
-        <button id="dpcAgainBtn" class="garb-btn" style="flex:0 0 34px;background:#374151;"
-          onclick="if(!gameOver)repeatDpc()"
-          title="前回選んだミノで、もう一度DPCセットします">再</button>
+      <div class="mode-buttons">
+        <button id="dekaModeBtn" class="toggle-btn"
+          style="background:#374151;"
+          onclick="toggleDekaMode()">デカミノ</button>
+        <button id="renModeBtn" class="toggle-btn"
+          style="background:#374151;"
+          onclick="toggleRenMode()">REN</button>
+        <div class="btn-group">
+          <button class="garb-btn" style="flex:1;background:#374151;"
+            onclick="if(!gameOver)openDpc()"
+            title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
+          <button id="dpcAgainBtn" class="garb-btn" style="flex:0 0 32px;background:#374151;"
+            onclick="if(!gameOver)repeatDpc()"
+            title="前回選んだミノで、もう一度DPCセットします">↻</button>
+        </div>
       </div>
       <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
       <div class="panel-label">せりあがり</div>
