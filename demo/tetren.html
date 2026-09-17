@@ -310,10 +310,7 @@ body.ppt2-theme #nextCanvas {
           style="width:14px;height:14px;cursor:pointer;">
         ぷよテト風
       </label>
-      <div class="panel-label">落下設定</div>
-      <button id="gravBtn" class="toggle-btn"
-        style="background:#374151;"
-        onclick="if(!gameOver)toggleGravity()">自由落下</button>
+      <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
         <button class="step-btn" onclick="changeGravSpeed(-1)">‹</button>
         <div class="speed-val">
@@ -857,8 +854,7 @@ setupHiDPICanvas(nextCanvas,  nextCtx);
 let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
-let gravityOn = true;    // 自然落下フラグ
-let gravSpeed = 1;       // 落下速度 1〜20G（段階。実際の行数は gravRowsPerFrame() 参照）
+let gravSpeed = 1;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照）
 let gravAccum = 0;       // 落下の端数（小数行/フレームを貯めて整数行ぶん落とす）
 let undoStack = [];     // undoスタック（複数手対応）
 const UNDO_MAX = 50;   // 最大保持数
@@ -2013,20 +2009,6 @@ function changeGravSpeed(delta) {
   gravAccum = 0;   // 端数もリセット（速度変更直後にいきなり1行落ちないように）
 }
 
-// ===== 自然落下トグル =====
-function toggleGravity() {
-  gravityOn = !gravityOn;
-  const btn = document.getElementById('gravBtn');
-  if (gravityOn) {
-    btn.style.background = '#16a34a'; // 緑 = ON
-    lastDrop = 0;
-    gravAccum = 0;
-  } else {
-    btn.style.background = '#374151'; // グレー = OFF
-    resetLock();
-  }
-}
-
 // ===== ゲームループ =====
 let rafId;
 function loop(ts) {
@@ -2038,32 +2020,21 @@ function loop(ts) {
     lastSoftDrop = ts;
   }
 
-  if (gravityOn) {
-    if (gravSpeed === 0) {
-      // 0G: 時間ベースの自然落下（dropInterval に従う）
-      if (!lastDrop) lastDrop = ts;
-      if (ts - lastDrop >= dropInterval) {
-        if (!valid(cur, 1, 0, cur.state)) { if (!isLocking) startLock(); }
-        else { cur.row++; resetLock(); draw(); }
-        lastDrop = ts;
-      } else if (!valid(cur, 1, 0, cur.state) && !isLocking) {
-        startLock();
-      }
-    } else {
-      // 1G〜20G: フレームベース（小数行/フレームを貯めて、たまった整数行ぶん落とす）
-      gravAccum += gravRowsPerFrame(gravSpeed);
-      let steps = Math.floor(gravAccum);
-      gravAccum -= steps;
-      let dropped = 0;
-      while (steps > 0 && valid(cur, 1, 0, cur.state)) {
-        cur.row++;
-        dropped++;
-        steps--;
-      }
-      if (steps > 0) gravAccum = 0;   // 着地して落とし切れなかった端数は持ち越さない
-      if (dropped > 0) { resetLock(); draw(); }
-      if (!valid(cur, 1, 0, cur.state) && !isLocking) startLock();
+  // 0G は自動で落とさない（ハードドロップするまでミノは止まったまま）
+  // 1G〜20G: フレームベース（小数行/フレームを貯めて、たまった整数行ぶん落とす）
+  if (gravSpeed > 0) {
+    gravAccum += gravRowsPerFrame(gravSpeed);
+    let steps = Math.floor(gravAccum);
+    gravAccum -= steps;
+    let dropped = 0;
+    while (steps > 0 && valid(cur, 1, 0, cur.state)) {
+      cur.row++;
+      dropped++;
+      steps--;
     }
+    if (steps > 0) gravAccum = 0;   // 着地して落とし切れなかった端数は持ち越さない
+    if (dropped > 0) { resetLock(); draw(); }
+    if (!valid(cur, 1, 0, cur.state) && !isLocking) startLock();
   }
 
   // せりあがり自動モード（秒数）
@@ -2740,7 +2711,6 @@ const KC_ACTIONS = [
   { id:'hold',       label:'ホールド',       d:[  'ShiftLeft', 'ShiftRight'] },
   { id:'discard',    label:'ミノを捨てる',   d:[  'KeyA',      null        ] },
   { id:'undo',       label:'1手戻す',        d:[  'KeyU',      null        ] },
-  { id:'gravity',    label:'落下トグル',     d:[  'KeyG',      null        ] },
   { id:'dpcAgain',   label:'DPCセット再',    d:[  'KeyR',      null        ] },
   { id:'restart',    label:'リスタート',     d:[  'KeyN',      null        ] },
 ];
@@ -2905,7 +2875,6 @@ document.addEventListener('keydown', e=>{
   else if (kcMatch('hold',      c)) { e.preventDefault(); doHold(); }
   else if (kcMatch('discard',   c)) { e.preventDefault(); discardPiece(); }
   else if (kcMatch('undo',      c)) { e.preventDefault(); undo(); }
-  else if (kcMatch('gravity',   c)) { e.preventDefault(); toggleGravity(); }
   else if (kcMatch('dpcAgain',  c)) { e.preventDefault(); if (!e.repeat) repeatDpc(); }
 });
 document.addEventListener('keyup', e=>{
@@ -2927,7 +2896,7 @@ function resetGameState(fullReset = true) {
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
-  dropInterval=1000; lastDrop=0; gravityOn=false; undoStack=[]; lastGarbageCol=null;
+  dropInterval=1000; lastDrop=0; undoStack=[]; lastGarbageCol=null;
   gravSpeed=0; gravAccum=0;
   document.getElementById('gravSpeedVal').textContent = 0;
   downHeld=false; lastSoftDrop=0;
@@ -2947,8 +2916,6 @@ function resetGameState(fullReset = true) {
   document.getElementById('terrainBtn').style.background = '#374151';
   document.getElementById('colorSection').style.display = '';
   boardCanvas.style.cursor = 'crosshair';
-  // 落下 → OFF（グレー）にリセット
-  document.getElementById('gravBtn').style.background = '#374151';
   // RENモードONならスタート時に地形セット
   if (renMode) setupRenTerrain();
   resetLock(); updUI(); fillQ(); spawn(); draw();
