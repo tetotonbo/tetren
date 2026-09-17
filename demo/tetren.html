@@ -858,7 +858,8 @@ let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
 let gravityOn = true;    // 自然落下フラグ
-let gravSpeed = 1;       // 落下速度 1〜20G（1G=1行/フレーム @60fps）
+let gravSpeed = 1;       // 落下速度 1〜20G（段階。実際の行数は gravRowsPerFrame() 参照）
+let gravAccum = 0;       // 落下の端数（小数行/フレームを貯めて整数行ぶん落とす）
 let undoStack = [];     // undoスタック（複数手対応）
 const UNDO_MAX = 50;   // 最大保持数
 let showGhost = true;    // ゴーストピース表示
@@ -1993,10 +1994,23 @@ function draw() {
 }
 
 // ===== 落下スピード =====
+// 1段あたりの落下量（行/フレーム, 60fps想定）
+//   1G  = 1行/秒（60フレームで1行）
+//   20G = 盤面の高さぶん = 1フレームで最下段まで落ちる
+//   間は等比（1段ごとに約1.47倍）でつないで、体感が滑らかに変化するようにする
+const GRAV_MIN_ROWS = 1 / 60; // 1G（1行/秒 @60fps）
+const GRAV_MAX_ROWS = TROW;   // 20G（24行 = 盤面全体）
+function gravRowsPerFrame(g) {
+  if (g <= 1)  return GRAV_MIN_ROWS;
+  if (g >= 20) return GRAV_MAX_ROWS;
+  return GRAV_MIN_ROWS * Math.pow(GRAV_MAX_ROWS / GRAV_MIN_ROWS, (g - 1) / 19);
+}
+
 function changeGravSpeed(delta) {
   gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
   document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
-  lastDrop = 0; // タイマーリセット
+  lastDrop = 0;    // タイマーリセット
+  gravAccum = 0;   // 端数もリセット（速度変更直後にいきなり1行落ちないように）
 }
 
 // ===== 自然落下トグル =====
@@ -2006,6 +2020,7 @@ function toggleGravity() {
   if (gravityOn) {
     btn.style.background = '#16a34a'; // 緑 = ON
     lastDrop = 0;
+    gravAccum = 0;
   } else {
     btn.style.background = '#374151'; // グレー = OFF
     resetLock();
@@ -2035,12 +2050,17 @@ function loop(ts) {
         startLock();
       }
     } else {
-      // 1G〜20G: フレームベース（毎フレーム gravSpeed 行落とす）
+      // 1G〜20G: フレームベース（小数行/フレームを貯めて、たまった整数行ぶん落とす）
+      gravAccum += gravRowsPerFrame(gravSpeed);
+      let steps = Math.floor(gravAccum);
+      gravAccum -= steps;
       let dropped = 0;
-      while (dropped < gravSpeed && valid(cur, 1, 0, cur.state)) {
+      while (steps > 0 && valid(cur, 1, 0, cur.state)) {
         cur.row++;
         dropped++;
+        steps--;
       }
+      if (steps > 0) gravAccum = 0;   // 着地して落とし切れなかった端数は持ち越さない
       if (dropped > 0) { resetLock(); draw(); }
       if (!valid(cur, 1, 0, cur.state) && !isLocking) startLock();
     }
@@ -2908,7 +2928,7 @@ function resetGameState(fullReset = true) {
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
   dropInterval=1000; lastDrop=0; gravityOn=false; undoStack=[]; lastGarbageCol=null;
-  gravSpeed=0;
+  gravSpeed=0; gravAccum=0;
   document.getElementById('gravSpeedVal').textContent = 0;
   downHeld=false; lastSoftDrop=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
