@@ -224,6 +224,23 @@ body.ppt2-theme #nextCanvas {
   display:block; line-height:1; margin-top:6px;
   font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
 }
+/* ラベル＋トグルスイッチの1行（ONで有効／OFFで無効） */
+.tgl-row {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; cursor:pointer; font-size:12px; color:#d1d5db; user-select:none;
+}
+.tgl-row input { display:none; }
+.tgl {
+  flex:0 0 auto; width:34px; height:18px; border-radius:9px;
+  background:#4b5563; position:relative; transition:background .15s;
+}
+.tgl::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:14px; height:14px; border-radius:50%; background:#fff;
+  transition:transform .15s;
+}
+.tgl-row input:checked + .tgl { background:#16a34a; }
+.tgl-row input:checked + .tgl::after { transform:translateX(16px); }
 /* 操作ボタンの出し入れ（PCではキーボードで操作するので既定では隠す） */
 .ctrl-toggle {
   width:100%; background:#1f2937; color:#9ca3af;
@@ -395,10 +412,12 @@ body.ppt2-theme #nextCanvas {
     <!-- 地形操作 -->
     <div class="panel" style="width:108px;">
       <div class="panel-label">地形操作</div>
-      <button id="terrainBtn" class="garb-btn"
-        style="background:#374151;"
-        onclick="toggleTerrainMode()"
-        title="クリック/ドラッグでブロックを設置・消去">地形編集ロック</button>
+      <label class="tgl-row" title="ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます">
+        <span>地形編集</span>
+        <input type="checkbox" id="terrainToggle" checked
+          onchange="setTerrainMode(this.checked)">
+        <span class="tgl"></span>
+      </label>
       <div id="colorSection">
         <div class="panel-label" style="margin-top:8px;">カラー</div>
         <div id="colorPalette" style="display:grid;grid-template-columns:repeat(4,20px);gap:4px;"></div>
@@ -1298,23 +1317,15 @@ function selectTerrainColor(type) {
 }
 
 // ===== 地形操作モード =====
-// terrainMode=true → 編集可（ロックOFF=グレー）, terrainMode=false → 編集不可（ロックON=緑）
-function toggleTerrainMode() {
-  terrainMode = !terrainMode;
-  const btn = document.getElementById('terrainBtn');
-  const cs  = document.getElementById('colorSection');
-  if (terrainMode) {
-    // ロック解除 → 編集可
-    btn.style.background = '#374151'; // グレー
-    boardCanvas.style.cursor = 'crosshair';
-    cs.style.display = '';
-  } else {
-    // ロック → 編集不可
-    btn.style.background = '#16a34a'; // 緑
-    boardCanvas.style.cursor = 'default';
-    terrainPainting = false;
-    cs.style.display = 'none';
-  }
+// ON（既定）= 盤面をクリック/ドラッグして編集できる、OFF = 編集できない
+function setTerrainMode(on) {
+  terrainMode = !!on;
+  const sw = document.getElementById('terrainToggle');
+  if (sw) sw.checked = terrainMode;
+  boardCanvas.style.cursor = terrainMode ? 'crosshair' : 'default';
+  // 編集できないときは描画カラーの選択肢も隠す
+  document.getElementById('colorSection').style.display = terrainMode ? '' : 'none';
+  if (!terrainMode) terrainPainting = false;
 }
 
 function getTerrainCell(e) {
@@ -3146,10 +3157,7 @@ function resetGameState(fullReset = true) {
   if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
   // 地形 → ロック解除（編集可）状態にリセット
-  terrainMode = true;
-  document.getElementById('terrainBtn').style.background = '#374151';
-  document.getElementById('colorSection').style.display = '';
-  boardCanvas.style.cursor = 'crosshair';
+  setTerrainMode(true);
   // RENモードONならスタート時に地形セット
   if (renMode) setupRenTerrain();
   resetLock(); updUI(); fillQ(); spawn(); draw();
