@@ -549,12 +549,6 @@ body.ppt2-theme #nextCanvas {
     <div class="panel" style="min-width:116px;">
       <div class="panel-label">モード</div>
       <div class="mode-buttons">
-        <button id="dekaModeBtn" class="toggle-btn"
-          style="background:#374151;"
-          onclick="toggleDekaMode()">デカミノ</button>
-        <button id="renModeBtn" class="toggle-btn"
-          style="background:#374151;"
-          onclick="toggleRenMode()">REN</button>
         <div class="btn-group">
           <button class="garb-btn" style="flex:1;background:#374151;"
             onclick="if(!gameOver)openDpc()"
@@ -563,6 +557,12 @@ body.ppt2-theme #nextCanvas {
             onclick="if(!gameOver)repeatDpc()"
             title="前回選んだミノで、もう一度DPCセットします">↻</button>
         </div>
+        <button id="dekaModeBtn" class="toggle-btn"
+          style="background:#374151;"
+          onclick="toggleDekaMode()">デカミノ</button>
+        <button id="renModeBtn" class="toggle-btn"
+          style="background:#374151;"
+          onclick="toggleRenMode()">REN</button>
       </div>
       <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
       <div class="panel-label">せりあがり</div>
