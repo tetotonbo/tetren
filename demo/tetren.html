@@ -213,8 +213,10 @@ body.ppt2-theme #nextCanvas {
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
 }
-#dpcGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+#dpcGrid { display:flex; flex-direction:column; gap:8px; }
+.dpc-row { display:flex; gap:8px; justify-content:center; }
 .dpc-btn {
+  width:100px; flex:0 0 auto;
   background:#0d1117; border:1px solid #374151; border-radius:8px;
   padding:8px 0 6px; cursor:pointer; line-height:0; text-align:center;
   transition:border-color .12s, background .12s;
@@ -1622,7 +1624,7 @@ function discardPiece() {
 }
 
 // ===== DPCセット（選んだミノをHOLDした状態にしてミノ順をリセット） =====
-const DPC_TYPES = ['I','O','T','S','Z','J','L'];
+const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];   // 選択画面の並び
 let lastDpcType = null;   // 「再」ボタン用：直前にDPCセットで選んだミノ
 
 function openDpc() {
@@ -1636,7 +1638,10 @@ function closeDpc() {
 function renderDpcGrid() {
   const grid = document.getElementById('dpcGrid');
   grid.innerHTML = '';
-  DPC_TYPES.forEach(type => {
+  DPC_ROWS.forEach(types => {
+   const row = document.createElement('div');
+   row.className = 'dpc-row';
+   types.forEach(type => {
     const btn = document.createElement('button');
     btn.className = 'dpc-btn';
     btn.title = type + 'ミノをHOLDにセットする';
@@ -1651,7 +1656,9 @@ function renderDpcGrid() {
     btn.appendChild(cv);
     btn.appendChild(name);
     btn.addEventListener('click', () => setDpcHold(type));
-    grid.appendChild(btn);
+    row.appendChild(btn);
+   });
+   grid.appendChild(row);
   });
 }
 // 選んだミノをHOLDに入れ、地形を消してバッグを組み直し、現在のミノも出し直す
