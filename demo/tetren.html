@@ -852,8 +852,10 @@ const SKINS = [
     colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
   { id:'pastel',  name:'パステル',   desc:'彩度低め・つや消し', style:'matte',
     colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
-  { id:'glass',   name:'透明',       desc:'ほぼ透明・枠で判別', style:'glass',
+  { id:'glass',   name:'アウトライン', desc:'中は透けて枠線だけ', style:'glass',
     colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
+  { id:'invisible', name:'透明',     desc:'ほぼ見えない（上級者向け）', style:'invisible',
+    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
   { id:'mono',    name:'モノクローム', desc:'色で見分けない練習用', style:'bevel',
     colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
   { id:'retro',   name:'レトロ',     desc:'ドット模様', style:'dot',
@@ -1046,6 +1048,14 @@ function drawSkinCell(ctx, x, y, size, color, alpha=1) {
     ctx.fillStyle = 'rgba(255,255,255,0.32)'; ctx.fillRect(x1, y1, w, Math.max(1, 2*k));
     ctx.strokeStyle = darken(col, 0.55);
     ctx.lineWidth = Math.max(1, 2*k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'invisible') {
+    // ほぼ見えない。目を凝らせば分かる程度にだけ色を残す（記憶して積む練習用）
+    ctx.globalAlpha = alpha * 0.03;
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.globalAlpha = alpha * 0.04;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(1, k);
     ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
   } else if (style === 'flat') {
     ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
