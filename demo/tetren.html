@@ -1200,6 +1200,7 @@ let terrainType = null; // 現在選択中のパレット種別（I/O/T/S/Z/J/L�
 let lastGarbageCol = null; // 直前のおじゃまの穴列
 let downHeld = false;     // ↓キー押しっぱなし状態
 let lastSoftDrop = 0;     // ソフトドロップ最終処理時刻
+let softAccum = 0;        // ソフトドロップの端数（1行に満たない落下量）
 // ソフトドロップ間隔は「その他」設定から決まる（softDropRate()）
 let digMode = false;       // 掘り練習モード（自動せりあがりON/OFF）
 let digTriggerType = 'time'; // トリガー種別: 'mino'=ミノごと / 'time'=秒数
@@ -1794,13 +1795,16 @@ function addGarbage(sameHole) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
   // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
   let holeCol;
-  const keepSame = lastGarbageCol !== null &&
-    (sameHole === true || Math.random() * 100 < opts.holeKeep);
-  if (keepSame) {
+  if (lastGarbageCol === null) {
+    holeCol = Math.floor(Math.random() * COLS);
+  } else if (sameHole === true || Math.random() * 100 < opts.holeKeep) {
     holeCol = lastGarbageCol;
   } else {
-    // ランダム（直前と被っても可）
-    holeCol = Math.floor(Math.random() * COLS);
+    // 外れたときは「直前以外」から選ぶ。こうすると設定値がそのまま
+    // 同じ列になる確率になり、10列なので10%＝完全ランダムと一致する
+    const others = [];
+    for (let i = 0; i < COLS; i++) if (i !== lastGarbageCol) others.push(i);
+    holeCol = others[Math.floor(Math.random() * others.length)];
   }
   lastGarbageCol = holeCol;
 
@@ -2380,9 +2384,14 @@ function loop(ts) {
   if (gameOver) return;
 
   // ↓キー押しっぱなし：ブラウザのキーリピートに頼らずポーリング
-  if (downHeld && ts - lastSoftDrop >= softDropRate()) {
-    softDrop();
+  if (downHeld) {
+    if (!lastSoftDrop) lastSoftDrop = ts;
+    const dt = Math.min(100, ts - lastSoftDrop);   // タブ復帰時に飛びすぎないよう上限を置く
     lastSoftDrop = ts;
+    softAccum += softDropRows() * dt / 1000;
+    let n = Math.floor(softAccum);
+    softAccum -= n;
+    while (n-- > 0) { if (!softDrop()) { softAccum = 0; break; } }   // 着地したら端数は捨てる
   }
 
   // 0G は自動で落とさない（ハードドロップするまでミノは止まったまま）
@@ -2424,10 +2433,11 @@ let dasTimer=null, arrTimer=null, heldKey=null;
 // ボタン長押しによるソフトドロップ連続入力
 let softDropBtnTimer=null;
 function startSoftDropBtn() {
-  softDrop();
-  softDropBtnTimer = setInterval(()=>{ if(!gameOver) softDrop(); else stopSoftDropBtn(); }, 50);
+  // キー操作と同じ扱いにして、設定した速さをそのまま使う
+  if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); }
 }
 function stopSoftDropBtn() {
+  downHeld = false; softAccum = 0;
   if(softDropBtnTimer){ clearInterval(softDropBtnTimer); softDropBtnTimer=null; }
 }
 function startDAS(key) {
@@ -3144,7 +3154,7 @@ function renderKcBtn(id, slot) {
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
   multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
-  holeKeep: 100,      // せりあがりの穴継続率(%)
+  holeKeep: 10,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
   lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
 };
@@ -3153,10 +3163,13 @@ const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 // ソフトドロップの間隔(ms)。数字が大きいほど速い
-const SOFT_DROP_MS = [130, 105, 85, 65, 50, 38, 28, 20, 13, 8];
-function softDropRate() {
-  return SOFT_DROP_MS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+// ソフトドロップの速さ（1秒あたりに落ちる行数）。5までは従来どおり、6以上は大きく加速する。
+// ミリ秒間隔で持つと1フレーム(約17ms)未満の指定が頭打ちになるため、行数で持って端数を積む。
+const SOFT_DROP_RPS = [8, 10, 12, 15, 20, 32, 55, 90, 150, 600];
+function softDropRows() {
+  return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
 }
+function softDropRate() { return 1000 / softDropRows(); }   // 参考: 1行あたりのミリ秒
 // 接地してから固定されるまでのミリ秒
 function lockDelayMs() { return opts.lockFrames * 1000 / 60; }
 
@@ -3327,7 +3340,7 @@ document.addEventListener('keydown', e=>{
   else if (kcMatch('moveRight', c)) { e.preventDefault(); moveH(+1); startDAS('R'); }
   else if (kcMatch('softDrop',  c)) {
     e.preventDefault();
-    if (!downHeld) { downHeld = true; lastSoftDrop = 0; softDrop(); }
+    if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); }
   }
   else if (kcMatch('rotateCW',  c)) { e.preventDefault(); if (!e.repeat) rotate(1); }
   else if (kcMatch('rotateCCW', c)) { e.preventDefault(); if (!e.repeat) rotate(-1); }
@@ -3366,7 +3379,7 @@ function resetGameState(fullReset = true) {
   dropInterval=1000; lastDrop=0; undoStack=[]; lastGarbageCol=null;
   gravSpeed=0; gravAccum=0;
   document.getElementById('gravSpeedVal').textContent = 0;
-  downHeld=false; lastSoftDrop=0;
+  downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
   if (fullReset) {
     // 自動せりあがりは止めるが、間隔の設定値（ミノごと/秒数とその数値）は
