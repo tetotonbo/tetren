@@ -224,6 +224,16 @@ body.ppt2-theme #nextCanvas {
   display:block; line-height:1; margin-top:6px;
   font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
 }
+/* 操作ボタンの出し入れ（PCではキーボードで操作するので既定では隠す） */
+.ctrl-toggle {
+  width:100%; background:#1f2937; color:#9ca3af;
+  border:1px solid #374151; border-radius:8px;
+  padding:8px 0; font-size:13px; font-weight:bold;
+  cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
+}
+.ctrl-toggle:hover { background:#374151; color:#e5e7eb; }
+#ctrlHidden { display:none; flex-direction:column; gap:6px; }
+#ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
 .ctrl-pad { width:300px; display:flex; flex-direction:column; gap:6px; }
 .ctrl-row { display:grid; gap:6px; }
@@ -414,62 +424,7 @@ body.ppt2-theme #nextCanvas {
 
     <!-- 操作ボタンパッド -->
     <div class="ctrl-pad">
-      <!-- 左右・ソフトドロップ（1段目） -->
-      <div class="ctrl-row r3">
-        <button class="ctrl-btn"
-          onmousedown="if(!gameOver){moveH(-1);startDAS('L')}"
-          onmouseup="stopDAS()" onmouseleave="stopDAS()"
-          ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);startDAS('L')}"
-          ontouchend="stopDAS()"
-          title="左移動">
-          ←<span class="ctrl-lbl">左</span>
-        </button>
-        <button class="ctrl-btn"
-          onmousedown="if(!gameOver)startSoftDropBtn()"
-          onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
-          ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
-          ontouchend="stopSoftDropBtn()"
-          title="ソフトドロップ">
-          ↓<span class="ctrl-lbl">ソフト</span>
-        </button>
-        <button class="ctrl-btn"
-          onmousedown="if(!gameOver){moveH(1);startDAS('R')}"
-          onmouseup="stopDAS()" onmouseleave="stopDAS()"
-          ontouchstart="e.preventDefault();if(!gameOver){moveH(1);startDAS('R')}"
-          ontouchend="stopDAS()"
-          title="右移動">
-          →<span class="ctrl-lbl">右</span>
-        </button>
-      </div>
-      <!-- 回転（2段目） -->
-      <div class="ctrl-row r2">
-        <button class="ctrl-btn"
-          onmousedown="if(!gameOver)rotate(-1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
-          title="反時計回り回転">
-          ↺<span class="ctrl-lbl">左回転</span>
-        </button>
-        <button class="ctrl-btn"
-          onmousedown="if(!gameOver)rotate(1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
-          title="時計回り回転">
-          ↻<span class="ctrl-lbl">右回転</span>
-        </button>
-      </div>
-      <!-- ホールド・ハードドロップ（3段目） -->
-      <div class="ctrl-row r2">
-        <button class="ctrl-btn ctrl-hold"
-          onclick="if(!gameOver)doHold()"
-          title="ホールド">
-          ⇪<span class="ctrl-lbl">HOLD</span>
-        </button>
-        <button class="ctrl-btn ctrl-hard"
-          onclick="if(!gameOver)hardDrop()"
-          title="ハードドロップ">
-          ⬇<span class="ctrl-lbl">HARD DROP</span>
-        </button>
-      </div>
-      <!-- ミノを捨てる・戻す（4段目） -->
+      <!-- ミノを捨てる・戻す（常時表示） -->
       <div class="ctrl-row r2">
         <button class="ctrl-btn"
           onclick="if(!gameOver)discardPiece()"
@@ -481,6 +436,67 @@ body.ppt2-theme #nextCanvas {
           title="1手戻す">
           ↩<span class="ctrl-lbl">戻す</span>
         </button>
+      </div>
+      <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
+      <button id="ctrlToggleBtn" class="ctrl-toggle" onclick="toggleCtrlButtons()">
+        ボタン操作 <span id="ctrlToggleArrow">▼</span>
+      </button>
+      <div id="ctrlHidden">
+        <!-- 左右・ソフトドロップ -->
+        <div class="ctrl-row r3">
+          <button class="ctrl-btn"
+            onmousedown="if(!gameOver){moveH(-1);startDAS('L')}"
+            onmouseup="stopDAS()" onmouseleave="stopDAS()"
+            ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);startDAS('L')}"
+            ontouchend="stopDAS()"
+            title="左移動">
+            ←<span class="ctrl-lbl">左</span>
+          </button>
+          <button class="ctrl-btn"
+            onmousedown="if(!gameOver)startSoftDropBtn()"
+            onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
+            ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
+            ontouchend="stopSoftDropBtn()"
+            title="ソフトドロップ">
+            ↓<span class="ctrl-lbl">ソフト</span>
+          </button>
+          <button class="ctrl-btn"
+            onmousedown="if(!gameOver){moveH(1);startDAS('R')}"
+            onmouseup="stopDAS()" onmouseleave="stopDAS()"
+            ontouchstart="e.preventDefault();if(!gameOver){moveH(1);startDAS('R')}"
+            ontouchend="stopDAS()"
+            title="右移動">
+            →<span class="ctrl-lbl">右</span>
+          </button>
+        </div>
+        <!-- 回転 -->
+        <div class="ctrl-row r2">
+          <button class="ctrl-btn"
+            onmousedown="if(!gameOver)rotate(-1)"
+            ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
+            title="反時計回り回転">
+            ↺<span class="ctrl-lbl">左回転</span>
+          </button>
+          <button class="ctrl-btn"
+            onmousedown="if(!gameOver)rotate(1)"
+            ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
+            title="時計回り回転">
+            ↻<span class="ctrl-lbl">右回転</span>
+          </button>
+        </div>
+        <!-- ホールド・ハードドロップ -->
+        <div class="ctrl-row r2">
+          <button class="ctrl-btn ctrl-hold"
+            onclick="if(!gameOver)doHold()"
+            title="ホールド">
+            ⇪<span class="ctrl-lbl">HOLD</span>
+          </button>
+          <button class="ctrl-btn ctrl-hard"
+            onclick="if(!gameOver)hardDrop()"
+            title="ハードドロップ">
+            ⬇<span class="ctrl-lbl">HARD DROP</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2918,6 +2934,13 @@ document.addEventListener('keyup', e=>{
   if (kcMatch('moveLeft', e.code) || kcMatch('moveRight', e.code)) stopDAS();
   if (kcMatch('softDrop', e.code)) downHeld = false;
 });
+
+// ===== 操作ボタンの表示切り替え =====
+function toggleCtrlButtons() {
+  const box = document.getElementById('ctrlHidden');
+  const open = box.classList.toggle('open');
+  document.getElementById('ctrlToggleArrow').textContent = open ? '▲' : '▼';
+}
 
 // ===== オーバーレイ =====
 function showOverlay(title, btn) {
