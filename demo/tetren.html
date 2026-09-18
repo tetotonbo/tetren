@@ -322,6 +322,29 @@ body.ppt2-theme #nextCanvas {
   line-height:1; transition:color .15s, border-color .15s;
 }
 .kc-del:hover { color:#ef4444; border-color:#ef4444; }
+/* 設定モーダルのタブ */
+.cfg-tabs { display:flex; gap:6px; margin-bottom:14px; border-bottom:1px solid #374151; }
+.cfg-tab {
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:#9ca3af; font-size:14px; font-weight:bold; cursor:pointer;
+  padding:8px 14px; transition:color .15s, border-color .15s;
+}
+.cfg-tab:hover { color:#e5e7eb; }
+.cfg-tab.active { color:#fff; border-bottom-color:#6366f1; }
+.cfg-pane { display:none; }
+.cfg-pane.active { display:block; }
+/* スキン選択 */
+#skinList { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.skin-card {
+  background:#111827; border:2px solid #374151; border-radius:8px;
+  padding:10px 8px 8px; cursor:pointer; text-align:center;
+  transition:border-color .15s, background .15s;
+}
+.skin-card:hover { border-color:#6b7280; background:#161f2e; }
+.skin-card.selected { border-color:#6366f1; background:#1e243a; }
+.skin-card canvas { display:block; margin:0 auto 6px; }
+.skin-name { font-size:13px; font-weight:bold; color:#e5e7eb; }
+.skin-desc { font-size:10px; color:#9ca3af; margin-top:2px; }
 .kc-btns { display:flex; gap:10px; margin-top:18px; }
 .kc-btns button {
   flex:1; padding:9px 0; border:none; border-radius:7px;
@@ -357,13 +380,6 @@ body.ppt2-theme #nextCanvas {
           onchange="showAxis=this.checked;draw();"
           style="width:14px;height:14px;cursor:pointer;">
         軸表示
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
-                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
-        <input type="checkbox" id="themeCheck"
-          onchange="toggleTheme()"
-          style="width:14px;height:14px;cursor:pointer;">
-        ぷよテト風
       </label>
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
@@ -408,7 +424,7 @@ body.ppt2-theme #nextCanvas {
 
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
-      <button class="kc-open-btn" onclick="openKeyConfig()" style="margin-top:0;">⌨ キーコンフィグ</button>
+      <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;">⚙ 設定</button>
     </div>
 
     <!-- ライン消去メッセージ -->
@@ -624,28 +640,43 @@ body.ppt2-theme #nextCanvas {
 <div id="overlay">
   <h1>テト練（β版）</h1>
   <button id="startBtn" style="margin-top:16px;">スタート</button>
-  <button onclick="openKeyConfig()"
+  <button onclick="openConfig()"
     style="margin-top:10px;background:none;border:1px solid #4b5563;color:#9ca3af;
            padding:6px 20px;border-radius:6px;cursor:pointer;font-size:12px;">
-    ⌨ キーコンフィグ
+    ⚙ 設定
   </button>
 </div>
 
 <!-- キーコンフィグモーダル -->
 <div id="keyconfigModal">
   <div id="keyconfigBox">
-    <h2>⌨ キーコンフィグ</h2>
-    <div id="kcHeader">
-      <span class="kc-label">操作</span>
-      <span class="kc-slot-head">スロット 1</span>
-      <span class="kc-slot-head">スロット 2</span>
+    <h2>⚙ 設定</h2>
+    <div class="cfg-tabs">
+      <button class="cfg-tab active" id="cfgTabKey"  onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab"        id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
     </div>
-    <div id="kcRows"></div>
-    <div class="kc-btns">
-      <button onclick="resetKeyConfig()"
-        style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
-      <button onclick="closeKeyConfig()"
-        style="background:#16a34a;color:#fff;">閉じる</button>
+
+    <div class="cfg-pane active" id="cfgPaneKey">
+      <div id="kcHeader">
+        <span class="kc-label">操作</span>
+        <span class="kc-slot-head">スロット 1</span>
+        <span class="kc-slot-head">スロット 2</span>
+      </div>
+      <div id="kcRows"></div>
+      <div class="kc-btns">
+        <button onclick="resetKeyConfig()"
+          style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    </div>
+
+    <div class="cfg-pane" id="cfgPaneSkin">
+      <div id="skinList"></div>
+      <div class="kc-btns">
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
     </div>
   </div>
 </div>
@@ -777,7 +808,7 @@ const SCORE_TABLE = [0,100,300,500,800];
 const GARBAGE_COLOR = '#4b5563';
 
 // ===== ぷよテト2風テーマ（実際のぷよテト2ミノ画像を使用） =====
-let ppt2Theme = false;
+let ppt2Theme = false;   // = (skinId === 'ppt2')。既存の描画分岐がこのフラグを見ている
 const PPT2_COLORS = {
   I: '#22e5ff',
   O: '#ffe14d',
@@ -791,6 +822,35 @@ const PPT2_COLORS = {
 // 逆引きで色→ミノ種類を求められるようにする
 const PPT2_COLOR_TO_TYPE = {};
 for (const t in PPT2_COLORS) PPT2_COLOR_TO_TYPE[PPT2_COLORS[t]] = t;
+
+// ===== スキン（ミノの見た目）=====
+// style で塗り方を切り替える。色は skin ごとに彩度・明度を変えてある。
+// 注意: 盤面には「色の文字列」が保存されるので、色はスキンをまたいで重複させないこと。
+const SKINS = [
+  { id:'classic', name:'クラシック', desc:'標準', style:'bevel',
+    colors:{ I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#4ade80', Z:'#f87171', J:'#60a5fa', L:'#fb923c' } },
+  { id:'plain',   name:'無地',       desc:'凹凸なしのベタ塗り', style:'flat',
+    colors:{ I:'#00b4d8', O:'#f2c200', T:'#9d38d6', S:'#3fbf5f', Z:'#e14b4b', J:'#3d6fd4', L:'#ee8b22' } },
+  { id:'gloss',   name:'グロス',     desc:'彩度高め・艶あり', style:'gloss',
+    colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
+  { id:'pastel',  name:'パステル',   desc:'彩度低め・つや消し', style:'matte',
+    colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
+  { id:'glass',   name:'透明',       desc:'半透明＋色枠', style:'glass',
+    colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
+  { id:'mono',    name:'モノクローム', desc:'色で見分けない練習用', style:'bevel',
+    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
+  { id:'retro',   name:'レトロ',     desc:'ドット模様', style:'dot',
+    colors:{ I:'#3fbecd', O:'#dcc233', T:'#ac57c7', S:'#57b657', Z:'#cf4a4a', J:'#4a69bf', L:'#d78129' } },
+  { id:'ppt2',    name:'ぷよテト風', desc:'原作に寄せた画像', style:'image',
+    colors:PPT2_COLORS },
+];
+let skinId = 'classic';
+function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS[0]; }
+
+// 盤面には色が保存されるため、どのスキンの色からでもミノ種別に戻せるようにしておく。
+// これでスキンを切り替えたとき、すでに置いたブロックの見た目も追従する。
+const COLOR_TO_TYPE = {};
+for (const sk of SKINS) for (const t in sk.colors) COLOR_TO_TYPE[sk.colors[t]] = t;
 
 const PPT2_CELL_SRC = {
   I: 'data:image/png;base64,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',
@@ -835,7 +895,7 @@ PPT2_BG_IMG.onload = () => {
 PPT2_BG_IMG.src = PPT2_BG_SRC;
 
 function pieceColor(type) {
-  return ppt2Theme ? PPT2_COLORS[type] : PIECE_DEF[type].color;
+  return currentSkin().colors[type];
 }
 // 16進カラーを白寄りに薄める（amt: 0=元の色, 1=白）
 function lighten(hex, amt) {
@@ -858,7 +918,7 @@ function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
   if (color === GARBAGE_COLOR) {
     img = PPT2_GARBAGE_IMG;
   } else {
-    const type = PPT2_COLOR_TO_TYPE[color];
+    const type = COLOR_TO_TYPE[color];   // 他スキンで置いたブロックもぷよテト画像に読み替える
     if (!type) return false;
     img = PPT2_CELL_IMG[type];
   }
@@ -869,13 +929,103 @@ function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
   ctx.restore();
   return true;
 }
-function toggleTheme() {
-  ppt2Theme = document.getElementById('themeCheck').checked;
+// スキンを適用する（盤面・パレット・背景をまとめて切り替える）
+function applySkin(id) {
+  if (!SKINS.some(x => x.id === id)) id = 'classic';
+  skinId = id;
+  ppt2Theme = (id === 'ppt2');
   document.body.classList.toggle('ppt2-theme', ppt2Theme);
-  // 地形パレットの色・選択中の描画カラーもテーマに合わせて再計算する
+  // 地形パレットの色・選択中の描画カラーもスキンに合わせて再計算する
   terrainColor = paletteColorFor(terrainType);
   if (document.getElementById('colorPalette')) initPalette();
+  try { localStorage.setItem('tetren_skin', id); } catch(e) {}
   if (cur) draw();
+}
+function loadSkin() {
+  let saved = null;
+  try { saved = localStorage.getItem('tetren_skin'); } catch(e) {}
+  applySkin(saved || 'classic');
+}
+
+// 角丸パス（ctx.roundRect が無い環境向けのフォールバック付き）
+function roundRectPath(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
+  ctx.closePath();
+}
+
+// スキンに応じて1マス描く。x,y はセル左上、size は1辺の長さ。
+function drawSkinCell(ctx, x, y, size, color, alpha=1) {
+  // ぷよテト風は画像に枠もハイライトも含まれるのでセル全面に描く
+  if (ppt2Theme && drawPPT2Cell(ctx, x, y, size, size, color, alpha)) return;
+  const isGarbage = (color === GARBAGE_COLOR);
+  const type = isGarbage ? null : COLOR_TO_TYPE[color];
+  const col = type ? currentSkin().colors[type] : color;
+  // おじゃまは見分けやすさ優先で、どのスキンでも同じ描き方にする
+  const style = isGarbage ? 'bevel' : currentSkin().style;
+  const k = size / BS;             // 30px基準の倍率（ミニ表示やデカミノでも崩れないように）
+  const x1 = x + 1, y1 = y + 1, w = size - 2, h = size - 2;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (style === 'gloss') {
+    const g = ctx.createLinearGradient(x1, y1, x1, y1 + h);
+    g.addColorStop(0,    lighten(col, 0.55));
+    g.addColorStop(0.45, col);
+    g.addColorStop(0.5,  darken(col, 0.12));
+    g.addColorStop(1,    darken(col, 0.38));
+    roundRectPath(ctx, x1, y1, w, h, 5*k); ctx.fillStyle = g; ctx.fill();
+    const gl = ctx.createLinearGradient(x1, y1, x1, y1 + h*0.5);
+    gl.addColorStop(0, 'rgba(255,255,255,0.55)');
+    gl.addColorStop(1, 'rgba(255,255,255,0)');
+    roundRectPath(ctx, x1+2.5*k, y1+1.5*k, w-5*k, h*0.40, 4*k); ctx.fillStyle = gl; ctx.fill();
+    roundRectPath(ctx, x1+0.5, y1+0.5, w-1, h-1, 5*k);
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = Math.max(1, k); ctx.stroke();
+  } else if (style === 'matte') {
+    roundRectPath(ctx, x1, y1, w, h, 3*k); ctx.fillStyle = col; ctx.fill();
+    roundRectPath(ctx, x1+1.5*k, y1+1.5*k, w-3*k, h-3*k, 2*k);
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = Math.max(1, k); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,0.10)'; ctx.fillRect(x1, y1 + h - 3*k, w, 3*k);
+  } else if (style === 'dot') {
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.fillStyle = darken(col, 0.22);
+    const d = Math.max(2, Math.round(4*k));
+    for (let yy = y1 + d; yy < y1 + h - d*0.5; yy += d*2)
+      for (let xx = x1 + d; xx < x1 + w - d*0.5; xx += d*2)
+        ctx.fillRect(xx, yy, d, d);
+    ctx.fillStyle = 'rgba(255,255,255,0.32)'; ctx.fillRect(x1, y1, w, Math.max(1, 2*k));
+    ctx.strokeStyle = darken(col, 0.55);
+    ctx.lineWidth = Math.max(1, 2*k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'flat') {
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.strokeStyle = darken(col, 0.38);
+    ctx.lineWidth = Math.max(1, k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'glass') {
+    ctx.globalAlpha = alpha * 0.42;
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(1.5, 2*k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+    ctx.globalAlpha = alpha * 0.55;
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillRect(x1 + 3*k, y1 + 3*k, w - 6*k, Math.max(1, 2.5*k));
+  } else {
+    // bevel（クラシック）
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(x1, y1, w, 4*k); ctx.fillRect(x1, y1, 4*k, h);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(x1, y1 + h - 4*k, w, 4*k); ctx.fillRect(x1 + w - 4*k, y1, 4*k, h);
+  }
+  ctx.restore();
 }
 
 // ===== Canvas & Context =====
@@ -1731,37 +1881,11 @@ function updUI() {
 
 // ===== 描画 =====
 function drawBlock(ctx, c, r, color, alpha=1) {
-  // ぷよテト風は画像自体に枠・ハイライトが含まれるためセル全面に描く（本物と同じ見た目）
-  if (ppt2Theme && drawPPT2Cell(ctx, c*BS, r*BS, BS, BS, color, alpha)) return;
-  const x = c*BS+1, y = r*BS+1, w = BS-2, h = BS-2;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.fillRect(x, y, w, 4);
-  ctx.fillRect(x, y, 4, h);
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.fillRect(x, y+h-4, w, 4);
-  ctx.fillRect(x+w-4, y, 4, h);
-  ctx.restore();
+  drawSkinCell(ctx, c*BS, r*BS, BS, color, alpha);
 }
 // デカミノモード用: 論理セル1つを2BS×2BSの大きなブロックとして描画
 function drawBigBlock(ctx, c, r, color, alpha=1) {
-  const sz = BS * 2;
-  if (ppt2Theme && drawPPT2Cell(ctx, c*BS, r*BS, sz, sz, color, alpha)) return;
-  const x = c*BS+1, y = r*BS+1, w = sz-2, h = sz-2;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.fillRect(x, y, w, 6);
-  ctx.fillRect(x, y, 6, h);
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.fillRect(x, y+h-6, w, 6);
-  ctx.fillRect(x+w-6, y, 6, h);
-  ctx.restore();
+  drawSkinCell(ctx, c*BS, r*BS, BS*2, color, alpha);
 }
 
 // 回転軸のキャンバス座標を返す（カレントピースとゴーストで共用）
@@ -1831,7 +1955,7 @@ function drawBoard() {
       // ミノ色を白っぽく薄めた面 + 中央の暗い斑 + セルごとの白に近い破線枠
       const step = dekaMode ? 2 : 1;
       const sz = BS * step;
-      const type = PPT2_COLOR_TO_TYPE[color];
+      const type = COLOR_TO_TYPE[color];
       const img = type && PPT2_CELL_IMG[type];
       const imgOk = img && img.complete && img.naturalWidth > 0;
       // 隣接セルの共有辺が二重線にならないよう、辺は1本ずつしか引かない。
@@ -1962,16 +2086,7 @@ function drawMini(ctx, type, yOff, w, h, dim=false, bs=18) {
   ctx.save();
   for (const [r,c] of cells) {
     const px = sx+(c-minC)*bs, py = sy+(r-minR)*bs;
-    if (ppt2Theme && drawPPT2Cell(ctx, px, py, bs, bs, color, alpha)) {
-      // 画像描画済み
-    } else {
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = color;
-      ctx.fillRect(px+1,py+1,bs-2,bs-2);
-      ctx.fillStyle='rgba(255,255,255,0.25)';
-      ctx.fillRect(px+1,py+1,bs-2,3);
-      ctx.fillRect(px+1,py+1,3,bs-2);
-    }
+    drawSkinCell(ctx, px, py, bs, color, alpha);
   }
   ctx.restore();
 }
@@ -2829,9 +2944,49 @@ function renderKcBtn(id, slot) {
   btn.style.color = code ? '#f9fafb' : '#6b7280';
 }
 
-function openKeyConfig() {
+// ===== 設定モーダル =====
+function switchConfigTab(name) {
+  const isKey = (name === 'key');
+  document.getElementById('cfgTabKey').classList.toggle('active', isKey);
+  document.getElementById('cfgTabSkin').classList.toggle('active', !isKey);
+  document.getElementById('cfgPaneKey').classList.toggle('active', isKey);
+  document.getElementById('cfgPaneSkin').classList.toggle('active', !isKey);
+  if (!isKey) renderSkinList();
+}
+
+// スキン一覧（見本つき）を描き直す
+function renderSkinList() {
+  const list = document.getElementById('skinList');
+  list.innerHTML = '';
+  const sample = ['I','O','T','Z'];      // 見本に使うミノ
+  const bs = 30;      // 実際の盤面と同じ大きさで見せる（質感の差がわかるように）
+  SKINS.forEach(sk => {
+    const card = document.createElement('button');
+    card.className = 'skin-card' + (sk.id === skinId ? ' selected' : '');
+    card.type = 'button';
+    const cv = document.createElement('canvas');
+    cv.width = bs * sample.length; cv.height = bs;
+    const cx = cv.getContext('2d');
+    setupHiDPICanvas(cv, cx);
+    // 見本を描く間だけスキンを差し替える
+    const prevId = skinId, prevPpt = ppt2Theme;
+    skinId = sk.id; ppt2Theme = (sk.id === 'ppt2');
+    sample.forEach((t, i) => drawSkinCell(cx, i * bs, 0, bs, sk.colors[t], 1));
+    skinId = prevId; ppt2Theme = prevPpt;
+    const name = document.createElement('div');
+    name.className = 'skin-name'; name.textContent = sk.name;
+    const desc = document.createElement('div');
+    desc.className = 'skin-desc'; desc.textContent = sk.desc;
+    card.appendChild(cv); card.appendChild(name); card.appendChild(desc);
+    card.addEventListener('click', () => { applySkin(sk.id); renderSkinList(); });
+    list.appendChild(card);
+  });
+}
+
+function openConfig() {
   // 待機中があればキャンセル
   if (kcWaiting) { renderKcBtn(kcWaiting.id, kcWaiting.slot); kcWaiting = null; }
+  switchConfigTab('key');
   const container = document.getElementById('kcRows');
   container.innerHTML = '';
   KC_ACTIONS.forEach(a => {
@@ -2871,7 +3026,7 @@ function openKeyConfig() {
   document.getElementById('keyconfigModal').style.display = 'flex';
 }
 
-function closeKeyConfig() {
+function closeConfig() {
   if (kcWaiting) { renderKcBtn(kcWaiting.id, kcWaiting.slot); kcWaiting = null; }
   saveKeyConfig();
   document.getElementById('keyconfigModal').style.display = 'none';
@@ -2880,7 +3035,7 @@ function closeKeyConfig() {
 function resetKeyConfig() {
   KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
   try { localStorage.removeItem('tetren_keyconfig'); } catch(e) {}
-  openKeyConfig();
+  openConfig();
 }
 
 function startKeyWait(id, slot, btn) {
@@ -2990,8 +3145,9 @@ function startGame() {
 
 document.getElementById('startBtn').addEventListener('click', startGame);
 
-// キーコンフィグ初期化
+// キーコンフィグ・スキン初期化
 initKeyConfig();
+loadSkin();
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
