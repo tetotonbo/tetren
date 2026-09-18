@@ -422,7 +422,7 @@ body.ppt2-theme #nextCanvas {
       </label>
       <div id="colorSection">
         <div class="panel-label" style="margin-top:8px;">カラー</div>
-        <div id="colorPalette" style="display:grid;grid-template-columns:repeat(4,20px);gap:4px;"></div>
+        <div id="colorPalette" style="display:flex;flex-direction:column;gap:4px;"></div>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px;">
         <button class="garb-btn" style="flex:1;background:#374151;"
@@ -1300,16 +1300,13 @@ function startLock() {
 }
 // ===== カラーパレット =====
 // type: I/O/T/S/Z/J/L はミノ種別（pieceColor()でテーマに応じた色を都度取得する）。おじゃまはnull固定色。
-const PALETTE_COLORS = [
-  { label:'オート（なぞった形のミノ色になる）', type: 'AUTO' },
-  { label:'おじゃま', type: null },
-  { label:'I',        type: 'I' },
-  { label:'O',        type: 'O' },
-  { label:'T',        type: 'T' },
-  { label:'S',        type: 'S' },
-  { label:'Z',        type: 'Z' },
-  { label:'J',        type: 'J' },
-  { label:'L',        type: 'L' },
+// パレットの並び。1段目は特殊なもの、2段目以降はミノ（DPCセットの選択画面と同じ並び）
+const PALETTE_ROWS = [
+  [ { label:'オート（なぞった形のミノ色になる）', type: 'AUTO' },
+    { label:'おじゃま', type: null } ],
+  [ { label:'I', type:'I' }, { label:'T', type:'T' }, { label:'O', type:'O' } ],
+  [ { label:'J', type:'J' }, { label:'L', type:'L' },
+    { label:'S', type:'S' }, { label:'Z', type:'Z' } ],
 ];
 
 function paletteColorFor(type) {
@@ -1320,7 +1317,10 @@ function paletteColorFor(type) {
 function initPalette() {
   const container = document.getElementById('colorPalette');
   container.innerHTML = '';
-  PALETTE_COLORS.forEach(({ label, type }) => {
+  PALETTE_ROWS.forEach(rowDef => {
+   const row = document.createElement('div');
+   row.style.cssText = 'display:flex; gap:4px;';
+   rowDef.forEach(({ label, type }) => {
     const color = paletteColorFor(type);
     const btn = document.createElement('button');
     btn.title = label;
@@ -1340,7 +1340,9 @@ function initPalette() {
     }
     if (type === terrainType) btn.style.borderColor = '#fff';
     btn.addEventListener('click', () => selectTerrainColor(type));
-    container.appendChild(btn);
+    row.appendChild(btn);
+   });
+   container.appendChild(row);
   });
 }
 
