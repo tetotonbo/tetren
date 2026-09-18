@@ -1276,6 +1276,7 @@ function startLock() {
 // ===== カラーパレット =====
 // type: I/O/T/S/Z/J/L はミノ種別（pieceColor()でテーマに応じた色を都度取得する）。おじゃまはnull固定色。
 const PALETTE_COLORS = [
+  { label:'オート（なぞった形のミノ色になる）', type: 'AUTO' },
   { label:'おじゃま', type: null },
   { label:'I',        type: 'I' },
   { label:'O',        type: 'O' },
@@ -1287,7 +1288,8 @@ const PALETTE_COLORS = [
 ];
 
 function paletteColorFor(type) {
-  return type ? pieceColor(type) : GARBAGE_COLOR;
+  if (!type || type === 'AUTO') return GARBAGE_COLOR;   // オートはおじゃま色で置き始める
+  return pieceColor(type);
 }
 
 function initPalette() {
@@ -1302,6 +1304,15 @@ function initPalette() {
       width:20px; height:20px; border-radius:3px; border:2px solid transparent;
       background:${color}; cursor:pointer; padding:0; transition:border-color .1s;
     `;
+    if (type === 'AUTO') {
+      // 「オート」は正方形にAの1文字だけ載せる（「オート」だと枠に入らないため）
+      btn.textContent = 'A';
+      btn.style.color = '#e5e7eb';
+      btn.style.font = 'bold 12px/1 Arial, sans-serif';
+      btn.style.display = 'flex';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = 'center';
+    }
     if (type === terrainType) btn.style.borderColor = '#fff';
     btn.addEventListener('click', () => selectTerrainColor(type));
     container.appendChild(btn);
@@ -1311,6 +1322,7 @@ function initPalette() {
 function selectTerrainColor(type) {
   terrainType = type;
   terrainColor = paletteColorFor(type);
+  autoGroup = [];   // 色を選び直したら、作りかけのミノは打ち切る
   document.querySelectorAll('#colorPalette button').forEach(btn => {
     btn.style.borderColor = (btn.dataset.type || null) === type ? '#fff' : 'transparent';
   });
@@ -1338,10 +1350,59 @@ function getTerrainCell(e) {
   return { row, col };
 }
 
+// ===== オート（なぞった形のミノになる）=====
+// 置きかけの4マス。1マス目は自由、2マス目以降は既に置いたマスの上下左右のみ。
+// 4マス揃った時点で、その形に一致するミノの色へ塗り替えてリセットする。
+let autoGroup = [];
+// 形（正規化した4マスの並び）→ ミノ種別 の対応表
+const AUTO_SHAPES = {};
+(function buildAutoShapes() {
+  const key = cells => {
+    const mr = Math.min(...cells.map(c => c[0])), mc = Math.min(...cells.map(c => c[1]));
+    return cells.map(([r,c]) => (r-mr) + ',' + (c-mc)).sort().join(' ');
+  };
+  for (const t in PIECE_DEF)
+    for (const st of PIECE_DEF[t].cells) AUTO_SHAPES[key(st)] = t;
+  AUTO_SHAPES._key = key;
+})();
+
+function autoIsAdjacent(row, col) {
+  return autoGroup.some(([r,c]) => Math.abs(r-row) + Math.abs(c-col) === 1);
+}
+
+// オート時の1マス処理。描画が必要ならtrueを返す
+function applyAutoAt(row, col) {
+  if (board[row][col]) return false;   // 既にある場所は素通り（削除は消去モード側で行う）
+  // 2マス目以降は、直前までに置いたマスと辺で接している場所だけ
+  if (autoGroup.length > 0 && !autoIsAdjacent(row, col)) return false;
+  board[row][col] = GARBAGE_COLOR;
+  autoGroup.push([row, col]);
+  if (autoGroup.length === 4) {
+    const type = AUTO_SHAPES[AUTO_SHAPES._key(autoGroup)];
+    if (type) {
+      const color = pieceColor(type);
+      for (const [r,c] of autoGroup) board[r][c] = color;
+    }
+    autoGroup = [];   // 次はまたどこからでも置ける
+  }
+  return true;
+}
+
 function applyTerrainAt(e) {
   const cell = getTerrainCell(e);
   if (!cell) return;
   const { row, col } = cell;
+  if (terrainType === 'AUTO') {
+    if (terrainPaintMode === 'erase') {
+      if (!board[row][col]) return;
+      board[row][col] = null;
+      autoGroup = autoGroup.filter(([r,c]) => !(r === row && c === col));
+    } else if (!applyAutoAt(row, col)) {
+      return;   // 置けない場所だったので何もしない
+    }
+    draw();
+    return;
+  }
   if (terrainPaintMode === 'set') {
     board[row][col] = terrainColor;
   } else {
@@ -3158,6 +3219,7 @@ function resetGameState(fullReset = true) {
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
   // 地形 → ロック解除（編集可）状態にリセット
   setTerrainMode(true);
+  autoGroup = [];
   // RENモードONならスタート時に地形セット
   if (renMode) setupRenTerrain();
   resetLock(); updUI(); fillQ(); spawn(); draw();
