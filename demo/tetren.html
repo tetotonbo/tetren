@@ -976,6 +976,18 @@ function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
   return true;
 }
 
+// 一時的に別スキンで描く。「透明」スキンでもHOLD/NEXT/ゴーストは見えないと
+// 操作のしようがないので、そこだけ「無地」で描くために使う。
+function withSkin(id, fn) {
+  const prevId = skinId, prevPpt = ppt2Theme;
+  skinId = id; ppt2Theme = (id === 'ppt2');
+  try { fn(); } finally { skinId = prevId; ppt2Theme = prevPpt; }
+}
+// 「透明」スキンのときの代替スキン（それ以外はそのまま）
+function visibleSkinId() {
+  return currentSkin().style === 'invisible' ? 'plain' : skinId;
+}
+
 // スキンを適用する（盤面・パレット・背景をまとめて切り替える）
 function applySkin(id) {
   if (!SKINS.some(x => x.id === id)) id = 'plain';
@@ -2134,16 +2146,20 @@ function drawBoard() {
       }
       boardCtx.restore();
     } else if (dekaMode) {
-      for (const [r,c] of cells) {
-        const vr0=(gr+r)*2-BUF, vc0=(cur.col+c)*2;
-        if (vr0+1 >= 0) drawBigBlock(boardCtx, vc0, Math.max(vr0,0), color, 0.2);
-        else if (vr0 >= -1) drawBigBlock(boardCtx, vc0, 0, color, 0.2);
-      }
+      withSkin(visibleSkinId(), () => {
+        for (const [r,c] of cells) {
+          const vr0=(gr+r)*2-BUF, vc0=(cur.col+c)*2;
+          if (vr0+1 >= 0) drawBigBlock(boardCtx, vc0, Math.max(vr0,0), color, 0.2);
+          else if (vr0 >= -1) drawBigBlock(boardCtx, vc0, 0, color, 0.2);
+        }
+      });
     } else {
-      for (const [r,c] of cells) {
-        const vr=gr+r-BUF, vc=cur.col+c;
-        if(vr>=-1) drawBlock(boardCtx,vc,vr,color,0.2);
-      }
+      withSkin(visibleSkinId(), () => {
+        for (const [r,c] of cells) {
+          const vr=gr+r-BUF, vc=cur.col+c;
+          if(vr>=-1) drawBlock(boardCtx,vc,vr,color,0.2);
+        }
+      });
     }
   }
   // カレントピース（常に表示）
@@ -2193,10 +2209,12 @@ function drawMini(ctx, type, yOff, w, h, dim=false, bs=18) {
   const sy = yOff + Math.floor((h-bh*bs)/2);
   const alpha = dim ? 0.3 : 1;
   ctx.save();
-  for (const [r,c] of cells) {
-    const px = sx+(c-minC)*bs, py = sy+(r-minR)*bs;
-    drawSkinCell(ctx, px, py, bs, color, alpha);
-  }
+  withSkin(visibleSkinId(), () => {
+    for (const [r,c] of cells) {
+      const px = sx+(c-minC)*bs, py = sy+(r-minR)*bs;
+      drawSkinCell(ctx, px, py, bs, color, alpha);
+    }
+  });
   ctx.restore();
 }
 
