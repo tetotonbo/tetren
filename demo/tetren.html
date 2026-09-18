@@ -859,8 +859,8 @@ const SKINS = [
   { id:'ppt2',    name:'ぷよテト風', desc:'原作に寄せた画像', style:'image',
     colors:PPT2_COLORS },
 ];
-let skinId = 'classic';
-function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS[0]; }
+let skinId = 'plain';   // 既定は「無地」
+function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS.find(x => x.id === 'plain'); }
 
 // 盤面には色が保存されるため、どのスキンの色からでもミノ種別に戻せるようにしておく。
 // これでスキンを切り替えたとき、すでに置いたブロックの見た目も追従する。
@@ -974,7 +974,7 @@ function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
 
 // スキンを適用する（盤面・パレット・背景をまとめて切り替える）
 function applySkin(id) {
-  if (!SKINS.some(x => x.id === id)) id = 'classic';
+  if (!SKINS.some(x => x.id === id)) id = 'plain';
   skinId = id;
   ppt2Theme = (id === 'ppt2');
   document.body.classList.toggle('ppt2-theme', ppt2Theme);
@@ -987,7 +987,7 @@ function applySkin(id) {
 function loadSkin() {
   let saved = null;
   try { saved = localStorage.getItem('tetren_skin'); } catch(e) {}
-  applySkin(saved || 'classic');
+  applySkin(saved || 'plain');
 }
 
 // 角丸パス（ctx.roundRect が無い環境向けのフォールバック付き）
