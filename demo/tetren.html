@@ -852,7 +852,7 @@ const SKINS = [
     colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
   { id:'pastel',  name:'パステル',   desc:'彩度低め・つや消し', style:'matte',
     colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
-  { id:'glass',   name:'透明',       desc:'半透明＋色枠', style:'glass',
+  { id:'glass',   name:'透明',       desc:'ほぼ透明・枠で判別', style:'glass',
     colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
   { id:'mono',    name:'モノクローム', desc:'色で見分けない練習用', style:'bevel',
     colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
@@ -1053,15 +1053,16 @@ function drawSkinCell(ctx, x, y, size, color, alpha=1) {
     ctx.lineWidth = Math.max(1, k);
     ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
   } else if (style === 'glass') {
-    ctx.globalAlpha = alpha * 0.42;
+    // ほぼ透明。中身はうっすら色が乗る程度で、枠でミノを見分ける
+    ctx.globalAlpha = alpha * 0.13;
     ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha = alpha * 0.9;
     ctx.strokeStyle = col;
     ctx.lineWidth = Math.max(1.5, 2*k);
     ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
-    ctx.globalAlpha = alpha * 0.55;
+    ctx.globalAlpha = alpha * 0.25;
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.fillRect(x1 + 3*k, y1 + 3*k, w - 6*k, Math.max(1, 2.5*k));
+    ctx.fillRect(x1 + 3*k, y1 + 3*k, w - 6*k, Math.max(1, 2*k));
   } else {
     // bevel（クラシック）
     ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
