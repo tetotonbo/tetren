@@ -241,8 +241,9 @@ body.ppt2-theme #nextCanvas {
   width:14px; height:14px; border-radius:50%; background:#fff;
   transition:transform .15s;
 }
-.tgl-row input:checked + .tgl { background:#16a34a; }
-.tgl-row input:checked + .tgl::after { transform:translateX(16px); }
+/* トグルはどの行（.tgl-row / .opt-row）でも同じ見た目にする */
+input:checked + .tgl { background:#16a34a; }
+input:checked + .tgl::after { transform:translateX(16px); }
 /* 操作ボタンの出し入れ（PCではキーボードで操作するので既定では隠す） */
 .ctrl-toggle {
   width:100%; background:#1f2937; color:#9ca3af;
@@ -352,6 +353,18 @@ body.ppt2-theme #nextCanvas {
 .cfg-tab.active { color:#fff; border-bottom-color:#6366f1; }
 .cfg-pane { display:none; }
 .cfg-pane.active { display:block; }
+/* その他タブの設定行 */
+.opt-row {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:10px 4px; border-bottom:1px solid #374151;
+}
+.opt-row:last-of-type { border-bottom:none; }
+.opt-row input[type=checkbox] { display:none; }
+.opt-label { font-size:13px; color:#e5e7eb; flex:1; min-width:0; }
+.opt-note { display:block; font-size:10px; color:#9ca3af; margin-top:2px; line-height:1.5; }
+.opt-step { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+.opt-val { font-size:13px; color:#e2e8f0; min-width:58px; text-align:center; }
+.opt-unit { font-size:10px; color:#6b7280; }
 /* スキン選択 */
 #skinList { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 .skin-card {
@@ -675,6 +688,7 @@ body.ppt2-theme #nextCanvas {
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab"        id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
@@ -695,6 +709,53 @@ body.ppt2-theme #nextCanvas {
     <div class="cfg-pane" id="cfgPaneSkin">
       <div id="skinList"></div>
       <div class="kc-btns">
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    </div>
+
+    <div class="cfg-pane" id="cfgPaneMisc">
+      <label class="opt-row">
+        <span class="opt-label">連続ホールド許可
+          <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）</span></span>
+        <input type="checkbox" id="optMultiHold" checked
+          onchange="setOption('multiHold', this.checked)">
+        <span class="tgl"></span>
+      </label>
+
+      <div class="opt-row">
+        <span class="opt-label">せりあがりの穴継続率
+          <span class="opt-note">せり上がったとき、前回と同じ列に穴が空く確率</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('holeKeep',-1)">‹</button>
+          <span class="opt-val"><span id="optHoleKeepVal">100</span><span class="opt-unit"> %</span></span>
+          <button class="step-btn" onclick="stepOption('holeKeep',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">ソフトドロップ速度
+          <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('softSpeed',-1)">‹</button>
+          <span class="opt-val" id="optSoftSpeedVal">5</span>
+          <button class="step-btn" onclick="stepOption('softSpeed',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">ミノの設置時間
+          <span class="opt-note">接地してから固定されるまでの猶予。落下が1G以上のときに効きます</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('lockFrames',-1)">‹</button>
+          <span class="opt-val"><span id="optLockFramesVal">30</span><span class="opt-unit"> F</span></span>
+          <button class="step-btn" onclick="stepOption('lockFrames',1)">›</button>
+        </div>
+      </div>
+
+      <div class="kc-btns">
+        <button onclick="resetOptions()"
+          style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
       </div>
@@ -1139,7 +1200,7 @@ let terrainType = null; // 現在選択中のパレット種別（I/O/T/S/Z/J/L�
 let lastGarbageCol = null; // 直前のおじゃまの穴列
 let downHeld = false;     // ↓キー押しっぱなし状態
 let lastSoftDrop = 0;     // ソフトドロップ最終処理時刻
-const SOFT_DROP_RATE = 50; // ソフトドロップ間隔(ms)
+// ソフトドロップ間隔は「その他」設定から決まる（softDropRate()）
 let digMode = false;       // 掘り練習モード（自動せりあがりON/OFF）
 let digTriggerType = 'time'; // トリガー種別: 'mino'=ミノごと / 'time'=秒数
 let digCount = 0;          // ミノごとモードでのピース設置数
@@ -1275,6 +1336,8 @@ function rotate(dir) { // dir: 1=CW, -1=CCW
 
 // ===== ホールド =====
 function doHold() {
+  // 連続ホールドOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
+  if (!opts.multiHold && !canHold) return;
   if (holdType === null) {
     holdType = cur.type;
     spawn();
@@ -1283,9 +1346,12 @@ function doHold() {
     holdType = cur.type;
     cur = mkPiece(t);
   }
+  canHold = false;   // spawn()側で次のミノ出現時に戻る
   lastWasRotation = false;
   resetLock(); draw();
 }
+// いまホールドできるか（HOLD表示のグレーアウト判定にも使う）
+function canUseHold() { return opts.multiHold || canHold; }
 
 // ===== ロック =====
 function resetLock() {
@@ -1295,7 +1361,7 @@ function resetLock() {
 function startLock() {
   if (!isLocking) {
     isLocking = true;
-    lockTimer = setTimeout(lock, 500);
+    lockTimer = setTimeout(lock, lockDelayMs());
   }
 }
 // ===== カラーパレット =====
@@ -1725,10 +1791,12 @@ function resetTerrain() {
 
 // ===== おじゃまブロック競り上がり =====
 function addGarbage(sameHole) {
-  // 穴の列を決定
-  // おじゃまがない or ランダム指定 → ランダム、同じ穴指定かつ直前あり → 同じ列
+  // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
+  // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
   let holeCol;
-  if (sameHole && lastGarbageCol !== null) {
+  const keepSame = lastGarbageCol !== null &&
+    (sameHole === true || Math.random() * 100 < opts.holeKeep);
+  if (keepSame) {
     holeCol = lastGarbageCol;
   } else {
     // ランダム（直前と被っても可）
@@ -2245,7 +2313,7 @@ function drawHold() {
     holdCtx.fillStyle = '#0d1117';
     holdCtx.fillRect(0,0,100,80);
   }
-  drawMini(holdCtx, holdType, 0, 100, 80, false);
+  drawMini(holdCtx, holdType, 0, 100, 80, !canUseHold());
 }
 
 function drawNext() {
@@ -2312,7 +2380,7 @@ function loop(ts) {
   if (gameOver) return;
 
   // ↓キー押しっぱなし：ブラウザのキーリピートに頼らずポーリング
-  if (downHeld && ts - lastSoftDrop >= SOFT_DROP_RATE) {
+  if (downHeld && ts - lastSoftDrop >= softDropRate()) {
     softDrop();
     lastSoftDrop = ts;
   }
@@ -3073,14 +3141,69 @@ function renderKcBtn(id, slot) {
   btn.style.color = code ? '#f9fafb' : '#6b7280';
 }
 
+// ===== その他の設定 =====
+const OPT_DEFAULTS = {
+  multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
+  holeKeep: 100,      // せりあがりの穴継続率(%)
+  softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
+  lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
+};
+// [最小, 最大, 刻み]
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
+let opts = Object.assign({}, OPT_DEFAULTS);
+
+// ソフトドロップの間隔(ms)。数字が大きいほど速い
+const SOFT_DROP_MS = [130, 105, 85, 65, 50, 38, 28, 20, 13, 8];
+function softDropRate() {
+  return SOFT_DROP_MS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+}
+// 接地してから固定されるまでのミリ秒
+function lockDelayMs() { return opts.lockFrames * 1000 / 60; }
+
+function saveOptions() {
+  try { localStorage.setItem('tetren_options', JSON.stringify(opts)); } catch(e) {}
+}
+function loadOptions() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_options'); } catch(e) {}
+  if (raw) { try { Object.assign(opts, JSON.parse(raw)); } catch(e) {} }
+  applyOptions();
+}
+// 画面表示を今の設定値に合わせる
+function applyOptions() {
+  const sw = document.getElementById('optMultiHold');
+  if (sw) sw.checked = opts.multiHold;
+  const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  put('optHoleKeepVal',   opts.holeKeep);
+  put('optSoftSpeedVal',  opts.softSpeed);
+  put('optLockFramesVal', opts.lockFrames);
+  if (cur) draw();
+}
+function setOption(key, value) {
+  opts[key] = value;
+  saveOptions();
+  applyOptions();
+}
+function stepOption(key, dir) {
+  const [min, max, step] = OPT_RANGE[key];
+  setOption(key, Math.min(max, Math.max(min, opts[key] + dir * step)));
+}
+function resetOptions() {
+  opts = Object.assign({}, OPT_DEFAULTS);
+  saveOptions();
+  applyOptions();
+}
+
 // ===== 設定モーダル =====
 function switchConfigTab(name) {
-  const isKey = (name === 'key');
-  document.getElementById('cfgTabKey').classList.toggle('active', isKey);
-  document.getElementById('cfgTabSkin').classList.toggle('active', !isKey);
-  document.getElementById('cfgPaneKey').classList.toggle('active', isKey);
-  document.getElementById('cfgPaneSkin').classList.toggle('active', !isKey);
-  if (!isKey) renderSkinList();
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'], misc:['cfgTabMisc','cfgPaneMisc'] };
+  for (const k in TABS) {
+    const [tab, pane] = TABS[k];
+    document.getElementById(tab).classList.toggle('active', k === name);
+    document.getElementById(pane).classList.toggle('active', k === name);
+  }
+  if (name === 'skin') renderSkinList();
+  if (name === 'misc') applyOptions();
 }
 
 // スキン一覧（見本つき）を描き直す
@@ -3275,6 +3398,7 @@ document.getElementById('startBtn').addEventListener('click', startGame);
 // キーコンフィグ・スキン初期化
 initKeyConfig();
 loadSkin();
+loadOptions();
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
