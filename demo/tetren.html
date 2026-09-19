@@ -1820,14 +1820,32 @@ function addGarbage(sameHole) {
   board.push(garbageRow);
 
   // カレントピースが盤面と重なった場合は1行上へ押し上げ
+  let escaped = true;
   if (!valid(cur, 0, 0, cur.state)) {
     cur.row--;
     // それでも重なるなら強制押し上げ（スタック上端に接している場合）
     while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+    escaped = valid(cur, 0, 0, cur.state);   // 上端でも逃がせなければ詰み
   }
 
   resetLock();
   draw();
+
+  // 自動せりあがりのときは、積み上がりすぎたらゲームオーバーにする。
+  // （↑ボタンは地形を作るための操作なので判定しない）
+  if (sameHole !== true && !gameOver && (!escaped || isStackOverflow())) {
+    gameOver = true;
+    setTimeout(() => showOverlay('ゲームオーバー','もう一度'), 100);
+  }
+}
+
+// 積み上がりすぎ判定。設置時の判定と基準を揃えて
+// 「真ん中4列が21段目以上まで到達したら終了」とする
+function isStackOverflow() {
+  for (let r = 0; r < BUF; r++)
+    for (let c = MID_COL_L; c <= MID_COL_R; c++)
+      if (board[r][c]) return true;
+  return false;
 }
 
 // ===== 地形を強制的に一段下にシフト（addGarbageの逆方向） =====

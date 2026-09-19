@@ -726,14 +726,30 @@ function updateDigCounter(){
 function discardPiece(){resetLock();spawn();draw();}
 
 // ===== おじゃま =====
+// 積み上がりすぎ判定: 真ん中4列が21段目以上まで到達したら終了
+const MID_COL_L = Math.floor((COLS-4)/2), MID_COL_R = MID_COL_L+3;
+function isStackOverflow(){
+  for(let r=0;r<BUF;r++) for(let c=MID_COL_L;c<=MID_COL_R;c++) if(board[r][c]) return true;
+  return false;
+}
 function addGarbage(sameHole){
   const holeCol=(sameHole&&lastGarbageCol!==null)?lastGarbageCol:Math.floor(Math.random()*COLS);
   lastGarbageCol=holeCol;
   board.shift();
   const g=new Array(COLS).fill(GARBAGE_COLOR); g[holeCol]=null;
   board.push(g);
-  if(!valid(cur,0,0,cur.state)){cur.row--;while(!valid(cur,0,0,cur.state)&&cur.row>0)cur.row--;}
+  let escaped=true;
+  if(!valid(cur,0,0,cur.state)){
+    cur.row--;
+    while(!valid(cur,0,0,cur.state)&&cur.row>0)cur.row--;
+    escaped=valid(cur,0,0,cur.state);   // 上端でも逃がせなければ詰み
+  }
   resetLock();draw();
+  // せりあがりで積み上がりすぎたらゲームオーバー（ミノを置かないままでも判定される）
+  if(!gameOver&&(!escaped||isStackOverflow())){
+    gameOver=true;
+    setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);
+  }
 }
 
 // ===== スナップショット =====
