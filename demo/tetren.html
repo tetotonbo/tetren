@@ -459,6 +459,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;">⚙ 設定</button>
+      <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
+      <button id="verSwitchBtn" class="kc-open-btn"
+        style="display:none;background:#374151;"
+        onclick="switchVersion()">📱 スマホ版へ</button>
     </div>
 
     <!-- ライン消去メッセージ -->
@@ -3407,6 +3411,15 @@ function startGame() {
 }
 
 document.getElementById('startBtn').addEventListener('click', startGame);
+
+// ===== 版の切り替え（デモ版限定） =====
+// URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
+function isDemoBuild() { return location.pathname.indexOf('/demo/') >= 0; }
+function switchVersion() { location.href = 'tetren_mobile.html'; }
+if (isDemoBuild()) {
+  const vb = document.getElementById('verSwitchBtn');
+  if (vb) vb.style.display = '';
+}
 
 // キーコンフィグ・スキン初期化
 initKeyConfig();

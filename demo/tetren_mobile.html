@@ -220,6 +220,9 @@ canvas { display:block; }
     </div>
     <button class="side-btn" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
+    <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
+    <button class="side-btn" id="verSwitchBtn" style="display:none;margin-top:4px;"
+      onclick="switchVersion()">🖥 PC版<br>へ</button>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
@@ -1051,6 +1054,15 @@ function drawNext(){
 }
 
 function draw(){drawBoard();drawHold();drawNext();}
+
+// ===== 版の切り替え（デモ版限定） =====
+// URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
+function isDemoBuild(){ return location.pathname.indexOf('/demo/') >= 0; }
+function switchVersion(){ location.href='tetren.html'; }
+if(isDemoBuild()){
+  const vb=document.getElementById('verSwitchBtn');
+  if(vb) vb.style.display='';
+}
 
 // ===== DPCセット（選んだミノをHOLDにして、地形とツモをリセット）=====
 const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];
