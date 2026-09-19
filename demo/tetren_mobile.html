@@ -473,6 +473,7 @@ function startLock(){if(!isLocking){isLocking=true;lockTimer=setTimeout(lock,500
 
 // ===== 地形編集 =====
 const PALETTE_COLORS = [
+  {label:'オート（なぞった形のミノ色になる）', color:'AUTO'},
   {label:'おじゃま', color:GARBAGE_COLOR},
   {label:'I', color:'#22d3ee'},{label:'O', color:'#facc15'},
   {label:'T', color:'#a855f7'},{label:'S', color:'#4ade80'},
@@ -488,7 +489,13 @@ function initPalette(){
     btn.className = 'color-swatch' + (color===terrainColor?' sel':'');
     btn.title = label;
     btn.dataset.color = color;
-    btn.style.background = color;
+    btn.style.background = (color==='AUTO') ? GARBAGE_COLOR : color;
+    if(color==='AUTO'){
+      // 「オート」は枠に文字が入らないのでAの1文字だけ載せる
+      btn.textContent = 'A';
+      btn.style.color = '#e5e7eb';
+      btn.style.font = 'bold 14px/1 Arial, sans-serif';
+    }
     btn.addEventListener('click', () => selectTerrainColor(color));
     wrap.appendChild(btn);
   });
@@ -496,6 +503,7 @@ function initPalette(){
 
 function selectTerrainColor(color){
   terrainColor = color;
+  autoGroup = [];   // 色を選び直したら、作りかけのミノは打ち切る
   document.querySelectorAll('.color-swatch').forEach(b => {
     b.classList.toggle('sel', b.dataset.color===color);
   });
@@ -529,7 +537,47 @@ function getTerrainCellFromPoint(clientX, clientY){
   return {row, col};
 }
 
+// ===== オート（なぞった形のミノになる）=====
+// 1マス目は自由、2マス目以降は置いたマスの上下左右のみ。
+// 4マス揃った時点で、その形に一致するミノの色へ塗り替えてリセットする。
+let autoGroup = [];
+const AUTO_SHAPES = {};
+(function buildAutoShapes(){
+  const key = cells => {
+    const mr=Math.min(...cells.map(c=>c[0])), mc=Math.min(...cells.map(c=>c[1]));
+    return cells.map(([r,c])=>(r-mr)+','+(c-mc)).sort().join(' ');
+  };
+  for(const t in PIECE_DEF) for(const st of PIECE_DEF[t].cells) AUTO_SHAPES[key(st)]=t;
+  AUTO_SHAPES._key = key;
+})();
+function autoIsAdjacent(row,col){
+  return autoGroup.some(([r,c])=>Math.abs(r-row)+Math.abs(c-col)===1);
+}
+// 置けたらtrue
+function applyAutoAt(row,col){
+  if(board[row][col]) return false;   // 既にある場所は素通り（削除は消去モード側）
+  if(autoGroup.length>0 && !autoIsAdjacent(row,col)) return false;
+  board[row][col] = GARBAGE_COLOR;
+  autoGroup.push([row,col]);
+  if(autoGroup.length===4){
+    const type = AUTO_SHAPES[AUTO_SHAPES._key(autoGroup)];
+    if(type){ const col2=PIECE_DEF[type].color; for(const[r,c] of autoGroup) board[r][c]=col2; }
+    autoGroup = [];   // 次はまたどこからでも置ける
+  }
+  return true;
+}
+
 function applyTerrainAt(col, row){
+  if(terrainColor==='AUTO'){
+    if(terrainPaintMode==='erase'){
+      if(!board[row][col]) return;
+      board[row][col] = null;
+      autoGroup = autoGroup.filter(([r,c])=>!(r===row&&c===col));
+    } else if(!applyAutoAt(row,col)){
+      return;   // 置けない場所だったので何もしない
+    }
+    draw(); return;
+  }
   if(terrainPaintMode==='set') board[row][col] = terrainColor;
   else                          board[row][col] = null;
   draw();
@@ -1225,7 +1273,7 @@ function startGame(){
   document.getElementById('overlay').style.display='none';
   cancelAnimationFrame(rafId);
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
-  bag=[];nextQ=[];holdType=null;canHold=true;
+  bag=[];nextQ=[];holdType=null;canHold=true;autoGroup=[];
   score=0;level=1;lines=0;b2b=false;gameOver=false;
   dropInterval=1000;lastDrop=0;gravityOn=false;undoStack=[];lastGarbageCol=null;
   gravSpeed=0; downHeld=false;lastSoftDrop=0; stopDAS();
