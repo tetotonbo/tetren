@@ -128,6 +128,34 @@ canvas { display:block; }
   display:flex; align-items:center; justify-content:center;
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
+/* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
+#dpcOverlay {
+  display:none; position:fixed; inset:0; z-index:30;
+  background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
+}
+#dpcOverlay.open { display:flex; }
+#dpcPanel {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  padding:12px; width:100%; max-width:340px;
+}
+#dpcPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
+.dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
+.dpc-btn {
+  width:72px; background:#0d1117; border:1px solid #374151; border-radius:8px;
+  padding:6px 0 4px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.dpc-btn:active { background:#1b2230; border-color:#9ca3af; }
+.dpc-btn canvas { display:block; margin:0 auto; }
+.dpc-name { display:block; font-size:10px; font-weight:bold; color:#9ca3af; margin-top:2px; text-align:center; }
+.dpc-close {
+  width:100%; margin-top:6px; padding:9px 0; border:none; border-radius:7px;
+  background:#16a34a; color:#fff; font-size:13px; font-weight:bold; cursor:pointer;
+}
+/* サイドの DPC / ↻ を1行に並べる */
+.dpc-side-row { display:flex; gap:3px; width:100%; margin-top:4px; }
+.dpc-side-row .side-btn { margin-top:0; }
+.dpc-side-row .side-btn.again { flex:0 0 26px; font-size:13px; padding:6px 0; }
 #overlay {
   position:fixed; inset:0; background:rgba(0,0,0,.85);
   display:flex; flex-direction:column;
@@ -177,6 +205,10 @@ canvas { display:block; }
       <span style="font-size:12px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <div class="dpc-side-row">
+      <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
+      <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
+    </div>
     <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
     <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
     <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
@@ -267,6 +299,16 @@ canvas { display:block; }
     <div id="clearMsg"></div>
   </div>
 
+</div>
+
+<!-- DPCセット: HOLDに入れるミノを選ぶ -->
+<div id="dpcOverlay">
+  <div id="dpcPanel">
+    <h2>DPCセット</h2>
+    <div class="sub2">選んだミノをHOLDした状態にして、<br>地形とミノの順番をリセットします</div>
+    <div id="dpcGrid"></div>
+    <button class="dpc-close" onclick="closeDpc()">キャンセル</button>
+  </div>
 </div>
 
 <div id="overlay">
@@ -1009,6 +1051,66 @@ function drawNext(){
 }
 
 function draw(){drawBoard();drawHold();drawNext();}
+
+// ===== DPCセット（選んだミノをHOLDにして、地形とツモをリセット）=====
+const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];
+let lastDpcType = null;   // ↻ボタン用：直前に選んだミノ
+
+function openDpc(){
+  document.getElementById('dpcOverlay').classList.add('open');
+  renderDpcGrid();
+}
+function closeDpc(){
+  document.getElementById('dpcOverlay').classList.remove('open');
+}
+function renderDpcGrid(){
+  const grid=document.getElementById('dpcGrid');
+  grid.innerHTML='';
+  DPC_ROWS.forEach(types=>{
+    const row=document.createElement('div');
+    row.className='dpc-row';
+    types.forEach(type=>{
+      const btn=document.createElement('button');
+      btn.className='dpc-btn'; btn.type='button';
+      const cv=document.createElement('canvas');
+      const dpr=window.devicePixelRatio||1;
+      cv.style.width='60px'; cv.style.height='40px';
+      cv.width=Math.round(60*dpr); cv.height=Math.round(40*dpr);
+      const cx=cv.getContext('2d');
+      cx.setTransform(dpr,0,0,dpr,0,0);
+      drawMini(cx,type,0,60,40);
+      const name=document.createElement('span');
+      name.className='dpc-name'; name.textContent=type;
+      btn.appendChild(cv); btn.appendChild(name);
+      btn.addEventListener('click',()=>setDpcHold(type));
+      row.appendChild(btn);
+    });
+    grid.appendChild(row);
+  });
+}
+function setDpcHold(type){
+  lastDpcType=type; updateDpcAgainBtn();
+  // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
+  board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
+  undoStack=[]; lastGarbageCol=null; ren=0;
+  if(renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
+  holdType=type;
+  bag=[]; nextQ=[];
+  spawn();          // 新しいバッグを引き直し、現在のミノも出し直す
+  canHold=true;
+  resetLock(); closeDpc(); updUI(); draw();
+}
+// 前回選んだミノでもう一度同じセットをやり直す
+function repeatDpc(){
+  if(!lastDpcType){ openDpc(); return; }
+  setDpcHold(lastDpcType);
+}
+function updateDpcAgainBtn(){
+  const btn=document.getElementById('dpcAgainBtn');
+  if(!btn) return;
+  btn.style.opacity = lastDpcType ? '1' : '0.45';
+}
+updateDpcAgainBtn();
 
 // ===== 落下トグル =====
 function setGravity(on){
