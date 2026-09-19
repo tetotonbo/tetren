@@ -282,7 +282,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
 .ctrl-btn.ctrl-hold:active { background:#5b21b6; }
 #overlay {
   position:fixed; inset:0; background:rgba(0,0,0,.75);
-  display:flex; flex-direction:column;
+  display:none; flex-direction:column;
   justify-content:center; align-items:center; z-index:10;
 }
 #overlay h1 { font-size:32px; margin-bottom:8px; }
@@ -3450,6 +3450,10 @@ nextCtx.fillStyle='#0d1117'; nextCtx.fillRect(0,0,100,420);
 boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,COLS*BS,ROWS*BS+PEEK);
 boardCanvas.style.cursor = 'crosshair';
 initPalette();
+
+// 最初のスタート画面は出さず、読み込んだらそのまま始める
+// （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
+startGame();
 </script>
 </body>
 </html>
