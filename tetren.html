@@ -459,6 +459,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;">⚙ 設定</button>
+      <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
+      <button id="verSwitchBtn" class="kc-open-btn"
+        style="display:none;background:#374151;"
+        onclick="switchVersion()">📱 スマホ版へ</button>
     </div>
 
     <!-- ライン消去メッセージ -->
@@ -1816,14 +1820,32 @@ function addGarbage(sameHole) {
   board.push(garbageRow);
 
   // カレントピースが盤面と重なった場合は1行上へ押し上げ
+  let escaped = true;
   if (!valid(cur, 0, 0, cur.state)) {
     cur.row--;
     // それでも重なるなら強制押し上げ（スタック上端に接している場合）
     while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+    escaped = valid(cur, 0, 0, cur.state);   // 上端でも逃がせなければ詰み
   }
 
   resetLock();
   draw();
+
+  // 自動せりあがりのときは、積み上がりすぎたらゲームオーバーにする。
+  // （↑ボタンは地形を作るための操作なので判定しない）
+  if (sameHole !== true && !gameOver && (!escaped || isStackOverflow())) {
+    gameOver = true;
+    setTimeout(() => showOverlay('ゲームオーバー','もう一度'), 100);
+  }
+}
+
+// 積み上がりすぎ判定。設置時の判定と基準を揃えて
+// 「真ん中4列が21段目以上まで到達したら終了」とする
+function isStackOverflow() {
+  for (let r = 0; r < BUF; r++)
+    for (let c = MID_COL_L; c <= MID_COL_R; c++)
+      if (board[r][c]) return true;
+  return false;
 }
 
 // ===== 地形を強制的に一段下にシフト（addGarbageの逆方向） =====
@@ -3407,6 +3429,15 @@ function startGame() {
 }
 
 document.getElementById('startBtn').addEventListener('click', startGame);
+
+// ===== 版の切り替え（デモ版限定） =====
+// URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
+function isDemoBuild() { return location.pathname.indexOf('/demo/') >= 0; }
+function switchVersion() { location.href = 'tetren_mobile.html'; }
+if (isDemoBuild()) {
+  const vb = document.getElementById('verSwitchBtn');
+  if (vb) vb.style.display = '';
+}
 
 // キーコンフィグ・スキン初期化
 initKeyConfig();

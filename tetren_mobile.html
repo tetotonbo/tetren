@@ -128,6 +128,34 @@ canvas { display:block; }
   display:flex; align-items:center; justify-content:center;
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
+/* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
+#dpcOverlay {
+  display:none; position:fixed; inset:0; z-index:30;
+  background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
+}
+#dpcOverlay.open { display:flex; }
+#dpcPanel {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  padding:12px; width:100%; max-width:340px;
+}
+#dpcPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
+.dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
+.dpc-btn {
+  width:72px; background:#0d1117; border:1px solid #374151; border-radius:8px;
+  padding:6px 0 4px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.dpc-btn:active { background:#1b2230; border-color:#9ca3af; }
+.dpc-btn canvas { display:block; margin:0 auto; }
+.dpc-name { display:block; font-size:10px; font-weight:bold; color:#9ca3af; margin-top:2px; text-align:center; }
+.dpc-close {
+  width:100%; margin-top:6px; padding:9px 0; border:none; border-radius:7px;
+  background:#16a34a; color:#fff; font-size:13px; font-weight:bold; cursor:pointer;
+}
+/* サイドの DPC / ↻ を1行に並べる */
+.dpc-side-row { display:flex; gap:3px; width:100%; margin-top:4px; }
+.dpc-side-row .side-btn { margin-top:0; }
+.dpc-side-row .side-btn.again { flex:0 0 26px; font-size:13px; padding:6px 0; }
 #overlay {
   position:fixed; inset:0; background:rgba(0,0,0,.85);
   display:flex; flex-direction:column;
@@ -177,6 +205,10 @@ canvas { display:block; }
       <span style="font-size:12px;color:#9ca3af;">自由落下</span>
     </label>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <div class="dpc-side-row">
+      <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
+      <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
+    </div>
     <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
     <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
     <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
@@ -188,6 +220,9 @@ canvas { display:block; }
     </div>
     <button class="side-btn" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
+    <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
+    <button class="side-btn" id="verSwitchBtn" style="display:none;margin-top:4px;"
+      onclick="switchVersion()">🖥 PC版<br>へ</button>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
@@ -267,6 +302,16 @@ canvas { display:block; }
     <div id="clearMsg"></div>
   </div>
 
+</div>
+
+<!-- DPCセット: HOLDに入れるミノを選ぶ -->
+<div id="dpcOverlay">
+  <div id="dpcPanel">
+    <h2>DPCセット</h2>
+    <div class="sub2">選んだミノをHOLDした状態にして、<br>地形とミノの順番をリセットします</div>
+    <div id="dpcGrid"></div>
+    <button class="dpc-close" onclick="closeDpc()">キャンセル</button>
+  </div>
 </div>
 
 <div id="overlay">
@@ -428,6 +473,7 @@ function startLock(){if(!isLocking){isLocking=true;lockTimer=setTimeout(lock,500
 
 // ===== 地形編集 =====
 const PALETTE_COLORS = [
+  {label:'オート（なぞった形のミノ色になる）', color:'AUTO'},
   {label:'おじゃま', color:GARBAGE_COLOR},
   {label:'I', color:'#22d3ee'},{label:'O', color:'#facc15'},
   {label:'T', color:'#a855f7'},{label:'S', color:'#4ade80'},
@@ -443,7 +489,13 @@ function initPalette(){
     btn.className = 'color-swatch' + (color===terrainColor?' sel':'');
     btn.title = label;
     btn.dataset.color = color;
-    btn.style.background = color;
+    btn.style.background = (color==='AUTO') ? GARBAGE_COLOR : color;
+    if(color==='AUTO'){
+      // 「オート」は枠に文字が入らないのでAの1文字だけ載せる
+      btn.textContent = 'A';
+      btn.style.color = '#e5e7eb';
+      btn.style.font = 'bold 14px/1 Arial, sans-serif';
+    }
     btn.addEventListener('click', () => selectTerrainColor(color));
     wrap.appendChild(btn);
   });
@@ -451,6 +503,7 @@ function initPalette(){
 
 function selectTerrainColor(color){
   terrainColor = color;
+  autoGroup = [];   // 色を選び直したら、作りかけのミノは打ち切る
   document.querySelectorAll('.color-swatch').forEach(b => {
     b.classList.toggle('sel', b.dataset.color===color);
   });
@@ -484,7 +537,47 @@ function getTerrainCellFromPoint(clientX, clientY){
   return {row, col};
 }
 
+// ===== オート（なぞった形のミノになる）=====
+// 1マス目は自由、2マス目以降は置いたマスの上下左右のみ。
+// 4マス揃った時点で、その形に一致するミノの色へ塗り替えてリセットする。
+let autoGroup = [];
+const AUTO_SHAPES = {};
+(function buildAutoShapes(){
+  const key = cells => {
+    const mr=Math.min(...cells.map(c=>c[0])), mc=Math.min(...cells.map(c=>c[1]));
+    return cells.map(([r,c])=>(r-mr)+','+(c-mc)).sort().join(' ');
+  };
+  for(const t in PIECE_DEF) for(const st of PIECE_DEF[t].cells) AUTO_SHAPES[key(st)]=t;
+  AUTO_SHAPES._key = key;
+})();
+function autoIsAdjacent(row,col){
+  return autoGroup.some(([r,c])=>Math.abs(r-row)+Math.abs(c-col)===1);
+}
+// 置けたらtrue
+function applyAutoAt(row,col){
+  if(board[row][col]) return false;   // 既にある場所は素通り（削除は消去モード側）
+  if(autoGroup.length>0 && !autoIsAdjacent(row,col)) return false;
+  board[row][col] = GARBAGE_COLOR;
+  autoGroup.push([row,col]);
+  if(autoGroup.length===4){
+    const type = AUTO_SHAPES[AUTO_SHAPES._key(autoGroup)];
+    if(type){ const col2=PIECE_DEF[type].color; for(const[r,c] of autoGroup) board[r][c]=col2; }
+    autoGroup = [];   // 次はまたどこからでも置ける
+  }
+  return true;
+}
+
 function applyTerrainAt(col, row){
+  if(terrainColor==='AUTO'){
+    if(terrainPaintMode==='erase'){
+      if(!board[row][col]) return;
+      board[row][col] = null;
+      autoGroup = autoGroup.filter(([r,c])=>!(r===row&&c===col));
+    } else if(!applyAutoAt(row,col)){
+      return;   // 置けない場所だったので何もしない
+    }
+    draw(); return;
+  }
   if(terrainPaintMode==='set') board[row][col] = terrainColor;
   else                          board[row][col] = null;
   draw();
@@ -681,14 +774,30 @@ function updateDigCounter(){
 function discardPiece(){resetLock();spawn();draw();}
 
 // ===== おじゃま =====
+// 積み上がりすぎ判定: 真ん中4列が21段目以上まで到達したら終了
+const MID_COL_L = Math.floor((COLS-4)/2), MID_COL_R = MID_COL_L+3;
+function isStackOverflow(){
+  for(let r=0;r<BUF;r++) for(let c=MID_COL_L;c<=MID_COL_R;c++) if(board[r][c]) return true;
+  return false;
+}
 function addGarbage(sameHole){
   const holeCol=(sameHole&&lastGarbageCol!==null)?lastGarbageCol:Math.floor(Math.random()*COLS);
   lastGarbageCol=holeCol;
   board.shift();
   const g=new Array(COLS).fill(GARBAGE_COLOR); g[holeCol]=null;
   board.push(g);
-  if(!valid(cur,0,0,cur.state)){cur.row--;while(!valid(cur,0,0,cur.state)&&cur.row>0)cur.row--;}
+  let escaped=true;
+  if(!valid(cur,0,0,cur.state)){
+    cur.row--;
+    while(!valid(cur,0,0,cur.state)&&cur.row>0)cur.row--;
+    escaped=valid(cur,0,0,cur.state);   // 上端でも逃がせなければ詰み
+  }
   resetLock();draw();
+  // せりあがりで積み上がりすぎたらゲームオーバー（ミノを置かないままでも判定される）
+  if(!gameOver&&(!escaped||isStackOverflow())){
+    gameOver=true;
+    setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);
+  }
 }
 
 // ===== スナップショット =====
@@ -1010,6 +1119,75 @@ function drawNext(){
 
 function draw(){drawBoard();drawHold();drawNext();}
 
+// ===== 版の切り替え（デモ版限定） =====
+// URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
+function isDemoBuild(){ return location.pathname.indexOf('/demo/') >= 0; }
+function switchVersion(){ location.href='tetren.html'; }
+if(isDemoBuild()){
+  const vb=document.getElementById('verSwitchBtn');
+  if(vb) vb.style.display='';
+}
+
+// ===== DPCセット（選んだミノをHOLDにして、地形とツモをリセット）=====
+const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];
+let lastDpcType = null;   // ↻ボタン用：直前に選んだミノ
+
+function openDpc(){
+  document.getElementById('dpcOverlay').classList.add('open');
+  renderDpcGrid();
+}
+function closeDpc(){
+  document.getElementById('dpcOverlay').classList.remove('open');
+}
+function renderDpcGrid(){
+  const grid=document.getElementById('dpcGrid');
+  grid.innerHTML='';
+  DPC_ROWS.forEach(types=>{
+    const row=document.createElement('div');
+    row.className='dpc-row';
+    types.forEach(type=>{
+      const btn=document.createElement('button');
+      btn.className='dpc-btn'; btn.type='button';
+      const cv=document.createElement('canvas');
+      const dpr=window.devicePixelRatio||1;
+      cv.style.width='60px'; cv.style.height='40px';
+      cv.width=Math.round(60*dpr); cv.height=Math.round(40*dpr);
+      const cx=cv.getContext('2d');
+      cx.setTransform(dpr,0,0,dpr,0,0);
+      drawMini(cx,type,0,60,40);
+      const name=document.createElement('span');
+      name.className='dpc-name'; name.textContent=type;
+      btn.appendChild(cv); btn.appendChild(name);
+      btn.addEventListener('click',()=>setDpcHold(type));
+      row.appendChild(btn);
+    });
+    grid.appendChild(row);
+  });
+}
+function setDpcHold(type){
+  lastDpcType=type; updateDpcAgainBtn();
+  // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
+  board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
+  undoStack=[]; lastGarbageCol=null; ren=0;
+  if(renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
+  holdType=type;
+  bag=[]; nextQ=[];
+  spawn();          // 新しいバッグを引き直し、現在のミノも出し直す
+  canHold=true;
+  resetLock(); closeDpc(); updUI(); draw();
+}
+// 前回選んだミノでもう一度同じセットをやり直す
+function repeatDpc(){
+  if(!lastDpcType){ openDpc(); return; }
+  setDpcHold(lastDpcType);
+}
+function updateDpcAgainBtn(){
+  const btn=document.getElementById('dpcAgainBtn');
+  if(!btn) return;
+  btn.style.opacity = lastDpcType ? '1' : '0.45';
+}
+updateDpcAgainBtn();
+
 // ===== 落下トグル =====
 function setGravity(on){
   gravityOn = on;
@@ -1095,7 +1273,7 @@ function startGame(){
   document.getElementById('overlay').style.display='none';
   cancelAnimationFrame(rafId);
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
-  bag=[];nextQ=[];holdType=null;canHold=true;
+  bag=[];nextQ=[];holdType=null;canHold=true;autoGroup=[];
   score=0;level=1;lines=0;b2b=false;gameOver=false;
   dropInterval=1000;lastDrop=0;gravityOn=false;undoStack=[];lastGarbageCol=null;
   gravSpeed=0; downHeld=false;lastSoftDrop=0; stopDAS();
