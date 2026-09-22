@@ -1620,13 +1620,16 @@ function toggleDigMode() {
 
 // ===== 中空けRENモード =====
 const REN_WALL_COLS = [0,1,2,7,8,9]; // 常に塞がっている列
+const REN_WALL_TOP  = BUF - 1;       // 壁の一番上の行（21段目まで積む）
 
 function setupRenTerrain() {
   // 盤面リセット
   for (let r = 0; r < TROW; r++)
     for (let c = 0; c < COLS; c++) board[r][c] = null;
-  // 左右3列をすべてグレーで埋める（可視行のみ）
-  for (let r = BUF; r < TROW; r++)
+  // 左右3列をすべてグレーで埋める。
+  // 21段目（バッファ最下行）まで1段高くして、ミノが壁の上に乗り上げて
+  // ゲームオーバーになるのを防ぐ（その高さでは横に動かせなくなる）
+  for (let r = REN_WALL_TOP; r < TROW; r++)
     for (const c of REN_WALL_COLS) board[r][c] = GARBAGE_COLOR;
   // 最下行の中央4列：左から3つグレー（▪▪▪▫）
   board[TROW-1][3] = GARBAGE_COLOR;
@@ -1637,7 +1640,7 @@ function setupRenTerrain() {
 
 function restoreRenWalls() {
   // ライン消去後も左右3列を維持
-  for (let r = BUF; r < TROW; r++)
+  for (let r = REN_WALL_TOP; r < TROW; r++)
     for (const c of REN_WALL_COLS) board[r][c] = GARBAGE_COLOR;
 }
 
