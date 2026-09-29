@@ -32,11 +32,17 @@ html, body {
   align-items:flex-start; justify-content:center;
   gap:5px; padding:4px 4px 2px;
   height:100%; overflow:hidden;
+  /* カンペ画像の最前面固定を外したとき、盤面の裏に回せるようにする */
+  position:relative; z-index:2;
 }
 .side-col {
   display:flex; flex-direction:column;
   align-items:center; gap:5px; flex-shrink:0;
+  /* 項目が増えて画面より長くなっても、全体を押し広げずカラム内でスクロールする */
+  max-height:100%; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
+.side-col::-webkit-scrollbar { display:none; }
 .m-lbl {
   font-size:9px; color:#6b7280; letter-spacing:1px;
   text-transform:uppercase; text-align:center; margin-bottom:2px;
@@ -101,13 +107,14 @@ canvas { display:block; }
 }
 .side-btn:active { background:#374151; }
 #colorPaletteWrap {
-  display:none; flex-wrap:wrap; gap:5px;
-  justify-content:center; padding:6px;
+  display:none; flex-wrap:wrap; gap:4px;
+  justify-content:center; padding:5px;
   background:#1f2937; border:1px solid #374151; border-radius:6px;
-  flex-shrink:0;
+  flex-shrink:0; box-sizing:border-box; max-width:100%;
 }
 .color-swatch {
-  width:28px; height:28px; border-radius:4px;
+  /* 大きさは initLayout() が盤面幅から決める（全部が1段に収まるサイズ） */
+  width:var(--swatch,26px); height:var(--swatch,26px); border-radius:4px;
   border:2px solid transparent; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation; transition:border-color .1s;
@@ -128,6 +135,84 @@ canvas { display:block; }
   display:flex; align-items:center; justify-content:center;
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
+/* ===== トグルスイッチ（PC版と見た目を揃える） ===== */
+/* 左カラムが狭いので、文字とスイッチを小さめにして1行に収める */
+.tgl-row {
+  display:flex; align-items:center; justify-content:space-between; gap:2px;
+  width:100%; cursor:pointer; font-size:8px; color:#9ca3af;
+  line-height:1.2; white-space:nowrap;
+  user-select:none; -webkit-tap-highlight-color:transparent;
+}
+.tgl-row input { display:none; }
+.tgl {
+  flex:0 0 auto; width:22px; height:12px; border-radius:6px;
+  background:#4b5563; position:relative; transition:background .15s;
+}
+.tgl::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:8px; height:8px; border-radius:50%; background:#fff;
+  transition:transform .15s;
+}
+input:checked + .tgl { background:#16a34a; }
+input:checked + .tgl::after { transform:translateX(10px); }
+
+/* ===== バージョン表示 ===== */
+#verLabel {
+  margin-top:4px; text-align:center; font-size:8px;
+  color:#4b5563; letter-spacing:0.5px;
+}
+
+/* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
+#shotOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.86); align-items:center; justify-content:center; padding:14px;
+}
+#shotOverlay.open { display:flex; }
+#shotDialog {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  width:min(360px, 94vw); padding:14px;
+}
+#shotDialog h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#shotDialog .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
+#shotDrop {
+  border:2px dashed #4b5563; border-radius:8px; padding:26px 10px;
+  text-align:center; font-size:11px; color:#d1d5db; line-height:1.8;
+}
+#shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
+.shot-act { display:flex; gap:6px; margin-top:12px; }
+.shot-act button {
+  flex:1; padding:8px 0; border:none; border-radius:6px;
+  font-size:11px; font-weight:bold; cursor:pointer;
+  background:#374151; color:#d1d5db;
+}
+#shotWin {
+  display:none; position:fixed; left:12px; top:60px; width:260px; height:200px;
+  background:#0f131c; border:1px solid #374151; border-radius:8px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
+}
+#shotWin.show { display:flex; flex-direction:column; }
+#shotWin.unpinned { z-index:1; }
+#shotBar {
+  display:flex; align-items:center; gap:4px; padding:4px 5px;
+  background:#1f2735; touch-action:none; user-select:none; flex:0 0 auto;
+}
+#shotBar .sw-title { font-size:9px; color:#9ca3af; margin-right:auto; }
+.sw-btn {
+  background:#374151; border:none; color:#d1d5db; font-size:9px;
+  border-radius:4px; padding:3px 6px; white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.sw-btn.on { background:#4f46e5; color:#fff; }
+#shotBody { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; background:#000; }
+#shotImg { width:100%; height:100%; object-fit:contain; display:block; -webkit-user-drag:none; }
+.sw-rs { position:absolute; touch-action:none; }
+.sw-rs-l  { left:0;  top:24px; bottom:0; width:10px; }
+.sw-rs-r  { right:0; top:24px; bottom:0; width:10px; }
+.sw-rs-b  { left:10px; right:10px; bottom:0; height:10px; }
+.sw-rs-bl { left:0;  bottom:0; width:18px; height:18px; }
+.sw-rs-br { right:0; bottom:0; width:20px; height:20px;
+            background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
+
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
 #dpcOverlay {
   display:none; position:fixed; inset:0; z-index:30;
@@ -185,25 +270,35 @@ canvas { display:block; }
     <div class="mini-panel" style="padding:5px 3px;">
       <div class="m-lbl">HOLD</div>
       <canvas id="holdCanvas"></canvas>
+      <label class="tgl-row" style="margin-top:4px;" title="OFFにするとミノを置くまで再ホールドできません">
+        <span>連続</span>
+        <input type="checkbox" id="optMultiHold" checked
+          onchange="setOption('multiHold', this.checked)">
+        <span class="tgl"></span>
+      </label>
     </div>
-    <label style="display:flex;align-items:center;gap:3px;cursor:pointer;width:100%;">
+    <label class="tgl-row">
+      <span>ゴースト</span>
       <input type="checkbox" id="ghostCheck" checked
-        onchange="showGhost=this.checked;draw();"
-        style="width:13px;height:13px;">
-      <span style="font-size:12px;color:#9ca3af;">ゴースト</span>
+        onchange="showGhost=this.checked;draw();">
+      <span class="tgl"></span>
     </label>
-    <label style="display:flex;align-items:center;gap:3px;cursor:pointer;width:100%;">
+    <label class="tgl-row">
+      <span>軸表示</span>
       <input type="checkbox" id="axisCheck"
-        onchange="showAxis=this.checked;draw();"
-        style="width:13px;height:13px;">
-      <span style="font-size:12px;color:#9ca3af;">軸表示</span>
+        onchange="showAxis=this.checked;draw();">
+      <span class="tgl"></span>
     </label>
-    <label style="display:flex;align-items:center;gap:3px;cursor:pointer;width:100%;">
-      <input type="checkbox" id="gravCheck"
-        onchange="setGravity(this.checked);"
-        style="width:13px;height:13px;">
-      <span style="font-size:12px;color:#9ca3af;">自由落下</span>
-    </label>
+    <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
+    <div class="di-row" style="margin-top:0;">
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
+      <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
+    </div>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
     <div class="dpc-side-row">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
@@ -218,11 +313,21 @@ canvas { display:block; }
       <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
       <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
     </div>
+    <div id="holeRow" style="display:none;width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;">穴継続率</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" onclick="stepOption('holeKeep',-1)">‹</button>
+        <div class="di-val"><span id="optHoleKeepVal">10</span> %</div>
+        <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
+      </div>
+    </div>
+    <button class="side-btn" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
     <button class="side-btn" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
     <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
     <button class="side-btn" id="verSwitchBtn" style="display:none;margin-top:4px;"
       onclick="switchVersion()">🖥 PC版<br>へ</button>
+    <div id="verLabel"></div>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
@@ -304,6 +409,42 @@ canvas { display:block; }
 
 </div>
 
+<!-- カンペ画像：貼り付け用ダイアログ -->
+<div id="shotOverlay">
+  <div id="shotDialog">
+    <h2>カンペ画像</h2>
+    <div class="sub2">画像を画面に重ねて表示します。<br>表示後は位置とサイズを変えられます</div>
+    <div id="shotDrop">
+      ここをタップして画像を選ぶ<br>
+      <span style="font-size:10px;color:#9ca3af;">ドラッグ＆ドロップ／貼り付けも可</span>
+    </div>
+    <input type="file" id="shotFile" accept="image/*" style="display:none">
+    <div class="shot-act" id="shotCtrls" style="display:none;">
+      <button id="shotPinBtn2" onclick="setShotPin(!shotPinned)">最前面 ON</button>
+      <button onclick="hideShot(); closeShot();">表示を消す</button>
+    </div>
+    <div class="shot-act">
+      <button onclick="closeShot()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- カンペ画像：重ねて表示するウィンドウ -->
+<div id="shotWin">
+  <div id="shotBar">
+    <span class="sw-title">カンペ</span>
+    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)">最前面 ON</button>
+    <button class="sw-btn" onclick="openShot()">変更</button>
+    <button class="sw-btn" onclick="hideShot()">閉じる</button>
+  </div>
+  <div id="shotBody"><img id="shotImg" alt=""></div>
+  <div class="sw-rs sw-rs-l"  data-dir="l"></div>
+  <div class="sw-rs sw-rs-r"  data-dir="r"></div>
+  <div class="sw-rs sw-rs-b"  data-dir="b"></div>
+  <div class="sw-rs sw-rs-bl" data-dir="bl"></div>
+  <div class="sw-rs sw-rs-br" data-dir="br"></div>
+</div>
+
 <!-- DPCセット: HOLDに入れるミノを選ぶ -->
 <div id="dpcOverlay">
   <div id="dpcPanel">
@@ -368,7 +509,7 @@ const nextCtx     = nextCanvas.getContext('2d');
 let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
-let gravityOn = false, gravSpeed = 0;
+let gravSpeed = 0, gravAccum = 0;   // 落下速度 0〜20G（0=自由落下なし。起動時に loadGravSpeed() で復元）
 let undoStack = [];
 const UNDO_MAX = 50;
 let showGhost = true;
@@ -463,8 +604,11 @@ function rotate(dir){
 
 // ===== ホールド =====
 function doHold(){
+  // 連続HOLDがOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
+  if(!opts.multiHold && !canHold) return;
   if(holdType===null){holdType=cur.type;spawn();}
   else{const t=holdType;holdType=cur.type;cur=mkPiece(t);}
+  canHold=false;   // spawn() 側で次のミノ出現時に戻る
   resetLock();draw();
 }
 
@@ -528,6 +672,9 @@ function toggleTerrainMode(){
     wrap.style.display = 'none';
     terrainPainting = false;
   }
+  // パレットの出し入れで中央カラムの高さが変わるので、盤面を組み直す
+  initLayout();
+  if(board) draw();
 }
 
 function getTerrainCellFromPoint(clientX, clientY){
@@ -743,6 +890,7 @@ function toggleDigMode(){
     btn.textContent='せりあがり';
     btn.style.cssText='background:#0891b2;border-color:#06b6d4;color:#fff;';
     diRow.style.display='flex';
+    document.getElementById('holeRow').style.display='block';
     if(renMode){
       renMode=false;
       const rb=document.getElementById('renModeBtn');
@@ -761,6 +909,7 @@ function toggleDigMode(){
     btn.textContent='せりあがり';
     btn.style.cssText='';
     diRow.style.display='none';
+    document.getElementById('holeRow').style.display='none';
   }
   updateDigCounter();
 }
@@ -782,7 +931,19 @@ function isStackOverflow(){
   return false;
 }
 function addGarbage(sameHole){
-  const holeCol=(sameHole&&lastGarbageCol!==null)?lastGarbageCol:Math.floor(Math.random()*COLS);
+  // 穴の列を決定。sameHole=true は必ず同じ列、
+  // 自動せりあがりは「穴継続率」の確率で同じ列を使う
+  let holeCol;
+  if(lastGarbageCol===null){
+    holeCol=Math.floor(Math.random()*COLS);
+  } else if(sameHole===true || Math.random()*100 < opts.holeKeep){
+    holeCol=lastGarbageCol;
+  } else {
+    // 外れたときは「直前以外」から選ぶ。10列なので10%＝完全ランダムと一致する
+    const others=[];
+    for(let i=0;i<COLS;i++) if(i!==lastGarbageCol) others.push(i);
+    holeCol=others[Math.floor(Math.random()*others.length)];
+  }
   lastGarbageCol=holeCol;
   board.shift();
   const g=new Array(COLS).fill(GARBAGE_COLOR); g[holeCol]=null;
@@ -985,6 +1146,7 @@ function toggleRenMode(){
       const db=document.getElementById('digBtn');
       db.textContent='せりあがり'; db.style.cssText='';
       document.getElementById('diRow').style.display='none';
+      document.getElementById('holeRow').style.display='none';
       updateDigCounter();
     }
     // デカミノモードを強制OFF
@@ -1189,11 +1351,84 @@ function updateDpcAgainBtn(){
 }
 updateDpcAgainBtn();
 
-// ===== 落下トグル =====
-function setGravity(on){
-  gravityOn = on;
-  if(gravityOn){ lastDrop=0; }
-  else { resetLock(); }
+// ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
+const OPT_DEFAULTS = { multiHold:true, holeKeep:10, softSpeed:5, lockFrames:30 };
+const OPT_RANGE    = { holeKeep:[10,100,10] };
+let opts = Object.assign({}, OPT_DEFAULTS);
+
+function saveOptions(){
+  try { localStorage.setItem('tetren_options', JSON.stringify(opts)); } catch(e) {}
+}
+function loadOptions(){
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_options'); } catch(e) {}
+  if(raw){ try { Object.assign(opts, JSON.parse(raw)); } catch(e) {} }
+  applyOptions();
+}
+function applyOptions(){
+  const sw = document.getElementById('optMultiHold');
+  if(sw) sw.checked = opts.multiHold;
+  const hk = document.getElementById('optHoleKeepVal');
+  if(hk) hk.textContent = opts.holeKeep;
+  if(cur) draw();
+}
+function setOption(key, value){ opts[key] = value; saveOptions(); applyOptions(); }
+function stepOption(key, dir){
+  const [min,max,step] = OPT_RANGE[key];
+  setOption(key, Math.min(max, Math.max(min, opts[key] + dir*step)));
+}
+
+// ===== ボタンの長押し連射 =====
+let repeatTimer = null;
+function startRepeat(fn){
+  stopRepeat();
+  fn();                                   // まず1回（単押しはこれだけ）
+  let interval = 130;                     // 連射の初期間隔(ms)
+  const tick = () => {
+    fn();
+    interval = Math.max(25, interval * 0.85);   // 押し続けるほど加速
+    repeatTimer = setTimeout(tick, interval);
+  };
+  repeatTimer = setTimeout(tick, 400);    // 長押しと判定するまでの待ち
+}
+function stopRepeat(){
+  if(repeatTimer){ clearTimeout(repeatTimer); repeatTimer = null; }
+}
+// ボタンの外で指を離した場合にも確実に止める
+window.addEventListener('mouseup', stopRepeat);
+window.addEventListener('touchend', stopRepeat);
+window.addEventListener('touchcancel', stopRepeat);
+window.addEventListener('blur', stopRepeat);
+
+// ===== 落下設定（PC版と同じ 0G〜20G） =====
+// 1G = 1行/秒、20G = 1フレームで最下段。間は等比で補間する
+const GRAV_MIN_ROWS = 1 / 60;
+const GRAV_MAX_ROWS = TROW;
+function gravRowsPerFrame(g){
+  if(g <= 1)  return GRAV_MIN_ROWS;
+  if(g >= 20) return GRAV_MAX_ROWS;
+  return GRAV_MIN_ROWS * Math.pow(GRAV_MAX_ROWS / GRAV_MIN_ROWS, (g - 1) / 19);
+}
+function updateGravDisplay(){
+  const el = document.getElementById('gravSpeedVal');
+  if(el) el.textContent = gravSpeed;
+}
+// 落下速度はリセットしてもページを閉じても保持する
+function saveGravSpeed(){
+  try { localStorage.setItem('tetren_grav', String(gravSpeed)); } catch(e) {}
+}
+function loadGravSpeed(){
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_grav'); } catch(e) {}
+  const v = parseInt(raw, 10);
+  gravSpeed = (Number.isFinite(v) && v >= 0 && v <= 20) ? v : 0;
+  updateGravDisplay();
+}
+function changeGravSpeed(delta){
+  gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
+  updateGravDisplay();
+  saveGravSpeed();
+  lastDrop = 0; gravAccum = 0;
 }
 
 // ===== ゲームループ =====
@@ -1201,20 +1436,13 @@ let rafId;
 function loop(ts){
   if(gameOver) return;
   if(downHeld&&ts-lastSoftDrop>=SOFT_DROP_RATE){softDrop();lastSoftDrop=ts;}
-  if(gravityOn){
-    if(gravSpeed===0){
-      if(!lastDrop) lastDrop=ts;
-      if(ts-lastDrop>=dropInterval){
-        if(!valid(cur,1,0,cur.state)){if(!isLocking)startLock();}
-        else{cur.row++;resetLock();draw();}
-        lastDrop=ts;
-      } else if(!valid(cur,1,0,cur.state)&&!isLocking) startLock();
-    } else {
-      let d=0;
-      while(d<gravSpeed&&valid(cur,1,0,cur.state)){cur.row++;d++;}
-      if(d>0){resetLock();draw();}
-      if(!valid(cur,1,0,cur.state)&&!isLocking) startLock();
-    }
+  // 0G は自由落下しない。1G以上は1フレームあたりの行数ぶん落とす
+  if(gravSpeed > 0){
+    gravAccum += gravRowsPerFrame(gravSpeed);
+    let moved = 0;
+    while(gravAccum >= 1 && valid(cur,1,0,cur.state)){ cur.row++; gravAccum--; moved++; }
+    if(moved > 0){ resetLock(); draw(); }
+    if(!valid(cur,1,0,cur.state)){ gravAccum = 0; if(!isLocking) startLock(); }
   }
   rafId=requestAnimationFrame(loop);
 }
@@ -1255,7 +1483,6 @@ document.addEventListener('keydown',e=>{
   else if(c==='Space'||c==='KeyC'){e.preventDefault();hardDrop();}
   else if(c==='ShiftLeft'||c==='ShiftRight'){e.preventDefault();doHold();}
   else if(c==='KeyU'){e.preventDefault();undo();}
-  else if(c==='KeyG'){e.preventDefault();const gc=document.getElementById('gravCheck');setGravity(!gravityOn);gc.checked=gravityOn;}
 });
 document.addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='ArrowRight') stopDAS();
@@ -1276,14 +1503,13 @@ function startGame(){
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
   bag=[];nextQ=[];holdType=null;canHold=true;autoGroup=[];
   score=0;level=1;lines=0;b2b=false;gameOver=false;
-  dropInterval=1000;lastDrop=0;gravityOn=false;undoStack=[];lastGarbageCol=null;
-  gravSpeed=0; downHeld=false;lastSoftDrop=0; stopDAS();
+  dropInterval=1000;lastDrop=0;undoStack=[];lastGarbageCol=null;
+  gravAccum=0; updateGravDisplay();   // 落下速度そのものは維持する
+  downHeld=false;lastSoftDrop=0; stopDAS();
   digCount=0; updateDigCounter();
   ren=0; lastWasRotation=false; lastKickIndex=0;
   if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
-  gravityOn=false;
-  document.getElementById('gravCheck').checked = false;
   if(renMode) setupRenTerrain();
   updUI(); fillQ(); spawn(); draw();
   rafId=requestAnimationFrame(loop);
@@ -1292,17 +1518,39 @@ function startGame(){
 document.getElementById('startBtn').addEventListener('click',startGame);
 
 // ===== レイアウト初期化 =====
+// パレットの高さは盤面の幅で段数が変わり、盤面の大きさはパレットの高さで変わる、
+// という相互依存になっている。そこでマスの大きさを大きい方から順に試して、
+// パレットまで含めて画面に収まる最大値を選ぶ。
+// マスの大きさは盤面幅から決める。全色が横1段に並ぶ大きさにするので、
+// パレットの高さは常に1段ぶんで済み、盤面をほとんど削らずに表示できる。
+const PAL_GAP = 4, PAL_PAD = 5 * 2 + 2;   // CSSの gap / padding+border と合わせる
+const PAL_MIN = 14, PAL_MAX = 26;         // マスの最小・最大
+function paletteMetrics(boardW){
+  const pw=document.getElementById('colorPaletteWrap');
+  if(!pw || pw.style.display !== 'flex') return { h:0, sw:PAL_MAX };
+  const n = document.querySelectorAll('.color-swatch').length || 9;
+  const fit = Math.floor((boardW - PAL_PAD - PAL_GAP * (n - 1)) / n);
+  const sw = Math.max(PAL_MIN, Math.min(PAL_MAX, fit));
+  const perRow = Math.max(1, Math.floor((boardW - PAL_PAD + PAL_GAP) / (sw + PAL_GAP)));
+  const rows = Math.ceil(n / perRow);
+  return { h: rows * sw + (rows - 1) * PAL_GAP + PAL_PAD + 4, sw };   // +4 は中央カラムの gap
+}
+
 function initLayout(){
   const vw=window.innerWidth, vh=window.innerHeight;
   // サイドカラム幅: 画面幅の15%、最小44px、最大62px
   const sideW=Math.max(44,Math.min(62,Math.floor(vw*0.15)));
   // 利用可能ボード幅
   const availW=vw-sideW*2-5*2-8; // gaps + padding
-  // 利用可能ボード高さ (stats_bar + ctrl + opts + gaps)
-  const statsH=38, ctrlH=66*3+4*2, optsH=42, gapsH=4*5;
-  const availH=vh-statsH-ctrlH-optsH-gapsH-8;
-  BS=Math.min(Math.floor(availH/ROWS),Math.floor(availW/COLS),28);
-  if(BS<16) BS=16; // 最小サイズ保証
+  // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。実測値に合わせている
+  const fixedH = 34 + 206 + 60 + 4*4 + 8;
+  const maxBS = Math.min(Math.floor(availW/COLS), 28);
+  const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
+  const minBS = editing ? 10 : 16;
+  BS = minBS;
+  for(let b = maxBS; b >= minBS; b--){
+    if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; break; }
+  }
 
   const bw=COLS*BS, bh=ROWS*BS;
   boardCanvas.width=bw; boardCanvas.height=bh;
@@ -1317,9 +1565,13 @@ function initLayout(){
   nextCanvas.width=actualSide-6; nextCanvas.height=holdH*NEXT_SHOW;
 
   // 中央要素の幅をボードに合わせる
+  // （カラーパレットも入れないと、マスが横一列に伸びて画面外まではみ出す）
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
+  const palWrap=document.getElementById('colorPaletteWrap');
+  palWrap.style.width=bw+'px';
+  palWrap.style.setProperty('--swatch', paletteMetrics(bw).sw+'px');
 
   // 初期塗りつぶし
   boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,bw,bh);
@@ -1347,9 +1599,139 @@ addTouchBtn('btnSoft',
   () => stopSoftDropBtn()
 );
 
+// ===== バージョン =====
+// 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
+const APP_VERSION = '1.0.0';
+(function showVersion(){
+  const el = document.getElementById('verLabel');
+  if(!el) return;
+  el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
+})();
+
+// ===== カンペ画像（画面に重ねて表示する参考画像） =====
+const SHOT_BAR_H = 24;
+let shotPinned = true;
+
+function openShot(){
+  document.getElementById('shotOverlay').classList.add('open');
+  document.getElementById('shotFile').value = '';
+  const shown = document.getElementById('shotWin').classList.contains('show');
+  document.getElementById('shotCtrls').style.display = shown ? 'flex' : 'none';
+}
+function closeShot(){ document.getElementById('shotOverlay').classList.remove('open'); }
+function hideShot(){ document.getElementById('shotWin').classList.remove('show'); }
+function setShotPin(on){
+  shotPinned = on;
+  const win = document.getElementById('shotWin');
+  win.classList.toggle('unpinned', !on);
+  const label = on ? '最前面 ON' : '最前面 OFF';
+  const b1 = document.getElementById('shotPinBtn');
+  const b2 = document.getElementById('shotPinBtn2');
+  b1.textContent = label; b1.classList.toggle('on', on);
+  b2.textContent = label;
+}
+
+function loadShotImage(src){
+  const img = new Image();
+  img.onload = () => {
+    const win = document.getElementById('shotWin');
+    document.getElementById('shotImg').src = src;
+    // 初回だけ画像の縦横比に合わせた大きさで出す
+    if(!win.dataset.placed){
+      const maxW = Math.min(280, window.innerWidth * 0.7);
+      const maxH = window.innerHeight * 0.5 - SHOT_BAR_H;
+      const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+      const w = Math.max(120, Math.round(img.naturalWidth * sc));
+      const h = Math.max(90, Math.round(img.naturalHeight * sc) + SHOT_BAR_H);
+      win.style.width = w + 'px';
+      win.style.height = h + 'px';
+      win.style.left = Math.max(6, Math.round((window.innerWidth - w) / 2)) + 'px';
+      win.style.top = '60px';
+      win.dataset.placed = '1';
+    }
+    win.classList.add('show');
+    closeShot();
+  };
+  img.onerror = () => alert('画像を読み込めませんでした。');
+  img.src = src;
+}
+function loadShotFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  const fr = new FileReader();
+  fr.onload = e => loadShotImage(e.target.result);
+  fr.readAsDataURL(file);
+}
+
+// バーで移動、辺と隅でサイズ変更（指でもマウスでも動くよう pointer events を使う）
+function shotPointerDown(e, mode){
+  if(e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  const win = document.getElementById('shotWin');
+  const r = win.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY;
+  const l0 = r.left, t0 = r.top, w0 = r.width, h0 = r.height;
+  const onMove = ev => {
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    if(mode === 'move'){
+      const l = Math.min(Math.max(l0 + dx, 24 - w0), window.innerWidth - 24);
+      const t = Math.min(Math.max(t0 + dy, 0), window.innerHeight - 24);
+      win.style.left = l + 'px'; win.style.top = t + 'px';
+    } else {
+      const MINW = 120, MINH = 90;
+      if(mode.includes('r')) win.style.width = Math.max(MINW, w0 + dx) + 'px';
+      if(mode.includes('l')){
+        const w = Math.max(MINW, w0 - dx);
+        win.style.width = w + 'px';
+        win.style.left  = (l0 + w0 - w) + 'px';
+      }
+      if(mode.includes('b')) win.style.height = Math.max(MINH, h0 + dy) + 'px';
+    }
+  };
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+}
+
+(function initShotUI(){
+  const drop = document.getElementById('shotDrop');
+  const file = document.getElementById('shotFile');
+  drop.addEventListener('click', () => file.click());
+  file.addEventListener('change', e => loadShotFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if(dt.files && dt.files[0]) loadShotFile(dt.files[0]);
+  });
+  window.addEventListener('paste', e => {
+    if(!document.getElementById('shotOverlay').classList.contains('open')) return;
+    for(const item of e.clipboardData.items){
+      if(item.type.startsWith('image/')){ loadShotFile(item.getAsFile()); break; }
+    }
+  });
+  document.getElementById('shotOverlay').addEventListener('pointerdown', e => {
+    if(e.target.id === 'shotOverlay') closeShot();
+  });
+  document.getElementById('shotBar').addEventListener('pointerdown', e => {
+    if(e.target.closest('.sw-btn')) return;
+    shotPointerDown(e, 'move');
+  });
+  document.querySelectorAll('#shotWin .sw-rs').forEach(h => {
+    h.addEventListener('pointerdown', e => shotPointerDown(e, h.dataset.dir));
+  });
+})();
+
 initPalette();
 initLayout();
 window.addEventListener('resize',()=>{initLayout();if(!gameOver&&board)draw();});
+
+loadOptions();
+loadGravSpeed();
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）

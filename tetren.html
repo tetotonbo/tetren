@@ -43,7 +43,7 @@ body {
   font-family:'Arial',sans-serif; color:#eee;
   user-select:none;
 }
-#wrap { display:flex; gap:12px; align-items:flex-start; }
+#wrap { display:flex; gap:12px; align-items:flex-start; position:relative; z-index:2; }
 .side { display:flex; flex-direction:column; gap:12px; }
 .panel {
   background:#1f2937; border:1px solid #374151;
@@ -202,6 +202,66 @@ body.ppt2-theme #nextCanvas {
   letter-spacing:0.5px; transition:background .15s; margin-top:8px;
 }
 .kc-open-btn:hover { background:#4338ca; }
+/* ===== バージョン表示 ===== */
+#verLabel {
+  margin-top:6px; text-align:center; font-size:9px;
+  color:#6b7280; letter-spacing:0.5px; user-select:text;
+}
+
+/* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
+#shotOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
+}
+#shotOverlay.open { display:flex; }
+#shotDialog {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  width:min(560px, 94vw); padding:16px 18px 18px;
+  box-shadow:0 18px 50px rgba(0,0,0,0.6);
+}
+#shotDrop {
+  border:2px dashed #4b5563; border-radius:8px; padding:36px 16px;
+  text-align:center; cursor:pointer; outline:none;
+}
+#shotDrop:hover, #shotDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
+#shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
+
+/* 浮かせるウィンドウ本体。最前面ONなら全部の上、OFFなら盤面の裏へ回る */
+#shotWin {
+  display:none; position:fixed; left:40px; top:80px; width:420px; height:300px;
+  background:#0f131c; border:1px solid #374151; border-radius:8px;
+  box-shadow:0 10px 34px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
+}
+#shotWin.show { display:flex; flex-direction:column; }
+#shotWin.unpinned { z-index:1; }
+#shotBar {
+  display:flex; align-items:center; gap:6px; padding:5px 6px;
+  background:#1f2735; cursor:move; user-select:none; flex:0 0 auto;
+}
+#shotBar .sw-title { font-size:11px; color:#9ca3af; letter-spacing:1px; margin-right:auto; }
+.sw-btn {
+  background:#374151; border:none; color:#d1d5db; font-size:11px;
+  border-radius:4px; padding:3px 8px; cursor:pointer; white-space:nowrap;
+}
+.sw-btn:hover { background:#4b5563; }
+.sw-btn.on { background:#4f46e5; color:#fff; }
+#shotBody {
+  flex:1; min-height:0; display:flex; align-items:center;
+  justify-content:center; background:#000;
+}
+#shotImg {
+  width:100%; height:100%; object-fit:contain; display:block;
+  -webkit-user-drag:none; user-select:none;
+}
+/* サイズ変更のつまみ。左右の辺・下辺・下の両隅で変えられる */
+.sw-rs { position:absolute; }
+.sw-rs-l  { left:0;  top:28px; bottom:0; width:6px;  cursor:ew-resize; }
+.sw-rs-r  { right:0; top:28px; bottom:0; width:6px;  cursor:ew-resize; }
+.sw-rs-b  { left:6px; right:6px; bottom:0; height:6px; cursor:ns-resize; }
+.sw-rs-bl { left:0;  bottom:0; width:14px; height:14px; cursor:nesw-resize; }
+.sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
+            background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
+
 /* ===== DPCセットダイアログ ===== */
 #dpcOverlay {
   display:none; position:fixed; inset:0; z-index:200;
@@ -376,7 +436,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
 .skin-card.selected { border-color:#6366f1; background:#1e243a; }
 .skin-card canvas { display:block; margin:0 auto 6px; }
 .skin-name { font-size:13px; font-weight:bold; color:#e5e7eb; }
-.skin-desc { font-size:10px; color:#9ca3af; margin-top:2px; }
 .kc-btns { display:flex; gap:10px; margin-top:18px; }
 .kc-btns button {
   flex:1; padding:9px 0; border:none; border-radius:7px;
@@ -394,34 +453,50 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="panel" id="holdPanel">
       <div class="panel-label">HOLD</div>
       <canvas id="holdCanvas" width="100" height="80"></canvas>
+      <!-- 連続HOLDの可否。HOLDの機能なのでこの枠の中に置く -->
+      <label class="tgl-row" style="margin-top:6px;"
+        title="OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）">
+        <span>連続HOLD</span>
+        <input type="checkbox" id="optMultiHold" checked
+          onchange="setOption('multiHold', this.checked)">
+        <span class="tgl"></span>
+      </label>
     </div>
 
-    <!-- デザイン + 落下設定 -->
+    <!-- 落下設定 -->
     <div class="panel" style="width:108px;">
-      <div class="panel-label">デザイン</div>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
-                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
-        <input type="checkbox" id="ghostCheck" checked
-          onchange="showGhost=this.checked;draw();"
-          style="width:14px;height:14px;cursor:pointer;">
-        ゴースト
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
-                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
-        <input type="checkbox" id="axisCheck"
-          onchange="showAxis=this.checked;draw();"
-          style="width:14px;height:14px;cursor:pointer;">
-        軸表示
-      </label>
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
-        <button class="step-btn" onclick="changeGravSpeed(-1)">‹</button>
+        <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
+          onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
         <div class="speed-val">
           <span id="gravSpeedVal">0</span>
           <span class="speed-unit"> G</span>
         </div>
-        <button class="step-btn" onclick="changeGravSpeed(+1)">›</button>
+        <button class="step-btn" title="落下速度を上げる（20Gは1フレームで最下段・長押しで連続）"
+          onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
       </div>
+    </div>
+
+    <!-- デザイン -->
+    <div class="panel" style="width:108px;">
+      <div class="panel-label">デザイン</div>
+      <label class="tgl-row" style="margin-bottom:8px;"
+        title="ミノがどこに落ちるかを薄く表示する">
+        <span>ゴースト</span>
+        <input type="checkbox" id="ghostCheck" checked
+          onchange="showGhost=this.checked;draw();">
+        <span class="tgl"></span>
+      </label>
+      <label class="tgl-row"
+        title="ミノの回転軸を表示する">
+        <span>軸表示</span>
+        <input type="checkbox" id="axisCheck"
+          onchange="showAxis=this.checked;draw();">
+        <span class="tgl"></span>
+      </label>
     </div>
 
     <!-- 地形操作 -->
@@ -450,6 +525,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
         title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
     </div>
 
+    <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
+    <button class="garb-btn" style="background:#374151;width:108px;"
+      onclick="openShot()"
+      title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
+
     <!-- LINES -->
     <div class="panel" style="text-align:center;width:108px;">
       <div class="panel-label">LINES</div>
@@ -458,11 +538,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
-      <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;">⚙ 設定</button>
+      <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
       <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
-      <button id="verSwitchBtn" class="kc-open-btn"
+      <button id="verSwitchBtn" title="スマホ版の画面に切り替える（デモ版のみ）" class="kc-open-btn"
         style="display:none;background:#374151;"
         onclick="switchVersion()">📱 スマホ版へ</button>
+      <div id="verLabel"></div>
     </div>
 
     <!-- ライン消去メッセージ -->
@@ -492,7 +573,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
-      <button id="ctrlToggleBtn" class="ctrl-toggle" onclick="toggleCtrlButtons()">
+      <button id="ctrlToggleBtn" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
       </button>
       <div id="ctrlHidden">
@@ -576,16 +657,16 @@ input:checked + .tgl::after { transform:translateX(16px); }
             onclick="if(!gameOver)repeatDpc()"
             title="前回選んだミノで、もう一度DPCセットします">↻</button>
         </div>
-        <button id="renModeBtn" class="toggle-btn"
+        <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleRenMode()">REN</button>
-        <button id="dekaModeBtn" class="toggle-btn"
+        <button id="dekaModeBtn" title="ミノを4倍の大きさにする" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleDekaMode()">デカミノ</button>
       </div>
       <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
       <div class="panel-label">せりあがり</div>
-      <button id="digBtn" class="toggle-btn"
+      <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
         style="background:#374151;"
         onclick="toggleDigMode()">スタート</button>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
@@ -599,17 +680,28 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div class="speed-row">
         <button class="step-btn"
           onmousedown="startDigRepeat(-1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
-          ontouchstart="event.preventDefault();startDigRepeat(-1)" ontouchend="stopDigRepeat()">‹</button>
+          ontouchstart="event.preventDefault();startDigRepeat(-1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を短くする（長押しで連続）">‹</button>
         <div class="speed-val">
           <span id="digIntervalVal">3</span>
           <span class="speed-unit" id="digIntervalUnit"> 秒ごと</span>
         </div>
         <button class="step-btn"
           onmousedown="startDigRepeat(+1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
-          ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()">›</button>
+          ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を長くする（長押しで連続）">›</button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:#9ca3af;text-align:center;letter-spacing:0.5px;"
+        title="せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）">穴継続率</div>
+      <div class="speed-row">
+        <button class="step-btn" onclick="stepOption('holeKeep',-1)"
+          title="同じ列に穴が続く確率を下げる（10%＝完全ランダム）">‹</button>
+        <div class="speed-val">
+          <span id="optHoleKeepVal">10</span><span class="speed-unit"> %</span>
+        </div>
+        <button class="step-btn" onclick="stepOption('holeKeep',1)"
+          title="同じ列に穴が続く確率を上げる（100%＝毎回同じ列）">›</button>
       </div>
       <div id="digCounter"
-        style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
+        style="text-align:center;margin-top:6px;min-height:40px;line-height:1.35;color:#9ca3af;font-size:10px;"></div>
     </div>
 
     <!-- リセット -->
@@ -627,7 +719,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="importPanel">
     <div class="imp-head">
       <span class="imp-title">地形取り込み</span>
-      <button class="imp-x" onclick="closeImport()">×</button>
+      <button class="imp-x" title="閉じる" onclick="closeImport()">×</button>
     </div>
 
     <div id="impDrop" tabindex="0">
@@ -650,12 +742,54 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </div>
       </div>
       <div class="imp-actions">
-        <button class="imp-btn" onclick="resetImportPick()">別の画像</button>
-        <button class="imp-btn" onclick="autoDetectField()">自動検出しなおす</button>
-        <button class="imp-btn imp-primary" onclick="applyImport()">この地形を取り込む</button>
+        <button class="imp-btn" onclick="resetImportPick()" title="読み込む画像を選び直す">別の画像</button>
+        <button class="imp-btn" onclick="autoDetectField()" title="盤面の範囲をもう一度自動で検出する">自動検出しなおす</button>
+        <button class="imp-btn imp-primary" onclick="applyImport()" title="読み取った地形・HOLD・NEXTを盤面に反映する">この地形を取り込む</button>
       </div>
     </div>
   </div>
+</div>
+
+<!-- スクショ表示：貼り付け用ダイアログ -->
+<div id="shotOverlay">
+  <div id="shotDialog">
+    <div class="imp-head">
+      <span class="imp-title">カンペ画像</span>
+      <button class="imp-x" title="閉じる" onclick="closeShot()">×</button>
+    </div>
+    <div class="imp-hint" style="margin:0 0 12px;">
+      画像を画面上に浮かせて表示します。表示後は位置とサイズを自由に変えられます。
+    </div>
+    <div id="shotDrop" tabindex="0">
+      <div class="imp-drop-main">ここに画像をドラッグ＆ドロップ</div>
+      <div class="imp-drop-sub">クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）</div>
+    </div>
+    <input type="file" id="shotFile" accept="image/*" style="display:none">
+    <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
+    <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
+      <button class="imp-btn" id="shotPinBtn2" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
+      <button class="imp-btn" onclick="hideShot(); closeShot();" title="カンペ画像を非表示にする">表示を消す</button>
+    </div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="closeShot()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- スクショ表示：浮かせるウィンドウ -->
+<div id="shotWin">
+  <div id="shotBar">
+    <span class="sw-title">カンペ</span>
+    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
+    <button class="sw-btn" onclick="openShot()" title="別の画像に差し替える">画像を変更</button>
+    <button class="sw-btn" onclick="hideShot()" title="カンペ画像を非表示にする">閉じる</button>
+  </div>
+  <div id="shotBody"><img id="shotImg" alt=""></div>
+  <div class="sw-rs sw-rs-l"  data-dir="l"></div>
+  <div class="sw-rs sw-rs-r"  data-dir="r"></div>
+  <div class="sw-rs sw-rs-b"  data-dir="b"></div>
+  <div class="sw-rs sw-rs-bl" data-dir="bl"></div>
+  <div class="sw-rs sw-rs-br" data-dir="br"></div>
 </div>
 
 <!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
@@ -663,7 +797,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="dpcPanel">
     <div class="imp-head">
       <span class="imp-title">DPCセット</span>
-      <button class="imp-x" onclick="closeDpc()">×</button>
+      <button class="imp-x" title="閉じる" onclick="closeDpc()">×</button>
     </div>
     <div class="imp-hint" style="margin:0 0 12px;">
       選んだミノをHOLDした状態にして、ミノの順番を最初から組み直します。
@@ -690,9 +824,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="keyconfigBox">
     <h2>⚙ 設定</h2>
     <div class="cfg-tabs">
-      <button class="cfg-tab active" id="cfgTabKey"  onclick="switchConfigTab('key')">キーコンフィグ</button>
-      <button class="cfg-tab"        id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
-      <button class="cfg-tab"        id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
+      <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
@@ -703,7 +837,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div id="kcRows"></div>
       <div class="kc-btns">
-        <button onclick="resetKeyConfig()"
+        <button onclick="resetKeyConfig()" title="キーの割り当てを初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
@@ -719,24 +853,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <div class="cfg-pane" id="cfgPaneMisc">
-      <label class="opt-row">
-        <span class="opt-label">連続ホールド許可
-          <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）</span></span>
-        <input type="checkbox" id="optMultiHold" checked
-          onchange="setOption('multiHold', this.checked)">
-        <span class="tgl"></span>
-      </label>
-
-      <div class="opt-row">
-        <span class="opt-label">せりあがりの穴継続率
-          <span class="opt-note">せり上がったとき、前回と同じ列に穴が空く確率</span></span>
-        <div class="opt-step">
-          <button class="step-btn" onclick="stepOption('holeKeep',-1)">‹</button>
-          <span class="opt-val"><span id="optHoleKeepVal">100</span><span class="opt-unit"> %</span></span>
-          <button class="step-btn" onclick="stepOption('holeKeep',1)">›</button>
-        </div>
-      </div>
-
       <div class="opt-row">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
@@ -758,7 +874,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
 
       <div class="kc-btns">
-        <button onclick="resetOptions()"
+        <button onclick="resetOptions()" title="その他の設定を初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
@@ -909,23 +1025,26 @@ const PPT2_COLORS = {
 // style で塗り方を切り替える。色は skin ごとに彩度・明度を変えてある。
 // 注意: 盤面には「色の文字列」が保存されるので、色はスキンをまたいで重複させないこと。
 const SKINS = [
-  { id:'classic', name:'クラシック', desc:'標準', style:'bevel',
+  { id:'classic', name:'標準', style:'bevel',
     colors:{ I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#4ade80', Z:'#f87171', J:'#60a5fa', L:'#fb923c' } },
-  { id:'plain',   name:'無地',       desc:'凹凸なしのベタ塗り', style:'flat',
+  { id:'plain',   name:'無地', style:'flat',
     colors:{ I:'#00b4d8', O:'#f2c200', T:'#9d38d6', S:'#3fbf5f', Z:'#e14b4b', J:'#3d6fd4', L:'#ee8b22' } },
-  { id:'gloss',   name:'グロス',     desc:'彩度高め・艶あり', style:'gloss',
+  { id:'gloss',   name:'グロス', style:'gloss',
     colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
-  { id:'pastel',  name:'パステル',   desc:'彩度低め・つや消し', style:'matte',
+  { id:'pastel',  name:'パステル', style:'matte',
     colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
-  { id:'glass',   name:'アウトライン', desc:'中は透けて枠線だけ', style:'glass',
-    colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
-  { id:'invisible', name:'透明',     desc:'ほぼ見えない（上級者向け）', style:'invisible',
-    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
-  { id:'mono',    name:'モノクローム', desc:'色で見分けない練習用', style:'bevel',
-    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
-  { id:'retro',   name:'レトロ',     desc:'ドット模様', style:'dot',
+  { id:'retro',   name:'レトロ', style:'dot',
     colors:{ I:'#3fbecd', O:'#dcc233', T:'#ac57c7', S:'#57b657', Z:'#cf4a4a', J:'#4a69bf', L:'#d78129' } },
-  { id:'ppt2',    name:'ぷよテト風', desc:'原作に寄せた画像', style:'image',
+  { id:'glass',   name:'アウトライン', style:'glass',
+    colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
+  { id:'invisible', name:'ほぼ透明', style:'invisible',
+    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
+  // 盤面には一切描かない。HOLD・NEXT・ゴーストだけは「無地」で描いて操作できるようにする
+  { id:'blank',   name:'完全透明', style:'blank',
+    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
+  { id:'mono',    name:'モノクローム', style:'bevel',
+    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
+  { id:'ppt2',    name:'ぷテ', style:'image',
     colors:PPT2_COLORS },
 ];
 let skinId = 'plain';   // 既定は「無地」
@@ -1041,16 +1160,17 @@ function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
   return true;
 }
 
-// 一時的に別スキンで描く。「透明」スキンでもHOLD/NEXT/ゴーストは見えないと
-// 操作のしようがないので、そこだけ「無地」で描くために使う。
+// 一時的に別スキンで描く。「ほぼ透明」「完全透明」スキンでもHOLD/NEXT/ゴーストは
+// 見えないと操作のしようがないので、そこだけ「無地」で描くために使う。
 function withSkin(id, fn) {
   const prevId = skinId, prevPpt = ppt2Theme;
   skinId = id; ppt2Theme = (id === 'ppt2');
   try { fn(); } finally { skinId = prevId; ppt2Theme = prevPpt; }
 }
-// 「透明」スキンのときの代替スキン（それ以外はそのまま）
+// 透明系スキンのときの代替スキン（それ以外はそのまま）
 function visibleSkinId() {
-  return currentSkin().style === 'invisible' ? 'plain' : skinId;
+  const st = currentSkin().style;
+  return (st === 'invisible' || st === 'blank') ? 'plain' : skinId;
 }
 
 // スキンを適用する（盤面・パレット・背景をまとめて切り替える）
@@ -1126,6 +1246,10 @@ function drawSkinCell(ctx, x, y, size, color, alpha=1) {
     ctx.strokeStyle = darken(col, 0.55);
     ctx.lineWidth = Math.max(1, 2*k);
     ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'blank') {
+    // 盤面には何も描かない（置いた場所を完全に記憶する練習用）。
+    // ここで return すると末尾の ctx.restore() を飛ばしてしまい、
+    // save/restore が釣り合わずに以降の描画が崩れるので、何もせず下まで抜ける。
   } else if (style === 'invisible') {
     // ほぼ見えない。目を凝らせば分かる程度にだけ色を残す（記憶して積む練習用）
     ctx.globalAlpha = alpha * 0.03;
@@ -1190,7 +1314,7 @@ setupHiDPICanvas(nextCanvas,  nextCtx);
 let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
-let gravSpeed = 1;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照）
+let gravSpeed = 0;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照。起動時に loadGravSpeed() で復元）
 let gravAccum = 0;       // 落下の端数（小数行/フレームを貯めて整数行ぶん落とす）
 let undoStack = [];     // undoスタック（複数手対応）
 const UNDO_MAX = 50;   // 最大保持数
@@ -1556,24 +1680,28 @@ function setDigTriggerType(type) {
 
 // ステッパーの長押し: 押し続けると連続で変化し、だんだん速くなる
 let digRepeatTimer = null;
-function startDigRepeat(delta) {
-  stopDigRepeat();
-  changeDigInterval(delta);          // まず1回（単押しはこれだけ）
+// ボタンの長押し連射。落下設定とせりあがり間隔で共用する
+function startRepeat(fn) {
+  stopRepeat();
+  fn();                              // まず1回（単押しはこれだけ）
   let interval = 130;                // 連射の初期間隔(ms)
   const tick = () => {
-    changeDigInterval(delta);
+    fn();
     interval = Math.max(25, interval * 0.85);   // 押し続けるほど加速
     digRepeatTimer = setTimeout(tick, interval);
   };
   digRepeatTimer = setTimeout(tick, 400);       // 長押しと判定するまでの待ち
 }
-function stopDigRepeat() {
+function stopRepeat() {
   if (digRepeatTimer) { clearTimeout(digRepeatTimer); digRepeatTimer = null; }
 }
+function startDigRepeat(delta) { startRepeat(() => changeDigInterval(delta)); }
+function stopDigRepeat() { stopRepeat(); }
 // ボタン外で指を離した場合やウィンドウを離れた場合にも確実に止める
-window.addEventListener('mouseup', stopDigRepeat);
-window.addEventListener('touchend', stopDigRepeat);
-window.addEventListener('blur', stopDigRepeat);
+window.addEventListener('mouseup', stopRepeat);
+window.addEventListener('touchend', stopRepeat);
+window.addEventListener('touchcancel', stopRepeat);
+window.addEventListener('blur', stopRepeat);
 
 function changeDigInterval(delta) {
   if (digTriggerType === 'time') {
@@ -1710,9 +1838,9 @@ function updateDigCounter(remainSecOverride) {
     : digInterval - (digCount % digInterval);
   const unit = isTime ? '秒' : '個';
   el.innerHTML =
-    `<span style="font-size:11px;">あと</span><br>` +
-    `<span style="font-size:28px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
-    `<span style="font-size:11px;">${unit}でせりあがり</span>`;
+    `<span style="font-size:10px;">あと</span><br>` +
+    `<span style="font-size:19px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
+    `<span style="font-size:10px;">${unit}でせりあがり</span>`;
 }
 
 // ===== ミノを捨てる =====
@@ -2396,9 +2524,24 @@ function gravRowsPerFrame(g) {
   return GRAV_MIN_ROWS * Math.pow(GRAV_MAX_ROWS / GRAV_MIN_ROWS, (g - 1) / 19);
 }
 
+function updateGravDisplay() {
+  document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+}
+// 落下速度はリセットやページを閉じても保持する（練習のたびに設定し直さずに済むように）
+function saveGravSpeed() {
+  try { localStorage.setItem('tetren_grav', String(gravSpeed)); } catch(e) {}
+}
+function loadGravSpeed() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_grav'); } catch(e) {}
+  const v = parseInt(raw, 10);
+  gravSpeed = (Number.isFinite(v) && v >= 0 && v <= 20) ? v : 0;
+  updateGravDisplay();
+}
 function changeGravSpeed(delta) {
   gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
-  document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+  updateGravDisplay();
+  saveGravSpeed();
   lastDrop = 0;    // タイマーリセット
   gravAccum = 0;   // 端数もリセット（速度変更直後にいきなり1行落ちないように）
 }
@@ -3265,9 +3408,7 @@ function renderSkinList() {
     skinId = prevId; ppt2Theme = prevPpt;
     const name = document.createElement('div');
     name.className = 'skin-name'; name.textContent = sk.name;
-    const desc = document.createElement('div');
-    desc.className = 'skin-desc'; desc.textContent = sk.desc;
-    card.appendChild(cv); card.appendChild(name); card.appendChild(desc);
+    card.appendChild(cv); card.appendChild(name);
     card.addEventListener('click', () => { applySkin(sk.id); renderSkinList(); });
     list.appendChild(card);
   });
@@ -3353,8 +3494,154 @@ function kcMatch(id, code) {
   return keyConfig[id][0] === code || keyConfig[id][1] === code;
 }
 
+// ===== バージョン =====
+// セマンティックバージョニング（MAJOR.MINOR.PATCH）で管理する。
+//   MAJOR … 既存のキー設定や遊び方が通用しなくなる非互換の変更
+//   MINOR … 後方互換のある機能追加
+//   PATCH … 不具合修正・数値調整
+// 変更履歴は CHANGELOG.md を参照。
+const APP_VERSION = '1.0.0';
+
+(function showVersion(){
+  const el = document.getElementById('verLabel');
+  if (!el) return;
+  el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
+})();
+
+// ===== カンペ画像（画面に重ねて表示する参考画像） =====
+const SHOT_BAR_H = 28;               // タイトルバーのおおよその高さ
+let shotPinned = true;               // 最前面に固定するか
+
+function openShot() {
+  document.getElementById('shotOverlay').classList.add('open');
+  document.getElementById('shotFile').value = '';
+  const shown = document.getElementById('shotWin').classList.contains('show');
+  document.getElementById('shotCtrls').style.display = shown ? 'flex' : 'none';
+  document.getElementById('shotDrop').focus();
+}
+function closeShot() {
+  document.getElementById('shotOverlay').classList.remove('open');
+}
+function hideShot() {
+  document.getElementById('shotWin').classList.remove('show');
+}
+function setShotPin(on) {
+  shotPinned = on;
+  const win = document.getElementById('shotWin');
+  const btn = document.getElementById('shotPinBtn');
+  win.classList.toggle('unpinned', !on);
+  btn.classList.toggle('on', on);
+  btn.textContent = on ? '最前面 ON' : '最前面 OFF';
+  const btn2 = document.getElementById('shotPinBtn2');
+  btn2.textContent = on ? '最前面 ON' : '最前面 OFF';
+  btn2.classList.toggle('imp-primary', on);
+  btn.blur(); btn2.blur();           // フォーカスが残るとキー操作を食うため
+}
+
+// 画像を受け取ってウィンドウに表示する
+function loadShotImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    const win = document.getElementById('shotWin');
+    document.getElementById('shotImg').src = src;
+    // 初回だけ画像の縦横比に合わせた大きさ・位置で出す（2枚目以降は今の枠を保つ）
+    if (!win.dataset.placed) {
+      const maxW = Math.min(520, window.innerWidth * 0.45);
+      const maxH = window.innerHeight * 0.7 - SHOT_BAR_H;
+      const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+      const w = Math.max(140, Math.round(img.naturalWidth * sc));
+      const h = Math.max(100, Math.round(img.naturalHeight * sc) + SHOT_BAR_H);
+      win.style.width = w + 'px';
+      win.style.height = h + 'px';
+      win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
+      win.style.top = '80px';
+      win.dataset.placed = '1';
+    }
+    win.classList.add('show');
+    closeShot();
+  };
+  img.onerror = () => alert('画像を読み込めませんでした。');
+  img.src = src;
+}
+function loadShotFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const fr = new FileReader();
+  fr.onload = e => loadShotImage(e.target.result);
+  fr.readAsDataURL(file);
+}
+
+// タイトルバーで移動、右下の三角でサイズ変更
+function shotPointerDown(e, mode) {
+  if (e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  const win = document.getElementById('shotWin');
+  const r = win.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY;
+  const l0 = r.left, t0 = r.top, w0 = r.width, h0 = r.height;
+  const onMove = ev => {
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    if (mode === 'move') {
+      // 画面外に出し切らないよう、最低24pxは残す
+      const l = Math.min(Math.max(l0 + dx, 24 - w0), window.innerWidth - 24);
+      const t = Math.min(Math.max(t0 + dy, 0), window.innerHeight - 24);
+      win.style.left = l + 'px';
+      win.style.top  = t + 'px';
+    } else {
+      // mode は 'l' 'r' 'b' 'bl' 'br' のいずれか。左辺を掴んだときは左端も動かす
+      const MINW = 140, MINH = 100;
+      if (mode.includes('r')) win.style.width = Math.max(MINW, w0 + dx) + 'px';
+      if (mode.includes('l')) {
+        const w = Math.max(MINW, w0 - dx);
+        win.style.width = w + 'px';
+        win.style.left  = (l0 + w0 - w) + 'px';
+      }
+      if (mode.includes('b')) win.style.height = Math.max(MINH, h0 + dy) + 'px';
+    }
+  };
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+}
+
+(function initShotUI(){
+  const drop = document.getElementById('shotDrop');
+  const file = document.getElementById('shotFile');
+  drop.addEventListener('click', () => file.click());
+  file.addEventListener('change', e => loadShotFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (dt.files && dt.files[0]) loadShotFile(dt.files[0]);
+  });
+  // ⌘V / Ctrl+V での貼り付け（このダイアログが開いている間だけ）
+  window.addEventListener('paste', e => {
+    if (!document.getElementById('shotOverlay').classList.contains('open')) return;
+    for (const item of e.clipboardData.items) {
+      if (item.type.startsWith('image/')) { loadShotFile(item.getAsFile()); break; }
+    }
+  });
+  document.getElementById('shotOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'shotOverlay') closeShot();
+  });
+  document.getElementById('shotBar').addEventListener('pointerdown', e => {
+    if (e.target.closest('.sw-btn')) return;   // ボタン上では動かさない
+    shotPointerDown(e, 'move');
+  });
+  document.querySelectorAll('#shotWin .sw-rs').forEach(h => {
+    h.addEventListener('pointerdown', e => shotPointerDown(e, h.dataset.dir));
+  });
+})();
+
 // ===== キー入力 =====
 document.addEventListener('keydown', e=>{
+  // カンペ画像の貼り付けダイアログを開いている間はゲーム操作を止める
+  if (document.getElementById('shotOverlay').classList.contains('open')) return;
   // リスタートはゲームオーバー時も有効
   if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
   if (gameOver) return;
@@ -3402,8 +3689,8 @@ function resetGameState(fullReset = true) {
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
   dropInterval=1000; lastDrop=0; undoStack=[]; lastGarbageCol=null;
-  gravSpeed=0; gravAccum=0;
-  document.getElementById('gravSpeedVal').textContent = 0;
+  gravAccum=0;                 // 落下速度そのものは維持する（設定し直す手間をなくすため）
+  updateGravDisplay();
   downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
   if (fullReset) {
@@ -3446,6 +3733,7 @@ if (isDemoBuild()) {
 initKeyConfig();
 loadSkin();
 loadOptions();
+loadGravSpeed();
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
