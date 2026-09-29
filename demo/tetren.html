@@ -202,6 +202,12 @@ body.ppt2-theme #nextCanvas {
   letter-spacing:0.5px; transition:background .15s; margin-top:8px;
 }
 .kc-open-btn:hover { background:#4338ca; }
+/* ===== バージョン表示 ===== */
+#verLabel {
+  margin-top:6px; text-align:center; font-size:9px;
+  color:#6b7280; letter-spacing:0.5px; user-select:text;
+}
+
 /* ===== スクショ表示（画面に浮かせる参考画像） ===== */
 #shotOverlay {
   display:none; position:fixed; inset:0; z-index:200;
@@ -516,6 +522,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button id="verSwitchBtn" class="kc-open-btn"
         style="display:none;background:#374151;"
         onclick="switchVersion()">📱 スマホ版へ</button>
+      <div id="verLabel"></div>
     </div>
 
     <!-- ライン消去メッセージ -->
@@ -3443,6 +3450,20 @@ document.addEventListener('keydown', e => {
 function kcMatch(id, code) {
   return keyConfig[id][0] === code || keyConfig[id][1] === code;
 }
+
+// ===== バージョン =====
+// セマンティックバージョニング（MAJOR.MINOR.PATCH）で管理する。
+//   MAJOR … 既存のキー設定や遊び方が通用しなくなる非互換の変更
+//   MINOR … 後方互換のある機能追加
+//   PATCH … 不具合修正・数値調整
+// 変更履歴は CHANGELOG.md を参照。
+const APP_VERSION = '1.0.0';
+
+(function showVersion(){
+  const el = document.getElementById('verLabel');
+  if (!el) return;
+  el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
+})();
 
 // ===== スクショ表示（画面に浮かせる参考画像） =====
 const SHOT_BAR_H = 28;               // タイトルバーのおおよその高さ
