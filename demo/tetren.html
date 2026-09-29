@@ -43,7 +43,7 @@ body {
   font-family:'Arial',sans-serif; color:#eee;
   user-select:none;
 }
-#wrap { display:flex; gap:12px; align-items:flex-start; }
+#wrap { display:flex; gap:12px; align-items:flex-start; position:relative; z-index:2; }
 .side { display:flex; flex-direction:column; gap:12px; }
 .panel {
   background:#1f2937; border:1px solid #374151;
@@ -202,6 +202,56 @@ body.ppt2-theme #nextCanvas {
   letter-spacing:0.5px; transition:background .15s; margin-top:8px;
 }
 .kc-open-btn:hover { background:#4338ca; }
+/* ===== スクショ表示（画面に浮かせる参考画像） ===== */
+#shotOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
+}
+#shotOverlay.open { display:flex; }
+#shotDialog {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  width:min(560px, 94vw); padding:16px 18px 18px;
+  box-shadow:0 18px 50px rgba(0,0,0,0.6);
+}
+#shotDrop {
+  border:2px dashed #4b5563; border-radius:8px; padding:36px 16px;
+  text-align:center; cursor:pointer; outline:none;
+}
+#shotDrop:hover, #shotDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
+#shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
+
+/* 浮かせるウィンドウ本体。最前面ONなら全部の上、OFFなら盤面の裏へ回る */
+#shotWin {
+  display:none; position:fixed; left:40px; top:80px; width:420px; height:300px;
+  background:#0f131c; border:1px solid #374151; border-radius:8px;
+  box-shadow:0 10px 34px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
+}
+#shotWin.show { display:flex; flex-direction:column; }
+#shotWin.unpinned { z-index:1; }
+#shotBar {
+  display:flex; align-items:center; gap:6px; padding:5px 6px;
+  background:#1f2735; cursor:move; user-select:none; flex:0 0 auto;
+}
+#shotBar .sw-title { font-size:11px; color:#9ca3af; letter-spacing:1px; margin-right:auto; }
+.sw-btn {
+  background:#374151; border:none; color:#d1d5db; font-size:11px;
+  border-radius:4px; padding:3px 8px; cursor:pointer; white-space:nowrap;
+}
+.sw-btn:hover { background:#4b5563; }
+.sw-btn.on { background:#4f46e5; color:#fff; }
+#shotBody {
+  flex:1; min-height:0; display:flex; align-items:center;
+  justify-content:center; background:#000;
+}
+#shotImg {
+  width:100%; height:100%; object-fit:contain; display:block;
+  -webkit-user-drag:none; user-select:none;
+}
+#shotResize {
+  position:absolute; right:0; bottom:0; width:16px; height:16px;
+  cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, #6b7280 50%);
+}
+
 /* ===== DPCセットダイアログ ===== */
 #dpcOverlay {
   display:none; position:fixed; inset:0; z-index:200;
@@ -448,6 +498,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="garb-btn" style="background:#374151;margin-top:6px;"
         onclick="openImport()"
         title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
+      <button class="garb-btn" style="background:#374151;margin-top:6px;"
+        onclick="openShot()"
+        title="スクショを画面に浮かせて表示します（位置・サイズ変更可）">スクショ表示</button>
     </div>
 
     <!-- LINES -->
@@ -656,6 +709,44 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
     </div>
   </div>
+</div>
+
+<!-- スクショ表示：貼り付け用ダイアログ -->
+<div id="shotOverlay">
+  <div id="shotDialog">
+    <div class="imp-head">
+      <span class="imp-title">スクショ表示</span>
+      <button class="imp-x" onclick="closeShot()">×</button>
+    </div>
+    <div class="imp-hint" style="margin:0 0 12px;">
+      画像を画面上に浮かせて表示します。表示後は位置とサイズを自由に変えられます。
+    </div>
+    <div id="shotDrop" tabindex="0">
+      <div class="imp-drop-main">ここに画像をドラッグ＆ドロップ</div>
+      <div class="imp-drop-sub">クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）</div>
+    </div>
+    <input type="file" id="shotFile" accept="image/*" style="display:none">
+    <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
+    <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
+      <button class="imp-btn" id="shotPinBtn2" onclick="setShotPin(!shotPinned)">最前面 ON</button>
+      <button class="imp-btn" onclick="hideShot(); closeShot();">表示を消す</button>
+    </div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="closeShot()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- スクショ表示：浮かせるウィンドウ -->
+<div id="shotWin">
+  <div id="shotBar">
+    <span class="sw-title">スクショ</span>
+    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)">最前面 ON</button>
+    <button class="sw-btn" onclick="openShot()">画像を変更</button>
+    <button class="sw-btn" onclick="hideShot()">閉じる</button>
+  </div>
+  <div id="shotBody"><img id="shotImg" alt=""></div>
+  <div id="shotResize"></div>
 </div>
 
 <!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
@@ -3353,8 +3444,132 @@ function kcMatch(id, code) {
   return keyConfig[id][0] === code || keyConfig[id][1] === code;
 }
 
+// ===== スクショ表示（画面に浮かせる参考画像） =====
+const SHOT_BAR_H = 28;               // タイトルバーのおおよその高さ
+let shotPinned = true;               // 最前面に固定するか
+
+function openShot() {
+  document.getElementById('shotOverlay').classList.add('open');
+  document.getElementById('shotFile').value = '';
+  const shown = document.getElementById('shotWin').classList.contains('show');
+  document.getElementById('shotCtrls').style.display = shown ? 'flex' : 'none';
+  document.getElementById('shotDrop').focus();
+}
+function closeShot() {
+  document.getElementById('shotOverlay').classList.remove('open');
+}
+function hideShot() {
+  document.getElementById('shotWin').classList.remove('show');
+}
+function setShotPin(on) {
+  shotPinned = on;
+  const win = document.getElementById('shotWin');
+  const btn = document.getElementById('shotPinBtn');
+  win.classList.toggle('unpinned', !on);
+  btn.classList.toggle('on', on);
+  btn.textContent = on ? '最前面 ON' : '最前面 OFF';
+  const btn2 = document.getElementById('shotPinBtn2');
+  btn2.textContent = on ? '最前面 ON' : '最前面 OFF';
+  btn2.classList.toggle('imp-primary', on);
+  btn.blur(); btn2.blur();           // フォーカスが残るとキー操作を食うため
+}
+
+// 画像を受け取ってウィンドウに表示する
+function loadShotImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    const win = document.getElementById('shotWin');
+    document.getElementById('shotImg').src = src;
+    // 初回だけ画像の縦横比に合わせた大きさ・位置で出す（2枚目以降は今の枠を保つ）
+    if (!win.dataset.placed) {
+      const maxW = Math.min(520, window.innerWidth * 0.45);
+      const maxH = window.innerHeight * 0.7 - SHOT_BAR_H;
+      const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+      const w = Math.max(140, Math.round(img.naturalWidth * sc));
+      const h = Math.max(100, Math.round(img.naturalHeight * sc) + SHOT_BAR_H);
+      win.style.width = w + 'px';
+      win.style.height = h + 'px';
+      win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
+      win.style.top = '80px';
+      win.dataset.placed = '1';
+    }
+    win.classList.add('show');
+    closeShot();
+  };
+  img.onerror = () => alert('画像を読み込めませんでした。');
+  img.src = src;
+}
+function loadShotFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const fr = new FileReader();
+  fr.onload = e => loadShotImage(e.target.result);
+  fr.readAsDataURL(file);
+}
+
+// タイトルバーで移動、右下の三角でサイズ変更
+function shotPointerDown(e, mode) {
+  if (e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  const win = document.getElementById('shotWin');
+  const r = win.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY;
+  const l0 = r.left, t0 = r.top, w0 = r.width, h0 = r.height;
+  const onMove = ev => {
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    if (mode === 'move') {
+      // 画面外に出し切らないよう、最低24pxは残す
+      const l = Math.min(Math.max(l0 + dx, 24 - w0), window.innerWidth - 24);
+      const t = Math.min(Math.max(t0 + dy, 0), window.innerHeight - 24);
+      win.style.left = l + 'px';
+      win.style.top  = t + 'px';
+    } else {
+      win.style.width  = Math.max(140, w0 + dx) + 'px';
+      win.style.height = Math.max(100, h0 + dy) + 'px';
+    }
+  };
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+}
+
+(function initShotUI(){
+  const drop = document.getElementById('shotDrop');
+  const file = document.getElementById('shotFile');
+  drop.addEventListener('click', () => file.click());
+  file.addEventListener('change', e => loadShotFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (dt.files && dt.files[0]) loadShotFile(dt.files[0]);
+  });
+  // ⌘V / Ctrl+V での貼り付け（このダイアログが開いている間だけ）
+  window.addEventListener('paste', e => {
+    if (!document.getElementById('shotOverlay').classList.contains('open')) return;
+    for (const item of e.clipboardData.items) {
+      if (item.type.startsWith('image/')) { loadShotFile(item.getAsFile()); break; }
+    }
+  });
+  document.getElementById('shotOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'shotOverlay') closeShot();
+  });
+  document.getElementById('shotBar').addEventListener('pointerdown', e => {
+    if (e.target.closest('.sw-btn')) return;   // ボタン上では動かさない
+    shotPointerDown(e, 'move');
+  });
+  document.getElementById('shotResize')
+    .addEventListener('pointerdown', e => shotPointerDown(e, 'resize'));
+})();
+
 // ===== キー入力 =====
 document.addEventListener('keydown', e=>{
+  // スクショ貼り付けダイアログを開いている間はゲーム操作を止める
+  if (document.getElementById('shotOverlay').classList.contains('open')) return;
   // リスタートはゲームオーバー時も有効
   if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
   if (gameOver) return;
