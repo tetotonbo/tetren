@@ -208,7 +208,7 @@ body.ppt2-theme #nextCanvas {
   color:#6b7280; letter-spacing:0.5px; user-select:text;
 }
 
-/* ===== スクショ表示（画面に浮かせる参考画像） ===== */
+/* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
 #shotOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
@@ -253,10 +253,14 @@ body.ppt2-theme #nextCanvas {
   width:100%; height:100%; object-fit:contain; display:block;
   -webkit-user-drag:none; user-select:none;
 }
-#shotResize {
-  position:absolute; right:0; bottom:0; width:16px; height:16px;
-  cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, #6b7280 50%);
-}
+/* サイズ変更のつまみ。左右の辺・下辺・下の両隅で変えられる */
+.sw-rs { position:absolute; }
+.sw-rs-l  { left:0;  top:28px; bottom:0; width:6px;  cursor:ew-resize; }
+.sw-rs-r  { right:0; top:28px; bottom:0; width:6px;  cursor:ew-resize; }
+.sw-rs-b  { left:6px; right:6px; bottom:0; height:6px; cursor:ns-resize; }
+.sw-rs-bl { left:0;  bottom:0; width:14px; height:14px; cursor:nesw-resize; }
+.sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
+            background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* ===== DPCセットダイアログ ===== */
 #dpcOverlay {
@@ -471,12 +475,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </label>
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
-        <button class="step-btn" onclick="changeGravSpeed(-1)">‹</button>
+        <button class="step-btn" onclick="changeGravSpeed(-1)" title="落下速度を下げる（0Gは自由落下なし）">‹</button>
         <div class="speed-val">
           <span id="gravSpeedVal">0</span>
           <span class="speed-unit"> G</span>
         </div>
-        <button class="step-btn" onclick="changeGravSpeed(+1)">›</button>
+        <button class="step-btn" onclick="changeGravSpeed(+1)" title="落下速度を上げる（20Gは1フレームで最下段）">›</button>
       </div>
     </div>
 
@@ -506,7 +510,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
         title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
       <button class="garb-btn" style="background:#374151;margin-top:6px;"
         onclick="openShot()"
-        title="スクショを画面に浮かせて表示します（位置・サイズ変更可）">スクショ表示</button>
+        title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
     </div>
 
     <!-- LINES -->
@@ -517,9 +521,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
-      <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;">⚙ 設定</button>
+      <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
       <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
-      <button id="verSwitchBtn" class="kc-open-btn"
+      <button id="verSwitchBtn" title="スマホ版の画面に切り替える（デモ版のみ）" class="kc-open-btn"
         style="display:none;background:#374151;"
         onclick="switchVersion()">📱 スマホ版へ</button>
       <div id="verLabel"></div>
@@ -552,7 +556,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
-      <button id="ctrlToggleBtn" class="ctrl-toggle" onclick="toggleCtrlButtons()">
+      <button id="ctrlToggleBtn" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
       </button>
       <div id="ctrlHidden">
@@ -636,16 +640,16 @@ input:checked + .tgl::after { transform:translateX(16px); }
             onclick="if(!gameOver)repeatDpc()"
             title="前回選んだミノで、もう一度DPCセットします">↻</button>
         </div>
-        <button id="renModeBtn" class="toggle-btn"
+        <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleRenMode()">REN</button>
-        <button id="dekaModeBtn" class="toggle-btn"
+        <button id="dekaModeBtn" title="ミノを4倍の大きさにする" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleDekaMode()">デカミノ</button>
       </div>
       <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
       <div class="panel-label">せりあがり</div>
-      <button id="digBtn" class="toggle-btn"
+      <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
         style="background:#374151;"
         onclick="toggleDigMode()">スタート</button>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
@@ -659,14 +663,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div class="speed-row">
         <button class="step-btn"
           onmousedown="startDigRepeat(-1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
-          ontouchstart="event.preventDefault();startDigRepeat(-1)" ontouchend="stopDigRepeat()">‹</button>
+          ontouchstart="event.preventDefault();startDigRepeat(-1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を短くする（長押しで連続）">‹</button>
         <div class="speed-val">
           <span id="digIntervalVal">3</span>
           <span class="speed-unit" id="digIntervalUnit"> 秒ごと</span>
         </div>
         <button class="step-btn"
           onmousedown="startDigRepeat(+1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
-          ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()">›</button>
+          ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を長くする（長押しで連続）">›</button>
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
@@ -687,7 +691,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="importPanel">
     <div class="imp-head">
       <span class="imp-title">地形取り込み</span>
-      <button class="imp-x" onclick="closeImport()">×</button>
+      <button class="imp-x" title="閉じる" onclick="closeImport()">×</button>
     </div>
 
     <div id="impDrop" tabindex="0">
@@ -710,9 +714,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </div>
       </div>
       <div class="imp-actions">
-        <button class="imp-btn" onclick="resetImportPick()">別の画像</button>
-        <button class="imp-btn" onclick="autoDetectField()">自動検出しなおす</button>
-        <button class="imp-btn imp-primary" onclick="applyImport()">この地形を取り込む</button>
+        <button class="imp-btn" onclick="resetImportPick()" title="読み込む画像を選び直す">別の画像</button>
+        <button class="imp-btn" onclick="autoDetectField()" title="盤面の範囲をもう一度自動で検出する">自動検出しなおす</button>
+        <button class="imp-btn imp-primary" onclick="applyImport()" title="読み取った地形・HOLD・NEXTを盤面に反映する">この地形を取り込む</button>
       </div>
     </div>
   </div>
@@ -722,8 +726,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <div id="shotOverlay">
   <div id="shotDialog">
     <div class="imp-head">
-      <span class="imp-title">スクショ表示</span>
-      <button class="imp-x" onclick="closeShot()">×</button>
+      <span class="imp-title">カンペ画像</span>
+      <button class="imp-x" title="閉じる" onclick="closeShot()">×</button>
     </div>
     <div class="imp-hint" style="margin:0 0 12px;">
       画像を画面上に浮かせて表示します。表示後は位置とサイズを自由に変えられます。
@@ -735,8 +739,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <input type="file" id="shotFile" accept="image/*" style="display:none">
     <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
     <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
-      <button class="imp-btn" id="shotPinBtn2" onclick="setShotPin(!shotPinned)">最前面 ON</button>
-      <button class="imp-btn" onclick="hideShot(); closeShot();">表示を消す</button>
+      <button class="imp-btn" id="shotPinBtn2" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
+      <button class="imp-btn" onclick="hideShot(); closeShot();" title="カンペ画像を非表示にする">表示を消す</button>
     </div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="closeShot()">キャンセル</button>
@@ -747,13 +751,17 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <!-- スクショ表示：浮かせるウィンドウ -->
 <div id="shotWin">
   <div id="shotBar">
-    <span class="sw-title">スクショ</span>
-    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)">最前面 ON</button>
-    <button class="sw-btn" onclick="openShot()">画像を変更</button>
-    <button class="sw-btn" onclick="hideShot()">閉じる</button>
+    <span class="sw-title">カンペ</span>
+    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
+    <button class="sw-btn" onclick="openShot()" title="別の画像に差し替える">画像を変更</button>
+    <button class="sw-btn" onclick="hideShot()" title="カンペ画像を非表示にする">閉じる</button>
   </div>
   <div id="shotBody"><img id="shotImg" alt=""></div>
-  <div id="shotResize"></div>
+  <div class="sw-rs sw-rs-l"  data-dir="l"></div>
+  <div class="sw-rs sw-rs-r"  data-dir="r"></div>
+  <div class="sw-rs sw-rs-b"  data-dir="b"></div>
+  <div class="sw-rs sw-rs-bl" data-dir="bl"></div>
+  <div class="sw-rs sw-rs-br" data-dir="br"></div>
 </div>
 
 <!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
@@ -761,7 +769,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="dpcPanel">
     <div class="imp-head">
       <span class="imp-title">DPCセット</span>
-      <button class="imp-x" onclick="closeDpc()">×</button>
+      <button class="imp-x" title="閉じる" onclick="closeDpc()">×</button>
     </div>
     <div class="imp-hint" style="margin:0 0 12px;">
       選んだミノをHOLDした状態にして、ミノの順番を最初から組み直します。
@@ -788,9 +796,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div id="keyconfigBox">
     <h2>⚙ 設定</h2>
     <div class="cfg-tabs">
-      <button class="cfg-tab active" id="cfgTabKey"  onclick="switchConfigTab('key')">キーコンフィグ</button>
-      <button class="cfg-tab"        id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
-      <button class="cfg-tab"        id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
+      <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
@@ -801,7 +809,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div id="kcRows"></div>
       <div class="kc-btns">
-        <button onclick="resetKeyConfig()"
+        <button onclick="resetKeyConfig()" title="キーの割り当てを初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
@@ -856,7 +864,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
 
       <div class="kc-btns">
-        <button onclick="resetOptions()"
+        <button onclick="resetOptions()" title="その他の設定を初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
@@ -3465,7 +3473,7 @@ const APP_VERSION = '1.0.0';
   el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
 })();
 
-// ===== スクショ表示（画面に浮かせる参考画像） =====
+// ===== カンペ画像（画面に重ねて表示する参考画像） =====
 const SHOT_BAR_H = 28;               // タイトルバーのおおよその高さ
 let shotPinned = true;               // 最前面に固定するか
 
@@ -3544,8 +3552,15 @@ function shotPointerDown(e, mode) {
       win.style.left = l + 'px';
       win.style.top  = t + 'px';
     } else {
-      win.style.width  = Math.max(140, w0 + dx) + 'px';
-      win.style.height = Math.max(100, h0 + dy) + 'px';
+      // mode は 'l' 'r' 'b' 'bl' 'br' のいずれか。左辺を掴んだときは左端も動かす
+      const MINW = 140, MINH = 100;
+      if (mode.includes('r')) win.style.width = Math.max(MINW, w0 + dx) + 'px';
+      if (mode.includes('l')) {
+        const w = Math.max(MINW, w0 - dx);
+        win.style.width = w + 'px';
+        win.style.left  = (l0 + w0 - w) + 'px';
+      }
+      if (mode.includes('b')) win.style.height = Math.max(MINH, h0 + dy) + 'px';
     }
   };
   const onUp = () => {
@@ -3583,13 +3598,14 @@ function shotPointerDown(e, mode) {
     if (e.target.closest('.sw-btn')) return;   // ボタン上では動かさない
     shotPointerDown(e, 'move');
   });
-  document.getElementById('shotResize')
-    .addEventListener('pointerdown', e => shotPointerDown(e, 'resize'));
+  document.querySelectorAll('#shotWin .sw-rs').forEach(h => {
+    h.addEventListener('pointerdown', e => shotPointerDown(e, h.dataset.dir));
+  });
 })();
 
 // ===== キー入力 =====
 document.addEventListener('keydown', e=>{
-  // スクショ貼り付けダイアログを開いている間はゲーム操作を止める
+  // カンペ画像の貼り付けダイアログを開いている間はゲーム操作を止める
   if (document.getElementById('shotOverlay').classList.contains('open')) return;
   // リスタートはゲームオーバー時も有効
   if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
