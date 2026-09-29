@@ -107,23 +107,19 @@ canvas { display:block; }
 }
 .side-btn:active { background:#374151; }
 #colorPaletteWrap {
-  display:none; flex-wrap:wrap; gap:5px;
-  justify-content:center; padding:6px;
+  display:none; flex-wrap:wrap; gap:4px;
+  justify-content:center; padding:5px;
   background:#1f2937; border:1px solid #374151; border-radius:6px;
   flex-shrink:0; box-sizing:border-box; max-width:100%;
 }
 .color-swatch {
-  width:28px; height:28px; border-radius:4px;
+  /* 大きさは initLayout() が盤面幅から決める（全部が1段に収まるサイズ） */
+  width:var(--swatch,26px); height:var(--swatch,26px); border-radius:4px;
   border:2px solid transparent; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation; transition:border-color .1s;
 }
 .color-swatch.sel { border-color:#fff; }
-/* 画面が低い端末ではマスを詰めて、パレットを出しても収まるようにする */
-@media (max-height: 700px) {
-  .color-swatch { width:24px; height:24px; }
-  #colorPaletteWrap { gap:4px; padding:4px; }
-}
 .mini-panel {
   background:#1f2937; border:1px solid #374151;
   border-radius:6px; padding:5px; width:100%;
@@ -1525,18 +1521,19 @@ document.getElementById('startBtn').addEventListener('click',startGame);
 // パレットの高さは盤面の幅で段数が変わり、盤面の大きさはパレットの高さで変わる、
 // という相互依存になっている。そこでマスの大きさを大きい方から順に試して、
 // パレットまで含めて画面に収まる最大値を選ぶ。
-const SWATCH_SHORT = window.matchMedia('(max-height: 700px)');
-function paletteHeightFor(boardW){
+// マスの大きさは盤面幅から決める。全色が横1段に並ぶ大きさにするので、
+// パレットの高さは常に1段ぶんで済み、盤面をほとんど削らずに表示できる。
+const PAL_GAP = 4, PAL_PAD = 5 * 2 + 2;   // CSSの gap / padding+border と合わせる
+const PAL_MIN = 14, PAL_MAX = 26;         // マスの最小・最大
+function paletteMetrics(boardW){
   const pw=document.getElementById('colorPaletteWrap');
-  if(!pw || pw.style.display !== 'flex') return 0;
-  const short = SWATCH_SHORT.matches;          // CSSの @media と同じ条件
-  const sw = short ? 24 : 28;                  // .color-swatch のサイズ
-  const gap = short ? 4 : 5;
-  const pad = (short ? 4 : 6) * 2 + 2;         // padding + border
+  if(!pw || pw.style.display !== 'flex') return { h:0, sw:PAL_MAX };
   const n = document.querySelectorAll('.color-swatch').length || 9;
-  const perRow = Math.max(1, Math.floor((boardW - pad + gap) / (sw + gap)));
+  const fit = Math.floor((boardW - PAL_PAD - PAL_GAP * (n - 1)) / n);
+  const sw = Math.max(PAL_MIN, Math.min(PAL_MAX, fit));
+  const perRow = Math.max(1, Math.floor((boardW - PAL_PAD + PAL_GAP) / (sw + PAL_GAP)));
   const rows = Math.ceil(n / perRow);
-  return rows * sw + (rows - 1) * gap + pad + 4;   // +4 は中央カラムの gap
+  return { h: rows * sw + (rows - 1) * PAL_GAP + PAL_PAD + 4, sw };   // +4 は中央カラムの gap
 }
 
 function initLayout(){
@@ -1552,7 +1549,7 @@ function initLayout(){
   const minBS = editing ? 10 : 16;
   BS = minBS;
   for(let b = maxBS; b >= minBS; b--){
-    if(fixedH + ROWS*b + paletteHeightFor(COLS*b) <= vh){ BS = b; break; }
+    if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; break; }
   }
 
   const bw=COLS*BS, bh=ROWS*BS;
@@ -1572,7 +1569,9 @@ function initLayout(){
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
-  document.getElementById('colorPaletteWrap').style.width=bw+'px';
+  const palWrap=document.getElementById('colorPaletteWrap');
+  palWrap.style.width=bw+'px';
+  palWrap.style.setProperty('--swatch', paletteMetrics(bw).sw+'px');
 
   // 初期塗りつぶし
   boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,bw,bh);
