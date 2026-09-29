@@ -450,6 +450,17 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <!-- 左: HOLD / ゴースト・落下 / 地形操作 -->
   <div class="side" style="align-items:flex-end;">
 
+    <!-- 連続HOLD許可 -->
+    <div class="panel" style="width:108px;">
+      <div class="panel-label">連続HOLD許可</div>
+      <label class="tgl-row" style="justify-content:center;"
+        title="OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）">
+        <input type="checkbox" id="optMultiHold" checked
+          onchange="setOption('multiHold', this.checked)">
+        <span class="tgl"></span>
+      </label>
+    </div>
+
     <!-- HOLD -->
     <div class="panel" id="holdPanel">
       <div class="panel-label">HOLD</div>
@@ -472,19 +483,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- デザイン -->
     <div class="panel" style="width:108px;">
       <div class="panel-label">デザイン</div>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
-                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
+      <label class="tgl-row" style="margin-bottom:8px;"
+        title="ミノがどこに落ちるかを薄く表示する">
+        <span>ゴースト</span>
         <input type="checkbox" id="ghostCheck" checked
-          onchange="showGhost=this.checked;draw();"
-          style="width:14px;height:14px;cursor:pointer;">
-        ゴースト
+          onchange="showGhost=this.checked;draw();">
+        <span class="tgl"></span>
       </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
-                    font-size:12px;color:#d1d5db;margin-bottom:8px;">
+      <label class="tgl-row"
+        title="ミノの回転軸を表示する">
+        <span>軸表示</span>
         <input type="checkbox" id="axisCheck"
-          onchange="showAxis=this.checked;draw();"
-          style="width:14px;height:14px;cursor:pointer;">
-        軸表示
+          onchange="showAxis=this.checked;draw();">
+        <span class="tgl"></span>
       </label>
     </div>
 
@@ -842,14 +853,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <div class="cfg-pane" id="cfgPaneMisc">
-      <label class="opt-row">
-        <span class="opt-label">連続ホールド許可
-          <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）</span></span>
-        <input type="checkbox" id="optMultiHold" checked
-          onchange="setOption('multiHold', this.checked)">
-        <span class="tgl"></span>
-      </label>
-
       <div class="opt-row">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
