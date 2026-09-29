@@ -456,7 +456,20 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <canvas id="holdCanvas" width="100" height="80"></canvas>
     </div>
 
-    <!-- デザイン + 落下設定 -->
+    <!-- 落下設定 -->
+    <div class="panel" style="width:108px;">
+      <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
+      <div class="speed-row">
+        <button class="step-btn" onclick="changeGravSpeed(-1)" title="落下速度を下げる（0Gは自由落下なし）">‹</button>
+        <div class="speed-val">
+          <span id="gravSpeedVal">0</span>
+          <span class="speed-unit"> G</span>
+        </div>
+        <button class="step-btn" onclick="changeGravSpeed(+1)" title="落下速度を上げる（20Gは1フレームで最下段）">›</button>
+      </div>
+    </div>
+
+    <!-- デザイン -->
     <div class="panel" style="width:108px;">
       <div class="panel-label">デザイン</div>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;
@@ -473,15 +486,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
           style="width:14px;height:14px;cursor:pointer;">
         軸表示
       </label>
-      <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
-      <div class="speed-row">
-        <button class="step-btn" onclick="changeGravSpeed(-1)" title="落下速度を下げる（0Gは自由落下なし）">‹</button>
-        <div class="speed-val">
-          <span id="gravSpeedVal">0</span>
-          <span class="speed-unit"> G</span>
-        </div>
-        <button class="step-btn" onclick="changeGravSpeed(+1)" title="落下速度を上げる（20Gは1フレームで最下段）">›</button>
-      </div>
     </div>
 
     <!-- 地形操作 -->
@@ -508,10 +512,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="garb-btn" style="background:#374151;margin-top:6px;"
         onclick="openImport()"
         title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
-      <button class="garb-btn" style="background:#374151;margin-top:6px;"
-        onclick="openShot()"
-        title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
     </div>
+
+    <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
+    <button class="garb-btn" style="background:#374151;width:108px;"
+      onclick="openShot()"
+      title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
 
     <!-- LINES -->
     <div class="panel" style="text-align:center;width:108px;">
@@ -1296,7 +1302,7 @@ setupHiDPICanvas(nextCanvas,  nextCtx);
 let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
-let gravSpeed = 1;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照）
+let gravSpeed = 0;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照。起動時に loadGravSpeed() で復元）
 let gravAccum = 0;       // 落下の端数（小数行/フレームを貯めて整数行ぶん落とす）
 let undoStack = [];     // undoスタック（複数手対応）
 const UNDO_MAX = 50;   // 最大保持数
@@ -2502,9 +2508,24 @@ function gravRowsPerFrame(g) {
   return GRAV_MIN_ROWS * Math.pow(GRAV_MAX_ROWS / GRAV_MIN_ROWS, (g - 1) / 19);
 }
 
+function updateGravDisplay() {
+  document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+}
+// 落下速度はリセットやページを閉じても保持する（練習のたびに設定し直さずに済むように）
+function saveGravSpeed() {
+  try { localStorage.setItem('tetren_grav', String(gravSpeed)); } catch(e) {}
+}
+function loadGravSpeed() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_grav'); } catch(e) {}
+  const v = parseInt(raw, 10);
+  gravSpeed = (Number.isFinite(v) && v >= 0 && v <= 20) ? v : 0;
+  updateGravDisplay();
+}
 function changeGravSpeed(delta) {
   gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
-  document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+  updateGravDisplay();
+  saveGravSpeed();
   lastDrop = 0;    // タイマーリセット
   gravAccum = 0;   // 端数もリセット（速度変更直後にいきなり1行落ちないように）
 }
@@ -3654,8 +3675,8 @@ function resetGameState(fullReset = true) {
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
   dropInterval=1000; lastDrop=0; undoStack=[]; lastGarbageCol=null;
-  gravSpeed=0; gravAccum=0;
-  document.getElementById('gravSpeedVal').textContent = 0;
+  gravAccum=0;                 // 落下速度そのものは維持する（設定し直す手間をなくすため）
+  updateGravDisplay();
   downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
   if (fullReset) {
@@ -3698,6 +3719,7 @@ if (isDemoBuild()) {
 initKeyConfig();
 loadSkin();
 loadOptions();
+loadGravSpeed();
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
