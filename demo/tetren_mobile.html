@@ -131,25 +131,25 @@ canvas { display:block; }
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
 /* ===== トグルスイッチ（PC版と見た目を揃える） ===== */
-/* 左カラムが約58pxしかないので、ラベルを上・スイッチを下に積む */
+/* 左カラムが狭いので、文字とスイッチを小さめにして1行に収める */
 .tgl-row {
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  width:100%; cursor:pointer; font-size:9px; color:#9ca3af;
-  line-height:1.2; text-align:center; white-space:nowrap;
+  display:flex; align-items:center; justify-content:space-between; gap:2px;
+  width:100%; cursor:pointer; font-size:8px; color:#9ca3af;
+  line-height:1.2; white-space:nowrap;
   user-select:none; -webkit-tap-highlight-color:transparent;
 }
 .tgl-row input { display:none; }
 .tgl {
-  flex:0 0 auto; width:26px; height:14px; border-radius:7px;
+  flex:0 0 auto; width:22px; height:12px; border-radius:6px;
   background:#4b5563; position:relative; transition:background .15s;
 }
 .tgl::after {
   content:''; position:absolute; top:2px; left:2px;
-  width:10px; height:10px; border-radius:50%; background:#fff;
+  width:8px; height:8px; border-radius:50%; background:#fff;
   transition:transform .15s;
 }
 input:checked + .tgl { background:#16a34a; }
-input:checked + .tgl::after { transform:translateX(12px); }
+input:checked + .tgl::after { transform:translateX(10px); }
 
 /* ===== バージョン表示 ===== */
 #verLabel {
@@ -265,8 +265,8 @@ input:checked + .tgl::after { transform:translateX(12px); }
     <div class="mini-panel" style="padding:5px 3px;">
       <div class="m-lbl">HOLD</div>
       <canvas id="holdCanvas"></canvas>
-      <label class="tgl-row" style="margin-top:4px;">
-        <span>連続HOLD</span>
+      <label class="tgl-row" style="margin-top:4px;" title="OFFにするとミノを置くまで再ホールドできません">
+        <span>連続</span>
         <input type="checkbox" id="optMultiHold" checked
           onchange="setOption('multiHold', this.checked)">
         <span class="tgl"></span>
@@ -286,9 +286,13 @@ input:checked + .tgl::after { transform:translateX(12px); }
     </label>
     <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
     <div class="di-row" style="margin-top:0;">
-      <button class="di-btn" onclick="changeGravSpeed(-1)">‹</button>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
       <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
-      <button class="di-btn" onclick="changeGravSpeed(+1)">›</button>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
     </div>
     <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
     <div class="dpc-side-row">
@@ -1360,6 +1364,28 @@ function stepOption(key, dir){
   const [min,max,step] = OPT_RANGE[key];
   setOption(key, Math.min(max, Math.max(min, opts[key] + dir*step)));
 }
+
+// ===== ボタンの長押し連射 =====
+let repeatTimer = null;
+function startRepeat(fn){
+  stopRepeat();
+  fn();                                   // まず1回（単押しはこれだけ）
+  let interval = 130;                     // 連射の初期間隔(ms)
+  const tick = () => {
+    fn();
+    interval = Math.max(25, interval * 0.85);   // 押し続けるほど加速
+    repeatTimer = setTimeout(tick, interval);
+  };
+  repeatTimer = setTimeout(tick, 400);    // 長押しと判定するまでの待ち
+}
+function stopRepeat(){
+  if(repeatTimer){ clearTimeout(repeatTimer); repeatTimer = null; }
+}
+// ボタンの外で指を離した場合にも確実に止める
+window.addEventListener('mouseup', stopRepeat);
+window.addEventListener('touchend', stopRepeat);
+window.addEventListener('touchcancel', stopRepeat);
+window.addEventListener('blur', stopRepeat);
 
 // ===== 落下設定（PC版と同じ 0G〜20G） =====
 // 1G = 1行/秒、20G = 1フレームで最下段。間は等比で補間する

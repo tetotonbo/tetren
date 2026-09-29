@@ -468,12 +468,16 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="panel" style="width:108px;">
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
-        <button class="step-btn" onclick="changeGravSpeed(-1)" title="落下速度を下げる（0Gは自由落下なし）">‹</button>
+        <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
+          onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
         <div class="speed-val">
           <span id="gravSpeedVal">0</span>
           <span class="speed-unit"> G</span>
         </div>
-        <button class="step-btn" onclick="changeGravSpeed(+1)" title="落下速度を上げる（20Gは1フレームで最下段）">›</button>
+        <button class="step-btn" title="落下速度を上げる（20Gは1フレームで最下段・長押しで連続）"
+          onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
       </div>
     </div>
 
@@ -1669,24 +1673,28 @@ function setDigTriggerType(type) {
 
 // ステッパーの長押し: 押し続けると連続で変化し、だんだん速くなる
 let digRepeatTimer = null;
-function startDigRepeat(delta) {
-  stopDigRepeat();
-  changeDigInterval(delta);          // まず1回（単押しはこれだけ）
+// ボタンの長押し連射。落下設定とせりあがり間隔で共用する
+function startRepeat(fn) {
+  stopRepeat();
+  fn();                              // まず1回（単押しはこれだけ）
   let interval = 130;                // 連射の初期間隔(ms)
   const tick = () => {
-    changeDigInterval(delta);
+    fn();
     interval = Math.max(25, interval * 0.85);   // 押し続けるほど加速
     digRepeatTimer = setTimeout(tick, interval);
   };
   digRepeatTimer = setTimeout(tick, 400);       // 長押しと判定するまでの待ち
 }
-function stopDigRepeat() {
+function stopRepeat() {
   if (digRepeatTimer) { clearTimeout(digRepeatTimer); digRepeatTimer = null; }
 }
+function startDigRepeat(delta) { startRepeat(() => changeDigInterval(delta)); }
+function stopDigRepeat() { stopRepeat(); }
 // ボタン外で指を離した場合やウィンドウを離れた場合にも確実に止める
-window.addEventListener('mouseup', stopDigRepeat);
-window.addEventListener('touchend', stopDigRepeat);
-window.addEventListener('blur', stopDigRepeat);
+window.addEventListener('mouseup', stopRepeat);
+window.addEventListener('touchend', stopRepeat);
+window.addEventListener('touchcancel', stopRepeat);
+window.addEventListener('blur', stopRepeat);
 
 function changeDigInterval(delta) {
   if (digTriggerType === 'time') {
