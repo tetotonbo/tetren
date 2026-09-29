@@ -881,6 +881,28 @@ function changeDigInterval(delta){
   digInterval=Math.min(20,Math.max(1,digInterval+delta));
   document.getElementById('digIntervalVal').textContent=digInterval;
   updateDigCounter();
+  saveDigSetting();
+}
+
+// せりあがりの間隔設定は、リセットしてもページを閉じても保持する。
+// 保存先はPC版と同じ tetren_dig（スマホ版が使うのは「個ごと」の値だけ）
+function saveDigSetting(){
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem('tetren_dig')) || {}; } catch(e) {}
+  d.mino = digInterval;
+  try { localStorage.setItem('tetren_dig', JSON.stringify(d)); } catch(e) {}
+}
+function loadDigSetting(){
+  let raw=null;
+  try { raw = localStorage.getItem('tetren_dig'); } catch(e) {}
+  if(raw){
+    try {
+      const d = JSON.parse(raw);
+      if(Number.isFinite(d.mino)) digInterval = Math.min(20, Math.max(1, d.mino));
+    } catch(e) {}
+  }
+  const el = document.getElementById('digIntervalVal');
+  if(el) el.textContent = digInterval;
 }
 function toggleDigMode(){
   digMode=!digMode; digCount=0;
@@ -1601,7 +1623,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -1732,6 +1754,7 @@ window.addEventListener('resize',()=>{initLayout();if(!gameOver&&board)draw();})
 
 loadOptions();
 loadGravSpeed();
+loadDigSetting();
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
