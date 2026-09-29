@@ -679,7 +679,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を長くする（長押しで連続）">›</button>
       </div>
       <div style="margin-top:8px;font-size:10px;color:#9ca3af;text-align:center;letter-spacing:0.5px;"
-        title="せり上がったとき、前回と同じ列に穴が空く確率。10%は完全ランダム">穴継続率</div>
+        title="せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）">穴継続率</div>
       <div class="speed-row">
         <button class="step-btn" onclick="stepOption('holeKeep',-1)"
           title="同じ列に穴が続く確率を下げる（10%＝完全ランダム）">‹</button>
