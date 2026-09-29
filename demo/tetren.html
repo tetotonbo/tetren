@@ -1033,19 +1033,19 @@ const SKINS = [
     colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
   { id:'pastel',  name:'パステル', style:'matte',
     colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
+  { id:'retro',   name:'レトロ', style:'dot',
+    colors:{ I:'#3fbecd', O:'#dcc233', T:'#ac57c7', S:'#57b657', Z:'#cf4a4a', J:'#4a69bf', L:'#d78129' } },
   { id:'glass',   name:'アウトライン', style:'glass',
     colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
   { id:'invisible', name:'ほぼ透明', style:'invisible',
     colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
-  { id:'mono',    name:'モノクローム', style:'bevel',
-    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
-  { id:'retro',   name:'レトロ', style:'dot',
-    colors:{ I:'#3fbecd', O:'#dcc233', T:'#ac57c7', S:'#57b657', Z:'#cf4a4a', J:'#4a69bf', L:'#d78129' } },
-  { id:'ppt2',    name:'ぷテ', style:'image',
-    colors:PPT2_COLORS },
   // 盤面には一切描かない。HOLD・NEXT・ゴーストだけは「無地」で描いて操作できるようにする
   { id:'blank',   name:'完全透明', style:'blank',
     colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
+  { id:'mono',    name:'モノクローム', style:'bevel',
+    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
+  { id:'ppt2',    name:'ぷテ', style:'image',
+    colors:PPT2_COLORS },
 ];
 let skinId = 'plain';   // 既定は「無地」
 function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS.find(x => x.id === 'plain'); }
@@ -1247,8 +1247,9 @@ function drawSkinCell(ctx, x, y, size, color, alpha=1) {
     ctx.lineWidth = Math.max(1, 2*k);
     ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
   } else if (style === 'blank') {
-    // 盤面には何も描かない（置いた場所を完全に記憶する練習用）
-    return;
+    // 盤面には何も描かない（置いた場所を完全に記憶する練習用）。
+    // ここで return すると末尾の ctx.restore() を飛ばしてしまい、
+    // save/restore が釣り合わずに以降の描画が崩れるので、何もせず下まで抜ける。
   } else if (style === 'invisible') {
     // ほぼ見えない。目を凝らせば分かる程度にだけ色を残す（記憶して積む練習用）
     ctx.globalAlpha = alpha * 0.03;
