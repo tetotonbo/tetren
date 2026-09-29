@@ -678,8 +678,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onmousedown="startDigRepeat(+1)" onmouseup="stopDigRepeat()" onmouseleave="stopDigRepeat()"
           ontouchstart="event.preventDefault();startDigRepeat(+1)" ontouchend="stopDigRepeat()" title="せりあがりの間隔を長くする（長押しで連続）">›</button>
       </div>
+      <div style="margin-top:8px;font-size:10px;color:#9ca3af;text-align:center;letter-spacing:0.5px;"
+        title="せり上がったとき、前回と同じ列に穴が空く確率。10%は完全ランダム">穴継続率</div>
+      <div class="speed-row">
+        <button class="step-btn" onclick="stepOption('holeKeep',-1)"
+          title="同じ列に穴が続く確率を下げる（10%＝完全ランダム）">‹</button>
+        <div class="speed-val">
+          <span id="optHoleKeepVal">10</span><span class="speed-unit"> %</span>
+        </div>
+        <button class="step-btn" onclick="stepOption('holeKeep',1)"
+          title="同じ列に穴が続く確率を上げる（100%＝毎回同じ列）">›</button>
+      </div>
       <div id="digCounter"
-        style="text-align:center;margin-top:6px;min-height:52px;line-height:1.4;color:#9ca3af;font-size:11px;"></div>
+        style="text-align:center;margin-top:6px;min-height:40px;line-height:1.35;color:#9ca3af;font-size:10px;"></div>
     </div>
 
     <!-- リセット -->
@@ -838,16 +849,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('multiHold', this.checked)">
         <span class="tgl"></span>
       </label>
-
-      <div class="opt-row">
-        <span class="opt-label">せりあがりの穴継続率
-          <span class="opt-note">せり上がったとき、前回と同じ列に穴が空く確率</span></span>
-        <div class="opt-step">
-          <button class="step-btn" onclick="stepOption('holeKeep',-1)">‹</button>
-          <span class="opt-val"><span id="optHoleKeepVal">100</span><span class="opt-unit"> %</span></span>
-          <button class="step-btn" onclick="stepOption('holeKeep',1)">›</button>
-        </div>
-      </div>
 
       <div class="opt-row">
         <span class="opt-label">ソフトドロップ速度
@@ -1822,9 +1823,9 @@ function updateDigCounter(remainSecOverride) {
     : digInterval - (digCount % digInterval);
   const unit = isTime ? '秒' : '個';
   el.innerHTML =
-    `<span style="font-size:11px;">あと</span><br>` +
-    `<span style="font-size:28px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
-    `<span style="font-size:11px;">${unit}でせりあがり</span>`;
+    `<span style="font-size:10px;">あと</span><br>` +
+    `<span style="font-size:19px;font-weight:bold;color:#22d3ee;line-height:1.1;">${next}</span><br>` +
+    `<span style="font-size:10px;">${unit}でせりあがり</span>`;
 }
 
 // ===== ミノを捨てる =====
