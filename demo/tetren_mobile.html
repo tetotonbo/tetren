@@ -38,7 +38,11 @@ html, body {
 .side-col {
   display:flex; flex-direction:column;
   align-items:center; gap:5px; flex-shrink:0;
+  /* 項目が増えて画面より長くなっても、全体を押し広げずカラム内でスクロールする */
+  max-height:100%; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
+.side-col::-webkit-scrollbar { display:none; }
 .m-lbl {
   font-size:9px; color:#6b7280; letter-spacing:1px;
   text-transform:uppercase; text-align:center; margin-bottom:2px;
@@ -106,7 +110,7 @@ canvas { display:block; }
   display:none; flex-wrap:wrap; gap:5px;
   justify-content:center; padding:6px;
   background:#1f2937; border:1px solid #374151; border-radius:6px;
-  flex-shrink:0;
+  flex-shrink:0; box-sizing:border-box; max-width:100%;
 }
 .color-swatch {
   width:28px; height:28px; border-radius:4px;
@@ -1518,22 +1522,38 @@ function startGame(){
 document.getElementById('startBtn').addEventListener('click',startGame);
 
 // ===== レイアウト初期化 =====
+// パレットの高さは盤面の幅で段数が変わり、盤面の大きさはパレットの高さで変わる、
+// という相互依存になっている。そこでマスの大きさを大きい方から順に試して、
+// パレットまで含めて画面に収まる最大値を選ぶ。
+const SWATCH_SHORT = window.matchMedia('(max-height: 700px)');
+function paletteHeightFor(boardW){
+  const pw=document.getElementById('colorPaletteWrap');
+  if(!pw || pw.style.display !== 'flex') return 0;
+  const short = SWATCH_SHORT.matches;          // CSSの @media と同じ条件
+  const sw = short ? 24 : 28;                  // .color-swatch のサイズ
+  const gap = short ? 4 : 5;
+  const pad = (short ? 4 : 6) * 2 + 2;         // padding + border
+  const n = document.querySelectorAll('.color-swatch').length || 9;
+  const perRow = Math.max(1, Math.floor((boardW - pad + gap) / (sw + gap)));
+  const rows = Math.ceil(n / perRow);
+  return rows * sw + (rows - 1) * gap + pad + 4;   // +4 は中央カラムの gap
+}
+
 function initLayout(){
   const vw=window.innerWidth, vh=window.innerHeight;
   // サイドカラム幅: 画面幅の15%、最小44px、最大62px
   const sideW=Math.max(44,Math.min(62,Math.floor(vw*0.15)));
   // 利用可能ボード幅
   const availW=vw-sideW*2-5*2-8; // gaps + padding
-  // 利用可能ボード高さ (stats_bar + ctrl + opts + カラーパレット + gaps)
-  // 地形編集ONのときはパレットが中央カラムに増えるので、その分もあらかじめ引く
-  const pw=document.getElementById('colorPaletteWrap');
-  // 実際に表示されているパレットの高さを測って使う（マスの折り返し段数が変わっても追従する）
-  const paletteH = (pw && pw.style.display === 'flex')
-    ? Math.max(pw.offsetHeight + 4, 46) : 0;
-  const statsH=38, ctrlH=66*3+4*2, optsH=42, gapsH=4*5;
-  const availH=vh-statsH-ctrlH-optsH-paletteH-gapsH-8;
-  BS=Math.min(Math.floor(availH/ROWS),Math.floor(availW/COLS),28);
-  if(BS<16) BS=16; // 最小サイズ保証
+  // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。実測値に合わせている
+  const fixedH = 34 + 206 + 60 + 4*4 + 8;
+  const maxBS = Math.min(Math.floor(availW/COLS), 28);
+  const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
+  const minBS = editing ? 10 : 16;
+  BS = minBS;
+  for(let b = maxBS; b >= minBS; b--){
+    if(fixedH + ROWS*b + paletteHeightFor(COLS*b) <= vh){ BS = b; break; }
+  }
 
   const bw=COLS*BS, bh=ROWS*BS;
   boardCanvas.width=bw; boardCanvas.height=bh;
@@ -1548,9 +1568,11 @@ function initLayout(){
   nextCanvas.width=actualSide-6; nextCanvas.height=holdH*NEXT_SHOW;
 
   // 中央要素の幅をボードに合わせる
+  // （カラーパレットも入れないと、マスが横一列に伸びて画面外まではみ出す）
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
+  document.getElementById('colorPaletteWrap').style.width=bw+'px';
 
   // 初期塗りつぶし
   boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,bw,bh);
