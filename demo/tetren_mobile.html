@@ -185,26 +185,28 @@ input:checked + .tgl::after { transform:translateX(10px); }
   font-size:11px; font-weight:bold; cursor:pointer;
   background:#374151; color:#d1d5db;
 }
-#shotWin {
-  display:none; position:fixed; left:12px; top:60px; width:260px; height:200px;
+.shot-win {
+  position:fixed; width:260px; height:200px;
   background:#0f131c; border:1px solid #374151; border-radius:8px;
   box-shadow:0 10px 30px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
+  display:flex; flex-direction:column;
 }
-#shotWin.show { display:flex; flex-direction:column; }
-#shotWin.unpinned { z-index:1; }
-#shotBar {
+.shot-win.unpinned { z-index:1; }
+.shot-bar {
   display:flex; align-items:center; gap:4px; padding:4px 5px;
   background:#1f2735; touch-action:none; user-select:none; flex:0 0 auto;
+  /* ウィンドウを小さくしてもボタンが切れないよう、狭いときは折り返す */
+  flex-wrap:wrap;
 }
-#shotBar .sw-title { font-size:9px; color:#9ca3af; margin-right:auto; }
+.shot-bar .sw-title { font-size:9px; color:#9ca3af; margin-right:auto; }
 .sw-btn {
   background:#374151; border:none; color:#d1d5db; font-size:9px;
   border-radius:4px; padding:3px 6px; white-space:nowrap;
   -webkit-tap-highlight-color:transparent;
 }
 .sw-btn.on { background:#4f46e5; color:#fff; }
-#shotBody { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; background:#000; }
-#shotImg { width:100%; height:100%; object-fit:contain; display:block; -webkit-user-drag:none; }
+.shot-body { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; background:#000; }
+.shot-body img { width:100%; height:100%; object-fit:contain; display:block; -webkit-user-drag:none; }
 .sw-rs { position:absolute; touch-action:none; }
 .sw-rs-l  { left:0;  top:24px; bottom:0; width:10px; }
 .sw-rs-r  { right:0; top:24px; bottom:0; width:10px; }
@@ -420,29 +422,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <input type="file" id="shotFile" accept="image/*" style="display:none">
     <div class="shot-act" id="shotCtrls" style="display:none;">
-      <button id="shotPinBtn2" onclick="setShotPin(!shotPinned)">最前面 ON</button>
-      <button onclick="hideShot(); closeShot();">表示を消す</button>
+      <button onclick="pinAllShots()">すべて最前面に</button>
+      <button onclick="closeAllShots(); closeShot();">すべて消す</button>
     </div>
     <div class="shot-act">
       <button onclick="closeShot()">閉じる</button>
     </div>
   </div>
-</div>
-
-<!-- カンペ画像：重ねて表示するウィンドウ -->
-<div id="shotWin">
-  <div id="shotBar">
-    <span class="sw-title">カンペ</span>
-    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)">最前面 ON</button>
-    <button class="sw-btn" onclick="openShot()">変更</button>
-    <button class="sw-btn" onclick="hideShot()">閉じる</button>
-  </div>
-  <div id="shotBody"><img id="shotImg" alt=""></div>
-  <div class="sw-rs sw-rs-l"  data-dir="l"></div>
-  <div class="sw-rs sw-rs-r"  data-dir="r"></div>
-  <div class="sw-rs sw-rs-b"  data-dir="b"></div>
-  <div class="sw-rs sw-rs-bl" data-dir="bl"></div>
-  <div class="sw-rs sw-rs-br" data-dir="br"></div>
 </div>
 
 <!-- DPCセット: HOLDに入れるミノを選ぶ -->
@@ -1623,55 +1609,82 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
   el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
 })();
 
-// ===== カンペ画像（画面に重ねて表示する参考画像） =====
+// ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====
 const SHOT_BAR_H = 24;
-let shotPinned = true;
+let shotSeq = 0;              // 新しいウィンドウを少しずつずらして出すためのカウンタ
+let shotTarget = null;        // 画像を差し替える対象。null なら新規に1枚追加する
 
-function openShot(){
+function shotWins(){ return [...document.querySelectorAll('.shot-win')]; }
+
+// ダイアログを開く。win を渡すとその1枚を差し替え、省略すると新規追加になる
+function openShot(win){
+  shotTarget = win || null;
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
-  const shown = document.getElementById('shotWin').classList.contains('show');
-  document.getElementById('shotCtrls').style.display = shown ? 'flex' : 'none';
+  document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
 }
-function closeShot(){ document.getElementById('shotOverlay').classList.remove('open'); }
-function hideShot(){ document.getElementById('shotWin').classList.remove('show'); }
-function setShotPin(on){
-  shotPinned = on;
-  const win = document.getElementById('shotWin');
+function closeShot(){
+  document.getElementById('shotOverlay').classList.remove('open');
+  shotTarget = null;
+}
+function closeAllShots(){ shotWins().forEach(w => w.remove()); }
+function pinAllShots(){ shotWins().forEach(w => setShotPin(w, true)); }
+
+function setShotPin(win, on){
   win.classList.toggle('unpinned', !on);
-  const label = on ? '最前面 ON' : '最前面 OFF';
-  const b1 = document.getElementById('shotPinBtn');
-  const b2 = document.getElementById('shotPinBtn2');
-  b1.textContent = label; b1.classList.toggle('on', on);
-  b2.textContent = label;
+  const btn = win.querySelector('[data-act="pin"]');
+  btn.classList.toggle('on', on);
+  btn.textContent = on ? '最前面 ON' : '最前面 OFF';
+  btn.blur();
+}
+
+function createShotWindow(){
+  const win = document.createElement('div');
+  win.className = 'shot-win';
+  win.innerHTML =
+    '<div class="shot-bar">' +
+      '<span class="sw-title">カンペ</span>' +
+      '<button class="sw-btn on" data-act="pin">最前面 ON</button>' +
+      '<button class="sw-btn" data-act="add">追加</button>' +
+      '<button class="sw-btn" data-act="change">変更</button>' +
+      '<button class="sw-btn" data-act="close">閉じる</button>' +
+    '</div>' +
+    '<div class="shot-body"><img alt=""></div>' +
+    '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
+    '<div class="sw-rs sw-rs-r"  data-dir="r"></div>' +
+    '<div class="sw-rs sw-rs-b"  data-dir="b"></div>' +
+    '<div class="sw-rs sw-rs-bl" data-dir="bl"></div>' +
+    '<div class="sw-rs sw-rs-br" data-dir="br"></div>';
+  document.body.appendChild(win);
+  return win;
 }
 
 function loadShotImage(src){
   const img = new Image();
   img.onload = () => {
-    const win = document.getElementById('shotWin');
-    document.getElementById('shotImg').src = src;
-    // 初回だけ画像の縦横比に合わせた大きさで出す
-    if(!win.dataset.placed){
+    const replacing = shotTarget && document.body.contains(shotTarget);
+    const win = replacing ? shotTarget : createShotWindow();
+    win.querySelector('img').src = src;
+    if(!replacing){
       const maxW = Math.min(280, window.innerWidth * 0.7);
       const maxH = window.innerHeight * 0.5 - SHOT_BAR_H;
       const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
       const w = Math.max(120, Math.round(img.naturalWidth * sc));
       const h = Math.max(90, Math.round(img.naturalHeight * sc) + SHOT_BAR_H);
-      win.style.width = w + 'px';
+      const off = (shotSeq++ % 5) * 18;   // 2枚目以降は少しずつずらす
+      win.style.width  = w + 'px';
       win.style.height = h + 'px';
-      win.style.left = Math.max(6, Math.round((window.innerWidth - w) / 2)) + 'px';
-      win.style.top = '60px';
-      win.dataset.placed = '1';
+      win.style.left = Math.max(4, Math.min(window.innerWidth - w - 4,
+                        Math.round((window.innerWidth - w) / 2) + off)) + 'px';
+      win.style.top  = Math.max(4, Math.min(window.innerHeight - 50, 60 + off)) + 'px';
     }
-    win.classList.add('show');
     closeShot();
   };
   img.onerror = () => alert('画像を読み込めませんでした。');
@@ -1685,10 +1698,9 @@ function loadShotFile(file){
 }
 
 // バーで移動、辺と隅でサイズ変更（指でもマウスでも動くよう pointer events を使う）
-function shotPointerDown(e, mode){
+function shotPointerDown(e, win, mode){
   if(e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
-  const win = document.getElementById('shotWin');
   const r = win.getBoundingClientRect();
   const sx = e.clientX, sy = e.clientY;
   const l0 = r.left, t0 = r.top, w0 = r.width, h0 = r.height;
@@ -1739,12 +1751,24 @@ function shotPointerDown(e, mode){
   document.getElementById('shotOverlay').addEventListener('pointerdown', e => {
     if(e.target.id === 'shotOverlay') closeShot();
   });
-  document.getElementById('shotBar').addEventListener('pointerdown', e => {
+  // ウィンドウは動的に増えるのでイベントは document で受ける
+  document.addEventListener('pointerdown', e => {
+    const win = e.target.closest('.shot-win');
+    if(!win) return;
+    const rs = e.target.closest('.sw-rs');
+    if(rs){ shotPointerDown(e, win, rs.dataset.dir); return; }
     if(e.target.closest('.sw-btn')) return;
-    shotPointerDown(e, 'move');
+    if(e.target.closest('.shot-bar')) shotPointerDown(e, win, 'move');
   });
-  document.querySelectorAll('#shotWin .sw-rs').forEach(h => {
-    h.addEventListener('pointerdown', e => shotPointerDown(e, h.dataset.dir));
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.shot-win .sw-btn');
+    if(!btn) return;
+    const win = btn.closest('.shot-win');
+    const act = btn.dataset.act;
+    if(act === 'pin')         setShotPin(win, win.classList.contains('unpinned'));
+    else if(act === 'add')    openShot();
+    else if(act === 'change') openShot(win);
+    else if(act === 'close')  win.remove();
   });
 })();
 
