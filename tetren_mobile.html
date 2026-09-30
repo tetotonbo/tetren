@@ -319,7 +319,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <div class="m-lbl" style="margin:4px 0 0;">穴継続率</div>
       <div class="di-row" style="margin-top:0;">
         <button class="di-btn" onclick="stepOption('holeKeep',-1)">‹</button>
-        <div class="di-val"><span id="optHoleKeepVal">10</span> %</div>
+        <div class="di-val"><span id="optHoleKeepVal">40</span> %</div>
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
     </div>
@@ -1360,7 +1360,7 @@ function updateDpcAgainBtn(){
 updateDpcAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
-const OPT_DEFAULTS = { multiHold:true, holeKeep:10, softSpeed:5, lockFrames:30 };
+const OPT_DEFAULTS = { multiHold:true, holeKeep:40, softSpeed:5, lockFrames:30 };
 const OPT_RANGE    = { holeKeep:[10,100,10] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
@@ -1609,7 +1609,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

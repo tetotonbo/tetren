@@ -697,7 +697,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <button class="step-btn" onclick="stepOption('holeKeep',-1)"
           title="同じ列に穴が続く確率を下げる（10%＝完全ランダム）">‹</button>
         <div class="speed-val">
-          <span id="optHoleKeepVal">10</span><span class="speed-unit"> %</span>
+          <span id="optHoleKeepVal">40</span><span class="speed-unit"> %</span>
         </div>
         <button class="step-btn" onclick="stepOption('holeKeep',1)"
           title="同じ列に穴が続く確率を上げる（100%＝毎回同じ列）">›</button>
@@ -3333,7 +3333,7 @@ function renderKcBtn(id, slot) {
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
   multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
-  holeKeep: 10,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
+  holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
   lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
 };
@@ -3511,7 +3511,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
