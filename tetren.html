@@ -226,30 +226,32 @@ body.ppt2-theme #nextCanvas {
 #shotDrop:hover, #shotDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
 #shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
 
-/* 浮かせるウィンドウ本体。最前面ONなら全部の上、OFFなら盤面の裏へ回る */
-#shotWin {
-  display:none; position:fixed; left:40px; top:80px; width:420px; height:300px;
+/* 浮かせるウィンドウ本体（何枚でも出せる）。最前面ONなら全部の上、OFFなら盤面の裏へ回る */
+.shot-win {
+  position:fixed; width:420px; height:300px;
   background:#0f131c; border:1px solid #374151; border-radius:8px;
   box-shadow:0 10px 34px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
+  display:flex; flex-direction:column;
 }
-#shotWin.show { display:flex; flex-direction:column; }
-#shotWin.unpinned { z-index:1; }
-#shotBar {
+.shot-win.unpinned { z-index:1; }
+.shot-bar {
   display:flex; align-items:center; gap:6px; padding:5px 6px;
   background:#1f2735; cursor:move; user-select:none; flex:0 0 auto;
+  /* ウィンドウを小さくしてもボタンが切れないよう、狭いときは折り返す */
+  flex-wrap:wrap;
 }
-#shotBar .sw-title { font-size:11px; color:#9ca3af; letter-spacing:1px; margin-right:auto; }
+.shot-bar .sw-title { font-size:11px; color:#9ca3af; letter-spacing:1px; margin-right:auto; }
 .sw-btn {
   background:#374151; border:none; color:#d1d5db; font-size:11px;
   border-radius:4px; padding:3px 8px; cursor:pointer; white-space:nowrap;
 }
 .sw-btn:hover { background:#4b5563; }
 .sw-btn.on { background:#4f46e5; color:#fff; }
-#shotBody {
+.shot-body {
   flex:1; min-height:0; display:flex; align-items:center;
   justify-content:center; background:#000;
 }
-#shotImg {
+.shot-body img {
   width:100%; height:100%; object-fit:contain; display:block;
   -webkit-user-drag:none; user-select:none;
 }
@@ -767,29 +769,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <input type="file" id="shotFile" accept="image/*" style="display:none">
     <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
     <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
-      <button class="imp-btn" id="shotPinBtn2" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
-      <button class="imp-btn" onclick="hideShot(); closeShot();" title="カンペ画像を非表示にする">表示を消す</button>
+      <button class="imp-btn" onclick="pinAllShots()" title="裏に回したカンペ画像をすべて手前に戻す">すべて最前面に</button>
+      <button class="imp-btn" onclick="closeAllShots(); closeShot();" title="表示中のカンペ画像をすべて消す">すべて消す</button>
     </div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="closeShot()">キャンセル</button>
     </div>
   </div>
-</div>
-
-<!-- スクショ表示：浮かせるウィンドウ -->
-<div id="shotWin">
-  <div id="shotBar">
-    <span class="sw-title">カンペ</span>
-    <button class="sw-btn on" id="shotPinBtn" onclick="setShotPin(!shotPinned)" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>
-    <button class="sw-btn" onclick="openShot()" title="別の画像に差し替える">画像を変更</button>
-    <button class="sw-btn" onclick="hideShot()" title="カンペ画像を非表示にする">閉じる</button>
-  </div>
-  <div id="shotBody"><img id="shotImg" alt=""></div>
-  <div class="sw-rs sw-rs-l"  data-dir="l"></div>
-  <div class="sw-rs sw-rs-r"  data-dir="r"></div>
-  <div class="sw-rs sw-rs-b"  data-dir="b"></div>
-  <div class="sw-rs sw-rs-bl" data-dir="bl"></div>
-  <div class="sw-rs sw-rs-br" data-dir="br"></div>
 </div>
 
 <!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
@@ -3525,7 +3511,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -3533,56 +3519,80 @@ const APP_VERSION = '1.1.0';
   el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
 })();
 
-// ===== カンペ画像（画面に重ねて表示する参考画像） =====
-const SHOT_BAR_H = 28;               // タイトルバーのおおよその高さ
-let shotPinned = true;               // 最前面に固定するか
+// ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====
+const SHOT_BAR_H = 28;        // タイトルバーのおおよその高さ
+let shotSeq = 0;              // 新しいウィンドウを少しずつずらして出すためのカウンタ
+let shotTarget = null;        // 画像を差し替える対象。null なら新規に1枚追加する
 
-function openShot() {
+function shotWins() { return [...document.querySelectorAll('.shot-win')]; }
+
+// ダイアログを開く。win を渡すとその1枚を差し替え、省略すると新規追加になる
+function openShot(win) {
+  shotTarget = win || null;
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
-  const shown = document.getElementById('shotWin').classList.contains('show');
-  document.getElementById('shotCtrls').style.display = shown ? 'flex' : 'none';
+  document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
   document.getElementById('shotDrop').focus();
 }
 function closeShot() {
   document.getElementById('shotOverlay').classList.remove('open');
+  shotTarget = null;
 }
-function hideShot() {
-  document.getElementById('shotWin').classList.remove('show');
-}
-function setShotPin(on) {
-  shotPinned = on;
-  const win = document.getElementById('shotWin');
-  const btn = document.getElementById('shotPinBtn');
+function closeAllShots() { shotWins().forEach(w => w.remove()); }
+function pinAllShots()   { shotWins().forEach(w => setShotPin(w, true)); }
+
+function setShotPin(win, on) {
   win.classList.toggle('unpinned', !on);
+  const btn = win.querySelector('[data-act="pin"]');
   btn.classList.toggle('on', on);
   btn.textContent = on ? '最前面 ON' : '最前面 OFF';
-  const btn2 = document.getElementById('shotPinBtn2');
-  btn2.textContent = on ? '最前面 ON' : '最前面 OFF';
-  btn2.classList.toggle('imp-primary', on);
-  btn.blur(); btn2.blur();           // フォーカスが残るとキー操作を食うため
+  btn.blur();                 // フォーカスが残るとキー操作を食うため
 }
 
-// 画像を受け取ってウィンドウに表示する
+// ウィンドウを1枚作る
+function createShotWindow() {
+  const win = document.createElement('div');
+  win.className = 'shot-win';
+  win.innerHTML =
+    '<div class="shot-bar">' +
+      '<span class="sw-title">カンペ</span>' +
+      '<button class="sw-btn on" data-act="pin" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>' +
+      '<button class="sw-btn" data-act="add" title="カンペ画像をもう1枚追加する">追加</button>' +
+      '<button class="sw-btn" data-act="change" title="この画像を別の画像に差し替える">変更</button>' +
+      '<button class="sw-btn" data-act="close" title="この画像を閉じる">閉じる</button>' +
+    '</div>' +
+    '<div class="shot-body"><img alt=""></div>' +
+    '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
+    '<div class="sw-rs sw-rs-r"  data-dir="r"></div>' +
+    '<div class="sw-rs sw-rs-b"  data-dir="b"></div>' +
+    '<div class="sw-rs sw-rs-bl" data-dir="bl"></div>' +
+    '<div class="sw-rs sw-rs-br" data-dir="br"></div>';
+  document.body.appendChild(win);
+  return win;
+}
+
+// 画像を受け取って表示する（差し替え対象があればそこに、なければ新しく1枚出す）
 function loadShotImage(src) {
   const img = new Image();
   img.onload = () => {
-    const win = document.getElementById('shotWin');
-    document.getElementById('shotImg').src = src;
-    // 初回だけ画像の縦横比に合わせた大きさ・位置で出す（2枚目以降は今の枠を保つ）
-    if (!win.dataset.placed) {
+    const replacing = shotTarget && document.body.contains(shotTarget);
+    const win = replacing ? shotTarget : createShotWindow();
+    win.querySelector('img').src = src;
+    // 新規のときだけ画像の縦横比に合わせた大きさ・位置で出す（差し替えは今の枠を保つ）
+    if (!replacing) {
       const maxW = Math.min(520, window.innerWidth * 0.45);
       const maxH = window.innerHeight * 0.7 - SHOT_BAR_H;
       const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
       const w = Math.max(140, Math.round(img.naturalWidth * sc));
       const h = Math.max(100, Math.round(img.naturalHeight * sc) + SHOT_BAR_H);
-      win.style.width = w + 'px';
+      // 2枚目以降は重ならないよう少しずつずらす
+      const off = (shotSeq++ % 6) * 26;
+      win.style.width  = w + 'px';
       win.style.height = h + 'px';
-      win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
-      win.style.top = '80px';
-      win.dataset.placed = '1';
+      win.style.left = Math.max(8, Math.min(window.innerWidth - w - 8,
+                        window.innerWidth - w - 24 - off)) + 'px';
+      win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80 + off)) + 'px';
     }
-    win.classList.add('show');
     closeShot();
   };
   img.onerror = () => alert('画像を読み込めませんでした。');
@@ -3595,11 +3605,10 @@ function loadShotFile(file) {
   fr.readAsDataURL(file);
 }
 
-// タイトルバーで移動、右下の三角でサイズ変更
-function shotPointerDown(e, mode) {
+// タイトルバーで移動、辺と隅でサイズ変更
+function shotPointerDown(e, win, mode) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
-  const win = document.getElementById('shotWin');
   const r = win.getBoundingClientRect();
   const sx = e.clientX, sy = e.clientY;
   const l0 = r.left, t0 = r.top, w0 = r.width, h0 = r.height;
@@ -3654,12 +3663,24 @@ function shotPointerDown(e, mode) {
   document.getElementById('shotOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'shotOverlay') closeShot();
   });
-  document.getElementById('shotBar').addEventListener('pointerdown', e => {
-    if (e.target.closest('.sw-btn')) return;   // ボタン上では動かさない
-    shotPointerDown(e, 'move');
+  // ウィンドウは動的に増えるのでイベントは document で受ける
+  document.addEventListener('pointerdown', e => {
+    const win = e.target.closest('.shot-win');
+    if (!win) return;
+    const rs = e.target.closest('.sw-rs');
+    if (rs) { shotPointerDown(e, win, rs.dataset.dir); return; }
+    if (e.target.closest('.sw-btn')) return;      // ボタン上では動かさない
+    if (e.target.closest('.shot-bar')) shotPointerDown(e, win, 'move');
   });
-  document.querySelectorAll('#shotWin .sw-rs').forEach(h => {
-    h.addEventListener('pointerdown', e => shotPointerDown(e, h.dataset.dir));
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.shot-win .sw-btn');
+    if (!btn) return;
+    const win = btn.closest('.shot-win');
+    const act = btn.dataset.act;
+    if (act === 'pin')         setShotPin(win, win.classList.contains('unpinned'));
+    else if (act === 'add')    openShot();        // 対象なし＝新規追加
+    else if (act === 'change') openShot(win);
+    else if (act === 'close')  win.remove();
   });
 })();
 
