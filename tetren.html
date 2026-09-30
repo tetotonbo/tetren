@@ -690,10 +690,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
         <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
           <input type="radio" name="digTriggerType" id="digTypeMino"
-            onchange="setDigTriggerType('mino')">ミノごと</label>
+            onchange="setDigTriggerType('mino')">ミノ設置</label>
         <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
           <input type="radio" name="digTriggerType" id="digTypeTime" checked
-            onchange="setDigTriggerType('time')">秒数</label>
+            onchange="setDigTriggerType('time')">時間経過</label>
       </div>
       <div class="speed-row">
         <button class="step-btn"
@@ -3585,7 +3585,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
