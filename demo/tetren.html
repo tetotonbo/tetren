@@ -187,11 +187,27 @@ body.ppt2-theme #nextCanvas {
 .imp-primary { background:#4f46e5; }
 .imp-primary:hover { background:#4338ca; }
 .imp-cols { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-.imp-col { flex:1; min-width:260px; }
-.imp-col-narrow { flex:0 0 auto; }
+.imp-col { flex:1 1 260px; min-width:0; }
+/* 右カラムは幅を固定する。判定結果の文言が長いと、成り行き幅では
+   カラムごと広がって左右に並ばなくなるため */
+.imp-col-narrow { flex:0 0 180px; min-width:0; }
+.imp-col-narrow #impPreview { margin:0 auto; }
+/* 縦の狭い画面では、結果プレビューとボタンを詰めてスクロールを避ける */
+@media (max-height: 760px) {
+  #impPreview { width:100px; height:200px; }
+  #impCanvas { max-height:52vh; }
+  .imp-actions-side { gap:5px; margin-top:8px; }
+  .imp-actions-side .imp-btn { padding:6px 10px; }
+}
+/* 画像が縦に長いとパネルがスクロールするので、結果とボタンは上に貼り付ける */
+.imp-side { position:sticky; top:0; align-self:flex-start; }
+.imp-actions-side { flex-direction:column; align-items:stretch; gap:6px; margin-top:10px; }
+.imp-actions-side .imp-btn { width:100%; text-align:center; }
 .imp-label { font-size:10px; color:#9ca3af; letter-spacing:1px; margin-bottom:6px; }
 #impCanvasWrap { line-height:0; }
-#impCanvas { max-width:100%; border-radius:6px; cursor:crosshair; touch-action:none; }
+/* 縦に長いスクショでもパネルからはみ出さないよう、高さにも上限を設ける。
+   width/height を auto のままにしているので縦横比は保たれる */
+#impCanvas { max-width:100%; max-height:62vh; border-radius:6px; cursor:crosshair; touch-action:none; }
 #impPreview { border:1px solid #374151; border-radius:6px; background:#0d1117; display:block; }
 .imp-hint { font-size:10px; color:#9ca3af; margin-top:6px; line-height:1.6; }
 .imp-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
@@ -737,16 +753,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <div id="impCanvasWrap"><canvas id="impCanvas"></canvas></div>
           <div class="imp-hint" id="impDetectMsg"></div>
         </div>
-        <div class="imp-col imp-col-narrow">
+        <div class="imp-col imp-col-narrow imp-side">
           <div class="imp-label">読み取り結果</div>
           <canvas id="impPreview" width="120" height="240"></canvas>
           <div class="imp-hint" id="impStat"></div>
+          <!-- 取り込み画像が大きいとページ下端のボタンが見えなくなるので、
+               操作ボタンは結果プレビューの下にまとめて、スクロールしても追従させる -->
+          <div class="imp-actions imp-actions-side">
+            <button class="imp-btn imp-primary" onclick="applyImport()" title="読み取った地形・HOLD・NEXTを盤面に反映する">この地形を取り込む</button>
+            <button class="imp-btn" onclick="autoDetectField()" title="盤面の範囲をもう一度自動で検出する">自動検出しなおす</button>
+            <button class="imp-btn" onclick="resetImportPick()" title="読み込む画像を選び直す">別の画像</button>
+          </div>
         </div>
-      </div>
-      <div class="imp-actions">
-        <button class="imp-btn" onclick="resetImportPick()" title="読み込む画像を選び直す">別の画像</button>
-        <button class="imp-btn" onclick="autoDetectField()" title="盤面の範囲をもう一度自動で検出する">自動検出しなおす</button>
-        <button class="imp-btn imp-primary" onclick="applyImport()" title="読み取った地形・HOLD・NEXTを盤面に反映する">この地形を取り込む</button>
       </div>
     </div>
   </div>
