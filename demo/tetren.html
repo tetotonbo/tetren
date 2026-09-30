@@ -1358,13 +1358,20 @@ function mkPiece(type) {
   }
   return { type, state:0, row:d.spawnRow, col:d.spawnCol };
 }
-function spawn() {
+// noGameOver=true のときは、出現位置がふさがっていてもゲームオーバーにしない。
+// 地形取り込みや地形編集のように「その状況から練習を始める」場面で使う。
+function spawn(noGameOver) {
   fillQ();
   cur = mkPiece(nextQ.shift().type);
   canHold = true; // ピース交代のたびにホールド権を回復
   lastWasRotation = false; // 新ピース出現時にTスピンフラグリセット
   lastKickIndex = 0;
   if (!valid(cur, 0, 0, cur.state)) {
+    if (noGameOver) {
+      // 置ける高さまで上に逃がす（バッファ内なら操作を続けられる）
+      while (cur.row > 0 && !valid(cur, 0, 0, cur.state)) cur.row--;
+      return;
+    }
     gameOver = true;
     setTimeout(() => showOverlay('ゲームオーバー','もう一度'), 100);
   }
@@ -2640,6 +2647,9 @@ const IMP_REF = {
   Z: [234, 64, 41], J: [ 40, 95,227], L: [239,136, 51],
 };
 const IMP_GARBAGE = [244,244,244];   // おじゃま（白）
+// 空きマス（盤面の背景）の明るさの目安。取り込むたびに画像から測り直す。
+// ゲームによって背景色が違うので、無彩色マスの判定はこれを基準にする。
+let impBgLevel = 0;
 let impImg = null;                   // 読み込んだ画像
 let impRect = null;                  // 盤面として読む範囲 {x,y,w,h}（画像座標）
 let impCells = null;                 // 読み取り結果 [row][col] = 'I'|..|'G'|null（ゴースト・操作中ミノは除く）
@@ -2836,9 +2846,11 @@ function initImportCanvasEvents() {
 function classifyImportColor(r, g, b) {
   const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
   const sat = mx - mn;
+  // 色みが無いマスは「空き」か「おじゃま」のどちらか。
+  // ぷよテトのおじゃまは白だが、他のゲームではグレーのことが多いので、
+  // 明るさの絶対値ではなく、その画像の空きマス（背景）より明るいかで決める。
+  if (sat < 46) return (mx >= Math.max(78, impBgLevel + 28)) ? 'G' : null;
   if (mx < 105 && sat < 60) return null;                  // 暗い = 空きマス
-  // 色みが無く明るい = おじゃま。影の帯で暗くなっても拾えるよう彩度で見る
-  if (sat < 40 && mx > 120) return 'G';
   const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
   const [nr,ng,nb] = norm(r,g,b);
   let best = null, bestD = Infinity;
@@ -2878,15 +2890,19 @@ function classifyImportGhostColor(r, g, b) {
 //   level : そのミノ本来の明るさに対する比率。ゴーストは半透明なので小さくなる。
 // level は「セル内の明るい方の画素」を代表値にする。ソリッドなブロックは影の帯が
 // あってもどこかは本来の明るさに達するが、ゴーストはどこも暗いままなので区別できる。
-function readImportCellInfo(ctx, x, y, w, h) {
-  // 種類の判定は、枠線を避けた中央付近の代表色（中央値）で行う
+// セルの代表色（枠線を避けた中央付近の中央値）
+function readImportCellMedian(ctx, x, y, w, h) {
   const nx = Math.round(x + w*0.30), ny = Math.round(y + h*0.30);
   const nw = Math.max(1, Math.round(w*0.40)), nh = Math.max(1, Math.round(h*0.40));
   const np = ctx.getImageData(nx, ny, nw, nh).data;
   const rs=[],gs=[],bs=[];
   for (let i=0;i<np.length;i+=4){ rs.push(np[i]); gs.push(np[i+1]); bs.push(np[i+2]); }
   const med = a => { a.sort((p,q)=>p-q); return a[a.length>>1]; };
-  const mr = med(rs), mg2 = med(gs), mb = med(bs);
+  return [med(rs), med(gs), med(bs)];
+}
+
+function readImportCellInfo(ctx, x, y, w, h) {
+  const [mr, mg2, mb] = readImportCellMedian(ctx, x, y, w, h);
   const type = classifyImportColor(mr, mg2, mb);
   const ghostType = classifyImportGhostColor(mr, mg2, mb);
   if (!type && !ghostType) return { type: null, ghostType: null, level: 0 };
@@ -3085,7 +3101,31 @@ function readImportCells() {
   const ctx = cv.getContext('2d');
   const cw = impRect.w / COLS, ch = impRect.h / ROWS;
 
-  // まず全マスを読む（種類＋本来の明るさに対する比率）
+  // 先に無彩色マスの明るさを集めて、盤面の背景がどれくらいかを見積もる。
+  // 暗い方から1/4の位置を「空きマスの明るさ」とみなす。
+  const grays = [];
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const x = impRect.x + cw*col, y = impRect.y + ch*row;
+      if (x < 0 || y < 0 || x+cw > cv.width || y+ch > cv.height) continue;
+      const [r0,g0,b0] = readImportCellMedian(ctx, x, y, cw, ch);
+      const mx = Math.max(r0,g0,b0);
+      if (mx - Math.min(r0,g0,b0) < 46) grays.push(mx);
+    }
+  }
+  grays.sort((a,b) => a-b);
+  if (!grays.length) {
+    impBgLevel = 0;
+  } else {
+    // 暗い方から3番目を背景の候補にする（1〜2マスの外れ値に引きずられないように）。
+    // 盤面がほぼ埋まっていても、空きマスが数マスあれば拾える。
+    const lo = grays[Math.min(grays.length - 1, 2)];
+    const hi = grays[grays.length - 1];
+    // 無彩色が1種類しかない（空きだけ、またはおじゃまだけ）ときは明るさで判断する
+    impBgLevel = (hi - lo >= 30) ? lo : (hi >= 100 ? Math.max(0, hi - 60) : hi);
+  }
+
+  // 全マスを読む（種類＋本来の明るさに対する比率）
   const info = [];
   for (let row = 0; row < ROWS; row++) {
     const line = [];
@@ -3211,12 +3251,19 @@ function applyImport() {
     }
   }
   if (!placedActive && impNext.length) {
-    spawn();                                    // フォールバック：NEXT先頭を操作中のミノにする
+    spawn(true);                                // フォールバック：NEXT先頭を操作中のミノにする
   }
   // 検出や以前の操作中ミノが新しい地形と重なってしまう場合の保険
   if (!cur || !valid(cur, 0, 0, cur.state)) {
-    spawn();
+    spawn(true);
   }
+
+  // 取り込んだ地形が高くてもゲームオーバーにはしない。
+  // ゲームオーバー中に取り込んだ場合も、その地形から再開できるようにする。
+  const wasOver = gameOver;
+  gameOver = false;
+  document.getElementById('overlay').style.display = 'none';
+  if (wasOver) { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop); }
 
   resetLock();
   closeImport();
@@ -3520,7 +3567,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
