@@ -282,13 +282,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <label class="tgl-row">
       <span>ゴースト</span>
       <input type="checkbox" id="ghostCheck" checked
-        onchange="showGhost=this.checked;draw();">
+        onchange="setOption('ghost', this.checked)">
       <span class="tgl"></span>
     </label>
     <label class="tgl-row">
       <span>軸表示</span>
       <input type="checkbox" id="axisCheck"
-        onchange="showAxis=this.checked;draw();">
+        onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
     <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
@@ -1360,7 +1360,7 @@ function updateDpcAgainBtn(){
 updateDpcAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
-const OPT_DEFAULTS = { multiHold:true, holeKeep:40, softSpeed:5, lockFrames:30 };
+const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30 };
 const OPT_RANGE    = { holeKeep:[10,100,10] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
@@ -1374,8 +1374,13 @@ function loadOptions(){
   applyOptions();
 }
 function applyOptions(){
-  const sw = document.getElementById('optMultiHold');
-  if(sw) sw.checked = opts.multiHold;
+  const check = (id,v) => { const el = document.getElementById(id); if(el) el.checked = v; };
+  check('optMultiHold', opts.multiHold);
+  // 表示系のスイッチも設定から復元する（地形編集はスマホ版ではボタンなので対象外）
+  check('ghostCheck', opts.ghost);
+  check('axisCheck',  opts.axis);
+  showGhost = opts.ghost;
+  showAxis  = opts.axis;
   const hk = document.getElementById('optHoleKeepVal');
   if(hk) hk.textContent = opts.holeKeep;
   if(cur) draw();
@@ -1609,7 +1614,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.3.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

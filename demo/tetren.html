@@ -489,14 +489,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
         title="ミノがどこに落ちるかを薄く表示する">
         <span>ゴースト</span>
         <input type="checkbox" id="ghostCheck" checked
-          onchange="showGhost=this.checked;draw();">
+          onchange="setOption('ghost', this.checked)">
         <span class="tgl"></span>
       </label>
       <label class="tgl-row"
         title="ミノの回転軸を表示する">
         <span>軸表示</span>
         <input type="checkbox" id="axisCheck"
-          onchange="showAxis=this.checked;draw();">
+          onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
     </div>
@@ -507,7 +507,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <label class="tgl-row" title="ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます">
         <span>地形編集</span>
         <input type="checkbox" id="terrainToggle" checked
-          onchange="setTerrainMode(this.checked)">
+          onchange="setOption('terrainEdit', this.checked)">
         <span class="tgl"></span>
       </label>
       <div id="colorSection">
@@ -3333,6 +3333,9 @@ function renderKcBtn(id, slot) {
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
   multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
+  ghost: true,        // ゴースト表示
+  axis: false,        // 軸表示
+  terrainEdit: true,  // 地形編集（PC版のみ。スマホ版はボタンなので使わない）
   holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
   lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
@@ -3363,8 +3366,14 @@ function loadOptions() {
 }
 // 画面表示を今の設定値に合わせる
 function applyOptions() {
-  const sw = document.getElementById('optMultiHold');
-  if (sw) sw.checked = opts.multiHold;
+  const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
+  check('optMultiHold', opts.multiHold);
+  // 表示系のスイッチも設定から復元する
+  check('ghostCheck', opts.ghost);
+  check('axisCheck',  opts.axis);
+  showGhost = opts.ghost;
+  showAxis  = opts.axis;
+  if (document.getElementById('terrainToggle')) setTerrainMode(opts.terrainEdit);
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
@@ -3511,7 +3520,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.3.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
