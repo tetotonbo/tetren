@@ -2665,9 +2665,11 @@ const IMP_REF = {
   Z: [234, 64, 41], J: [ 40, 95,227], L: [239,136, 51],
 };
 const IMP_GARBAGE = [244,244,244];   // おじゃま（白）
-// 空きマス（盤面の背景）の明るさの目安。取り込むたびに画像から測り直す。
+// 空きマス（盤面の背景）の明るさと色。取り込むたびに画像から測り直す。
 // ゲームによって背景色が違うので、無彩色マスの判定はこれを基準にする。
+// ゴーストは背景と混ざって色が鈍るため、種類の判定では背景色を差し引く。
 let impBgLevel = 0;
+let impBgColor = [0, 0, 0];
 let impImg = null;                   // 読み込んだ画像
 let impRect = null;                  // 盤面として読む範囲 {x,y,w,h}（画像座標）
 let impCells = null;                 // 読み取り結果 [row][col] = 'I'|..|'G'|null（ゴースト・操作中ミノは除く）
@@ -2864,13 +2866,21 @@ function initImportCanvasEvents() {
 function classifyImportColor(r, g, b) {
   const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
   const sat = mx - mn;
-  // 色みが無いマスは「空き」か「おじゃま」のどちらか。
+  // 色みの強さは明るさに対する比で見る。ゴーストは背景と混ざって暗くなるため、
+  // 差の絶対値で測ると「色みが無い」と誤判定してしまう。
+  // 例: 紫のゴースト rgb(76,38,80) は差こそ42だが、比では0.53ではっきり色がある。
+  const rel = mx ? sat / mx : 0;
+  // 色みがほとんど無いマスは「空き」か「おじゃま」のどちらか。
   // ぷよテトのおじゃまは白だが、他のゲームではグレーのことが多いので、
   // 明るさの絶対値ではなく、その画像の空きマス（背景）より明るいかで決める。
-  if (sat < 46) return (mx >= Math.max(78, impBgLevel + 28)) ? 'G' : null;
-  if (mx < 105 && sat < 60) return null;                  // 暗い = 空きマス
+  if (rel < 0.22 || sat < 16) return (mx >= Math.max(78, impBgLevel + 28)) ? 'G' : null;
+  if (mx < 48) return null;                               // 暗すぎて色を判定できない
   const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
-  const [nr,ng,nb] = norm(r,g,b);
+  // 背景に溶けたぶんを差し引いてから比率を取る。
+  // こうしないと、薄いゴーストほど無彩色寄りになって別のミノと判定されてしまう。
+  const [nr,ng,nb] = norm(Math.max(0, r - impBgColor[0]),
+                          Math.max(0, g - impBgColor[1]),
+                          Math.max(0, b - impBgColor[2]));
   let best = null, bestD = Infinity;
   for (const t in IMP_REF) {
     const [rr,gg,bb] = IMP_REF[t];
@@ -2892,7 +2902,9 @@ function classifyImportGhostColor(r, g, b) {
   if (sat < 28 || mx < 70) return null;        // 背景・グリッド線・黒箱
   if (mx > 175 && sat < 55) return null;       // 白っぽいものはおじゃま側
   const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
-  const [nr,ng,nb] = norm(r,g,b);
+  const [nr,ng,nb] = norm(Math.max(0, r - impBgColor[0]),
+                          Math.max(0, g - impBgColor[1]),
+                          Math.max(0, b - impBgColor[2]));
   let best = null, bestD = Infinity;
   for (const t in IMP_REF) {
     const [rr,gg,bb] = IMP_REF[t];
@@ -2939,101 +2951,117 @@ function readImportCellInfo(ctx, x, y, w, h) {
   return { type, ghostType, level: bright / refLum };
 }
 
-// ゴーストのマス集合（同じ種類4マス）から、ミノ種類・回転状態・アンカー位置を逆算する。
-// cells は [visible行, 列] の配列（ちょうど4マス）。
-function matchPieceShape(type, cells) {
-  if (cells.length !== 4) return null;
-  const key = new Set(cells.map(([r,c]) => r+','+c));
-  const states = PIECE_DEF[type].cells;
-  for (let st = 0; st < states.length; st++) {
-    const shape = states[st];
-    const [r0off, c0off] = shape[0];
-    for (const [gr, gc] of cells) {
-      const row0 = gr - r0off, col0 = gc - c0off;
-      const expect = shape.map(([r,c]) => (row0+r)+','+(col0+c));
-      if (expect.every(k => key.has(k))) return { state: st, row0, col0 };
-    }
-  }
-  return null;
-}
-
-// ゴーストと同じ列・同じ回転状態の実ブロックを、ゴーストより上の行から探す。
-// 見つかった中でゴーストに一番近い行（＝現在の落下位置として最も自然）を返す。
-function findActivePieceRow(type, state, col0, ghostRow0, grid) {
-  const shape = PIECE_DEF[type].cells[state];
-  for (let row0 = ghostRow0 - 1; row0 >= 0; row0--) {
-    let ok = true;
-    for (const [r,c] of shape) {
-      const rr = row0+r, cc = col0+c;
-      if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS || grid[rr][cc] !== type) { ok = false; break; }
-    }
-    if (ok) return row0;
-  }
-  return null;
-}
-
-// ゴーストの候補（暗いマス）から、ゴーストと操作中ミノを確定する。
-// 誤検出で地形が欠けるのを避けるため、候補がちょうどテトリミノの形に
-// なっているときだけゴーストと確定し、そうでなければ地形として残す。
+// ゴーストと操作中のミノを確定する。
+// 誤検出で地形が欠けるのを避けるため、ちょうどミノの形に一致したときだけ確定する。
 const IMP_GHOST_LEVEL = 0.78;   // 本来の明るさのこの割合を下回ったらゴースト候補
 
-function detectGhostAndActive(info) {
-  // 種類ごとにゴースト候補を集める。
-  //  ・地形判定では拾えなかったが、薄く色みが残っているマス
-  //  ・地形として拾えたが、本来の明るさよりはっきり暗いマス
-  const cand = {};
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
-    const cell = info[r][c];
-    if (cell.type === 'G') continue;                    // おじゃまは半透明表示されない
-    if (!cell.type && cell.ghostType) {
-      (cand[cell.ghostType] ||= []).push([r,c]);
-    } else if (cell.type && cell.level < IMP_GHOST_LEVEL) {
-      (cand[cell.type] ||= []).push([r,c]);
+// 盤面から「あるミノの形にちょうど一致する4マス」をすべて探す。
+// 連結成分で切り出す方式だと、同じ色の地形と隣り合ったときに形が崩れてしまうので、
+// 形そのものを総当たりで当てはめる。
+function findImportShapeMatches(grid) {
+  const out = [];
+  for (const type in PIECE_DEF) {
+    const states = PIECE_DEF[type].cells;
+    for (let st = 0; st < states.length; st++) {
+      const shape = states[st];
+      for (let row0 = -3; row0 < ROWS; row0++) {
+        for (let col0 = -3; col0 < COLS; col0++) {
+          const cells = [];
+          let ok = true;
+          for (const [dr, dc] of shape) {
+            const r = row0 + dr, c = col0 + dc;
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS || grid[r][c] !== type) { ok = false; break; }
+            cells.push([r, c]);
+          }
+          if (ok) out.push({ type, state: st, row0, col0, cells });
+        }
+      }
     }
   }
+  return out;
+}
 
-  // 盤面の背景に絵柄が透けていると、その部分も候補に混ざってしまう。
-  // ゴーストは必ず「4マスがつながったテトリミノの形」なので、候補を
-  // 連結したかたまりに分けて、ちょうど4マスで形が一致するものだけを採用する。
-  for (const type in cand) {
-    const set = new Set(cand[type].map(([r,c]) => r+','+c));
-    const seen = new Set();
-    for (const [sr,sc] of cand[type]) {
-      const startKey = sr+','+sc;
-      if (seen.has(startKey)) continue;
-      const group = [];
-      const stack = [[sr,sc]];
-      seen.add(startKey);
-      while (stack.length) {
-        const [r,c] = stack.pop();
-        group.push([r,c]);
-        for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-          const k = (r+dr)+','+(c+dc);
-          if (set.has(k) && !seen.has(k)) { seen.add(k); stack.push([r+dr, c+dc]); }
-        }
-      }
-      if (group.length !== 4) continue;                 // 4マスでなければゴーストではない
-      const m = matchPieceShape(type, group);
-      if (!m) continue;
+// その4マスが着地位置にあるか（＝ゴーストらしいか）。
+// 各列の一番下のマスの真下が、床か自分以外の埋まったマスであること。
+// occ はおじゃまも含めた「埋まっているか」のグリッド。
+function importRestsOnStack(m, occ) {
+  // 「1マス下に動かせないこと」で判定する。S・Zのように一部の列が宙に浮く形でも、
+  // どこか1マスでも下がふさがっていれば着地している。
+  const own = new Set(m.cells.map(([r, c]) => r + ',' + c));
+  for (const [r, c] of m.cells) {
+    const rr = r + 1;
+    if (rr >= ROWS) return true;               // 床に着いている
+    if (own.has(rr + ',' + c)) continue;       // 自分の下側のマス
+    if (occ[rr][c]) return true;               // 下がふさがっている
+  }
+  return false;
+}
 
-      // ゴーストと同じ列・同じ回転で、その上にある「暗くない」同色ブロックを探す
-      const solid = [];
-      for (let r = 0; r < ROWS; r++) {
-        const line = [];
-        for (let c = 0; c < COLS; c++) {
-          const cell = info[r][c];
-          line.push(cell.type && cell.level >= IMP_GHOST_LEVEL ? cell.type : null);
-        }
-        solid.push(line);
-      }
-      const activeRow = findActivePieceRow(type, m.state, m.col0, m.row0, solid);
-      return {
-        ghostCells: group,
-        type, state: m.state, col0: m.col0,
-        row0: activeRow !== null ? activeRow : m.row0,
-        foundActive: activeRow !== null,
-      };
+function detectGhostAndActive(info) {
+  // 色が付いているマスの種類グリッド（おじゃまは除く）。
+  // ゴーストは半透明で暗いので、薄くても色みが残っていれば拾う。
+  const grid = [], lv = [], occ = [];
+  for (let r = 0; r < ROWS; r++) {
+    const line = [], ll = [], oc = [];
+    for (let c = 0; c < COLS; c++) {
+      const cell = info[r][c];
+      const t = cell.type || cell.ghostType || null;
+      line.push(cell.type === 'G' ? null : t);
+      ll.push(cell.level || 0);
+      oc.push(!!t);                            // おじゃまも「埋まっている」に含める
     }
+    grid.push(line); lv.push(ll); occ.push(oc);
+  }
+  const matches = findImportShapeMatches(grid);
+  const maxLv = m => Math.max(...m.cells.map(([r, c]) => lv[r][c]));
+
+  // ① ゴーストと操作中のミノを「同じ形・同じ列で上下に2つある」ことで見つける。
+  //    明るさに頼らないので、ゴーストの描き方がゲームによって違っても効く。
+  //    ゴースト＝着地位置にある下の方、操作中のミノ＝浮いている上の方。
+  let best = null;
+  for (const lower of matches) {
+    if (!importRestsOnStack(lower, occ)) continue;
+    const loLv = maxLv(lower);
+    for (const upper of matches) {
+      if (upper.type !== lower.type || upper.state !== lower.state) continue;
+      if (upper.col0 !== lower.col0 || upper.row0 >= lower.row0) continue;
+      if (importRestsOnStack(upper, occ)) continue;        // 操作中のミノは空中にある
+      const upLv = maxLv(upper);
+      if (loLv > upLv * 1.15) continue;                     // ゴーストの方が明るいのは不自然
+      // より下にあるゴーストを優先し、同じなら明暗差がはっきりしている方を選ぶ
+      const score = lower.row0 * 100 + (upLv - loLv) * 10;
+      if (!best || score > best.score) best = { score, upper, lower };
+    }
+  }
+  if (best) {
+    return {
+      ghostCells: best.lower.cells,
+      type: best.lower.type, state: best.lower.state, col0: best.lower.col0,
+      row0: best.upper.row0, foundActive: true,
+    };
+  }
+
+  // ② 対になる相手が見つからないとき（操作中のミノが画面の上に隠れている等）は、
+  //    着地位置にあって、同じ色の他のブロックよりはっきり暗い4マスをゴーストとみなす。
+  // 比較の基準は、画像内で一番明るいミノの明るさ。ゴーストしか写っていない画像でも
+  // 判定できるよう、下限を設けておく（level は本来の色に対する比率なので 1 が実色）。
+  let brightest = 0;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    if (grid[r][c]) brightest = Math.max(brightest, lv[r][c]);
+  }
+  brightest = Math.max(brightest, 0.85);
+  let ghostOnly = null;
+  for (const m of matches) {
+    if (!importRestsOnStack(m, occ)) continue;
+    if (maxLv(m) >= brightest * IMP_GHOST_LEVEL) continue;  // 周りと同じ明るさ＝ただの地形
+    if (!ghostOnly || m.row0 > ghostOnly.row0) ghostOnly = m;
+  }
+  if (ghostOnly) {
+    return {
+      ghostCells: ghostOnly.cells,
+      type: ghostOnly.type, state: ghostOnly.state, col0: ghostOnly.col0,
+      row0: ghostOnly.row0, foundActive: false,
+    };
   }
   return null;
 }
@@ -3121,17 +3149,23 @@ function readImportCells() {
 
   // 先に無彩色マスの明るさを集めて、盤面の背景がどれくらいかを見積もる。
   // 暗い方から1/4の位置を「空きマスの明るさ」とみなす。
-  const grays = [];
+  let grays = [];
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
       const x = impRect.x + cw*col, y = impRect.y + ch*row;
       if (x < 0 || y < 0 || x+cw > cv.width || y+ch > cv.height) continue;
       const [r0,g0,b0] = readImportCellMedian(ctx, x, y, cw, ch);
-      const mx = Math.max(r0,g0,b0);
-      if (mx - Math.min(r0,g0,b0) < 46) grays.push(mx);
+      const mx = Math.max(r0,g0,b0), sat0 = mx - Math.min(r0,g0,b0);
+      if (mx ? sat0 / mx < 0.22 : true) grays.push({ mx, rgb: [r0,g0,b0] });
     }
   }
-  grays.sort((a,b) => a-b);
+  grays.sort((a,b) => a.mx - b.mx);
+  // 暗い方を背景とみなし、その色を代表色にする
+  const dark = grays.slice(0, Math.max(1, Math.round(grays.length * 0.25)));
+  impBgColor = dark.length
+    ? [0,1,2].map(i => { const v = dark.map(d => d.rgb[i]).sort((a,b)=>a-b); return v[v.length>>1]; })
+    : [0,0,0];
+  grays = grays.map(d => d.mx);
   if (!grays.length) {
     impBgLevel = 0;
   } else {
@@ -3585,7 +3619,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.5.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
