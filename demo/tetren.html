@@ -2865,9 +2865,10 @@ function initImportCanvasEvents() {
 function classifyImportColor(r, g, b) {
   const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
   const sat = mx - mn;
-  // 盤面の空きマスは暗い。背景の絵柄が透けて多少の色みが乗っても、
-  // ここで確実に弾いておかないと一番近いミノ色に誤判定されてしまう。
-  if (mx < 105 && sat < 60) return null;
+  // 盤面の空きマスは暗い。ぷよテトのミノはどれも明るい（一番暗いJでも明るさ235）ので、
+  // 明るさだけで切り分ける。背景が青や紫に色づいていても確実に弾けるよう、
+  // 彩度は条件に入れない（青い盤面では空きマスの彩度が60を超えることがある）。
+  if (mx < 105) return null;
   // 色みが無く明るい = おじゃま。ぷよテトは白、他のゲームはグレーのことが多い。
   // 影の帯で暗くなっても拾えるよう、明るさの下限は少し緩めにしてある。
   if (sat < 40 && mx > 105) return 'G';
@@ -2977,7 +2978,7 @@ function findImportActiveRow(m, grid, faint) {
       if (r >= ROWS || c < 0 || c >= COLS || grid[r][c] !== m.type || faint[r][c]) { ok = false; break; }
       visible++;
     }
-    if (ok && visible >= 2) return row0;
+    if (ok && visible >= 1) return row0;   // 1マスしか見えていなくても位置は絞れる
   }
   return null;
 }
@@ -3242,6 +3243,13 @@ function applyImport() {
       lastKickIndex = 0;
       placedActive = true;
     }
+  }
+  if (!placedActive && impActivePiece) {
+    // 位置までは特定できなかったが、ゴーストから種類は分かっている。
+    // ゴーストの位置に置くと「着地済み」になってしまうので、通常の出現位置から始める。
+    nextQ.unshift({ type: impActivePiece.type, newBag: false });
+    spawn(true);
+    placedActive = true;
   }
   if (!placedActive && impNext.length) {
     spawn(true);                                // フォールバック：NEXT先頭を操作中のミノにする
@@ -3560,7 +3568,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
