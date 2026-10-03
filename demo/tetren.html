@@ -3039,18 +3039,21 @@ function detectGhostAndActive(info) {
   ghosts.sort((a, b) => b.row0 - a.row0);
   for (const m of ghosts) {
     const activeRow = findImportActiveRow(m, grid, faint);
-    let activeCells = null;
+    // 操作中のミノが盤面に見えている部分は、必ず地形から取り除く。
+    //  ・位置が分かっていれば、その形のマス
+    //  ・加えて、ゴーストより上で宙に浮いた同じ色のかたまり
+    // 位置の推定を外しても見えている部分が残らないよう、両方を合わせて除外する。
+    const seen = new Set(), activeCells = [];
+    const add = (r, c) => {
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+      const k = r + ',' + c;
+      if (!seen.has(k)) { seen.add(k); activeCells.push([r, c]); }
+    };
     if (activeRow !== null) {
-      activeCells = [];
-      for (const [dr, dc] of PIECE_DEF[m.type].cells[m.state]) {
-        const r = activeRow + dr, c = m.col0 + dc;
-        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) activeCells.push([r, c]);
-      }
-    } else {
-      // 位置までは分からなくても、宙に浮いた同じ色のかたまりがあればそれが見えている部分。
-      // 地形に残すと設置済みのブロックに見えてしまうので取り除く。
-      activeCells = findImportFloatingGroup(m.type, grid, occ, Math.min(...m.cells.map(x => x[0])));
+      for (const [dr, dc] of PIECE_DEF[m.type].cells[m.state]) add(activeRow + dr, m.col0 + dc);
     }
+    const floating = findImportFloatingGroup(m.type, grid, occ, Math.min(...m.cells.map(x => x[0])));
+    if (floating) for (const [r, c] of floating) add(r, c);
     return {
       ghostCells: m.cells, activeCells,
       type: m.type, state: m.state, col0: m.col0,
@@ -3631,7 +3634,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
