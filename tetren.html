@@ -3348,6 +3348,20 @@ function applyImport() {
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
   });
+  // ダイアログを開いている間は Enter で取り込み、Escape で閉じる。
+  // ボタンにフォーカスが残っていると Enter でそれが再実行されてしまうので、
+  // capture で先に受け取って既定の動作を止める。
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('importOverlay').classList.contains('open')) return;
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+      e.preventDefault(); e.stopPropagation();
+      // 画像を読み込んで読み取りが終わっているときだけ取り込む
+      if (document.getElementById('impWork').style.display !== 'none' && impCells) applyImport();
+    } else if (e.code === 'Escape') {
+      e.preventDefault(); e.stopPropagation();
+      closeImport();
+    }
+  }, true);
   initImportCanvasEvents();
 })();
 
@@ -3617,7 +3631,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.6.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
