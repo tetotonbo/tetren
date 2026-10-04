@@ -280,18 +280,18 @@ body.ppt2-theme #nextCanvas {
 .sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
-/* ===== DPCセットダイアログ ===== */
-#dpcOverlay {
+/* ===== DPCセット／1欠けダイアログ（同じ見た目を共用） ===== */
+#dpcOverlay, #missOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
 }
-#dpcOverlay.open { display:flex; }
-#dpcPanel {
+#dpcOverlay.open, #missOverlay.open { display:flex; }
+#dpcPanel, #missPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
 }
-#dpcGrid { display:flex; flex-direction:column; gap:8px; }
+#dpcGrid, #missGrid { display:flex; flex-direction:column; gap:8px; }
 .dpc-row { display:flex; gap:8px; justify-content:center; }
 .dpc-btn {
   width:100px; flex:0 0 auto;
@@ -678,6 +678,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
             onclick="if(!gameOver)repeatDpc()"
             title="前回選んだミノで、もう一度DPCセットします">↻</button>
         </div>
+        <div class="btn-group">
+          <button class="garb-btn" style="flex:1;background:#374151;"
+            onclick="openMiss()"
+            title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">1欠け</button>
+          <button id="missAgainBtn" class="garb-btn" style="flex:0 0 32px;background:#374151;"
+            onclick="repeatMiss()"
+            title="前回選んだミノで、もう一度1欠けで始めます">↻</button>
+        </div>
         <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleRenMode()">REN</button>
@@ -812,6 +820,23 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div id="dpcGrid"></div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="closeDpc()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<div id="missOverlay">
+  <div id="missPanel">
+    <div class="imp-head">
+      <span class="imp-title">1欠け</span>
+      <button class="imp-x" title="閉じる" onclick="closeMiss()">×</button>
+    </div>
+    <div class="imp-hint" style="margin:0 0 12px;">
+      選んだミノを抜いた残り6ミノで1巡目を回し、ゲームを最初から始めます。<br>
+      2巡目からは7ミノすべて出ます。
+    </div>
+    <div id="missGrid"></div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
     </div>
   </div>
 </div>
@@ -1381,8 +1406,15 @@ let lastKickIndex = 0;       // 最後に使ったSRSキックのインデック
 let clearMsgTimer = null;    // メッセージ消去タイマー
 
 // ===== 7種1巡バッグ =====
+// 1欠け：最初の1巡だけ、選んだミノを抜いた6ミノで回す
+let missingType = null;
+let missFirstBagDone = true;   // まだ1欠けを使っていない状態
 function newBag() {
-  const a = ['I','O','T','S','Z','J','L'];
+  let a = ['I','O','T','S','Z','J','L'];
+  if (missingType && !missFirstBagDone) {
+    a = a.filter(t => t !== missingType);
+    missFirstBagDone = true;    // 2巡目からは通常どおり7ミノ
+  }
   for (let i=a.length-1; i>0; i--) {
     const j = Math.floor(Math.random()*(i+1));
     [a[i],a[j]] = [a[j],a[i]];
@@ -1932,8 +1964,9 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
-function renderDpcGrid() {
-  const grid = document.getElementById('dpcGrid');
+// DPCセットと1欠けで共用する。titleFn / onPick だけが違う。
+function renderPieceGrid(gridId, titleFn, onPick) {
+  const grid = document.getElementById(gridId);
   grid.innerHTML = '';
   DPC_ROWS.forEach(types => {
    const row = document.createElement('div');
@@ -1941,7 +1974,7 @@ function renderDpcGrid() {
    types.forEach(type => {
     const btn = document.createElement('button');
     btn.className = 'dpc-btn';
-    btn.title = type + 'ミノをHOLDにセットする';
+    btn.title = titleFn(type);
     const cv = document.createElement('canvas');
     cv.width = 84; cv.height = 56;
     const cx = cv.getContext('2d');
@@ -1952,11 +1985,14 @@ function renderDpcGrid() {
     name.textContent = type;
     btn.appendChild(cv);
     btn.appendChild(name);
-    btn.addEventListener('click', () => setDpcHold(type));
+    btn.addEventListener('click', () => onPick(type));
     row.appendChild(btn);
    });
    grid.appendChild(row);
   });
+}
+function renderDpcGrid() {
+  renderPieceGrid('dpcGrid', t => t + 'ミノをHOLDにセットする', setDpcHold);
 }
 // 選んだミノをHOLDに入れ、地形を消してバッグを組み直し、現在のミノも出し直す
 function setDpcHold(type) {
@@ -1989,6 +2025,40 @@ function updateDpcAgainBtn() {
     : 'まだミノを選んでいません（押すと選択画面が開きます）';
 }
 updateDpcAgainBtn();
+
+// ===== 1欠け（選んだミノを最初の1巡から抜いて最初から始める） =====
+let lastMissType = null;   // 「再」ボタン用：直前に1欠けで選んだミノ
+
+function openMiss() {
+  document.getElementById('missOverlay').classList.add('open');
+  renderPieceGrid('missGrid', t => t + 'ミノを抜いた6ミノで1巡目を回す', setMissingPiece);
+}
+function closeMiss() {
+  document.getElementById('missOverlay').classList.remove('open');
+}
+// 選んだミノを1巡目から抜いて、ゲームを最初から始める
+function setMissingPiece(type) {
+  lastMissType = type;
+  updateMissAgainBtn();
+  missingType = type;
+  missFirstBagDone = false;   // 次に引くバッグだけ6ミノにする
+  closeMiss();
+  startGame();               // 盤面もツモも最初から
+}
+// 直前に選んだミノで、もう一度1欠けで始める
+function repeatMiss() {
+  if (!lastMissType) { openMiss(); return; }
+  setMissingPiece(lastMissType);
+}
+function updateMissAgainBtn() {
+  const btn = document.getElementById('missAgainBtn');
+  if (!btn) return;
+  btn.style.opacity = lastMissType ? '1' : '0.45';
+  btn.title = lastMissType
+    ? `前回選んだ ${lastMissType} ミノを抜いて、もう一度1欠けで始めます`
+    : 'まだミノを選んでいません（押すと選択画面が開きます）';
+}
+updateMissAgainBtn();
 
 // ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
 function resetTerrain() {
@@ -3444,6 +3514,9 @@ function applyImport() {
   document.getElementById('dpcOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'dpcOverlay') closeDpc();
   });
+  document.getElementById('missOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'missOverlay') closeMiss();
+  });
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
   });
@@ -3761,7 +3834,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.8.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
