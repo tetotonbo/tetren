@@ -1361,8 +1361,9 @@ function updateDpcAgainBtn(){
 updateDpcAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
-const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30 };
-const OPT_RANGE    = { holeKeep:[10,100,10] };
+const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
+                       dasFrames:10, arrFrames:2 };
+const OPT_RANGE    = { holeKeep:[10,100,10], dasFrames:[0,30,1], arrFrames:[0,10,1] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 function saveOptions(){
@@ -1462,17 +1463,27 @@ function loop(ts){
 }
 
 // ===== DAS / ARR =====
-const DAS=167, ARR=33;
+// 「その他」設定（PC版の設定画面で変更）をフレーム単位で読む。60fps基準。
+// 設定は同じ localStorage を共有しているので、PC版で変えた値がここにも効く。
+function dasMs(){ return opts.dasFrames * 1000 / 60; }
+function arrMs(){ return opts.arrFrames * 1000 / 60; }
 let dasTimer=null, arrTimer=null, heldKey=null;
 let softDropBtnTimer=null;
 
+// ARR 1回分の移動。0Fのときは一気に端まで動かす。
+function arrStep(dc){
+  if (opts.arrFrames > 0) { moveH(dc); return; }
+  for (let i=0; i<COLS && valid(cur,0,dc,cur.state); i++) moveH(dc);
+}
 function startDAS(key){
   if(heldKey===key) return;
   stopDAS(); heldKey=key;
+  const dc = key==='L' ? -1 : 1;
   dasTimer=setTimeout(()=>{
     if(heldKey!==key) return;
-    arrTimer=setInterval(()=>{ if(heldKey===key){ if(key==='L') moveH(-1); else moveH(1); } }, ARR);
-  }, DAS);
+    const every = opts.arrFrames > 0 ? arrMs() : 1000/60;
+    arrTimer=setInterval(()=>{ if(heldKey===key) arrStep(dc); }, every);
+  }, dasMs());
 }
 function stopDAS(){heldKey=null;if(dasTimer){clearTimeout(dasTimer);dasTimer=null;}if(arrTimer){clearInterval(arrTimer);arrTimer=null;}}
 // 押されている左右キーを押した順に覚えておく。
@@ -1640,7 +1651,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.6.3';
+const APP_VERSION = '1.7.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

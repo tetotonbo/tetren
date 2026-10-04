@@ -877,6 +877,34 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </div>
       </div>
 
+      <div class="opt-row">
+        <span class="opt-label">左右の効き始め（DAS）
+          <span class="opt-note">左右を押してから自動で動き出すまでの待ち時間。<span id="optDasMs">約167ms</span>（長押しで連続変更）</span></span>
+        <div class="opt-step">
+          <button class="step-btn" title="待ち時間を短くする（長押しで連続）"
+            onmousedown="startOptRepeat('dasFrames',-1)"
+            ontouchstart="event.preventDefault();startOptRepeat('dasFrames',-1)">‹</button>
+          <span class="opt-val"><span id="optDasVal">10</span><span class="opt-unit"> F</span></span>
+          <button class="step-btn" title="待ち時間を長くする（長押しで連続）"
+            onmousedown="startOptRepeat('dasFrames',1)"
+            ontouchstart="event.preventDefault();startOptRepeat('dasFrames',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">左右の連打間隔（ARR）
+          <span class="opt-note">動き出したあと1マス進むごとの間隔。<span id="optArrMs">約33ms</span>。0Fにすると一気に端まで動きます</span></span>
+        <div class="opt-step">
+          <button class="step-btn" title="連打を速くする（長押しで連続）"
+            onmousedown="startOptRepeat('arrFrames',-1)"
+            ontouchstart="event.preventDefault();startOptRepeat('arrFrames',-1)">‹</button>
+          <span class="opt-val"><span id="optArrVal">2</span><span class="opt-unit"> F</span></span>
+          <button class="step-btn" title="連打を遅くする（長押しで連続）"
+            onmousedown="startOptRepeat('arrFrames',1)"
+            ontouchstart="event.preventDefault();startOptRepeat('arrFrames',1)">›</button>
+        </div>
+      </div>
+
       <div class="kc-btns">
         <button onclick="resetOptions()" title="その他の設定を初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
@@ -2633,7 +2661,10 @@ function loop(ts) {
 }
 
 // ===== DAS / ARR =====
-const DAS=167, ARR=33;
+// 「その他」設定からフレーム単位で指定する（60fps基準）。
+// 既定は DAS 10F(約167ms) / ARR 2F(約33ms) で、従来の挙動と同じ。
+function dasMs() { return opts.dasFrames * 1000 / 60; }
+function arrMs() { return opts.arrFrames * 1000 / 60; }
 let dasTimer=null, arrTimer=null, heldKey=null;
 // ボタン長押しによるソフトドロップ連続入力
 let softDropBtnTimer=null;
@@ -2645,13 +2676,21 @@ function stopSoftDropBtn() {
   downHeld = false; softAccum = 0;
   if(softDropBtnTimer){ clearInterval(softDropBtnTimer); softDropBtnTimer=null; }
 }
+// ARR 1回分の移動。0Fのときは一気に端まで動かす（いわゆる瞬間移動）。
+function arrStep(dc) {
+  if (opts.arrFrames > 0) { moveH(dc); return; }
+  for (let i = 0; i < COLS && valid(cur, 0, dc, cur.state); i++) moveH(dc);
+}
 function startDAS(key) {
   if (heldKey===key) return;
   stopDAS(); heldKey=key;
+  const dc = key==='L' ? -1 : 1;
   dasTimer = setTimeout(()=>{
     if (heldKey!==key) return;
-    arrTimer = setInterval(()=>{ if(heldKey===key) { if(key==='L') moveH(-1); else moveH(1); } }, ARR);
-  }, DAS);
+    // 0F指定でも setInterval(0) にはせず、1フレーム相当で回して端まで動かす
+    const every = opts.arrFrames > 0 ? arrMs() : 1000/60;
+    arrTimer = setInterval(()=>{ if(heldKey===key) arrStep(dc); }, every);
+  }, dasMs());
 }
 function stopDAS() {
   heldKey=null;
@@ -3505,9 +3544,12 @@ const OPT_DEFAULTS = {
   holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
   lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
+  dasFrames: 10,      // 左右を押してから自動連打が始まるまで（10F=約167ms）
+  arrFrames: 2,       // 自動連打の間隔（2F=約33ms）。0Fは一気に端まで
 };
 // [最小, 最大, 刻み]
-const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5],
+                    dasFrames:[0,30,1], arrFrames:[0,10,1] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 // ソフトドロップの間隔(ms)。数字が大きいほど速い
@@ -3544,6 +3586,15 @@ function applyOptions() {
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
   put('optLockFramesVal', opts.lockFrames);
+  put('optDasVal', opts.dasFrames);
+  put('optArrVal', opts.arrFrames);
+  // ミリ秒も併記する。0Fのときは何が起きるかを言葉で出す
+  put('optDasMs', '約' + Math.round(opts.dasFrames * 1000 / 60) + 'ms');
+  put('optArrMs', opts.arrFrames === 0
+        ? '一気に端まで'
+        : '約' + Math.round(opts.arrFrames * 1000 / 60) + 'ms');
+  // 設定を変えたら、押しっぱなしのタイマーを張り直す
+  if (heldKey) { const k = heldKey; heldKey = null; startDAS(k); }
   if (cur) draw();
 }
 function setOption(key, value) {
@@ -3551,6 +3602,8 @@ function setOption(key, value) {
   saveOptions();
   applyOptions();
 }
+// ステッパーを長押ししている間、連続で変化させる
+function startOptRepeat(key, dir) { startRepeat(() => stepOption(key, dir)); }
 function stepOption(key, dir) {
   const [min, max, step] = OPT_RANGE[key];
   setOption(key, Math.min(max, Math.max(min, opts[key] + dir * step)));
@@ -3686,7 +3739,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.6.3';
+const APP_VERSION = '1.7.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
