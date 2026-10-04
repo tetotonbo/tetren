@@ -216,17 +216,17 @@ input:checked + .tgl::after { transform:translateX(10px); }
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay {
+#dpcOverlay, #missOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open { display:flex; }
-#dpcPanel {
+#dpcOverlay.open, #missOverlay.open { display:flex; }
+#dpcPanel, #missPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
-#dpcPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
+#dpcPanel h2, #missPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel .sub2, #missPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
 .dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
 .dpc-btn {
   width:72px; background:#0d1117; border:1px solid #374151; border-radius:8px;
@@ -305,6 +305,10 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <div class="dpc-side-row">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
+    </div>
+    <div class="dpc-side-row">
+      <button class="side-btn" style="flex:1;" onclick="openMiss()">1欠け</button>
+      <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
     <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
     <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
@@ -441,6 +445,16 @@ input:checked + .tgl::after { transform:translateX(10px); }
   </div>
 </div>
 
+<!-- 1欠け: 最初の1巡から抜くミノを選ぶ -->
+<div id="missOverlay">
+  <div id="missPanel">
+    <h2>1欠け</h2>
+    <div class="sub2">選んだミノを抜いた残り6ミノで1巡目を回し、<br>ゲームを最初から始めます（2巡目からは7ミノ）</div>
+    <div id="missGrid"></div>
+    <button class="dpc-close" onclick="closeMiss()">キャンセル</button>
+  </div>
+</div>
+
 <div id="overlay">
   <h1>テト練（β版）<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
   <div class="sub">タッチ操作でプレイ</div>
@@ -518,8 +532,12 @@ let terrainPaintMode = 'set';
 let terrainColor = GARBAGE_COLOR;
 
 // ===== バッグ =====
+// 1欠け：最初の1巡だけ、選んだミノを抜いた6ミノで回す
+let missingType=null;
+let missFirstBagDone=true;
 function newBag() {
-  const a=['I','O','T','S','Z','J','L'];
+  let a=['I','O','T','S','Z','J','L'];
+  if(missingType && !missFirstBagDone){ a=a.filter(t=>t!==missingType); missFirstBagDone=true; }
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
@@ -1311,8 +1329,9 @@ function openDpc(){
 function closeDpc(){
   document.getElementById('dpcOverlay').classList.remove('open');
 }
-function renderDpcGrid(){
-  const grid=document.getElementById('dpcGrid');
+// DPCセットと1欠けで共用する。選んだときの動作だけが違う。
+function renderPieceGrid(gridId, onPick){
+  const grid=document.getElementById(gridId);
   grid.innerHTML='';
   DPC_ROWS.forEach(types=>{
     const row=document.createElement('div');
@@ -1330,12 +1349,13 @@ function renderDpcGrid(){
       const name=document.createElement('span');
       name.className='dpc-name'; name.textContent=type;
       btn.appendChild(cv); btn.appendChild(name);
-      btn.addEventListener('click',()=>setDpcHold(type));
+      btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
     grid.appendChild(row);
   });
 }
+function renderDpcGrid(){ renderPieceGrid('dpcGrid', setDpcHold); }
 function setDpcHold(type){
   lastDpcType=type; updateDpcAgainBtn();
   // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
@@ -1359,6 +1379,33 @@ function updateDpcAgainBtn(){
   btn.style.opacity = lastDpcType ? '1' : '0.45';
 }
 updateDpcAgainBtn();
+
+// ===== 1欠け（選んだミノを最初の1巡から抜いて最初から始める）=====
+let lastMissType=null;
+function openMiss(){
+  document.getElementById('missOverlay').classList.add('open');
+  renderPieceGrid('missGrid', setMissingPiece);
+}
+function closeMiss(){
+  document.getElementById('missOverlay').classList.remove('open');
+}
+function setMissingPiece(type){
+  lastMissType=type; updateMissAgainBtn();
+  missingType=type;
+  missFirstBagDone=false;   // 次に引くバッグだけ6ミノにする
+  closeMiss();
+  startGame();              // 盤面もツモも最初から
+}
+function repeatMiss(){
+  if(!lastMissType){ openMiss(); return; }
+  setMissingPiece(lastMissType);
+}
+function updateMissAgainBtn(){
+  const btn=document.getElementById('missAgainBtn');
+  if(!btn) return;
+  btn.style.opacity = lastMissType ? '1' : '0.45';
+}
+updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
@@ -1657,7 +1704,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.8.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
