@@ -598,10 +598,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <!-- 左右・ソフトドロップ -->
         <div class="ctrl-row r3">
           <button class="ctrl-btn"
-            onmousedown="if(!gameOver){moveH(-1);startDAS('L')}"
-            onmouseup="stopDAS()" onmouseleave="stopDAS()"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);startDAS('L')}"
-            ontouchend="stopDAS()"
+            onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
+            onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')"
+            ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
+            ontouchend="releaseDir('L')"
             title="左移動">
             ←<span class="ctrl-lbl">左</span>
           </button>
@@ -614,10 +614,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
             ↓<span class="ctrl-lbl">ソフト</span>
           </button>
           <button class="ctrl-btn"
-            onmousedown="if(!gameOver){moveH(1);startDAS('R')}"
-            onmouseup="stopDAS()" onmouseleave="stopDAS()"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(1);startDAS('R')}"
-            ontouchend="stopDAS()"
+            onmousedown="if(!gameOver){moveH(1);pressDir('R')}"
+            onmouseup="releaseDir('R')" onmouseleave="releaseDir('R')"
+            ontouchstart="e.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
+            ontouchend="releaseDir('R')"
             title="右移動">
             →<span class="ctrl-lbl">右</span>
           </button>
@@ -1381,6 +1381,7 @@ function mkPiece(type) {
 function spawn(noGameOver) {
   fillQ();
   cur = mkPiece(nextQ.shift().type);
+  resumeDAS();   // 左右を押したまま次のミノに移っても動き続けるようにする
   canHold = true; // ピース交代のたびにホールド権を回復
   lastWasRotation = false; // 新ピース出現時にTスピンフラグリセット
   lastKickIndex = 0;
@@ -2657,6 +2658,31 @@ function stopDAS() {
   if(dasTimer){clearTimeout(dasTimer);dasTimer=null;}
   if(arrTimer){clearInterval(arrTimer);arrTimer=null;}
 }
+// 押されている左右キーを押した順に覚えておく。
+// 左を押したまま右をタップして離す、といった操作でも、
+// まだ押している方の自動連打が止まらないようにするため。
+const heldDirs = [];
+function pressDir(key) {
+  const i = heldDirs.indexOf(key);
+  if (i >= 0) heldDirs.splice(i, 1);
+  heldDirs.push(key);          // あとから押した方を優先する
+  startDAS(key);
+}
+function releaseDir(key) {
+  const i = heldDirs.indexOf(key);
+  if (i >= 0) heldDirs.splice(i, 1);
+  if (heldDirs.length) startDAS(heldDirs[heldDirs.length-1]);  // まだ押している方へ戻す
+  else stopDAS();
+}
+// 次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐ。
+// ハードドロップ後に新しいミノが動き出さない、という取りこぼしを防ぐ。
+function resumeDAS() {
+  if (!heldDirs.length) return;
+  const key = heldDirs[heldDirs.length-1];
+  if (heldKey===key && (arrTimer || dasTimer)) return;   // すでに動いているので何もしない
+  heldKey = null;
+  startDAS(key);
+}
 
 // ===== 地形取り込み（ぷよテトのスクショから盤面を読む） =====
 // 実機スクショから採寸したミノの代表色。判定はこの色との距離で行う。
@@ -3660,7 +3686,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.6.2';
+const APP_VERSION = '1.6.3';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -3843,8 +3869,8 @@ document.addEventListener('keydown', e=>{
   // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
   const c = e.code;
-  if      (kcMatch('moveLeft',  c)) { e.preventDefault(); moveH(-1); startDAS('L'); }
-  else if (kcMatch('moveRight', c)) { e.preventDefault(); moveH(+1); startDAS('R'); }
+  if      (kcMatch('moveLeft',  c)) { e.preventDefault(); if (!e.repeat) moveH(-1); pressDir('L'); }
+  else if (kcMatch('moveRight', c)) { e.preventDefault(); if (!e.repeat) moveH(+1); pressDir('R'); }
   else if (kcMatch('softDrop',  c)) {
     e.preventDefault();
     if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); }
@@ -3858,7 +3884,8 @@ document.addEventListener('keydown', e=>{
   else if (kcMatch('dpcAgain',  c)) { e.preventDefault(); if (!e.repeat) repeatDpc(); }
 });
 document.addEventListener('keyup', e=>{
-  if (kcMatch('moveLeft', e.code) || kcMatch('moveRight', e.code)) stopDAS();
+  if      (kcMatch('moveLeft',  e.code)) releaseDir('L');
+  else if (kcMatch('moveRight', e.code)) releaseDir('R');
   if (kcMatch('softDrop', e.code)) downHeld = false;
 });
 
@@ -3909,6 +3936,7 @@ function resetGameState(fullReset = true) {
 function startGame() {
   document.getElementById('overlay').style.display = 'none';
   cancelAnimationFrame(rafId);
+  heldDirs.length = 0; stopDAS();   // 押しっぱなしの状態を持ち越さない
   resetGameState(false); // せりあがり設定は維持（ゲームオーバー後の再スタートも含む）
   rafId = requestAnimationFrame(loop);
 }
