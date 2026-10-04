@@ -1362,17 +1362,23 @@ updateDpcAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
-                       dasFrames:10, arrFrames:2 };
-const OPT_RANGE    = { holeKeep:[10,100,10], dasFrames:[0,30,1], arrFrames:[0,10,1] };
+                       dasMs:167, arrMs:33, inputUnit:'ms' };
+const OPT_RANGE    = { holeKeep:[10,100,10] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 function saveOptions(){
   try { localStorage.setItem('tetren_options', JSON.stringify(opts)); } catch(e) {}
 }
+// v1.7.0 まではフレームで保存していた。残っていればミリ秒に移す。
+function migrateInputOpts(){
+  if (opts.dasFrames !== undefined) { opts.dasMs = Math.round(opts.dasFrames * 1000 / 60); delete opts.dasFrames; }
+  if (opts.arrFrames !== undefined) { opts.arrMs = Math.round(opts.arrFrames * 1000 / 60); delete opts.arrFrames; }
+}
 function loadOptions(){
   let raw = null;
   try { raw = localStorage.getItem('tetren_options'); } catch(e) {}
   if(raw){ try { Object.assign(opts, JSON.parse(raw)); } catch(e) {} }
+  migrateInputOpts();
   applyOptions();
 }
 function applyOptions(){
@@ -1465,14 +1471,14 @@ function loop(ts){
 // ===== DAS / ARR =====
 // 「その他」設定（PC版の設定画面で変更）をフレーム単位で読む。60fps基準。
 // 設定は同じ localStorage を共有しているので、PC版で変えた値がここにも効く。
-function dasMs(){ return opts.dasFrames * 1000 / 60; }
-function arrMs(){ return opts.arrFrames * 1000 / 60; }
+function dasMs(){ return opts.dasMs; }
+function arrMs(){ return opts.arrMs; }
 let dasTimer=null, arrTimer=null, heldKey=null;
 let softDropBtnTimer=null;
 
 // ARR 1回分の移動。0Fのときは一気に端まで動かす。
 function arrStep(dc){
-  if (opts.arrFrames > 0) { moveH(dc); return; }
+  if (opts.arrMs > 0) { moveH(dc); return; }
   for (let i=0; i<COLS && valid(cur,0,dc,cur.state); i++) moveH(dc);
 }
 function startDAS(key){
@@ -1481,7 +1487,7 @@ function startDAS(key){
   const dc = key==='L' ? -1 : 1;
   dasTimer=setTimeout(()=>{
     if(heldKey!==key) return;
-    const every = opts.arrFrames > 0 ? arrMs() : 1000/60;
+    const every = opts.arrMs > 0 ? arrMs() : 1000/60;
     arrTimer=setInterval(()=>{ if(heldKey===key) arrStep(dc); }, every);
   }, dasMs());
 }
@@ -1651,7 +1657,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

@@ -443,6 +443,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
 .opt-step { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
 .opt-val { font-size:13px; color:#e2e8f0; min-width:58px; text-align:center; }
 .opt-unit { font-size:10px; color:#6b7280; }
+/* クリックで ms ⇄ F を切り替える単位表示 */
+.unit-btn { cursor:pointer; text-decoration:underline dotted; }
+.unit-btn:hover { color:#9ca3af; }
 /* スキン選択 */
 #skinList { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 .skin-card {
@@ -879,29 +882,31 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
       <div class="opt-row">
         <span class="opt-label">左右の効き始め（DAS）
-          <span class="opt-note">左右を押してから自動で動き出すまでの待ち時間。<span id="optDasMs">約167ms</span>（長押しで連続変更）</span></span>
+          <span class="opt-note">左右を押してから自動で動き出すまでの待ち時間。<span id="optDasAlt">約10フレーム</span>（長押しで連続変更）</span></span>
         <div class="opt-step">
           <button class="step-btn" title="待ち時間を短くする（長押しで連続）"
-            onmousedown="startOptRepeat('dasFrames',-1)"
-            ontouchstart="event.preventDefault();startOptRepeat('dasFrames',-1)">‹</button>
-          <span class="opt-val"><span id="optDasVal">10</span><span class="opt-unit"> F</span></span>
+            onmousedown="startInputRepeat('dasMs',-1)"
+            ontouchstart="event.preventDefault();startInputRepeat('dasMs',-1)">‹</button>
+          <span class="opt-val"><span id="optDasVal">167</span><span class="opt-unit unit-btn" id="optDasUnit"
+            onclick="toggleInputUnit()" title="ミリ秒とフレームを切り替える"> ms</span></span>
           <button class="step-btn" title="待ち時間を長くする（長押しで連続）"
-            onmousedown="startOptRepeat('dasFrames',1)"
-            ontouchstart="event.preventDefault();startOptRepeat('dasFrames',1)">›</button>
+            onmousedown="startInputRepeat('dasMs',1)"
+            ontouchstart="event.preventDefault();startInputRepeat('dasMs',1)">›</button>
         </div>
       </div>
 
       <div class="opt-row">
         <span class="opt-label">左右の連打間隔（ARR）
-          <span class="opt-note">動き出したあと1マス進むごとの間隔。<span id="optArrMs">約33ms</span>。0Fにすると一気に端まで動きます</span></span>
+          <span class="opt-note">動き出したあと1マス進むごとの間隔。<span id="optArrAlt">約2フレーム</span>。0にすると一気に端まで動きます。単位をクリックするとフレーム表示に変わります</span></span>
         <div class="opt-step">
           <button class="step-btn" title="連打を速くする（長押しで連続）"
-            onmousedown="startOptRepeat('arrFrames',-1)"
-            ontouchstart="event.preventDefault();startOptRepeat('arrFrames',-1)">‹</button>
-          <span class="opt-val"><span id="optArrVal">2</span><span class="opt-unit"> F</span></span>
+            onmousedown="startInputRepeat('arrMs',-1)"
+            ontouchstart="event.preventDefault();startInputRepeat('arrMs',-1)">‹</button>
+          <span class="opt-val"><span id="optArrVal">33</span><span class="opt-unit unit-btn" id="optArrUnit"
+            onclick="toggleInputUnit()" title="ミリ秒とフレームを切り替える"> ms</span></span>
           <button class="step-btn" title="連打を遅くする（長押しで連続）"
-            onmousedown="startOptRepeat('arrFrames',1)"
-            ontouchstart="event.preventDefault();startOptRepeat('arrFrames',1)">›</button>
+            onmousedown="startInputRepeat('arrMs',1)"
+            ontouchstart="event.preventDefault();startInputRepeat('arrMs',1)">›</button>
         </div>
       </div>
 
@@ -2661,10 +2666,10 @@ function loop(ts) {
 }
 
 // ===== DAS / ARR =====
-// 「その他」設定からフレーム単位で指定する（60fps基準）。
-// 既定は DAS 10F(約167ms) / ARR 2F(約33ms) で、従来の挙動と同じ。
-function dasMs() { return opts.dasFrames * 1000 / 60; }
-function arrMs() { return opts.arrFrames * 1000 / 60; }
+// 「その他」設定で指定する。値はミリ秒で持ち、表示だけフレームにも切り替えられる。
+// 既定は DAS 167ms(10F) / ARR 33ms(2F) で、従来の挙動と同じ。
+function dasMs() { return opts.dasMs; }
+function arrMs() { return opts.arrMs; }
 let dasTimer=null, arrTimer=null, heldKey=null;
 // ボタン長押しによるソフトドロップ連続入力
 let softDropBtnTimer=null;
@@ -2678,7 +2683,7 @@ function stopSoftDropBtn() {
 }
 // ARR 1回分の移動。0Fのときは一気に端まで動かす（いわゆる瞬間移動）。
 function arrStep(dc) {
-  if (opts.arrFrames > 0) { moveH(dc); return; }
+  if (opts.arrMs > 0) { moveH(dc); return; }
   for (let i = 0; i < COLS && valid(cur, 0, dc, cur.state); i++) moveH(dc);
 }
 function startDAS(key) {
@@ -2688,7 +2693,7 @@ function startDAS(key) {
   dasTimer = setTimeout(()=>{
     if (heldKey!==key) return;
     // 0F指定でも setInterval(0) にはせず、1フレーム相当で回して端まで動かす
-    const every = opts.arrFrames > 0 ? arrMs() : 1000/60;
+    const every = opts.arrMs > 0 ? arrMs() : 1000/60;
     arrTimer = setInterval(()=>{ if(heldKey===key) arrStep(dc); }, every);
   }, dasMs());
 }
@@ -3544,12 +3549,26 @@ const OPT_DEFAULTS = {
   holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
   lockFrames: 30,     // 接地から固定までのフレーム数（60fps基準。従来は500ms=30F）
-  dasFrames: 10,      // 左右を押してから自動連打が始まるまで（10F=約167ms）
-  arrFrames: 2,       // 自動連打の間隔（2F=約33ms）。0Fは一気に端まで
+  dasMs: 167,         // 左右を押してから自動連打が始まるまで（約10F）
+  arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
+  inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
 };
 // [最小, 最大, 刻み]
-const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5],
-                    dasFrames:[0,30,1], arrFrames:[0,10,1] };
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
+// DAS/ARR の上下限（ミリ秒）
+const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
+const FRAME_MS = 1000 / 60;
+function msToF(ms) { return Math.round(ms / FRAME_MS); }
+// 単位に応じて1目盛り動かす。フレーム表示のときはフレーム境界に丸める。
+function stepInput(key, dir) {
+  const [min, max] = INPUT_RANGE[key];
+  let v;
+  if (opts.inputUnit === 'F') v = (msToF(opts[key]) + dir) * FRAME_MS;
+  else                        v = opts[key] + dir;
+  setOption(key, Math.round(Math.min(max, Math.max(min, v))));
+}
+function startInputRepeat(key, dir) { startRepeat(() => stepInput(key, dir)); }
+function toggleInputUnit() { setOption('inputUnit', opts.inputUnit === 'ms' ? 'F' : 'ms'); }
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 // ソフトドロップの間隔(ms)。数字が大きいほど速い
@@ -3570,6 +3589,9 @@ function loadOptions() {
   let raw = null;
   try { raw = localStorage.getItem('tetren_options'); } catch(e) {}
   if (raw) { try { Object.assign(opts, JSON.parse(raw)); } catch(e) {} }
+  // v1.7.0 まではフレームで保存していた。残っていればミリ秒に移す。
+  if (opts.dasFrames !== undefined) { opts.dasMs = Math.round(opts.dasFrames * FRAME_MS); delete opts.dasFrames; }
+  if (opts.arrFrames !== undefined) { opts.arrMs = Math.round(opts.arrFrames * FRAME_MS); delete opts.arrFrames; }
   applyOptions();
 }
 // 画面表示を今の設定値に合わせる
@@ -3586,13 +3608,15 @@ function applyOptions() {
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
   put('optLockFramesVal', opts.lockFrames);
-  put('optDasVal', opts.dasFrames);
-  put('optArrVal', opts.arrFrames);
-  // ミリ秒も併記する。0Fのときは何が起きるかを言葉で出す
-  put('optDasMs', '約' + Math.round(opts.dasFrames * 1000 / 60) + 'ms');
-  put('optArrMs', opts.arrFrames === 0
-        ? '一気に端まで'
-        : '約' + Math.round(opts.arrFrames * 1000 / 60) + 'ms');
+  const inF = opts.inputUnit === 'F';
+  put('optDasVal', inF ? msToF(opts.dasMs) : opts.dasMs);
+  put('optArrVal', inF ? msToF(opts.arrMs) : opts.arrMs);
+  put('optDasUnit', inF ? ' F' : ' ms');
+  put('optArrUnit', inF ? ' F' : ' ms');
+  // もう一方の単位を説明文に併記する。0のときは何が起きるかを言葉で出す
+  put('optDasAlt', inF ? ('約' + opts.dasMs + 'ms') : ('約' + msToF(opts.dasMs) + 'フレーム'));
+  put('optArrAlt', opts.arrMs === 0 ? '一気に端まで'
+        : inF ? ('約' + opts.arrMs + 'ms') : ('約' + msToF(opts.arrMs) + 'フレーム'));
   // 設定を変えたら、押しっぱなしのタイマーを張り直す
   if (heldKey) { const k = heldKey; heldKey = null; startDAS(k); }
   if (cur) draw();
@@ -3602,8 +3626,6 @@ function setOption(key, value) {
   saveOptions();
   applyOptions();
 }
-// ステッパーを長押ししている間、連続で変化させる
-function startOptRepeat(key, dir) { startRepeat(() => stepOption(key, dir)); }
 function stepOption(key, dir) {
   const [min, max, step] = OPT_RANGE[key];
   setOption(key, Math.min(max, Math.max(min, opts[key] + dir * step)));
@@ -3739,7 +3761,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
