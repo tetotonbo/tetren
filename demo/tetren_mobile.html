@@ -216,16 +216,16 @@ input:checked + .tgl::after { transform:translateX(10px); }
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay, #missOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open, #missOverlay.open { display:flex; }
-#dpcPanel, #missPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2, #missPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel h2, #missPanel h2, #aboutPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a !important; background:#132a1d !important; }
 /* 選択画面の複数選択スイッチ */
@@ -239,6 +239,10 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .pick-sw input:checked + .tgl { background:#16a34a; }
 .pick-sw input:checked + .tgl::after { transform:translateX(16px); }
 .pick-note { font-size:10px; color:#9ca3af; margin:8px 0 0; line-height:1.6; text-align:center; }
+#aboutLink { color:#6b7280; text-decoration:underline; font-size:10px; }
+#aboutPanel p { margin:0 0 10px; font-size:11px; color:#d1d5db; line-height:1.9; text-align:left; }
+#aboutPanel h3 { font-size:11px; color:#9ca3af; margin:12px 0 5px; text-align:left; }
+#aboutPanel a { color:#818cf8; }
 #dpcPanel .sub2, #missPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
 .dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
 .dpc-btn {
@@ -473,6 +477,19 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <button class="dpc-close" id="missStartBtn" style="display:none;background:#4f46e5;color:#fff;"
       onclick="startMissMulti()">開始</button>
     <button class="dpc-close" onclick="closeMiss()">キャンセル</button>
+  </div>
+</div>
+
+<!-- このサイトについて（非公式である旨と利用条件） -->
+<div id="aboutOverlay">
+  <div id="aboutPanel">
+    <h2>このサイトについて</h2>
+    <p>テト練は、個人が趣味で作っている<strong>非公式</strong>のテトリス練習ツールです。特定のゲームのメーカーや公式サイトとは関係ありません。</p>
+    <h3>利用について</h3>
+    <p>紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。<br>URLを添えていただけると嬉しいです。</p>
+    <h3>ご要望・不具合の報告</h3>
+    <p>YouTube「<a href="https://www.youtube.com/@Tonbo_tetris" target="_blank" rel="noopener">とんぼ_テトリス初心者講座</a>」のコメントまでお寄せください。</p>
+    <button class="dpc-close" onclick="closeAbout()">閉じる</button>
   </div>
 </div>
 
@@ -1763,11 +1780,19 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.9.1';
+function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
+function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
+const APP_VERSION = '1.10.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
   el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
+  // 利用条件の案内へ。紹介したい人がすぐ確認できるよう、バージョンの隣に置く
+  const a = document.createElement('a');
+  a.href = '#'; a.id = 'aboutLink'; a.textContent = 'このサイトについて';
+  a.addEventListener('click', e => { e.preventDefault(); openAbout(); });
+  el.appendChild(document.createElement('br'));
+  el.appendChild(a);
 })();
 
 // ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====

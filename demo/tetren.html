@@ -280,13 +280,20 @@ body.ppt2-theme #nextCanvas {
 .sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
-/* ===== DPCセット／ミノ欠けダイアログ（同じ見た目を共用） ===== */
-#dpcOverlay, #missOverlay {
+#aboutLink { color:#6b7280; text-decoration:underline; font-size:10px; }
+#aboutLink:hover { color:#9ca3af; }
+#aboutPanel p { margin:0 0 10px; font-size:12px; color:#d1d5db; line-height:1.9; }
+#aboutPanel p:last-of-type { margin-bottom:0; }
+#aboutPanel h3 { font-size:12px; color:#9ca3af; margin:14px 0 6px; }
+#aboutPanel a { color:#818cf8; }
+
+/* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
+#dpcOverlay, #missOverlay, #aboutOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
 }
-#dpcOverlay.open, #missOverlay.open { display:flex; }
-#dpcPanel, #missPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
@@ -854,6 +861,31 @@ input:checked + .tgl::after { transform:translateX(16px); }
   </div>
 </div>
 
+<div id="aboutOverlay">
+  <div id="aboutPanel">
+    <div class="imp-head">
+      <span class="imp-title">このサイトについて</span>
+      <button class="imp-x" title="閉じる" onclick="closeAbout()">×</button>
+    </div>
+    <p>
+      テト練は、個人が趣味で作っている<strong>非公式</strong>のテトリス練習ツールです。
+      特定のゲームのメーカーや公式サイトとは関係ありません。
+    </p>
+    <h3>利用について</h3>
+    <p>
+      紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。<br>
+      URLを添えていただけると嬉しいです。
+    </p>
+    <h3>ご要望・不具合の報告</h3>
+    <p>
+      YouTube「<a href="https://www.youtube.com/@Tonbo_tetris" target="_blank" rel="noopener">とんぼ_テトリス初心者講座</a>」のコメントまでお寄せください。
+    </p>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="closeAbout()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div id="overlay">
   <h1>テト練（β版）</h1>
   <button id="startBtn" style="margin-top:16px;">スタート</button>
@@ -1130,31 +1162,53 @@ function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS.find(x
 const COLOR_TO_TYPE = {};
 for (const sk of SKINS) for (const t in sk.colors) COLOR_TO_TYPE[sk.colors[t]] = t;
 
-// おじゃまブロック用テクスチャ（白地にグリッド継ぎ目のあるぷよテト風）
-const PPT2_GARBAGE_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAIAAAC1nk4lAAACFUlEQVR4nO2a0YqbQBSGz5k5YnIV2F1M9hm6vdr3am/6GL1pX1IMdCFXies4f3EEUTG2hVbnFD9CGGPAf8aff2b08MvHVwB1XQOguGFmay0zC0AiNssyERuzbmZ2rn57++Gcl7p2Wfb8/dvX4/HonGNmig8AIlIUxafPX/I8l3BsTqfT09MjxQ0zi5hGcOgHVVUFoKqqaEc6SZIgsjmUrhMdFCXc02ZIITJzbt1Rx/0ok8n/MXNZlrfbjdZjt9uladpKGnXgrj1ugUXk/fHV5+yx3+8Ph8PyMw4zXy6X37IHAqND7/0qor33fUkjbSrTw5BCpGuNbsHMj4uBzR4rI11rs8e/xZBme6A1SHdiMtUXA8Orh+/2o3akDSnEkF5PI+wU454RCapH2pDiyMPEejqqyEPPHypH2pD2BZP3MCbG9PDNpm/bbq2+nvaAiTI9/GaPGLZbGJohkvTA9rAmMnsgrvRo0D2NG1KIIYVI1wq2GVhni7y/iW57QEPkQfFIG1KI9NoT6bEu6Nmj88Yv3iM6567X6yLyxjjnRO5qmz4BwFpL6yEi1t6t9OlPLoOssNbO9HUBMIyyvv45WVH5+39JD4TX4O0b6Qjxge7ON6KZKUmStrjCjB4xxYH3Pk3TsizbshkJ9W6+KM6gpvzKRFnD5IHy/f1cnJ3zTSnTh5dXEfPw8KipmJCZnKvzPI9ZcUtXtvkTMr87nmwHwfEAAAAASUVORK5CYII=';
-
-const PPT2_BG_SRC = 'data:image/png;base64,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';
-const PPT2_GARBAGE_IMG = new Image();
-PPT2_GARBAGE_IMG.onload = () => { if (cur) draw(); };
-PPT2_GARBAGE_IMG.src = PPT2_GARBAGE_SRC;
-// パターンはcanvasのコンテキストごとに作る必要があるため、board/hold/next それぞれで生成する
+// 盤面の空きマスとおじゃまブロックのタイル。
+// ミノ（PPT2_TONE）と同じく、ゲームの画像は使わずコードで描き起こしている。
+// 元の配色をそのまま再現しているので見た目は変わらず、どの倍率でもくっきり出る。
 // ゴースト用の作業キャンバス（中心を抜いたミノ画像を作ってから盤面へ合成する）
 const ppt2GhostCanvas = document.createElement('canvas');
 const ppt2GhostCtx = ppt2GhostCanvas.getContext('2d');
 
+const PPT2_TILE = 60;   // タイル1枚の基準サイズ(px)
+function makePPT2Tile(draw) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = PPT2_TILE;
+  draw(cv.getContext('2d'), PPT2_TILE);
+  return cv;
+}
+// 空きマス: 暗い紫地に、ひとまわり明るい継ぎ目を回す
+const PPT2_BG_TILE = makePPT2Tile((c, s) => {
+  c.fillStyle = '#322d3d';
+  c.fillRect(0, 0, s, s);
+  c.strokeStyle = '#484152';
+  c.lineWidth = s * 0.05;
+  c.strokeRect(c.lineWidth / 2, c.lineWidth / 2, s - c.lineWidth, s - c.lineWidth);
+});
+// おじゃま: 濃い縁取りの内側を、上がわずかに明るい白で埋める
+const PPT2_GARBAGE_TILE = makePPT2Tile((c, s) => {
+  c.fillStyle = '#2c2d33';
+  c.fillRect(0, 0, s, s);
+  const b = s * 0.035;                       // 縁取りの太さ
+  const g = c.createLinearGradient(0, b, 0, s - b);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(1, '#e4e4e4');
+  c.fillStyle = g;
+  c.fillRect(b, b, s - b * 2, s - b * 2);
+});
+
+// 盤面に敷くパターン。boardCtx はこの時点ではまだ無いので、初回描画時に作る。
 let ppt2BgPatternBoard = null;
-const PPT2_BG_IMG = new Image();
-PPT2_BG_IMG.onload = () => {
-  ppt2BgPatternBoard = boardCtx.createPattern(PPT2_BG_IMG, 'repeat');
-  // 画像は1セル=60pxで用意してあるので、盤面の1セル(BS=30)に合わせて縮める。
-  // 高DPI環境ではキャンバス自体が2倍解像度なので、結果的に画像が等倍で載り輪郭がぼけない。
-  if (ppt2BgPatternBoard.setTransform) {
-    ppt2BgPatternBoard.setTransform(
-      new DOMMatrix().scaleSelf(BS / PPT2_BG_IMG.naturalWidth));
+function ppt2BgPattern() {
+  if (!ppt2BgPatternBoard) {
+    ppt2BgPatternBoard = boardCtx.createPattern(PPT2_BG_TILE, 'repeat');
+    // タイルは1セル=60pxで描いてあるので、盤面の1セル(BS=30)に合わせて縮める。
+    // 高DPI環境ではキャンバス自体が2倍解像度なので、結果的に等倍で載り輪郭がぼけない。
+    if (ppt2BgPatternBoard.setTransform) {
+      ppt2BgPatternBoard.setTransform(new DOMMatrix().scaleSelf(BS / PPT2_TILE));
+    }
   }
-  if (cur) draw();
-};
-PPT2_BG_IMG.src = PPT2_BG_SRC;
+  return ppt2BgPatternBoard;
+}
 
 function pieceColor(type) {
   return currentSkin().colors[type];
@@ -1190,11 +1244,9 @@ const PPT2_TONE = {
 // ぷよテト風の1マスを描く。描けたらtrue（呼び出し側は他スキンの描画にフォールバックする）
 function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
   if (color === GARBAGE_COLOR) {
-    const img = PPT2_GARBAGE_IMG;
-    if (!img.complete || img.naturalWidth === 0) return false;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.drawImage(img, x, y, w, h);
+    ctx.drawImage(PPT2_GARBAGE_TILE, x, y, w, h);
     ctx.restore();
     return true;
   }
@@ -2497,9 +2549,9 @@ function drawBoard() {
   // 21段目（バッファ最下行）を PEEK 分だけ覗かせるため、全体を下にずらして描く
   boardCtx.save();
   boardCtx.translate(0, PEEK);
-  if (ppt2Theme && ppt2BgPatternBoard) {
-    // 実際のぷよテト2フィールド画像をタイル状に敷き詰める（グリッド線も画像に含まれる）
-    boardCtx.fillStyle = ppt2BgPatternBoard;
+  if (ppt2Theme) {
+    // 空きマスのタイルを敷き詰める（継ぎ目もタイルに含まれる）
+    boardCtx.fillStyle = ppt2BgPattern();
     boardCtx.fillRect(0,-PEEK,COLS*BS,ROWS*BS+PEEK);
     // 原作同様、盤面最上部に落ちる影（下に向かってフェードアウト）
     const shade = boardCtx.createLinearGradient(0, -PEEK, 0, BS*1.6);
@@ -2507,17 +2559,6 @@ function drawBoard() {
     shade.addColorStop(1, 'rgba(0,0,10,0)');
     boardCtx.fillStyle = shade;
     boardCtx.fillRect(0,-PEEK,COLS*BS,BS*1.6+PEEK);
-  } else if (ppt2Theme) {
-    // 画像読み込み中の暫定フォールバック
-    const g = boardCtx.createLinearGradient(0, 0, 0, ROWS*BS);
-    g.addColorStop(0, '#241b3d');
-    g.addColorStop(1, '#140f24');
-    boardCtx.fillStyle = g;
-    boardCtx.fillRect(0,-PEEK,COLS*BS,ROWS*BS+PEEK);
-    boardCtx.strokeStyle = 'rgba(255,255,255,0.10)';
-    boardCtx.lineWidth = 0.5;
-    for (let r=-1;r<ROWS;r++) for (let c=0;c<COLS;c++)
-      boardCtx.strokeRect(c*BS, r*BS, BS, BS);
   } else {
     boardCtx.fillStyle = '#0d1117';
     boardCtx.fillRect(0,-PEEK,COLS*BS,ROWS*BS+PEEK);
@@ -3614,6 +3655,9 @@ function applyImport() {
   document.getElementById('missOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'missOverlay') closeMiss();
   });
+  document.getElementById('aboutOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'aboutOverlay') closeAbout();
+  });
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
   });
@@ -3931,13 +3975,21 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.10.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if (!el) return;
   el.textContent = 'v' + APP_VERSION + (isDemoBuild() ? ' demo' : '');
+  // 利用条件の案内へ。紹介したい人がすぐ確認できるよう、バージョンの隣に置く
+  const a = document.createElement('a');
+  a.href = '#'; a.id = 'aboutLink'; a.textContent = 'このサイトについて';
+  a.addEventListener('click', e => { e.preventDefault(); openAbout(); });
+  el.appendChild(document.createElement('br'));
+  el.appendChild(a);
 })();
+function openAbout()  { document.getElementById('aboutOverlay').classList.add('open'); }
+function closeAbout() { document.getElementById('aboutOverlay').classList.remove('open'); }
 
 // ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====
 const SHOT_BAR_H = 28;        // タイトルバーのおおよその高さ
