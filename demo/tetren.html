@@ -280,7 +280,7 @@ body.ppt2-theme #nextCanvas {
 .sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
-#aboutLink { color:#6b7280; text-decoration:underline; font-size:10px; }
+#aboutLink { color:#6b7280; text-decoration:underline; font-size:9px; white-space:nowrap; }
 #aboutLink:hover { color:#9ca3af; }
 #aboutPanel p { margin:0 0 10px; font-size:12px; color:#d1d5db; line-height:1.9; }
 #aboutPanel p:last-of-type { margin-bottom:0; }
@@ -342,6 +342,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
   cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
 }
 .ctrl-toggle:hover { background:#374151; color:#e5e7eb; }
+/* リセット。捨てる・戻すの2つ分の幅で、色だけ少し変えて区別する */
+.ctrl-reset {
+  width:100%; background:#2b2328; color:#b49ba1;
+  border:1px solid #4a3a40; border-radius:8px;
+  padding:8px 0; font-size:13px; font-weight:bold;
+  cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
+}
+.ctrl-reset:hover { background:#3c2d34; color:#e8cdd2; }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
@@ -605,6 +613,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
           ↩<span class="ctrl-lbl">戻す</span>
         </button>
       </div>
+      <!-- リセット。誤爆すると痛いので、主張は控えめにしつつ他のボタンと色を変える -->
+      <button class="ctrl-reset" onclick="resetTerrain()"
+        title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
       <button id="ctrlToggleBtn" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
@@ -743,13 +754,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:40px;line-height:1.35;color:#9ca3af;font-size:10px;"></div>
-    </div>
-
-    <!-- リセット -->
-    <div class="panel" style="min-width:116px;">
-      <button class="garb-btn" style="background:#374151;"
-        onclick="resetTerrain()"
-        title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
     </div>
 
   </div>
@@ -3975,7 +3979,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.10.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
