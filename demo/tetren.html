@@ -2044,6 +2044,8 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 function openMiss() {
+  pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  pick.miss.sel.clear();
   document.getElementById('missOverlay').classList.add('open');
   renderPieceGrid('miss');
 }
@@ -2055,6 +2057,8 @@ function closeMiss() {
 function setPickMulti(kind, on) {
   pick[kind].multi = on;
   pick[kind].sel.clear();
+  // ミノ欠けのスイッチは次に開いたときも同じ状態になるよう覚えておく
+  if (kind === 'miss') { opts.missMulti = on; saveOptions(); }
   renderPieceGrid(kind);
 }
 // 選択できる上限・下限は用途で違う
@@ -3694,6 +3698,7 @@ const KC_ACTIONS = [
   { id:'discard',    label:'ミノを捨てる',   d:[  'KeyA',      null        ] },
   { id:'undo',       label:'1手戻す',        d:[  'KeyU',      null        ] },
   { id:'dpcAgain',   label:'DPCセット再',    d:[  'KeyR',      null        ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:[  'KeyM',      null        ] },
   { id:'restart',    label:'リスタート',     d:[  'KeyN',      null        ] },
 ];
 
@@ -3770,6 +3775,7 @@ const OPT_DEFAULTS = {
   dasMs: 167,         // 左右を押してから自動連打が始まるまで（約10F）
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
+  missMulti: false,   // ミノ欠けの「複数選択」スイッチ
 };
 // [最小, 最大, 刻み]
 const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
@@ -3979,7 +3985,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.10.1';
+const APP_VERSION = '1.11.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4166,6 +4172,8 @@ document.addEventListener('keydown', e=>{
   if (document.getElementById('shotOverlay').classList.contains('open')) return;
   // リスタートはゲームオーバー時も有効
   if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
+  // ミノ欠けはゲームを始め直す操作なので、リスタートと同じくゲームオーバー中も効かせる
+  if (kcMatch('missAgain', e.code)) { e.preventDefault(); if (!e.repeat) repeatMiss(); return; }
   if (gameOver) return;
   // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }

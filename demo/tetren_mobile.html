@@ -1426,6 +1426,8 @@ let lastMiss=null;                              // {multi:false,type} か {multi
 const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
 
 function openMiss(){
+  missPick.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  missPick.sel.clear();
   document.getElementById('missOverlay').classList.add('open');
   drawMissGrid();
 }
@@ -1433,7 +1435,10 @@ function closeMiss(){
   document.getElementById('missOverlay').classList.remove('open');
 }
 function setPickMulti(on){
-  missPick.multi=on; missPick.sel.clear(); drawMissGrid();
+  missPick.multi=on; missPick.sel.clear();
+  // 次に開いたときも同じ状態になるよう覚えておく
+  opts.missMulti=on; saveOptions();
+  drawMissGrid();
 }
 // 7個すべては抜けない（引けるミノが無くなる）
 function missValid(){ const n=missPick.sel.size; return n>=1 && n<=6; }
@@ -1485,7 +1490,8 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
-                       dasMs:167, arrMs:33, inputUnit:'ms' };
+                       dasMs:167, arrMs:33, inputUnit:'ms',
+                       missMulti:false };   // ミノ欠けの「複数選択」スイッチ
 const OPT_RANGE    = { holeKeep:[10,100,10] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
@@ -1670,7 +1676,7 @@ document.addEventListener('keyup',e=>{
 
 // ===== オーバーレイ =====
 function showOverlay(title,btn){
-  document.querySelector('#overlay h1').innerHTML=title+'<br><span style="font-size:13px;color:#6b7280;">スマホ版 (β)</span>';
+  document.querySelector('#overlay h1').textContent=title;
   document.getElementById('startBtn').textContent=btn;
   document.getElementById('overlay').style.display='flex';
 }
@@ -1782,7 +1788,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.11.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
