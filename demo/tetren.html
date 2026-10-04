@@ -280,7 +280,7 @@ body.ppt2-theme #nextCanvas {
 .sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
-/* ===== DPCセット／1欠けダイアログ（同じ見た目を共用） ===== */
+/* ===== DPCセット／ミノ欠けダイアログ（同じ見た目を共用） ===== */
 #dpcOverlay, #missOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
@@ -686,10 +686,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <div class="btn-group">
           <button class="garb-btn" style="flex:1;background:#374151;"
             onclick="openMiss()"
-            title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">1欠け</button>
+            title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">ミノ欠け</button>
           <button id="missAgainBtn" class="garb-btn" style="flex:0 0 32px;background:#374151;"
             onclick="repeatMiss()"
-            title="前回選んだミノで、もう一度1欠けで始めます">↻</button>
+            title="前回選んだミノで、もう一度ミノ欠けで始めます">↻</button>
         </div>
         <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
@@ -832,7 +832,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <div id="missOverlay">
   <div id="missPanel">
     <div class="imp-head">
-      <span class="imp-title">1欠け</span>
+      <span class="imp-title">ミノ欠け</span>
       <button class="imp-x" title="閉じる" onclick="closeMiss()">×</button>
     </div>
     <div class="imp-hint" style="margin:0 0 12px;">
@@ -1419,7 +1419,7 @@ let lastKickIndex = 0;       // 最後に使ったSRSキックのインデック
 let clearMsgTimer = null;    // メッセージ消去タイマー
 
 // ===== 7種1巡バッグ =====
-// DPCセット・1欠け用。次に引く1巡だけ、このミノ構成に差し替える。
+// DPCセット・ミノ欠け用。次に引く1巡だけ、このミノ構成に差し替える。
 // 使い切ったら null に戻るので、2巡目からは通常の7ミノに戻る。
 let firstBagTypes = null;
 function newBag() {
@@ -1965,7 +1965,7 @@ function discardPiece() {
   draw();
 }
 
-// ===== DPCセット／1欠け（ミノを選んで練習を始める） =====
+// ===== DPCセット／ミノ欠け（ミノを選んで練習を始める） =====
 // この2つは「選択画面を出して、選んだミノで1巡目を組み直す」という同じ骨格なので、
 // 選択画面の描画と複数選択の状態管理を共用する。違うのは選んだあとの適用だけ。
 const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];   // 選択画面の並び
@@ -2003,7 +2003,7 @@ function setPickMulti(kind, on) {
 }
 // 選択できる上限・下限は用途で違う
 //   DPCセット … 選んだミノ「だけ」で1巡目を組むので、1個以上あればよい
-//   1欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
+//   ミノ欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
 function pickValid(kind) {
   const n = pick[kind].sel.size;
   return kind === 'dpc' ? n >= 1 : (n >= 1 && n <= 6);
@@ -2121,11 +2121,11 @@ function updateDpcAgainBtn() {
 }
 updateDpcAgainBtn();
 
-// --- 1欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
+// --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
 function setMissingPiece(type) {
   applyMissTypes([type], { multi:false, type });
 }
-// --- 1欠け（複数選択）: 選んだミノをまとめて1巡目から抜く ---
+// --- ミノ欠け（複数選択）: 選んだミノをまとめて1巡目から抜く ---
 function applyMissMulti(types) {
   if (!types.length || types.length >= 7) return;
   applyMissTypes(types, { multi:true, types: types.slice() });
@@ -2153,7 +2153,7 @@ function updateMissAgainBtn() {
   btn.title = !lastMiss ? 'まだミノを選んでいません（押すと選択画面が開きます）'
     : lastMiss.multi
       ? `前回選んだ ${lastMiss.types.join('・')} を抜いて、もう一度始めます`
-      : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度1欠けで始めます`;
+      : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度ミノ欠けで始めます`;
 }
 updateMissAgainBtn();
 
@@ -3931,7 +3931,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

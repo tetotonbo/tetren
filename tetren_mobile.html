@@ -226,6 +226,19 @@ input:checked + .tgl::after { transform:translateX(10px); }
   padding:12px; width:100%; max-width:340px;
 }
 #dpcPanel h2, #missPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+/* 複数選択で選ばれているミノ */
+.dpc-btn.sel { border-color:#16a34a !important; background:#132a1d !important; }
+/* 選択画面の複数選択スイッチ */
+.pick-sw { display:flex; align-items:center; justify-content:space-between; gap:8px;
+  cursor:pointer; font-size:12px; color:#d1d5db; user-select:none; margin:0 0 10px; }
+.pick-sw input { display:none; }
+.pick-sw .tgl { flex:0 0 auto; width:34px; height:18px; border-radius:9px;
+  background:#4b5563; position:relative; transition:background .15s; }
+.pick-sw .tgl::after { content:''; position:absolute; top:2px; left:2px;
+  width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .15s; }
+.pick-sw input:checked + .tgl { background:#16a34a; }
+.pick-sw input:checked + .tgl::after { transform:translateX(16px); }
+.pick-note { font-size:10px; color:#9ca3af; margin:8px 0 0; line-height:1.6; text-align:center; }
 #dpcPanel .sub2, #missPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
 .dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
 .dpc-btn {
@@ -307,7 +320,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
     </div>
     <div class="dpc-side-row">
-      <button class="side-btn" style="flex:1;" onclick="openMiss()">1欠け</button>
+      <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
     <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
@@ -445,12 +458,20 @@ input:checked + .tgl::after { transform:translateX(10px); }
   </div>
 </div>
 
-<!-- 1欠け: 最初の1巡から抜くミノを選ぶ -->
+<!-- ミノ欠け: 最初の1巡から抜くミノを選ぶ -->
 <div id="missOverlay">
   <div id="missPanel">
-    <h2>1欠け</h2>
+    <h2>ミノ欠け</h2>
     <div class="sub2">選んだミノを抜いた残り6ミノで1巡目を回し、<br>ゲームを最初から始めます（2巡目からは7ミノ）</div>
+    <label class="pick-sw">
+      <span>複数選択</span>
+      <input type="checkbox" id="missMultiSw" onchange="setPickMulti(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
+    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
+    <button class="dpc-close" id="missStartBtn" style="display:none;background:#4f46e5;color:#fff;"
+      onclick="startMissMulti()">開始</button>
     <button class="dpc-close" onclick="closeMiss()">キャンセル</button>
   </div>
 </div>
@@ -532,12 +553,12 @@ let terrainPaintMode = 'set';
 let terrainColor = GARBAGE_COLOR;
 
 // ===== バッグ =====
-// 1欠け：最初の1巡だけ、選んだミノを抜いた6ミノで回す
-let missingType=null;
-let missFirstBagDone=true;
+// ミノ欠け用。次に引く1巡だけ、このミノ構成に差し替える。
+// 使い切ったら null に戻るので、2巡目からは通常の7ミノに戻る。
+let firstBagTypes=null;
 function newBag() {
   let a=['I','O','T','S','Z','J','L'];
-  if(missingType && !missFirstBagDone){ a=a.filter(t=>t!==missingType); missFirstBagDone=true; }
+  if(firstBagTypes && firstBagTypes.length){ a=firstBagTypes.slice(); firstBagTypes=null; }
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
@@ -1329,7 +1350,7 @@ function openDpc(){
 function closeDpc(){
   document.getElementById('dpcOverlay').classList.remove('open');
 }
-// DPCセットと1欠けで共用する。選んだときの動作だけが違う。
+// DPCセットとミノ欠けで共用する。選んだときの動作だけが違う。
 function renderPieceGrid(gridId, onPick){
   const grid=document.getElementById(gridId);
   grid.innerHTML='';
@@ -1349,6 +1370,8 @@ function renderPieceGrid(gridId, onPick){
       const name=document.createElement('span');
       name.className='dpc-name'; name.textContent=type;
       btn.appendChild(cv); btn.appendChild(name);
+      // ミノ欠けの複数選択中は、選ばれているミノに印をつける
+      if (gridId === 'missGrid' && missPick.multi && missPick.sel.has(type)) btn.classList.add('sel');
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
@@ -1380,30 +1403,66 @@ function updateDpcAgainBtn(){
 }
 updateDpcAgainBtn();
 
-// ===== 1欠け（選んだミノを最初の1巡から抜いて最初から始める）=====
-let lastMissType=null;
+// ===== ミノ欠け（選んだミノを最初の1巡から抜いて最初から始める）=====
+const ALL_TYPES=['I','O','T','S','Z','J','L'];
+let lastMiss=null;                              // {multi:false,type} か {multi:true,types:[...]}
+const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
+
 function openMiss(){
   document.getElementById('missOverlay').classList.add('open');
-  renderPieceGrid('missGrid', setMissingPiece);
+  drawMissGrid();
 }
 function closeMiss(){
   document.getElementById('missOverlay').classList.remove('open');
 }
-function setMissingPiece(type){
-  lastMissType=type; updateMissAgainBtn();
-  missingType=type;
-  missFirstBagDone=false;   // 次に引くバッグだけ6ミノにする
+function setPickMulti(on){
+  missPick.multi=on; missPick.sel.clear(); drawMissGrid();
+}
+// 7個すべては抜けない（引けるミノが無くなる）
+function missValid(){ const n=missPick.sel.size; return n>=1 && n<=6; }
+function drawMissGrid(){
+  renderPieceGrid('missGrid', type=>{
+    if(missPick.multi){
+      if(missPick.sel.has(type)) missPick.sel.delete(type); else missPick.sel.add(type);
+      drawMissGrid();
+    } else {
+      setMissingPiece(type);
+    }
+  });
+  const sw=document.getElementById('missMultiSw'); if(sw) sw.checked=missPick.multi;
+  const start=document.getElementById('missStartBtn');
+  if(start){
+    start.style.display = missPick.multi ? '' : 'none';
+    start.disabled = !missValid();
+    start.style.opacity = missValid() ? '1' : '0.45';
+  }
+  const note=document.getElementById('missMultiNote');
+  if(note){
+    note.style.display = missPick.multi ? '' : 'none';
+    note.textContent = missPick.sel.size>=7 ? '全部は抜けません。6個までにしてください。'
+                                            : '選んだミノを1巡目から抜きます。';
+  }
+}
+function setMissingPiece(type){ applyMissTypes([type], {multi:false, type}); }
+function applyMissMulti(types){
+  if(!types.length || types.length>=7) return;
+  applyMissTypes(types, {multi:true, types:types.slice()});
+}
+function applyMissTypes(types, last){
+  lastMiss=last; updateMissAgainBtn();
+  firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
   closeMiss();
   startGame();              // 盤面もツモも最初から
 }
+function startMissMulti(){ if(missValid()) applyMissMulti([...missPick.sel]); }
 function repeatMiss(){
-  if(!lastMissType){ openMiss(); return; }
-  setMissingPiece(lastMissType);
+  if(!lastMiss){ openMiss(); return; }
+  if(lastMiss.multi) applyMissMulti(lastMiss.types); else setMissingPiece(lastMiss.type);
 }
 function updateMissAgainBtn(){
   const btn=document.getElementById('missAgainBtn');
   if(!btn) return;
-  btn.style.opacity = lastMissType ? '1' : '0.45';
+  btn.style.opacity = lastMiss ? '1' : '0.45';
 }
 updateMissAgainBtn();
 
@@ -1704,7 +1763,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

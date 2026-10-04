@@ -280,7 +280,7 @@ body.ppt2-theme #nextCanvas {
 .sw-rs-br { right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
-/* ===== DPCセット／1欠けダイアログ（同じ見た目を共用） ===== */
+/* ===== DPCセット／ミノ欠けダイアログ（同じ見た目を共用） ===== */
 #dpcOverlay, #missOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
@@ -300,6 +300,11 @@ body.ppt2-theme #nextCanvas {
   transition:border-color .12s, background .12s;
 }
 .dpc-btn:hover { border-color:#9ca3af; background:#1b2230; }
+/* 複数選択で選ばれているミノ */
+.dpc-btn.sel { border-color:#16a34a; background:#132a1d; }
+/* 選択画面の複数選択スイッチ */
+.pick-sw { margin:0 0 10px; }
+.pick-note { font-size:11px; color:#9ca3af; margin:8px 0 0; line-height:1.6; }
 .dpc-name {
   display:block; line-height:1; margin-top:6px;
   font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
@@ -681,10 +686,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <div class="btn-group">
           <button class="garb-btn" style="flex:1;background:#374151;"
             onclick="openMiss()"
-            title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">1欠け</button>
+            title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">ミノ欠け</button>
           <button id="missAgainBtn" class="garb-btn" style="flex:0 0 32px;background:#374151;"
             onclick="repeatMiss()"
-            title="前回選んだミノで、もう一度1欠けで始めます">↻</button>
+            title="前回選んだミノで、もう一度ミノ欠けで始めます">↻</button>
         </div>
         <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
@@ -827,16 +832,24 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <div id="missOverlay">
   <div id="missPanel">
     <div class="imp-head">
-      <span class="imp-title">1欠け</span>
+      <span class="imp-title">ミノ欠け</span>
       <button class="imp-x" title="閉じる" onclick="closeMiss()">×</button>
     </div>
     <div class="imp-hint" style="margin:0 0 12px;">
-      選んだミノを抜いた残り6ミノで1巡目を回し、ゲームを最初から始めます。<br>
+      選んだミノを抜いた残りで1巡目を回し、ゲームを最初から始めます。<br>
       2巡目からは7ミノすべて出ます。
     </div>
+    <label class="tgl-row pick-sw" title="ONにすると複数のミノを選べます。選んだミノをまとめて1巡目から抜きます">
+      <span>複数選択</span>
+      <input type="checkbox" id="missMultiSw" onchange="setPickMulti('miss', this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
+    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
+      <button class="imp-btn imp-primary" id="missStartBtn" style="display:none;"
+        onclick="startMissMulti()">開始</button>
     </div>
   </div>
 </div>
@@ -1406,14 +1419,14 @@ let lastKickIndex = 0;       // 最後に使ったSRSキックのインデック
 let clearMsgTimer = null;    // メッセージ消去タイマー
 
 // ===== 7種1巡バッグ =====
-// 1欠け：最初の1巡だけ、選んだミノを抜いた6ミノで回す
-let missingType = null;
-let missFirstBagDone = true;   // まだ1欠けを使っていない状態
+// DPCセット・ミノ欠け用。次に引く1巡だけ、このミノ構成に差し替える。
+// 使い切ったら null に戻るので、2巡目からは通常の7ミノに戻る。
+let firstBagTypes = null;
 function newBag() {
   let a = ['I','O','T','S','Z','J','L'];
-  if (missingType && !missFirstBagDone) {
-    a = a.filter(t => t !== missingType);
-    missFirstBagDone = true;    // 2巡目からは通常どおり7ミノ
+  if (firstBagTypes && firstBagTypes.length) {
+    a = firstBagTypes.slice();
+    firstBagTypes = null;
   }
   for (let i=a.length-1; i>0; i--) {
     const j = Math.floor(Math.random()*(i+1));
@@ -1952,29 +1965,64 @@ function discardPiece() {
   draw();
 }
 
-// ===== DPCセット（選んだミノをHOLDした状態にしてミノ順をリセット） =====
+// ===== DPCセット／ミノ欠け（ミノを選んで練習を始める） =====
+// この2つは「選択画面を出して、選んだミノで1巡目を組み直す」という同じ骨格なので、
+// 選択画面の描画と複数選択の状態管理を共用する。違うのは選んだあとの適用だけ。
 const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];   // 選択画面の並び
-let lastDpcType = null;   // 「再」ボタン用：直前にDPCセットで選んだミノ
+const ALL_TYPES = ['I','O','T','S','Z','J','L'];
+
+// 直前の操作。{multi:false, type:'I'} または {multi:true, types:['I','O']}
+let lastDpc = null;
+let lastMiss = null;
+// 選択画面の状態（複数選択のON/OFFと、選ばれているミノ）
+const pick = {
+  dpc:  { multi:false, sel:new Set() },
+  miss: { multi:false, sel:new Set() },
+};
 
 function openDpc() {
   document.getElementById('dpcOverlay').classList.add('open');
-  renderDpcGrid();
+  renderPieceGrid('dpc');
 }
 function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
+function openMiss() {
+  document.getElementById('missOverlay').classList.add('open');
+  renderPieceGrid('miss');
+}
+function closeMiss() {
+  document.getElementById('missOverlay').classList.remove('open');
+}
+
+// 複数選択スイッチの切り替え
+function setPickMulti(kind, on) {
+  pick[kind].multi = on;
+  pick[kind].sel.clear();
+  renderPieceGrid(kind);
+}
+// 選択できる上限・下限は用途で違う
+//   DPCセット … 選んだミノ「だけ」で1巡目を組むので、1個以上あればよい
+//   ミノ欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
+function pickValid(kind) {
+  const n = pick[kind].sel.size;
+  return kind === 'dpc' ? n >= 1 : (n >= 1 && n <= 6);
+}
+
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
-// DPCセットと1欠けで共用する。titleFn / onPick だけが違う。
-function renderPieceGrid(gridId, titleFn, onPick) {
-  const grid = document.getElementById(gridId);
+function renderPieceGrid(kind) {
+  const st = pick[kind];
+  const grid = document.getElementById(kind === 'dpc' ? 'dpcGrid' : 'missGrid');
   grid.innerHTML = '';
   DPC_ROWS.forEach(types => {
    const row = document.createElement('div');
    row.className = 'dpc-row';
    types.forEach(type => {
     const btn = document.createElement('button');
-    btn.className = 'dpc-btn';
-    btn.title = titleFn(type);
+    btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '');
+    btn.title = st.multi
+      ? (kind === 'dpc' ? type + 'ミノを1巡目に残す' : type + 'ミノを1巡目から抜く')
+      : (kind === 'dpc' ? type + 'ミノをHOLDにセットする' : type + 'ミノを抜いた6ミノで1巡目を回す');
     const cv = document.createElement('canvas');
     cv.width = 84; cv.height = 56;
     const cx = cv.getContext('2d');
@@ -1985,23 +2033,50 @@ function renderPieceGrid(gridId, titleFn, onPick) {
     name.textContent = type;
     btn.appendChild(cv);
     btn.appendChild(name);
-    btn.addEventListener('click', () => onPick(type));
+    btn.addEventListener('click', () => {
+      if (st.multi) {
+        if (st.sel.has(type)) st.sel.delete(type); else st.sel.add(type);
+        renderPieceGrid(kind);
+      } else {
+        if (kind === 'dpc') setDpcHold(type); else setMissingPiece(type);
+      }
+    });
     row.appendChild(btn);
    });
    grid.appendChild(row);
   });
+  // 複数選択のときだけ「開始」を出す
+  const sw = document.getElementById(kind === 'dpc' ? 'dpcMultiSw' : 'missMultiSw');
+  if (sw) sw.checked = st.multi;
+  const start = document.getElementById(kind === 'dpc' ? 'dpcStartBtn' : 'missStartBtn');
+  if (start) {
+    start.style.display = st.multi ? '' : 'none';
+    start.disabled = !pickValid(kind);
+    start.style.opacity = pickValid(kind) ? '1' : '0.45';
+  }
+  const note = document.getElementById(kind === 'dpc' ? 'dpcMultiNote' : 'missMultiNote');
+  if (note) {
+    note.style.display = st.multi ? '' : 'none';
+    note.textContent = kind === 'dpc'
+      ? '選んだミノだけで1巡目を組みます（HOLDには何も入れません）。'
+      : (pick.miss.sel.size >= 7
+          ? '全部は抜けません。6個までにしてください。'
+          : '選んだミノを1巡目から抜きます。');
+  }
 }
-function renderDpcGrid() {
-  renderPieceGrid('dpcGrid', t => t + 'ミノをHOLDにセットする', setDpcHold);
-}
-// 選んだミノをHOLDに入れ、地形を消してバッグを組み直し、現在のミノも出し直す
-function setDpcHold(type) {
-  lastDpcType = type;
-  updateDpcAgainBtn();
-  // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
+
+// 盤面と履歴を初期化する（DPCセットの共通部分）
+function resetBoardForPick() {
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   undoStack = []; lastGarbageCol = null; ren = 0;
   if (renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
+}
+
+// --- DPCセット（単体）: 選んだミノをHOLDに入れ、地形を消してバッグを組み直す ---
+function setDpcHold(type) {
+  lastDpc = { multi:false, type };
+  updateDpcAgainBtn();
+  resetBoardForPick();
   holdType = type;
   bag = []; nextQ = [];
   spawn();          // fillQ() で新しいバッグを引き直し、現在のミノを出し直す
@@ -2010,53 +2085,75 @@ function setDpcHold(type) {
   closeDpc();
   updUI(); draw();
 }
-// 直前に選んだミノで、もう一度同じセットをやり直す
-function repeatDpc() {
-  if (!lastDpcType) { openDpc(); return; }   // まだ一度も選んでいなければ選択画面を出す
-  setDpcHold(lastDpcType);
+// --- DPCセット（複数選択）: 選んだミノ「だけ」で1巡目を組む。HOLDは空のまま ---
+function applyDpcMulti(types) {
+  if (!types.length) return;
+  lastDpc = { multi:true, types: types.slice() };
+  updateDpcAgainBtn();
+  resetBoardForPick();
+  holdType = null;             // 複数選択のときはHOLDに入れない
+  bag = []; nextQ = [];
+  firstBagTypes = types.slice();
+  spawn();
+  canHold = true;
+  resetLock();
+  closeDpc();
+  updUI(); draw();
 }
-// 「再」ボタンの見た目（未選択のうちは押せなさそうに薄く出す）
+function startDpcMulti() {
+  if (!pickValid('dpc')) return;
+  applyDpcMulti([...pick.dpc.sel]);
+}
+// 直前の操作で、もう一度同じセットをやり直す
+function repeatDpc() {
+  if (!lastDpc) { openDpc(); return; }   // まだ一度も選んでいなければ選択画面を出す
+  if (lastDpc.multi) applyDpcMulti(lastDpc.types);
+  else setDpcHold(lastDpc.type);
+}
 function updateDpcAgainBtn() {
   const btn = document.getElementById('dpcAgainBtn');
   if (!btn) return;
-  btn.style.opacity = lastDpcType ? '1' : '0.45';
-  btn.title = lastDpcType
-    ? `前回選んだ ${lastDpcType} ミノで、もう一度DPCセットします`
-    : 'まだミノを選んでいません（押すと選択画面が開きます）';
+  btn.style.opacity = lastDpc ? '1' : '0.45';
+  btn.title = !lastDpc ? 'まだミノを選んでいません（押すと選択画面が開きます）'
+    : lastDpc.multi
+      ? `前回選んだ ${lastDpc.types.join('・')} だけで、もう一度始めます`
+      : `前回選んだ ${lastDpc.type} ミノで、もう一度DPCセットします`;
 }
 updateDpcAgainBtn();
 
-// ===== 1欠け（選んだミノを最初の1巡から抜いて最初から始める） =====
-let lastMissType = null;   // 「再」ボタン用：直前に1欠けで選んだミノ
-
-function openMiss() {
-  document.getElementById('missOverlay').classList.add('open');
-  renderPieceGrid('missGrid', t => t + 'ミノを抜いた6ミノで1巡目を回す', setMissingPiece);
-}
-function closeMiss() {
-  document.getElementById('missOverlay').classList.remove('open');
-}
-// 選んだミノを1巡目から抜いて、ゲームを最初から始める
+// --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
 function setMissingPiece(type) {
-  lastMissType = type;
+  applyMissTypes([type], { multi:false, type });
+}
+// --- ミノ欠け（複数選択）: 選んだミノをまとめて1巡目から抜く ---
+function applyMissMulti(types) {
+  if (!types.length || types.length >= 7) return;
+  applyMissTypes(types, { multi:true, types: types.slice() });
+}
+function applyMissTypes(types, last) {
+  lastMiss = last;
   updateMissAgainBtn();
-  missingType = type;
-  missFirstBagDone = false;   // 次に引くバッグだけ6ミノにする
+  firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
   closeMiss();
   startGame();               // 盤面もツモも最初から
 }
-// 直前に選んだミノで、もう一度1欠けで始める
+function startMissMulti() {
+  if (!pickValid('miss')) return;
+  applyMissMulti([...pick.miss.sel]);
+}
 function repeatMiss() {
-  if (!lastMissType) { openMiss(); return; }
-  setMissingPiece(lastMissType);
+  if (!lastMiss) { openMiss(); return; }
+  if (lastMiss.multi) applyMissMulti(lastMiss.types);
+  else setMissingPiece(lastMiss.type);
 }
 function updateMissAgainBtn() {
   const btn = document.getElementById('missAgainBtn');
   if (!btn) return;
-  btn.style.opacity = lastMissType ? '1' : '0.45';
-  btn.title = lastMissType
-    ? `前回選んだ ${lastMissType} ミノを抜いて、もう一度1欠けで始めます`
-    : 'まだミノを選んでいません（押すと選択画面が開きます）';
+  btn.style.opacity = lastMiss ? '1' : '0.45';
+  btn.title = !lastMiss ? 'まだミノを選んでいません（押すと選択画面が開きます）'
+    : lastMiss.multi
+      ? `前回選んだ ${lastMiss.types.join('・')} を抜いて、もう一度始めます`
+      : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度ミノ欠けで始めます`;
 }
 updateMissAgainBtn();
 
@@ -3834,7 +3931,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

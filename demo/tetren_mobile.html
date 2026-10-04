@@ -320,7 +320,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
     </div>
     <div class="dpc-side-row">
-      <button class="side-btn" style="flex:1;" onclick="openMiss()">1欠け</button>
+      <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
     <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
@@ -458,10 +458,10 @@ input:checked + .tgl::after { transform:translateX(10px); }
   </div>
 </div>
 
-<!-- 1欠け: 最初の1巡から抜くミノを選ぶ -->
+<!-- ミノ欠け: 最初の1巡から抜くミノを選ぶ -->
 <div id="missOverlay">
   <div id="missPanel">
-    <h2>1欠け</h2>
+    <h2>ミノ欠け</h2>
     <div class="sub2">選んだミノを抜いた残り6ミノで1巡目を回し、<br>ゲームを最初から始めます（2巡目からは7ミノ）</div>
     <label class="pick-sw">
       <span>複数選択</span>
@@ -553,7 +553,7 @@ let terrainPaintMode = 'set';
 let terrainColor = GARBAGE_COLOR;
 
 // ===== バッグ =====
-// 1欠け用。次に引く1巡だけ、このミノ構成に差し替える。
+// ミノ欠け用。次に引く1巡だけ、このミノ構成に差し替える。
 // 使い切ったら null に戻るので、2巡目からは通常の7ミノに戻る。
 let firstBagTypes=null;
 function newBag() {
@@ -1350,7 +1350,7 @@ function openDpc(){
 function closeDpc(){
   document.getElementById('dpcOverlay').classList.remove('open');
 }
-// DPCセットと1欠けで共用する。選んだときの動作だけが違う。
+// DPCセットとミノ欠けで共用する。選んだときの動作だけが違う。
 function renderPieceGrid(gridId, onPick){
   const grid=document.getElementById(gridId);
   grid.innerHTML='';
@@ -1370,7 +1370,7 @@ function renderPieceGrid(gridId, onPick){
       const name=document.createElement('span');
       name.className='dpc-name'; name.textContent=type;
       btn.appendChild(cv); btn.appendChild(name);
-      // 1欠けの複数選択中は、選ばれているミノに印をつける
+      // ミノ欠けの複数選択中は、選ばれているミノに印をつける
       if (gridId === 'missGrid' && missPick.multi && missPick.sel.has(type)) btn.classList.add('sel');
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
@@ -1403,7 +1403,7 @@ function updateDpcAgainBtn(){
 }
 updateDpcAgainBtn();
 
-// ===== 1欠け（選んだミノを最初の1巡から抜いて最初から始める）=====
+// ===== ミノ欠け（選んだミノを最初の1巡から抜いて最初から始める）=====
 const ALL_TYPES=['I','O','T','S','Z','J','L'];
 let lastMiss=null;                              // {multi:false,type} か {multi:true,types:[...]}
 const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
@@ -1763,7 +1763,7 @@ addTouchBtn('btnSoft',
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
