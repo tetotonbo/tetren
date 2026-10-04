@@ -2665,6 +2665,9 @@ const IMP_REF = {
   Z: [252, 34, 11], J: [  1, 95,235], L: [253,129,  0],
 };
 const IMP_GARBAGE = [244,244,244];   // おじゃま（白）
+// 盤面の空きマスの色。取り込むたびに画像から測り直す。
+// ゴーストは暗くて背景と混ざるため、種類を当てるときにこれを差し引く。
+let impBgColor = [0, 0, 0];
 let impImg = null;                   // 読み込んだ画像
 let impRect = null;                  // 盤面として読む範囲 {x,y,w,h}（画像座標）
 let impCells = null;                 // 読み取り結果 [row][col] = 'I'|..|'G'|null（ゴースト・操作中ミノは除く）
@@ -2872,6 +2875,11 @@ function classifyImportColor(r, g, b) {
   // 色みが無く明るい = おじゃま。ぷよテトは白、他のゲームはグレーのことが多い。
   // 影の帯で暗くなっても拾えるよう、明るさの下限は少し緩めにしてある。
   if (sat < 40 && mx > 105) return 'G';
+  return matchImportHue(r, g, b);
+}
+
+// 色の比率だけでミノ種別を当てる。明るさの判定は呼び出し側で行う。
+function matchImportHue(r, g, b) {
   const norm = (a,b2,c) => { const t = a+b2+c || 1; return [a/t, b2/t, c/t]; };
   const [nr,ng,nb] = norm(r, g, b);
   let best = null, bestD = Infinity;
@@ -2900,29 +2908,32 @@ function readImportCellInfo(ctx, x, y, w, h) {
   const [mr, mg, mb] = readImportCellMedian(ctx, x, y, w, h);
   const type = classifyImportColor(mr, mg, mb);
 
-  // 明るい方の画素の平均色も取る。
-  // ぷよテトのゴーストは「暗い半透明＋ドット模様」で描かれるため中央値は暗くなるが、
-  // 明るい画素には本来の色が残っている。ここでだけ色が出るマスがゴーストの候補。
-  const wx = Math.round(x + w*0.12), wy = Math.round(y + h*0.12);
-  const ww = Math.max(1, Math.round(w*0.76)), wh = Math.max(1, Math.round(h*0.76));
-  const wp = ctx.getImageData(wx, wy, ww, wh).data;
-  const lums = [];
-  for (let i = 0; i < wp.length; i += 4) lums.push(wp[i] + wp[i+1] + wp[i+2]);
-  lums.sort((p, q) => p - q);
-  const bright = lums[Math.min(lums.length - 1, Math.floor(lums.length * 0.8))];
-  let sr = 0, sg = 0, sb = 0, n = 0;
-  for (let i = 0; i < wp.length; i += 4) {
-    if (wp[i] + wp[i+1] + wp[i+2] >= bright) { sr += wp[i]; sg += wp[i+1]; sb += wp[i+2]; n++; }
+  // ゴーストは暗い半透明＋ドット模様で描かれるので、中央値では種類を当てられない。
+  // セル内で「最も色みの強い画素」を代表色にする。明るい画素を使うと、ツヤの白っぽい
+  // ハイライトを拾ってしまい、色の比率が灰色寄りに崩れて別のミノと判定されてしまう。
+  let ghostType = null;
+  if (!type) {
+    const wx = Math.round(x + w*0.12), wy = Math.round(y + h*0.12);
+    const ww = Math.max(1, Math.round(w*0.76)), wh = Math.max(1, Math.round(h*0.76));
+    const wp = ctx.getImageData(wx, wy, ww, wh).data;
+    const px = [];
+    for (let i = 0; i < wp.length; i += 4) {
+      const R = wp[i], G = wp[i+1], B = wp[i+2];
+      px.push([R, G, B, Math.max(R,G,B) - Math.min(R,G,B)]);
+    }
+    px.sort((a, b) => b[3] - a[3]);
+    const n = Math.max(1, Math.round(px.length * 0.2));
+    let sr = 0, sg = 0, sb = 0;
+    for (let i = 0; i < n; i++) { sr += px[i][0]; sg += px[i][1]; sb += px[i][2]; }
+    // 背景に溶けたぶんを差し引いてから比率を見る
+    const dr = Math.max(0, sr/n - impBgColor[0]);
+    const dg = Math.max(0, sg/n - impBgColor[1]);
+    const db = Math.max(0, sb/n - impBgColor[2]);
+    if (Math.max(dr, dg, db) >= 40) ghostType = matchImportHue(dr, dg, db);
   }
-  const ghostType = type ? null
-    : (n ? classifyImportColor(sr/n, sg/n, sb/n) : null);
 
-  const key = type || ghostType;
-  if (!key) return { type: null, ghostType: null, faint: false, level: 0 };
-  const ref = (key === 'G') ? IMP_GARBAGE : IMP_REF[key];
-  const refLum = (ref[0] + ref[1] + ref[2]) || 1;
-  // faint = 中央は暗いのに明るい画素には色がある＝ゴーストらしいマス
-  return { type, ghostType, faint: !type && !!ghostType, level: bright / refLum };
+  // faint = 中央は暗いのに、色みの強い画素には本来の色が残っているマス＝ゴーストらしい
+  return { type, ghostType, faint: !type && !!ghostType };
 }
 
 // 盤面から「あるミノの形にちょうど一致する4マス」をすべて探す。
@@ -3165,7 +3176,22 @@ function readImportCells() {
   const ctx = cv.getContext('2d');
   const cw = impRect.w / COLS, ch = impRect.h / ROWS;
 
-  // まず全マスを読む（種類＋本来の明るさに対する比率）
+  // 先に空きマス（暗いマス）の色を集めて、盤面の背景色を見積もる。
+  // ゴーストの種類を当てるときに、この色を差し引いて使う。
+  const bg = [];
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const x = impRect.x + cw*col, y = impRect.y + ch*row;
+      if (x < 0 || y < 0 || x+cw > cv.width || y+ch > cv.height) continue;
+      const m = readImportCellMedian(ctx, x, y, cw, ch);
+      if (Math.max(m[0], m[1], m[2]) < 105) bg.push(m);   // 空きマスとみなす明るさ
+    }
+  }
+  impBgColor = bg.length
+    ? [0,1,2].map(i => { const v = bg.map(m => m[i]).sort((a,b) => a-b); return v[v.length >> 1]; })
+    : [0, 0, 0];
+
+  // 全マスを読む
   const info = [];
   for (let row = 0; row < ROWS; row++) {
     const line = [];
@@ -3634,7 +3660,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.6.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
