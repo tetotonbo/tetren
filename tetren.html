@@ -74,6 +74,13 @@ body {
 .btn-group .garb-btn { border-radius:0; }
 .btn-group .garb-btn + .garb-btn { border-left:1px solid #4b5563; }
 .garb-btn:hover { background:#6d28d9; }
+/* 配置編集。枠をドラッグで好きな位置へ動かせるようにする */
+.layout-edit [data-pos] {
+  outline:2px dashed #818cf8; outline-offset:2px; border-radius:8px;
+  cursor:move; user-select:none;
+}
+.layout-edit [data-pos] * { pointer-events:none; }
+[data-pos].moved { position:fixed; z-index:6; }
 /* 右の枠はボタンが増えてきたので、高さを詰めて縦に収まるようにする。
    押しやすさは保ちたいので、文字は小さくせず余白だけを削る。 */
 #rightSide .mode-buttons > * + * { margin-top:5px; }
@@ -510,7 +517,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div class="side" style="align-items:flex-end;">
 
     <!-- HOLD -->
-    <div class="panel" id="holdPanel">
+    <div class="panel" id="holdPanel" data-pos="hold">
       <div class="panel-label">HOLD</div>
       <canvas id="holdCanvas" width="100" height="80"></canvas>
       <!-- 連続HOLDの可否。HOLDの機能なのでこの枠の中に置く -->
@@ -524,7 +531,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 落下設定 -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-pos="grav">
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
         <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
@@ -541,7 +548,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- デザイン -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-pos="design">
       <div class="panel-label">デザイン</div>
       <label class="tgl-row" style="margin-bottom:8px;"
         title="ミノがどこに落ちるかを薄く表示する">
@@ -557,10 +564,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
+      <label class="tgl-row" style="margin-top:8px;"
+        title="ONにすると、枠をドラッグで好きな位置に動かせます">
+        <span>配置編集</span>
+        <input type="checkbox" id="layoutEditSw"
+          onchange="setLayoutEdit(this.checked)">
+        <span class="tgl"></span>
+      </label>
+      <button id="posResetBtn" class="garb-btn" style="display:none;margin-top:8px;background:#374151;font-size:11px;"
+        onclick="resetPanelPos()">配置を元に戻す</button>
     </div>
 
     <!-- 地形操作 -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-pos="terrain">
       <div class="panel-label">地形操作</div>
       <label class="tgl-row" title="ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます">
         <span>地形編集</span>
@@ -591,13 +607,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
       title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
 
     <!-- LINES -->
-    <div class="panel" style="text-align:center;width:108px;">
+    <div class="panel" style="text-align:center;width:108px;" data-pos="lines">
       <div class="panel-label">LINES</div>
       <div class="stat-val" id="linesEl">0</div>
     </div>
 
     <!-- キーコンフィグ -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-pos="setting">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
       <!-- デモ版と、タッチ端末（iPadなど）で出す版切り替え -->
       <button id="verSwitchBtn" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
@@ -618,7 +634,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 操作ボタンパッド -->
-    <div class="ctrl-pad">
+    <div class="ctrl-pad" data-pos="pad">
       <!-- ミノを捨てる・戻す（常時表示） -->
       <div class="ctrl-row r2">
         <button class="ctrl-btn"
@@ -703,13 +719,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div class="side" id="rightSide">
 
     <!-- NEXT -->
-    <div class="panel" id="nextPanel">
+    <div class="panel" id="nextPanel" data-pos="next">
       <div class="panel-label">NEXT</div>
       <canvas id="nextCanvas" width="100" height="420"></canvas>
     </div>
 
     <!-- モード（デカミノ / REN / DPCセット） -->
-    <div class="panel" style="min-width:116px;">
+    <div class="panel" style="min-width:116px;" data-pos="mode">
       <div class="panel-label">モード</div>
       <div class="mode-buttons">
         <div class="btn-group">
@@ -4050,6 +4066,89 @@ loadGamepadConfig();
 // 設定画面を開いている間も割り当てを拾えるよう、ループとは別に回しておく
 setInterval(() => { if (gpWaiting || gameOver) pollGamepad(); }, 1000/60);
 
+// ===== 配置編集（枠をドラッグで好きな位置へ） =====
+// スマホ版と同じ考え方。枠ごと画面に固定して、位置を覚えておく。
+let panelPos = {};
+let layoutEdit = false;
+
+function loadPanelPos() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_panelpos'); } catch(e) {}
+  if (raw) { try { panelPos = JSON.parse(raw) || {}; } catch(e) { panelPos = {}; } }
+  applyPanelPos();
+}
+function savePanelPos() {
+  try { localStorage.setItem('tetren_panelpos', JSON.stringify(panelPos)); } catch(e) {}
+}
+// 保存した位置を当てる。画面サイズが変わっても外に出ないよう収める。
+function applyPanelPos() {
+  document.querySelectorAll('[data-pos]').forEach(el => {
+    const p = panelPos[el.dataset.pos];
+    if (!p) {
+      el.classList.remove('moved');
+      el.style.left = el.style.top = el.style.width = '';
+      return;
+    }
+    el.classList.add('moved');
+    if (p.w) el.style.width = p.w + 'px';
+    const w = p.w || el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(0, Math.min(window.innerWidth  - w, p.x)) + 'px';
+    el.style.top  = Math.max(0, Math.min(window.innerHeight - h, p.y)) + 'px';
+  });
+}
+function setLayoutEdit(on) {
+  layoutEdit = on;
+  document.body.classList.toggle('layout-edit', on);
+  const sw = document.getElementById('layoutEditSw'); if (sw) sw.checked = on;
+  const rb = document.getElementById('posResetBtn'); if (rb) rb.style.display = on ? '' : 'none';
+}
+function resetPanelPos() {
+  panelPos = {};
+  savePanelPos();
+  applyPanelPos();
+}
+// ドラッグ。編集中のみ有効。つかんだ瞬間に画面固定へ切り替える。
+(function initPanelDrag(){
+  let target=null, id=null, dx=0, dy=0;
+  function down(e) {
+    if (!layoutEdit) return;
+    const el = e.target.closest('[data-pos]');
+    if (!el) return;
+    e.preventDefault();
+    target = el; id = el.dataset.pos;
+    const r = el.getBoundingClientRect();
+    if (!el.classList.contains('moved')) {
+      // 流し込みから外す前に、今の見た目の大きさと位置で固定する
+      el.style.width = r.width + 'px';
+      el.classList.add('moved');
+      el.style.left = r.left + 'px';
+      el.style.top  = r.top  + 'px';
+      panelPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width) };
+    }
+    const rr = target.getBoundingClientRect();
+    dx = e.clientX - rr.left; dy = e.clientY - rr.top;
+  }
+  function move(e) {
+    if (!target) return;
+    e.preventDefault();
+    const w = target.offsetWidth, h = target.offsetHeight;
+    const x = Math.max(0, Math.min(window.innerWidth  - w, e.clientX - dx));
+    const y = Math.max(0, Math.min(window.innerHeight - h, e.clientY - dy));
+    target.style.left = x + 'px'; target.style.top = y + 'px';
+    panelPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w) };
+  }
+  function up() {
+    if (!target) return;
+    savePanelPos();
+    target = null; id = null;
+  }
+  document.addEventListener('pointerdown', down, {passive:false});
+  document.addEventListener('pointermove', move, {passive:false});
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', up);
+})();
+window.addEventListener('resize', applyPanelPos);
+
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
   multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
@@ -4286,7 +4385,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.17.0';
+const APP_VERSION = '1.18.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4568,6 +4667,7 @@ if (isDemoBuild() || isTouchDevice) {
 // キーコンフィグ・スキン初期化
 initKeyConfig();
 loadSkin();
+loadPanelPos();   // 保存した枠の位置を復元する
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
