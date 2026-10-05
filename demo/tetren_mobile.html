@@ -340,42 +340,45 @@ input:checked + .tgl::after { transform:translateX(10px); }
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます">
+    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
       <span>配置編集</span>
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
       <span class="tgl"></span>
     </label>
     <button class="side-btn" id="ctrlPosResetBtn" style="display:none;margin-top:4px;"
       onclick="resetCtrlPos()">配置を<br>元に戻す</button>
-    <div class="m-lbl" style="margin:4px 0 0;">盤面サイズ</div>
-    <div class="di-row" style="margin-top:0;">
-      <button class="di-btn" title="盤面を小さくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('boardScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="boardScaleVal">100</span> %</div>
-      <button class="di-btn" title="盤面を大きくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('boardScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',1))" ontouchend="stopRepeat()">›</button>
-    </div>
-    <div class="m-lbl" style="margin:4px 0 0;">NEXT/HOLD</div>
-    <div class="di-row" style="margin-top:0;">
-      <button class="di-btn" title="NEXT・HOLDを小さくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('miniScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="miniScaleVal">100</span> %</div>
-      <button class="di-btn" title="NEXT・HOLDを大きくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('miniScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',1))" ontouchend="stopRepeat()">›</button>
-    </div>
-    <div class="m-lbl" style="margin:4px 0 0;">メニュー</div>
-    <div class="di-row" style="margin-top:0;">
-      <button class="di-btn" title="左のボタンを小さくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('menuScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="menuScaleVal">100</span> %</div>
-      <button class="di-btn" title="左のボタンを大きくする（長押しで連続）"
-        onmousedown="startRepeat(()=>stepViewScale('menuScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',1))" ontouchend="stopRepeat()">›</button>
+    <!-- 表示サイズは普段使わないので、配置編集をONにしたときだけ出す -->
+    <div id="viewScaleBox" style="display:none;">
+      <div class="m-lbl" style="margin:4px 0 0;">盤面サイズ</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="盤面を小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('boardScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="boardScaleVal">100</span> %</div>
+        <button class="di-btn" title="盤面を大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('boardScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
+      <div class="m-lbl" style="margin:4px 0 0;">NEXT/HOLD</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="NEXT・HOLDを小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('miniScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="miniScaleVal">100</span> %</div>
+        <button class="di-btn" title="NEXT・HOLDを大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('miniScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
+      <div class="m-lbl" style="margin:4px 0 0;">メニュー</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="左のボタンを小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('menuScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="menuScaleVal">100</span> %</div>
+        <button class="di-btn" title="左のボタンを大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('menuScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
     </div>
     <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
     <div class="di-row" style="margin-top:0;">
@@ -1909,6 +1912,8 @@ function setLayoutEdit(on){
   document.body.classList.toggle('layout-edit', on);
   const sw = document.getElementById('layoutEditSw'); if(sw) sw.checked = on;
   const rb = document.getElementById('ctrlPosResetBtn'); if(rb) rb.style.display = on ? '' : 'none';
+  // 盤面・NEXT・メニューの大きさも編集中だけ出す（普段はメニューを短くしておきたい）
+  const vs = document.getElementById('viewScaleBox'); if(vs) vs.style.display = on ? 'block' : 'none';
   // 編集中は盤面を動かさず、終えたときに空いたぶんをまとめて反映する
   if(!on){ initLayout(); applyCtrlPos(); if(board) draw(); }
 }
@@ -2110,7 +2115,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.27.0';
+const APP_VERSION = '1.28.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
