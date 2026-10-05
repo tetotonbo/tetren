@@ -505,6 +505,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <button class="dpc-close" id="missStartBtn" style="display:none;background:#4f46e5;color:#fff;"
       onclick="startMissMulti()">開始</button>
+    <button class="dpc-close" onclick="startMissRandom()">ランダム</button>
     <button class="dpc-close" onclick="closeMiss()">キャンセル</button>
   </div>
 </div>
@@ -1496,6 +1497,18 @@ function drawMissGrid(){
                                             : '選んだミノを1巡目から抜きます。';
   }
 }
+// ランダム: 抜くミノの数（0〜6個）も種類も毎回くじ引きで決める。
+// 0個のときは何も抜かないので、通常どおり7ミノで始まる。
+function randomMissTypes(){
+  const n = Math.floor(Math.random() * 7);        // 0〜6個
+  const a = ALL_TYPES.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0, n);
+}
+function startMissRandom(){
+  const types = randomMissTypes();
+  applyMissTypes(types, { random:true, types });
+}
 function setMissingPiece(type){ applyMissTypes([type], {multi:false, type}); }
 function applyMissMulti(types){
   if(!types.length || types.length>=7) return;
@@ -1510,7 +1523,10 @@ function applyMissTypes(types, last){
 function startMissMulti(){ if(missValid()) applyMissMulti([...missPick.sel]); }
 function repeatMiss(){
   if(!lastMiss){ openMiss(); return; }
-  if(lastMiss.multi) applyMissMulti(lastMiss.types); else setMissingPiece(lastMiss.type);
+  // ランダムで始めたときは、押すたびに引き直す
+  if(lastMiss.random) startMissRandom();
+  else if(lastMiss.multi) applyMissMulti(lastMiss.types);
+  else setMissingPiece(lastMiss.type);
 }
 function updateMissAgainBtn(){
   const btn=document.getElementById('missAgainBtn');
@@ -1977,7 +1993,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.13.2';
+const APP_VERSION = '1.15.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
