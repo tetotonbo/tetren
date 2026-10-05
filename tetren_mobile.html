@@ -376,8 +376,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <button class="side-btn" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
     <button class="side-btn" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
-    <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
-    <button class="side-btn" id="verSwitchBtn" style="display:none;margin-top:4px;"
+    <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
+    <button class="side-btn" id="verSwitchBtn" style="margin-top:4px;"
       onclick="switchVersion()">🖥 PC版<br>へ</button>
     <div id="verLabel"></div>
   </div>
@@ -1396,17 +1396,6 @@ function draw(){drawBoard();drawHold();drawNext();}
 // URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
 function isDemoBuild(){ return location.pathname.indexOf('/demo/') >= 0; }
 function switchVersion(){ location.href='tetren.html'; }
-// タブレット（短辺600px以上）はPC版でも扱えるので、戻れるようにしておく。
-// 画面の狭い端末ではPC版は使いづらいので出さない。
-// 回転やウィンドウサイズの変更で条件が変わるため、その都度見直す。
-function updateVerSwitchBtn(){
-  const vb=document.getElementById('verSwitchBtn');
-  if(!vb) return;
-  const show = isDemoBuild() || Math.min(window.innerWidth, window.innerHeight) >= 600;
-  vb.style.display = show ? '' : 'none';
-}
-updateVerSwitchBtn();
-window.addEventListener('resize', updateVerSwitchBtn);
 
 // ===== DPCセット（選んだミノをHOLDにして、地形とツモをリセット）=====
 const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];
@@ -2013,7 +2002,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.17.0';
+const APP_VERSION = '1.19.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
