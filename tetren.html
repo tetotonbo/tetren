@@ -351,6 +351,7 @@ body.ppt2-theme #nextCanvas {
   transition:background .12s, border-color .12s;
 }
 .rand-num:hover { background:#1b2230; border-color:#9ca3af; }
+.rand-num.rand-any { flex:0 0 auto; padding:7px 12px; font-size:11px; }
 .dpc-name {
   display:block; line-height:1; margin-top:6px;
   font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
@@ -927,6 +928,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="rand-num" onclick="startMissRandom(4)">4</button>
       <button class="rand-num" onclick="startMissRandom(5)">5</button>
       <button class="rand-num" onclick="startMissRandom(6)">6</button>
+      <button class="rand-num rand-any" onclick="startMissRandom(null)"
+        title="抜く数もおまかせ。↻ を押すたびに数から引き直します">ランダム</button>
     </div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="toggleMissRandRow()"
@@ -2297,10 +2300,13 @@ function randomMissTypes(n) {
   }
   return a.slice(0, Math.max(0, Math.min(6, n)));
 }
-// 個数は覚えておき、↻ では種類だけを引き直す
+// 個数は覚えておき、↻ では種類だけを引き直す。
+// n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
 function startMissRandom(n) {
-  const types = randomMissTypes(n);
-  applyMissTypes(types, { random:true, n, types });
+  const any = (n === null || n === undefined);
+  const count = any ? Math.floor(Math.random() * 7) : n;
+  const types = randomMissTypes(count);
+  applyMissTypes(types, { random:true, n: any ? null : n, types });
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
@@ -2342,7 +2348,9 @@ function updateMissAgainBtn() {
   btn.style.opacity = lastMiss ? '1' : '0.45';
   btn.title = !lastMiss ? 'まだミノを選んでいません（押すと選択画面が開きます）'
     : lastMiss.random
-      ? `${lastMiss.n}個のまま、抜くミノを引き直します（前回は ${lastMiss.types.length ? lastMiss.types.join('・') : 'なし'}）`
+      ? (lastMiss.n === null
+          ? `数も種類もおまかせで引き直します（前回は ${lastMiss.types.length ? lastMiss.types.join('・') : 'なし'}）`
+          : `${lastMiss.n}個のまま、抜くミノを引き直します（前回は ${lastMiss.types.length ? lastMiss.types.join('・') : 'なし'}）`)
       : lastMiss.multi
         ? `前回選んだ ${lastMiss.types.join('・')} を抜いて、もう一度始めます`
         : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度ミノ欠けで始めます`;
@@ -4454,7 +4462,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.20.0';
+const APP_VERSION = '1.20.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
