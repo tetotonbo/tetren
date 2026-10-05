@@ -408,12 +408,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
   padding:24px 28px; width:480px; max-height:90vh; overflow-y:auto;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
-#kcHeader {
+.kc-header {
   display:flex; align-items:center; margin-bottom:10px;
   padding:0 4px 8px 4px; border-bottom:1px solid #374151;
 }
-#kcHeader .kc-label { font-size:11px; color:#6b7280; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; }
-#kcHeader .kc-slot-head {
+.kc-header .kc-label { font-size:11px; color:#6b7280; font-weight:bold; text-transform:uppercase; letter-spacing:.05em; }
+.kc-header .kc-slot-head {
   font-size:11px; color:#6b7280; font-weight:bold; text-transform:uppercase;
   letter-spacing:.05em; width:110px; text-align:center;
 }
@@ -451,6 +451,17 @@ input:checked + .tgl::after { transform:translateX(16px); }
 .cfg-tab.active { color:#fff; border-bottom-color:#6366f1; }
 .cfg-pane { display:none; }
 .cfg-pane.active { display:block; }
+/* キーコンフィグ内の切り替え（キーボード / コントローラ） */
+.kc-subtabs { display:flex; gap:4px; margin-bottom:12px; }
+.kc-subtab {
+  background:#1f2937; border:1px solid #374151; border-radius:6px;
+  color:#9ca3af; font-size:12px; font-weight:bold; cursor:pointer;
+  padding:6px 14px; transition:background .15s, color .15s, border-color .15s;
+}
+.kc-subtab:hover { color:#e5e7eb; }
+.kc-subtab.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.kc-sub { display:none; }
+.kc-sub.active { display:block; }
 /* その他タブの設定行 */
 .opt-row {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -907,42 +918,49 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
-      <button class="cfg-tab"        id="cfgTabPad" title="ゲームパッドのボタン割り当て" onclick="switchConfigTab('pad')">コントローラ</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
-      <div id="kcHeader">
-        <span class="kc-label">操作</span>
-        <span class="kc-slot-head">スロット 1</span>
-        <span class="kc-slot-head">スロット 2</span>
+      <!-- キーボードとコントローラを、キーコンフィグの中で切り替える -->
+      <div class="kc-subtabs">
+        <button class="kc-subtab active" id="kcSubTabKey" onclick="switchKcSub('key')">キーボード</button>
+        <button class="kc-subtab"        id="kcSubTabPad" onclick="switchKcSub('pad')">コントローラ</button>
       </div>
-      <div id="kcRows"></div>
-      <div class="kc-btns">
-        <button onclick="resetKeyConfig()" title="キーの割り当てを初期状態に戻す"
-          style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
-        <button onclick="closeConfig()"
-          style="background:#16a34a;color:#fff;">閉じる</button>
-      </div>
-    </div>
 
-    <div class="cfg-pane" id="cfgPanePad">
-      <div class="imp-hint" id="gpStatus" style="margin:0 0 10px;"></div>
-      <div class="imp-hint" style="margin:0 0 10px;">
-        割り当てを変えたい欄を押してから、コントローラのボタンを押してください。<br>
-        スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。
+      <div class="kc-sub active" id="kcSubPaneKey">
+        <div class="kc-header">
+          <span class="kc-label">操作</span>
+          <span class="kc-slot-head">スロット 1</span>
+          <span class="kc-slot-head">スロット 2</span>
+        </div>
+        <div id="kcRows"></div>
+        <div class="kc-btns">
+          <button onclick="resetKeyConfig()" title="キーの割り当てを初期状態に戻す"
+            style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          <button onclick="closeConfig()"
+            style="background:#16a34a;color:#fff;">閉じる</button>
+        </div>
       </div>
-      <div id="kcHeader">
-        <span class="kc-label">操作</span>
-        <span class="kc-slot-head">スロット 1</span>
-        <span class="kc-slot-head">スロット 2</span>
-      </div>
-      <div id="gpRows"></div>
-      <div class="kc-btns">
-        <button onclick="resetGamepadConfig()" title="ボタンの割り当てを初期状態に戻す"
-          style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
-        <button onclick="closeConfig()"
-          style="background:#16a34a;color:#fff;">閉じる</button>
+
+      <div class="kc-sub" id="kcSubPanePad">
+        <div class="imp-hint" id="gpStatus" style="margin:0 0 10px;"></div>
+        <div class="imp-hint" style="margin:0 0 10px;">
+          割り当てを変えたい欄を押してから、コントローラのボタンを押してください。<br>
+          スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。
+        </div>
+        <div class="kc-header">
+          <span class="kc-label">操作</span>
+          <span class="kc-slot-head">スロット 1</span>
+          <span class="kc-slot-head">スロット 2</span>
+        </div>
+        <div id="gpRows"></div>
+        <div class="kc-btns">
+          <button onclick="resetGamepadConfig()" title="ボタンの割り当てを初期状態に戻す"
+            style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          <button onclick="closeConfig()"
+            style="background:#16a34a;color:#fff;">閉じる</button>
+        </div>
       </div>
     </div>
 
@@ -4087,8 +4105,20 @@ function resetOptions() {
 }
 
 // ===== 設定モーダル =====
+// キーコンフィグの中の切り替え。開いているほうを覚えておき、戻ったときも同じ面を出す。
+let kcSub = 'key';
+function switchKcSub(name) {
+  kcSub = name;
+  const SUBS = { key:['kcSubTabKey','kcSubPaneKey'], pad:['kcSubTabPad','kcSubPanePad'] };
+  for (const k in SUBS) {
+    const [tab, pane] = SUBS[k];
+    document.getElementById(tab).classList.toggle('active', k === name);
+    document.getElementById(pane).classList.toggle('active', k === name);
+  }
+  if (name === 'pad') buildGpRows();
+}
 function switchConfigTab(name) {
-  const TABS = { key:['cfgTabKey','cfgPaneKey'], pad:['cfgTabPad','cfgPanePad'],
+  const TABS = { key:['cfgTabKey','cfgPaneKey'],
                  skin:['cfgTabSkin','cfgPaneSkin'], misc:['cfgTabMisc','cfgPaneMisc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
@@ -4097,7 +4127,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'misc') applyOptions();
-  if (name === 'pad')  buildGpRows();
+  if (name === 'key' && kcSub === 'pad') buildGpRows();
 }
 
 // スキン一覧（見本つき）を描き直す
@@ -4213,7 +4243,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.14.0';
+const APP_VERSION = '1.14.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
