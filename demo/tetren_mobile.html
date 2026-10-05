@@ -25,6 +25,8 @@ html, body {
   background:#111827; height:100%;
   font-family:'Arial',sans-serif; color:#eee;
   user-select:none; -webkit-user-select:none;
+  /* 長押しの選択メニューはcalloutを切らないと止まらない（PC版と同じ対策） */
+  -webkit-touch-callout:none;
   overflow:hidden; touch-action:manipulation;
 }
 #wrap {
@@ -2063,7 +2065,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.26.0';
+const APP_VERSION = '1.26.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

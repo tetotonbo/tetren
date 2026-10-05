@@ -42,6 +42,9 @@ body {
   min-height:100vh; padding:8px 0;
   font-family:'Arial',sans-serif; color:#eee;
   user-select:none;
+  /* iPadのSafariは標準のuser-selectだけでは長押しの選択メニューを止められない。
+     -webkit-の2つを併記しないと、ボタン長押しが文字選択になってしまう。 */
+  -webkit-user-select:none; -webkit-touch-callout:none;
 }
 #wrap { display:flex; gap:12px; align-items:flex-start; position:relative; z-index:2; }
 .side { display:flex; flex-direction:column; gap:12px; }
@@ -249,10 +252,17 @@ body.ppt2-theme #nextCanvas {
   letter-spacing:0.5px; transition:background .15s; margin-top:8px;
 }
 .kc-open-btn:hover { background:#4338ca; }
+/* iPadで長押しすると文字選択・コピーメニューが出るため、押せるもの全てで止める。
+   #verLabel だけはバージョンを控えられるよう選択を許す（下で上書き）。 */
+button, label, .ctrl-lbl, [data-pos] {
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+}
+
 /* ===== バージョン表示 ===== */
 #verLabel {
   margin-top:6px; text-align:center; font-size:9px;
-  color:#6b7280; letter-spacing:0.5px; user-select:text;
+  color:#6b7280; letter-spacing:0.5px;
+  user-select:text; -webkit-user-select:text; -webkit-touch-callout:default;
 }
 
 /* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
@@ -430,7 +440,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
   font-size:28px; cursor:pointer;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:2px;
-  user-select:none; -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
   transition:background .1s, transform .08s;
 }
 .ctrl-btn:active, .ctrl-btn.pressed {
@@ -4886,7 +4897,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.25.0';
+const APP_VERSION = '1.25.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
