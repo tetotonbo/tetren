@@ -408,6 +408,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
+/* せりあがり予告（盤面の下） */
+#digPreview {
+  width:300px; display:flex; align-items:center; justify-content:space-between;
+  background:#111827; border:1px solid #374151; border-radius:6px;
+  padding:5px 10px; font-size:12px; font-weight:bold; letter-spacing:0.5px;
+}
+#digPreviewNext    { color:#93c5fd; }
+#digPreviewPending { color:#fca5a5; }
 .ctrl-pad { width:300px; display:flex; flex-direction:column; gap:6px; }
 .ctrl-row { display:grid; gap:6px; }
 .ctrl-row.r2 { grid-template-columns:repeat(2,1fr); }
@@ -664,6 +672,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div style="display:flex;flex-direction:column;gap:8px;">
     <div style="position:relative;display:inline-block;" id="boardWrap">
       <canvas id="boardCanvas" width="300" height="610"></canvas>
+    </div>
+    <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
+    <div id="digPreview" style="display:none;">
+      <span id="digPreviewNext"></span>
+      <span id="digPreviewPending"></span>
     </div>
 
     <!-- 操作ボタンパッド -->
@@ -2477,7 +2490,7 @@ function flushPendingDig() {
 function offsetPendingDig(atk) {
   if (!atk || !pendingDigRows) return;
   pendingDigRows = Math.max(0, pendingDigRows - atk);
-  updateDigCounter();
+  updateDigCounter(); drawDigPreview();
 }
 function addGarbage(sameHole, multi) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
@@ -2839,29 +2852,19 @@ function attackPower(cleared, tSpin, wasB2B, isPerfect) {
   return a;
 }
 
-// 次に何段上がるかを盤面の下端に予告として出す。
-// 溜まっているぶん（ミノ設置待ち）があれば、それも並べて出す。
+// 次に何段上がるかを盤面の「外」に予告として出す。
+// せりあがりが動いている間は常に出し、いまどういう状態かが分かるようにする。
 function drawDigPreview() {
-  if (!digMode) return;
-  if (!digMulti.on && !pendingDigRows) return;   // 1段ずつで溜まりも無いなら出さない
-  const H = 18;
-  const y = ROWS * BS - H;                        // 盤面の最下段に重ねる
-  boardCtx.save();
-  boardCtx.fillStyle = 'rgba(8,10,18,0.72)';
-  boardCtx.fillRect(0, y, COLS * BS, H);
-  boardCtx.font = 'bold 12px sans-serif';
-  boardCtx.textBaseline = 'middle';
-  if (digMulti.on) {
-    boardCtx.fillStyle = '#93c5fd';
-    boardCtx.textAlign = 'left';
-    boardCtx.fillText('次 ' + nextDigRows + '段', 6, y + H / 2);
-  }
-  if (pendingDigRows) {
-    boardCtx.fillStyle = '#fca5a5';
-    boardCtx.textAlign = 'right';
-    boardCtx.fillText('溜まり ' + pendingDigRows + '段', COLS * BS - 6, y + H / 2);
-  }
-  boardCtx.restore();
+  const box = document.getElementById('digPreview');
+  if (!box) return;
+  if (!digMode) { box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  document.getElementById('digPreviewNext').textContent = '次 ' + nextDigRows + '段';
+  const pend = document.getElementById('digPreviewPending');
+  // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
+  if (opts.digOnLock)      pend.textContent = '溜まり ' + pendingDigRows + '段';
+  else if (pendingDigRows) pend.textContent = 'まもなく ' + pendingDigRows + '段';
+  else                     pend.textContent = '';
 }
 
 function drawBoard() {
@@ -3017,8 +3020,8 @@ function drawBoard() {
       boardCtx.restore();
     }
   }
-  drawDigPreview();   // 予告は地形の上に重ねる
   boardCtx.restore(); // translate(0, PEEK) を戻す
+  drawDigPreview();   // 予告は盤面の外に出す
 }
 
 function drawMini(ctx, type, yOff, w, h, dim=false, bs=18) {
@@ -4501,7 +4504,7 @@ let pendingDigRows = 0; // 設置待ちで溜まっている段数
 let digStaged = false;  // この周期ぶんを溜まりへ積んだか（1秒前に積む）
 // パフェで10ライン相殺できるので、それでも返せない量になったら終わりにする
 const DIG_PENDING_LIMIT = 30;   // これ以上溜まったら相殺を待たず一気に積む
-function rollNextDigRows() { nextDigRows = pickDigRows(); updateDigCounter(); }
+function rollNextDigRows() { nextDigRows = pickDigRows(); updateDigCounter(); drawDigPreview(); }
 
 // 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う。
 function pickDigRows() {
@@ -4833,7 +4836,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.24.1';
+const APP_VERSION = '1.24.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
