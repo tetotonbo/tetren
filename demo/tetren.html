@@ -81,8 +81,16 @@ body {
 }
 .layout-edit [data-pos] {
   outline:2px dashed #818cf8; outline-offset:2px; border-radius:10px;
-  cursor:move; user-select:none;
+  cursor:move; user-select:none; position:relative;
 }
+/* 右下のつまみ。ここをドラッグすると大きさを変えられる */
+.layout-edit [data-pos]::after {
+  content:''; position:absolute; right:3px; bottom:3px;
+  width:14px; height:14px;
+  border-right:3px solid #818cf8; border-bottom:3px solid #818cf8;
+  border-radius:0 0 3px 0; pointer-events:none;
+}
+.layout-edit [data-pos].moved { position:fixed; }
 .layout-edit [data-pos] * { pointer-events:none; }
 [data-pos].moved { position:fixed; z-index:6; }
 /* 右の枠はボタンが増えてきたので、高さを詰めて縦に収まるようにする。
@@ -632,36 +640,36 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="ctrl-pad">
       <!-- ミノを捨てる・戻す（常時表示） -->
       <div class="ctrl-row r2">
-        <button class="ctrl-btn"
+        <button data-pos="discard" class="ctrl-btn"
           onclick="if(!gameOver)discardPiece()"
           title="現在のミノを捨てて次を出す">
           🗑<span class="ctrl-lbl">ミノを捨てる</span>
         </button>
-        <button class="ctrl-btn"
+        <button data-pos="undo" class="ctrl-btn"
           onclick="if(!gameOver&&undoStack.length)undo()"
           title="1手戻す">
           ↩<span class="ctrl-lbl">戻す</span>
         </button>
       </div>
       <!-- リセット。誤爆すると痛いので、主張は控えめにしつつ他のボタンと色を変える -->
-      <button class="ctrl-reset" onclick="resetTerrain()"
+      <button data-pos="reset" class="ctrl-reset" onclick="resetTerrain()"
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
+      <!-- 操作ボタンの配置を自分で決められるようにする -->
+      <div class="ctrl-edit-row">
+        <label class="tgl-row" style="flex:1;"
+          title="ONにすると、操作ボタンをドラッグで動かせます。右下のつまみで大きさも変えられます">
+          <span>配置編集</span>
+          <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+          <span class="tgl"></span>
+        </label>
+        <button id="posResetBtn" class="ctrl-reset" style="display:none;flex:0 0 auto;width:auto;padding:6px 10px;font-size:11px;"
+          onclick="resetPanelPos()">元に戻す</button>
+      </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
       <button id="ctrlToggleBtn" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
       </button>
       <div id="ctrlHidden">
-        <!-- 開いたボタンの配置を自分で決められるようにする -->
-        <div class="ctrl-edit-row">
-          <label class="tgl-row" style="flex:1;"
-            title="ONにすると、下のボタンをドラッグで好きな位置に動かせます">
-            <span>配置編集</span>
-            <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
-            <span class="tgl"></span>
-          </label>
-          <button id="posResetBtn" class="ctrl-reset" style="display:none;flex:0 0 auto;width:auto;padding:6px 10px;font-size:11px;"
-            onclick="resetPanelPos()">元に戻す</button>
-        </div>
         <!-- 左右・ソフトドロップ -->
         <div class="ctrl-row r3">
           <button data-pos="left" class="ctrl-btn"
@@ -4092,15 +4100,23 @@ function applyPanelPos() {
     const p = panelPos[el.dataset.pos];
     if (!p) {
       el.classList.remove('moved');
-      el.style.left = el.style.top = el.style.width = '';
+      el.style.left = el.style.top = el.style.width = el.style.height = el.style.fontSize = '';
       return;
     }
     el.classList.add('moved');
     if (p.w) el.style.width = p.w + 'px';
-    const w = p.w || el.offsetWidth, h = el.offsetHeight;
+    if (p.h) el.style.height = p.h + 'px';
+    syncPosFont(el);
+    const w = p.w || el.offsetWidth, h = p.h || el.offsetHeight;
     el.style.left = Math.max(0, Math.min(window.innerWidth  - w, p.x)) + 'px';
     el.style.top  = Math.max(0, Math.min(window.innerHeight - h, p.y)) + 'px';
   });
+}
+// 大きくしたとき、矢印だけ小さいままだと間が抜けるので文字も合わせる
+function syncPosFont(el) {
+  if (!el.classList.contains('ctrl-btn')) return;   // 文字ボタン（リセット等）はそのまま
+  const h = el.offsetHeight;
+  el.style.fontSize = Math.round(Math.max(14, Math.min(60, h * 0.44))) + 'px';
 }
 function setLayoutEdit(on) {
   layoutEdit = on;
@@ -4115,7 +4131,9 @@ function resetPanelPos() {
 }
 // ドラッグ。編集中のみ有効。つかんだ瞬間に画面固定へ切り替える。
 (function initPanelDrag(){
-  let target=null, id=null, dx=0, dy=0;
+  const HANDLE = 22;      // 右下のこの範囲をつかむとサイズ変更
+  const MIN = 40, MAX = 260;
+  let target=null, id=null, dx=0, dy=0, mode='move', w0=0, h0=0, sx=0, sy=0;
   function down(e) {
     if (!layoutEdit) return;
     const el = e.target.closest('[data-pos]');
@@ -4123,13 +4141,18 @@ function resetPanelPos() {
     e.preventDefault();
     target = el; id = el.dataset.pos;
     const r = el.getBoundingClientRect();
+    // 右下の角をつかんだらサイズ変更、それ以外は移動
+    mode = (e.clientX > r.right - HANDLE && e.clientY > r.bottom - HANDLE) ? 'size' : 'move';
+    w0 = r.width; h0 = r.height; sx = e.clientX; sy = e.clientY;
     if (!el.classList.contains('moved')) {
       // 流し込みから外す前に、今の見た目の大きさと位置で固定する
       el.style.width = r.width + 'px';
+      el.style.height = r.height + 'px';
       el.classList.add('moved');
       el.style.left = r.left + 'px';
       el.style.top  = r.top  + 'px';
-      panelPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width) };
+      panelPos[id] = { x:Math.round(r.left), y:Math.round(r.top),
+                       w:Math.round(r.width), h:Math.round(r.height) };
     }
     const rr = target.getBoundingClientRect();
     dx = e.clientX - rr.left; dy = e.clientY - rr.top;
@@ -4137,11 +4160,21 @@ function resetPanelPos() {
   function move(e) {
     if (!target) return;
     e.preventDefault();
+    const p = panelPos[id] || {};
+    if (mode === 'size') {
+      const w = Math.max(MIN, Math.min(MAX, w0 + (e.clientX - sx)));
+      const h = Math.max(MIN, Math.min(MAX, h0 + (e.clientY - sy)));
+      target.style.width = Math.round(w) + 'px';
+      target.style.height = Math.round(h) + 'px';
+      syncPosFont(target);
+      panelPos[id] = { x:p.x, y:p.y, w:Math.round(w), h:Math.round(h) };
+      return;
+    }
     const w = target.offsetWidth, h = target.offsetHeight;
     const x = Math.max(0, Math.min(window.innerWidth  - w, e.clientX - dx));
     const y = Math.max(0, Math.min(window.innerHeight - h, e.clientY - dy));
     target.style.left = x + 'px'; target.style.top = y + 'px';
-    panelPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w) };
+    panelPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:p.h };
   }
   function up() {
     if (!target) return;
@@ -4391,7 +4424,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.18.1';
+const APP_VERSION = '1.19.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
