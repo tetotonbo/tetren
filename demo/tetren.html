@@ -1135,12 +1135,36 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
 
       <div class="opt-row">
+        <span class="opt-label">ソフトドロップをSDFで指定
+          <span class="opt-note">他のテトリスと同じ「重力の何倍で落ちるか」での指定に切り替えます</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optSdfMode"
+            onchange="setOption('sdfMode', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optSoftRow">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
         <div class="opt-step">
           <button class="step-btn" onclick="stepOption('softSpeed',-1)">‹</button>
           <span class="opt-val" id="optSoftSpeedVal">5</span>
           <button class="step-btn" onclick="stepOption('softSpeed',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row" id="optSdfRow" style="display:none;">
+        <span class="opt-label">SDF
+          <span class="opt-note">重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。<span id="optSdfNote"></span>（長押しで連続変更）</span></span>
+        <div class="opt-step">
+          <button class="step-btn" title="SDFを下げる（長押しで連続）"
+            onmousedown="startRepeat(()=>stepOption('sdf',-1))"
+            ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',-1))">‹</button>
+          <span class="opt-val" id="optSdfVal">6</span>
+          <button class="step-btn" title="SDFを上げる（長押しで連続）"
+            onmousedown="startRepeat(()=>stepOption('sdf',1))"
+            ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',1))">›</button>
         </div>
       </div>
 
@@ -4616,9 +4640,11 @@ const OPT_DEFAULTS = {
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
+  sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
+  sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
 };
 // [最小, 最大, 刻み]
-const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1] };
 // DAS/ARR の上下限（ミリ秒）
 const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
 const FRAME_MS = 1000 / 60;
@@ -4639,8 +4665,15 @@ let opts = Object.assign({}, OPT_DEFAULTS);
 // ソフトドロップの速さ（1秒あたりに落ちる行数）。5までは従来どおり、6以上は大きく加速する。
 // ミリ秒間隔で持つと1フレーム(約17ms)未満の指定が頭打ちになるため、行数で持って端数を積む。
 const SOFT_DROP_RPS = [8, 10, 12, 15, 20, 32, 55, 90, 150, 600];
+// SDF（Soft Drop Factor）: 他のテトリスと同じ「重力の何倍で落ちるか」での指定。
+// 41 は ∞ 扱いで、押した瞬間に最下段まで落ちる。
+const SDF_MIN = 5, SDF_MAX = 41;
 function softDropRows() {
-  return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+  if (!opts.sdfMode) return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+  if (opts.sdf >= SDF_MAX) return TROW * 60;        // ∞（1フレームで最下段）
+  // 落下設定が0G（自由落下なし）だと倍率が効かないので、1G相当を下敷きにする
+  const baseG = Math.max(1, gravSpeed);
+  return gravRowsPerFrame(baseG) * 60 * opts.sdf;   // 行/秒
 }
 function softDropRate() { return 1000 / softDropRows(); }   // 参考: 1行あたりのミリ秒
 // 接地してから固定されるまでのミリ秒
@@ -4675,6 +4708,16 @@ function applyOptions() {
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
+  check('optSdfMode', opts.sdfMode);
+  put('optSdfVal', opts.sdf >= SDF_MAX ? '∞' : opts.sdf);
+  // SDFで指定するときは、従来の「ソフトドロップ速度」は隠す
+  const softRow = document.getElementById('optSoftRow');
+  const sdfRow  = document.getElementById('optSdfRow');
+  if (softRow) softRow.style.display = opts.sdfMode ? 'none' : '';
+  if (sdfRow)  sdfRow.style.display  = opts.sdfMode ? '' : 'none';
+  put('optSdfNote', opts.sdfMode
+    ? ('いまの落下設定だと毎秒 ' + (opts.sdf >= SDF_MAX ? '∞' : Math.round(softDropRows())) + ' 行')
+    : '');
   put('optLockFramesVal', opts.lockFrames);
   const inF = opts.inputUnit === 'F';
   put('optDasVal', inF ? msToF(opts.dasMs) : opts.dasMs);
@@ -4843,7 +4886,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.24.4';
+const APP_VERSION = '1.25.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
