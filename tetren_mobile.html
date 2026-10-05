@@ -71,6 +71,15 @@ canvas { display:block; }
   cursor:move; touch-action:none;
 }
 .layout-edit [data-ctrl] > * { pointer-events:none; }
+/* 右下のつまみ。ここをドラッグすると大きさを変えられる */
+.layout-edit [data-ctrl] { position:relative; }
+.layout-edit [data-ctrl].moved { position:fixed; }
+.layout-edit [data-ctrl]::after {
+  content:''; position:absolute; right:2px; bottom:2px;
+  width:16px; height:16px; border-radius:3px;
+  border-right:3px solid #818cf8; border-bottom:3px solid #818cf8;
+  pointer-events:none;
+}
 /* 自分で動かしたグループは画面に固定する */
 [data-ctrl].moved { position:fixed; z-index:6; }
 .ctrl-row { display:grid; gap:4px; justify-content:space-between; }
@@ -1768,15 +1777,23 @@ function applyCtrlPos(){
     const p = ctrlPos[id];
     if(!p){
       el.classList.remove('moved');
-      el.style.left = el.style.top = el.style.width = '';
+      el.style.left = el.style.top = el.style.width = el.style.height = el.style.fontSize = '';
       return;
     }
     el.classList.add('moved');
     el.style.width = (p.w || el.offsetWidth) + 'px';
-    const w = p.w || el.offsetWidth, h = el.offsetHeight;
+    if (p.h) el.style.height = p.h + 'px';
+    syncBtnFont(el);
+    const w = p.w || el.offsetWidth, h = p.h || el.offsetHeight;
     el.style.left = Math.max(0, Math.min(window.innerWidth  - w, p.x)) + 'px';
     el.style.top  = Math.max(0, Math.min(window.innerHeight - h, p.y)) + 'px';
   });
+}
+// ボタンを大きくしたとき、矢印だけ小さいままだと間が抜けるので文字も合わせる
+function syncBtnFont(el){
+  if(!el.classList.contains('ctrl-btn')) return;   // 文字ボタン（捨てる/戻す）はそのまま
+  const h = el.offsetHeight;
+  el.style.fontSize = Math.round(Math.max(16, Math.min(64, h * 0.45))) + 'px';
 }
 function setLayoutEdit(on){
   layoutEdit = on;
@@ -1794,7 +1811,9 @@ function resetCtrlPos(){
 
 // ドラッグ。編集中のみ有効。つかんだ瞬間に画面固定へ切り替える。
 (function initCtrlDrag(){
-  let target=null, id=null, dx=0, dy=0;
+  const HANDLE = 26;      // 右下のこの範囲をつかむとサイズ変更
+  const MIN = 44, MAX = 240;
+  let target=null, id=null, dx=0, dy=0, mode='move', w0=0, h0=0, sx=0, sy=0;
   function down(e){
     if(!layoutEdit) return;
     const el = e.target.closest('[data-ctrl]');
@@ -1802,13 +1821,18 @@ function resetCtrlPos(){
     e.preventDefault();
     target = el; id = el.dataset.ctrl;
     const r = el.getBoundingClientRect();
+    const pt0 = e.touches ? e.touches[0] : e;
+    // 右下の角をつかんだらサイズ変更、それ以外は移動
+    mode = (pt0.clientX > r.right - HANDLE && pt0.clientY > r.bottom - HANDLE) ? 'size' : 'move';
+    w0 = r.width; h0 = r.height; sx = pt0.clientX; sy = pt0.clientY;
     if(!el.classList.contains('moved')){
       // 流し込みから外す前に、今の見た目の大きさと位置を固定する
       el.style.width = r.width + 'px';
       el.classList.add('moved');
       el.style.left = r.left + 'px';
       el.style.top  = r.top  + 'px';
-      ctrlPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width) };
+      ctrlPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height) };
+      el.style.height = Math.round(r.height) + 'px';
       initLayout();                       // 抜けたぶん中央カラムを詰める
       const r2 = el.getBoundingClientRect();
       el.style.left = r2.left + 'px'; el.style.top = r2.top + 'px';
@@ -1821,11 +1845,21 @@ function resetCtrlPos(){
     if(!target) return;
     e.preventDefault();
     const pt = e.touches ? e.touches[0] : e;
+    const p = ctrlPos[id] || {};
+    if(mode === 'size'){
+      const w = Math.max(MIN, Math.min(MAX, w0 + (pt.clientX - sx)));
+      const h = Math.max(MIN, Math.min(MAX, h0 + (pt.clientY - sy)));
+      target.style.width = Math.round(w) + 'px';
+      target.style.height = Math.round(h) + 'px';
+      syncBtnFont(target);
+      ctrlPos[id] = { x:p.x, y:p.y, w:Math.round(w), h:Math.round(h) };
+      return;
+    }
     const w = target.offsetWidth, h = target.offsetHeight;
     const x = Math.max(0, Math.min(window.innerWidth  - w, pt.clientX - dx));
     const y = Math.max(0, Math.min(window.innerHeight - h, pt.clientY - dy));
     target.style.left = x + 'px'; target.style.top = y + 'px';
-    ctrlPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w) };
+    ctrlPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:p.h };
   }
   function up(){
     if(!target) return;
@@ -1942,7 +1976,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.12.4';
+const APP_VERSION = '1.13.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
