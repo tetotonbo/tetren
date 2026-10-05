@@ -63,13 +63,22 @@ canvas { display:block; }
 .stat-lbl { font-size:8px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
 .stat-val { font-size:15px; font-weight:bold; color:#fff; line-height:1.1; }
 .ctrl-pad { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+/* 配置編集中。枠を出し、ボタン自体の反応は止めてドラッグだけを拾う */
+.layout-edit [data-ctrl] {
+  outline:2px dashed #818cf8; outline-offset:2px; border-radius:8px;
+  cursor:move; touch-action:none;
+}
+.layout-edit [data-ctrl] > * { pointer-events:none; }
+/* 自分で動かしたグループは画面に固定する */
+[data-ctrl].moved { position:fixed; z-index:6; }
 .ctrl-row { display:grid; gap:4px; }
 .ctrl-row.r2 { grid-template-columns:repeat(2,1fr); }
 .ctrl-row.r3 { grid-template-columns:repeat(3,1fr); }
 .ctrl-btn {
-  height:66px; background:#1f2937; color:#e5e7eb;
+  /* 高さと文字サイズは initLayout() が画面幅から決める（タブレットでは大きくする） */
+  height:var(--ctrl-h, 66px); background:#1f2937; color:#e5e7eb;
   border:1px solid #374151; border-radius:10px;
-  font-size:30px; cursor:pointer;
+  font-size:var(--ctrl-fs, 30px); cursor:pointer;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:1px;
   -webkit-tap-highlight-color:transparent;
@@ -78,7 +87,7 @@ canvas { display:block; }
   transition:background .08s, transform .06s;
 }
 .ctrl-btn:active { background:#374151; transform:scale(0.94); }
-.ctrl-lbl { font-size:9px; color:#6b7280; line-height:1; }
+.ctrl-lbl { font-size:var(--ctrl-lbl-fs, 9px); color:#6b7280; line-height:1; }
 .ctrl-btn.ctrl-hold { background:#2d1b4e; border-color:#7c3aed; color:#c4b5fd; }
 .ctrl-btn.ctrl-hold:active { background:#5b21b6; }
 .ctrl-btn.ctrl-hard { background:#1e3a5f; border-color:#2563eb; color:#93c5fd; }
@@ -88,19 +97,19 @@ canvas { display:block; }
   gap:4px; flex-shrink:0;
 }
 .opt-btn {
-  padding:12px 4px; background:#1f2937; color:#d1d5db;
+  padding:var(--opt-pad, 12px) 4px; background:#1f2937; color:#d1d5db;
   border:1px solid #374151; border-radius:6px;
-  font-size:13px; font-weight:bold; cursor:pointer;
+  font-size:var(--opt-fs, 13px); font-weight:bold; cursor:pointer;
   text-align:center; line-height:1.3;
   -webkit-tap-highlight-color:transparent;
   transition:background .1s;
 }
 .opt-btn:active { background:#374151; }
 .side-btn {
-  width:100%; padding:6px 2px;
+  width:100%; padding:var(--side-pad, 6px) 2px;
   background:#1f2937; color:#d1d5db;
   border:1px solid #374151; border-radius:6px;
-  font-size:9px; font-weight:bold; cursor:pointer;
+  font-size:var(--side-fs, 9px); font-weight:bold; cursor:pointer;
   text-align:center; line-height:1.4;
   -webkit-tap-highlight-color:transparent;
   transition:background .1s;
@@ -308,6 +317,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます">
+      <span>配置編集</span>
+      <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+      <span class="tgl"></span>
+    </label>
+    <button class="side-btn" id="ctrlPosResetBtn" style="display:none;margin-top:4px;"
+      onclick="resetCtrlPos()">配置を<br>元に戻す</button>
     <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
     <div class="di-row" style="margin-top:0;">
       <button class="di-btn"
@@ -373,7 +389,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <canvas id="boardCanvas"></canvas>
 
     <div class="ctrl-pad" id="ctrlPad">
-      <div class="ctrl-row r3">
+      <div class="ctrl-row r3" data-ctrl="move">
         <button class="ctrl-btn" id="btnLeft"
           onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
           onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')">
@@ -390,7 +406,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
           →<span class="ctrl-lbl">右</span>
         </button>
       </div>
-      <div class="ctrl-row r2">
+      <div class="ctrl-row r2" data-ctrl="rotate">
         <button class="ctrl-btn"
           onmousedown="if(!gameOver)rotate(-1)"
           ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)">
@@ -402,7 +418,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
-      <div class="ctrl-row r2">
+      <div class="ctrl-row r2" data-ctrl="drop">
         <button class="ctrl-btn ctrl-hold" onclick="if(!gameOver)doHold()">
           ⇪<span class="ctrl-lbl">HOLD</span>
         </button>
@@ -412,7 +428,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
 
-    <div id="opts">
+    <div id="opts" data-ctrl="opts">
       <button class="opt-btn"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn"
@@ -1721,15 +1737,129 @@ function paletteMetrics(boardW){
   return { h: rows * sw + (rows - 1) * PAL_GAP + PAL_PAD + 4, sw };   // +4 は中央カラムの gap
 }
 
+// ===== 操作ボタンの配置（タブレットで指が届く位置へ動かせるようにする）=====
+// グループ単位で動かす。左右+ソフト / 回転 / HOLD+DROP / 捨てる+戻す の4つ。
+const CTRL_GROUPS = ['move','rotate','drop','opts'];
+let ctrlPos = {};        // {id:{x,y}} 画面左上からのpx。未設定なら既定の位置のまま
+let layoutEdit = false;
+
+function loadCtrlPos(){
+  let raw=null;
+  try { raw = localStorage.getItem('tetren_ctrlpos'); } catch(e) {}
+  if(raw){ try { ctrlPos = JSON.parse(raw) || {}; } catch(e) { ctrlPos = {}; } }
+  applyCtrlPos();
+}
+function saveCtrlPos(){
+  try { localStorage.setItem('tetren_ctrlpos', JSON.stringify(ctrlPos)); } catch(e) {}
+}
+function ctrlEl(id){ return document.querySelector('[data-ctrl="' + id + '"]'); }
+
+// 保存された位置を画面に当てる。画面サイズが変わっても外に出ないよう収める。
+function applyCtrlPos(){
+  CTRL_GROUPS.forEach(id => {
+    const el = ctrlEl(id);
+    if(!el) return;
+    const p = ctrlPos[id];
+    if(!p){
+      el.classList.remove('moved');
+      el.style.left = el.style.top = el.style.width = '';
+      return;
+    }
+    el.classList.add('moved');
+    el.style.width = (p.w || el.offsetWidth) + 'px';
+    const w = p.w || el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(0, Math.min(window.innerWidth  - w, p.x)) + 'px';
+    el.style.top  = Math.max(0, Math.min(window.innerHeight - h, p.y)) + 'px';
+  });
+}
+function setLayoutEdit(on){
+  layoutEdit = on;
+  document.body.classList.toggle('layout-edit', on);
+  const sw = document.getElementById('layoutEditSw'); if(sw) sw.checked = on;
+  const rb = document.getElementById('ctrlPosResetBtn'); if(rb) rb.style.display = on ? '' : 'none';
+}
+function resetCtrlPos(){
+  ctrlPos = {};
+  saveCtrlPos();
+  applyCtrlPos();
+  initLayout();            // 中央カラムに戻るぶん盤面の大きさも計算し直す
+  if(board) draw();
+}
+
+// ドラッグ。編集中のみ有効。つかんだ瞬間に画面固定へ切り替える。
+(function initCtrlDrag(){
+  let target=null, id=null, dx=0, dy=0;
+  function down(e){
+    if(!layoutEdit) return;
+    const el = e.target.closest('[data-ctrl]');
+    if(!el) return;
+    e.preventDefault();
+    target = el; id = el.dataset.ctrl;
+    const r = el.getBoundingClientRect();
+    if(!el.classList.contains('moved')){
+      // 流し込みから外す前に、今の見た目の大きさと位置を固定する
+      el.style.width = r.width + 'px';
+      el.classList.add('moved');
+      el.style.left = r.left + 'px';
+      el.style.top  = r.top  + 'px';
+      ctrlPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width) };
+      initLayout();                       // 抜けたぶん中央カラムを詰める
+      const r2 = el.getBoundingClientRect();
+      el.style.left = r2.left + 'px'; el.style.top = r2.top + 'px';
+    }
+    const rr = target.getBoundingClientRect();
+    const pt = e.touches ? e.touches[0] : e;
+    dx = pt.clientX - rr.left; dy = pt.clientY - rr.top;
+  }
+  function move(e){
+    if(!target) return;
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    const w = target.offsetWidth, h = target.offsetHeight;
+    const x = Math.max(0, Math.min(window.innerWidth  - w, pt.clientX - dx));
+    const y = Math.max(0, Math.min(window.innerHeight - h, pt.clientY - dy));
+    target.style.left = x + 'px'; target.style.top = y + 'px';
+    ctrlPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w) };
+  }
+  function up(){
+    if(!target) return;
+    saveCtrlPos();
+    target = null; id = null;
+    if(board) draw();
+  }
+  document.addEventListener('pointerdown', down, {passive:false});
+  document.addEventListener('pointermove', move, {passive:false});
+  document.addEventListener('pointerup',   up);
+  document.addEventListener('pointercancel', up);
+})();
+
 function initLayout(){
   const vw=window.innerWidth, vh=window.innerHeight;
-  // サイドカラム幅: 画面幅の15%、最小44px、最大62px
-  const sideW=Math.max(44,Math.min(62,Math.floor(vw*0.15)));
+  // タブレットは短辺が600px以上。スマホ用の上限のままだと画面を使い切れないので緩める。
+  const tablet = Math.min(vw, vh) >= 600;
+  const CELL_MAX = tablet ? 46 : 28;   // 1マスの最大px
+  const SIDE_MAX = tablet ? 108 : 62;  // サイドカラムの最大px
+  const CTRL_H   = tablet ? 96 : 66;   // 操作ボタンの高さ
+  // ボタン類の寸法をCSS側へ渡す
+  const root = document.documentElement.style;
+  root.setProperty('--ctrl-h',      CTRL_H + 'px');
+  root.setProperty('--ctrl-fs',     (tablet ? 42 : 30) + 'px');
+  root.setProperty('--ctrl-lbl-fs', (tablet ? 12 : 9) + 'px');
+  root.setProperty('--opt-pad',     (tablet ? 18 : 12) + 'px');
+  root.setProperty('--opt-fs',      (tablet ? 17 : 13) + 'px');
+  root.setProperty('--side-pad',    (tablet ? 9 : 6) + 'px');
+  root.setProperty('--side-fs',     (tablet ? 12 : 9) + 'px');
+
+  // サイドカラム幅: 画面幅の15%、最小44px
+  const sideW=Math.max(44,Math.min(SIDE_MAX,Math.floor(vw*0.15)));
   // 利用可能ボード幅
   const availW=vw-sideW*2-5*2-8; // gaps + padding
-  // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。実測値に合わせている
-  const fixedH = 34 + 206 + 60 + 4*4 + 8;
-  const maxBS = Math.min(Math.floor(availW/COLS), 28);
+  // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。
+  // 配置編集で外に出したグループは中央カラムの高さを食わないので差し引く。
+  const ctrlH = CTRL_GROUPS.filter(g => g !== 'opts' && !ctrlPos[g]).length * (CTRL_H + 4);
+  const optsH = ctrlPos.opts ? 0 : (tablet ? 70 : 60);
+  const fixedH = (tablet ? 44 : 34) + ctrlH + optsH + 4*4 + 8;
+  const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
   const minBS = editing ? 10 : 16;
   BS = minBS;
@@ -1788,7 +1918,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.11.1';
+const APP_VERSION = '1.12.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -1959,7 +2089,9 @@ function shotPointerDown(e, win, mode){
 
 initPalette();
 initLayout();
-window.addEventListener('resize',()=>{initLayout();if(!gameOver&&board)draw();});
+loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
+initLayout();
+window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
 
 loadOptions();
 loadGravSpeed();
