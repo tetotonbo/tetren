@@ -82,7 +82,11 @@ body {
 .layout-edit [data-pos] {
   outline:2px dashed #818cf8; outline-offset:2px; border-radius:10px;
   cursor:move; user-select:none; position:relative;
+  /* iPadなどのタッチ端末で、ドラッグがページのスクロールとして扱われるのを防ぐ */
+  touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none;
 }
+/* 編集中はページ自体も動かさない（端をつかんだときの揺れ防止） */
+body.layout-edit { overscroll-behavior:none; }
 /* 右下のつまみ。ここをドラッグすると大きさを変えられる */
 .layout-edit [data-pos]::after {
   content:''; position:absolute; right:3px; bottom:3px;
@@ -313,14 +317,29 @@ body.ppt2-theme #nextCanvas {
 #aboutPanel p:last-of-type { margin-bottom:0; }
 #aboutPanel h3 { font-size:12px; color:#9ca3af; margin:14px 0 6px; }
 #aboutPanel a { color:#818cf8; }
+/* 複数段せりあがりの割合入力 */
+#digMultiRows { display:grid; grid-template-columns:repeat(2,1fr); gap:4px 12px; }
+.dm-row { display:flex; align-items:center; gap:6px; font-size:12px; color:#d1d5db; }
+.dm-row span.dm-lbl { flex:0 0 38px; color:#9ca3af; }
+.dm-row input {
+  flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
+  border:1px solid #374151; border-radius:5px;
+  padding:4px 6px; font-size:12px; text-align:right;
+}
+.dm-total {
+  display:flex; align-items:center; justify-content:flex-end; gap:10px;
+  margin-top:10px; font-size:12px; color:#d1d5db;
+}
+.dm-total.ng { color:#f87171; }
+.dm-sep { border-top:1px solid #374151; margin:12px 0 4px; }
 
 /* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
-#dpcOverlay, #missOverlay, #aboutOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #digMultiOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #digMultiPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
@@ -393,6 +412,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
+/* せりあがり予告（盤面の下） */
+#digPreview {
+  width:300px; display:flex; align-items:center; justify-content:space-between;
+  background:#111827; border:1px solid #374151; border-radius:6px;
+  padding:5px 10px; font-size:12px; font-weight:bold; letter-spacing:0.5px;
+}
+#digPreviewNext    { color:#93c5fd; }
+#digPreviewPending { color:#fca5a5; }
 .ctrl-pad { width:300px; display:flex; flex-direction:column; gap:6px; }
 .ctrl-row { display:grid; gap:6px; }
 .ctrl-row.r2 { grid-template-columns:repeat(2,1fr); }
@@ -570,6 +597,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
           ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
       </div>
+      <!-- マラソン中だけ、設置時間と次の段階までの行数を出す -->
+      <div id="marathonInfo" style="display:none;font-size:9px;color:#9ca3af;text-align:center;margin-top:6px;white-space:nowrap;"></div>
     </div>
 
     <!-- デザイン -->
@@ -647,6 +676,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div style="display:flex;flex-direction:column;gap:8px;">
     <div style="position:relative;display:inline-block;" id="boardWrap">
       <canvas id="boardCanvas" width="300" height="610"></canvas>
+    </div>
+    <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
+    <div id="digPreview" style="display:none;">
+      <span id="digPreviewNext"></span>
+      <span id="digPreviewPending"></span>
     </div>
 
     <!-- 操作ボタンパッド -->
@@ -777,12 +811,24 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <button id="dekaModeBtn" title="ミノを4倍の大きさにする" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleDekaMode()">デカミノ</button>
+        <button id="marathonBtn" class="toggle-btn"
+          style="background:#374151;"
+          title="10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります"
+          onclick="toggleMarathon()">マラソン</button>
+        <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
+        <button id="digOpenBtn" class="toggle-btn"
+          style="background:#374151;"
+          title="せりあがりの設定とスタートボタンを開きます"
+          onclick="toggleDigPanel()">せりあがり</button>
       </div>
-      <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
-      <div class="panel-label">せりあがり</div>
+      <div id="digPanel" style="display:none;">
       <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
-        style="background:#374151;"
+        style="background:#374151;margin-top:8px;"
         onclick="toggleDigMode()">スタート</button>
+      <button id="digMultiBtn" class="toggle-btn"
+        style="background:#374151;margin-top:6px;"
+        title="1回のせりあがりで何段上げるかを、段数ごとの割合で決めます"
+        onclick="openDigMulti()">複数段</button>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
         <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
           <input type="radio" name="digTriggerType" id="digTypeMino"
@@ -816,6 +862,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:40px;line-height:1.35;color:#9ca3af;font-size:10px;"></div>
+      </div>
     </div>
 
   </div>
@@ -941,6 +988,45 @@ input:checked + .tgl::after { transform:translateX(16px); }
   </div>
 </div>
 
+<!-- 複数段せりあがり: 段数ごとの出現割合と、そのときの穴継続率 -->
+<div id="digMultiOverlay">
+  <div id="digMultiPanel">
+    <div class="imp-head">
+      <span class="imp-title">複数段せりあがり</span>
+      <button class="imp-x" title="閉じる" onclick="closeDigMulti()">×</button>
+    </div>
+    <label class="tgl-row" style="margin:0 0 10px;"
+      title="ONにすると、1回のせりあがりで下の割合に従って段数を決めます">
+      <span>複数段にする</span>
+      <input type="checkbox" id="digMultiSw" onchange="setDigMultiOn(this.checked)">
+      <span class="tgl"></span>
+    </label>
+    <div class="imp-hint" style="margin:0 0 8px;">
+      1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。
+    </div>
+    <div id="digMultiRows"></div>
+    <div class="dm-total">
+      合計 <span id="digMultiTotal">100</span>％
+      <button class="imp-btn" style="padding:4px 10px;font-size:11px;"
+        onclick="normalizeDigMulti()" title="合計がちょうど100％になるように割り振り直します">100％にそろえる</button>
+    </div>
+    <div class="dm-sep"></div>
+    <div class="opt-row" style="border-bottom:none;">
+      <span class="opt-label">複数段のときの穴継続率
+        <span class="opt-note">複数段で上がるとき、直前の穴と同じ列になる確率（10％＝完全ランダム）</span></span>
+      <div class="opt-step">
+        <button class="step-btn" onclick="stepDigMultiHole(-1)">‹</button>
+        <span class="opt-val"><span id="digMultiHoleVal">40</span><span class="opt-unit"> %</span></span>
+        <button class="step-btn" onclick="stepDigMultiHole(1)">›</button>
+      </div>
+    </div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="resetDigMulti()">初期値に戻す</button>
+      <button class="imp-btn imp-primary" onclick="closeDigMulti()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div id="aboutOverlay">
   <div id="aboutPanel">
     <div class="imp-head">
@@ -1039,12 +1125,46 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
     <div class="cfg-pane" id="cfgPaneMisc">
       <div class="opt-row">
+        <span class="opt-label">ミノ設置直後にせりあがり
+          <span class="opt-note">せりあがりの「時間経過」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optDigOnLock"
+            onchange="setOption('digOnLock', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">ソフトドロップをSDFで指定
+          <span class="opt-note">他のテトリスと同じ「重力の何倍で落ちるか」での指定に切り替えます</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optSdfMode"
+            onchange="setOption('sdfMode', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optSoftRow">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
         <div class="opt-step">
           <button class="step-btn" onclick="stepOption('softSpeed',-1)">‹</button>
           <span class="opt-val" id="optSoftSpeedVal">5</span>
           <button class="step-btn" onclick="stepOption('softSpeed',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row" id="optSdfRow" style="display:none;">
+        <span class="opt-label">SDF
+          <span class="opt-note">重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。<span id="optSdfNote"></span>（長押しで連続変更）</span></span>
+        <div class="opt-step">
+          <button class="step-btn" title="SDFを下げる（長押しで連続）"
+            onmousedown="startRepeat(()=>stepOption('sdf',-1))"
+            ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',-1))">‹</button>
+          <span class="opt-val" id="optSdfVal">6</span>
+          <button class="step-btn" title="SDFを上げる（長押しで連続）"
+            onmousedown="startRepeat(()=>stepOption('sdf',1))"
+            ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',1))">›</button>
         </div>
       </div>
 
@@ -1998,6 +2118,9 @@ function toggleDigMode() {
   digMode = !digMode;
   digCount = 0;
   timeDigLastTs = 0;
+  pendingDigRows = 0;   // 溜まっていたぶんは持ち越さない
+  digStaged = false;
+  rollNextDigRows();
   const btn = document.getElementById('digBtn');
   if (digMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
@@ -2052,6 +2175,7 @@ function restoreRenWalls() {
 
 // ===== デカミノモード =====
 function toggleDekaMode() {
+  closeDigPanel();
   dekaMode = !dekaMode;
   const btn = document.getElementById('dekaModeBtn');
   // 盤面リセット
@@ -2078,6 +2202,7 @@ function toggleDekaMode() {
 }
 
 function toggleRenMode() {
+  closeDigPanel();
   renMode = !renMode;
   const btn = document.getElementById('renModeBtn');
   if (renMode) {
@@ -2098,8 +2223,9 @@ function toggleRenMode() {
     setupRenTerrain();
   } else {
     btn.style.background = '#374151'; // グレー = OFF
-    // 地形クリア（可視行のみ）
-    for (let r = BUF; r < TROW; r++)
+    // 地形クリア。壁は REN_WALL_TOP（21段目）から積んでいるので、
+    // 可視行だけ消すとそこに壁が残ってしまう。バッファ行まで含めて消す。
+    for (let r = 0; r < TROW; r++)
       for (let c = 0; c < COLS; c++) board[r][c] = null;
     // RENリセット
     ren = 0;
@@ -2144,6 +2270,7 @@ const pick = {
 };
 
 function openDpc() {
+  closeDigPanel();
   document.getElementById('dpcOverlay').classList.add('open');
   renderPieceGrid('dpc');
 }
@@ -2151,6 +2278,7 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 function openMiss() {
+  closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
@@ -2363,13 +2491,40 @@ function resetTerrain() {
 }
 
 // ===== おじゃまブロック競り上がり =====
-function addGarbage(sameHole) {
+// 自動せりあがりの入り口。予告した段数ぶん積んでから、次の段数を引き直す。
+function addGarbageRows(sameHole, rows) {
+  const n = Math.max(1, rows || nextDigRows);
+  let ok = true;
+  for (let i = 0; i < n; i++) ok = addGarbage(sameHole, n > 1) && ok;
+  rollNextDigRows();
+  return ok;
+}
+// 時間経過ぶんを溜める（「ミノ設置直後にせりあがり」がONのとき）
+function queueDigRows() {
+  pendingDigRows += Math.max(1, nextDigRows);
+  rollNextDigRows();
+}
+// ミノを置いた直後に、溜まっているぶんをまとめて上げる
+function flushPendingDig() {
+  if (!pendingDigRows) return;
+  const n = pendingDigRows;
+  pendingDigRows = 0;
+  for (let i = 0; i < n; i++) addGarbage(false, n > 1);
+  updateDigCounter();
+}
+// 攻撃したぶんだけ溜まりを減らす（相殺）。0以下になればせりあがらない。
+function offsetPendingDig(atk) {
+  if (!atk || !pendingDigRows) return;
+  pendingDigRows = Math.max(0, pendingDigRows - atk);
+  updateDigCounter(); drawDigPreview();
+}
+function addGarbage(sameHole, multi) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
   // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
   let holeCol;
   if (lastGarbageCol === null) {
     holeCol = Math.floor(Math.random() * COLS);
-  } else if (sameHole === true || Math.random() * 100 < opts.holeKeep) {
+  } else if (sameHole === true || Math.random() * 100 < (multi ? digMulti.hole : opts.holeKeep)) {
     holeCol = lastGarbageCol;
   } else {
     // 外れたときは「直前以外」から選ぶ。こうすると設定値がそのまま
@@ -2579,6 +2734,7 @@ function lock() {
   }
 
   const cleared = clearLines();
+  marathonOnClear(cleared);   // マラソン中は消した行数で段階を進める
   if (renMode) restoreRenWalls(); // RENモード：壁を常時維持
 
   // パーフェクトクリア判定
@@ -2587,13 +2743,19 @@ function lock() {
   // REN更新
   if (cleared > 0) { ren++; } else { ren = 0; }
 
+  const wasB2B = b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared, tSpin, isPerfect);
 
   // せりあがり自動モード（ミノごと）
   if (digMode && digTriggerType === 'mino') {
     digCount++;
     updateDigCounter();
-    if (digCount % digInterval === 0) addGarbage(false);
+    if (digCount % digInterval === 0) addGarbageRows(false);
+  }
+  // 時間経過タイプ: 置いた攻撃で相殺してから、残りを上げる
+  if (digMode && digTriggerType === 'time') {
+    offsetPendingDig(attackPower(cleared, tSpin, wasB2B, isPerfect));
+    if (opts.digOnLock) flushPendingDig();
   }
 
   spawn();
@@ -2691,6 +2853,44 @@ function pieceAxisPos(row, col, type) {
   if (type === 'I') return [(vc+2)*BS, (vr+2)*BS];
   if (type === 'O') return [(vc+1)*BS, (vr+1)*BS];
   return [(vc+1)*BS + BS/2, (vr+1)*BS + BS/2];
+}
+
+// ===== 火力（相殺に使う攻撃ライン数） =====
+// ぷよぷよテトリス2の表に合わせている。
+//   通常消し : 1→0 / 2→1 / 3→2 / 4(テトリス)→4
+//   Tスピン  : ミニ→0 / シングル→2 / ダブル→4 / トリプル→6
+//   REN      : 11REN以降はすべて5
+//   B2B      : テトリス・Tスピンを続けたとき +1
+//   パフェ   : +10
+const ATK_LINE  = [0, 0, 1, 2, 4];          // 消したライン数で引く
+const ATK_TSPIN = [0, 2, 4, 6];             // Tスピンの消しライン数で引く（1〜3）
+const ATK_REN   = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5];  // REN数で引く（11以降は5）
+const ATK_PERFECT = 10;
+function attackPower(cleared, tSpin, wasB2B, isPerfect) {
+  if (!cleared) return 0;
+  let a;
+  if (tSpin === 'mini')      a = 0;
+  else if (tSpin === 'full') a = ATK_TSPIN[cleared] ?? 0;
+  else                       a = ATK_LINE[cleared] ?? 0;
+  if (wasB2B && (cleared === 4 || tSpin === 'full')) a += 1;   // B2B
+  a += ATK_REN[Math.min(ren, 11)];                             // REN（renはここでは加算済み）
+  if (isPerfect) a += ATK_PERFECT;                             // パーフェクトクリア
+  return a;
+}
+
+// 次に何段上がるかを盤面の「外」に予告として出す。
+// せりあがりが動いている間は常に出し、いまどういう状態かが分かるようにする。
+function drawDigPreview() {
+  const box = document.getElementById('digPreview');
+  if (!box) return;
+  if (!digMode) { box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  document.getElementById('digPreviewNext').textContent = '次 ' + nextDigRows + '段';
+  const pend = document.getElementById('digPreviewPending');
+  // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
+  if (opts.digOnLock)      pend.textContent = '溜まり ' + pendingDigRows + '段';
+  else if (pendingDigRows) pend.textContent = 'まもなく ' + pendingDigRows + '段';
+  else                     pend.textContent = '';
 }
 
 function drawBoard() {
@@ -2847,6 +3047,7 @@ function drawBoard() {
     }
   }
   boardCtx.restore(); // translate(0, PEEK) を戻す
+  drawDigPreview();   // 予告は盤面の外に出す
 }
 
 function drawMini(ctx, type, yOff, w, h, dim=false, bs=18) {
@@ -3020,8 +3221,14 @@ function loop(ts) {
   if (digMode && digTriggerType === 'time') {
     if (!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
+    // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
+    if (remainMs <= 1000 && !digStaged) { queueDigRows(); digStaged = true; }
     if (remainMs <= 0) {
-      addGarbage(false);
+      // 溜まりが限界を超えていたら、相殺を待たず一気に積んで終わらせる
+      if (pendingDigRows >= DIG_PENDING_LIMIT) flushPendingDig();
+      // 「ミノ設置直後にせりあがり」がONのときは、置くまで溜めたままにする
+      else if (!opts.digOnLock) flushPendingDig();
+      digStaged = false;
       timeDigLastTs = ts;
       updateDigCounter(timeDigInterval);
     } else {
@@ -3817,6 +4024,9 @@ function applyImport() {
   document.getElementById('aboutOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'aboutOverlay') closeAbout();
   });
+  document.getElementById('digMultiOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'digMultiOverlay') closeDigMulti();
+  });
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
   });
@@ -4223,8 +4433,198 @@ function resetPanelPos() {
   document.addEventListener('pointermove', move, {passive:false});
   document.addEventListener('pointerup', up);
   document.addEventListener('pointercancel', up);
+  // iOS/iPadOS は pointer の preventDefault だけではスクロールが止まらないことがあるため、
+  // つかんでいる間の touchmove も明示的に止める。
+  document.addEventListener('touchmove', e => {
+    if (target) e.preventDefault();
+  }, {passive:false});
 })();
 window.addEventListener('resize', applyPanelPos);
+
+// ===== 複数段せりあがり =====
+// 1回のせりあがりで何段上げるかを、段数ごとの割合（合計100％）で決める。
+// 複数段のときは穴の続きやすさも別に持てるようにしてある。
+const DIG_MULTI_DEFAULT = { on:false, w:[100,0,0,0,0,0,0,0,0,0], hole:40 };
+let digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+
+function loadDigMulti() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_digmulti'); } catch(e) {}
+  if (raw) {
+    try {
+      const v = JSON.parse(raw);
+      if (v && Array.isArray(v.w) && v.w.length === 10) digMulti = v;
+    } catch(e) {}
+  }
+  renderDigMulti();
+  updateDigMultiBtn();
+}
+function saveDigMulti() {
+  try { localStorage.setItem('tetren_digmulti', JSON.stringify(digMulti)); } catch(e) {}
+}
+function openDigMulti()  { document.getElementById('digMultiOverlay').classList.add('open'); renderDigMulti(); }
+function closeDigMulti() { document.getElementById('digMultiOverlay').classList.remove('open'); }
+function setDigMultiOn(on) { digMulti.on = on; saveDigMulti(); updateDigMultiBtn(); }
+function stepDigMultiHole(d) {
+  digMulti.hole = Math.max(10, Math.min(100, digMulti.hole + d * 10));
+  saveDigMulti(); renderDigMulti();
+}
+function resetDigMulti() {
+  digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+  saveDigMulti(); renderDigMulti(); updateDigMultiBtn();
+}
+function digMultiTotal() { return digMulti.w.reduce((a,b)=>a+b, 0); }
+// 合計が100になるよう、いまの比率のまま割り振り直す
+function normalizeDigMulti() {
+  const t = digMultiTotal();
+  if (t <= 0) { digMulti.w = [100,0,0,0,0,0,0,0,0,0]; }
+  else {
+    const scaled = digMulti.w.map(v => v * 100 / t);
+    const floored = scaled.map(v => Math.floor(v));
+    let rest = 100 - floored.reduce((a,b)=>a+b, 0);
+    // 端数が大きい順に1ずつ配る
+    const order = scaled.map((v,i)=>[v - Math.floor(v), i]).sort((a,b)=>b[0]-a[0]);
+    for (let k = 0; k < rest; k++) floored[order[k % 10][1]]++;
+    digMulti.w = floored;
+  }
+  saveDigMulti(); renderDigMulti();
+}
+function renderDigMulti() {
+  const box = document.getElementById('digMultiRows');
+  if (!box) return;
+  box.innerHTML = '';
+  digMulti.w.forEach((v, i) => {
+    const row = document.createElement('div');
+    row.className = 'dm-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'dm-lbl';
+    lbl.textContent = (i + 1) + '段';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min = '0'; inp.max = '100'; inp.value = v;
+    inp.addEventListener('input', () => {
+      const n = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));
+      digMulti.w[i] = n;
+      saveDigMulti();
+      updateDigMultiTotal();
+    });
+    const pct = document.createElement('span');
+    pct.textContent = '％';
+    row.appendChild(lbl); row.appendChild(inp); row.appendChild(pct);
+    box.appendChild(row);
+  });
+  const sw = document.getElementById('digMultiSw'); if (sw) sw.checked = digMulti.on;
+  const hv = document.getElementById('digMultiHoleVal'); if (hv) hv.textContent = digMulti.hole;
+  updateDigMultiTotal();
+}
+function updateDigMultiTotal() {
+  const t = digMultiTotal();
+  const el = document.getElementById('digMultiTotal');
+  if (el) el.textContent = t;
+  const box = el && el.parentElement;
+  if (box) box.classList.toggle('ng', t !== 100);
+}
+function updateDigMultiBtn() {
+  const btn = document.getElementById('digMultiBtn');
+  if (!btn) return;
+  btn.style.background = digMulti.on ? '#16a34a' : '#374151';
+}
+// 次に何段上がるかを先に決めておき、盤面下部に予告として出す。
+// 「ミノ設置直後にせりあがり」のときは、時間で溜まったぶんもここに足す。
+let nextDigRows = 1;    // 次のせりあがりで上がる段数（予告）
+let pendingDigRows = 0; // 設置待ちで溜まっている段数
+let digStaged = false;  // この周期ぶんを溜まりへ積んだか（1秒前に積む）
+// パフェで10ライン相殺できるので、それでも返せない量になったら終わりにする
+const DIG_PENDING_LIMIT = 30;   // これ以上溜まったら相殺を待たず一気に積む
+function rollNextDigRows() { nextDigRows = pickDigRows(); updateDigCounter(); drawDigPreview(); }
+
+// 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う。
+function pickDigRows() {
+  if (!digMulti.on) return 1;
+  const t = digMultiTotal();
+  if (t <= 0) return 1;
+  let r = Math.random() * t;
+  for (let i = 0; i < 10; i++) {
+    r -= digMulti.w[i];
+    if (r < 0) return i + 1;
+  }
+  return 1;
+}
+
+// せりあがり設定の開閉
+function setDigPanelOpen(open) {
+  const box = document.getElementById('digPanel');
+  if (!box) return;
+  // '' だと「閉じている」と区別できないので、必ず値を入れる
+  box.style.display = open ? 'block' : 'none';
+  const btn = document.getElementById('digOpenBtn');
+  if (btn) btn.style.background = open ? '#4b5563' : '#374151';
+}
+function digPanelOpen() {
+  const box = document.getElementById('digPanel');
+  return !!box && box.style.display === 'block';
+}
+function toggleDigPanel() { setDigPanelOpen(!digPanelOpen()); }
+// 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
+function closeDigPanel() { setDigPanelOpen(false); }
+
+// ===== マラソン（進むほど速くなる） =====
+// 1Gから始めて、10ライン消すごとに1Gずつ上がる。
+// 20Gに達したあとさらに10ライン消すと、15Gへ戻す代わりに
+// ミノの設置時間を短くする。これを繰り返して少しずつ厳しくしていく。
+let marathonMode = false;
+let marathonLines = 0;    // 次の段階までに消した行数
+let marathonLock = 30;    // マラソン中の設置時間（フレーム）
+let marathonSavedGrav = 0;
+
+// 設置時間の下げ幅。残りが少ないほど刻みを細かくする。
+function nextMarathonLock(cur) {
+  const step = cur > 15 ? 5 : (cur > 9 ? 2 : 1);
+  return Math.max(1, cur - step);
+}
+function toggleMarathon() {
+  closeDigPanel();
+  marathonMode = !marathonMode;
+  const btn = document.getElementById('marathonBtn');
+  if (marathonMode) {
+    btn.style.background = '#16a34a'; // 緑 = ON
+    marathonSavedGrav = gravSpeed;
+    marathonLines = 0;
+    marathonLock = 30;
+    gravSpeed = 1;
+    updateGravDisplay();
+    startGame();                     // 1Gの状態から始める
+  } else {
+    btn.style.background = '#374151';
+    gravSpeed = marathonSavedGrav;   // 元の落下速度に戻す
+    updateGravDisplay();
+  }
+  updateMarathonInfo();
+}
+// 消した行数を受け取って段階を進める
+function marathonOnClear(n) {
+  if (!marathonMode || !n) return;
+  marathonLines += n;
+  while (marathonLines >= 10) {
+    marathonLines -= 10;
+    if (gravSpeed < 20) {
+      gravSpeed++;                       // 20Gまでは素直に上げる
+    } else {
+      gravSpeed = 15;                    // 20Gの次は15Gへ戻し、
+      marathonLock = nextMarathonLock(marathonLock);  // 代わりに設置時間を詰める
+    }
+  }
+  updateGravDisplay();
+  updateMarathonInfo();
+}
+// 現在の段階を落下設定の下に小さく出す
+function updateMarathonInfo() {
+  const el = document.getElementById('marathonInfo');
+  if (!el) return;
+  el.style.display = marathonMode ? '' : 'none';
+  if (marathonMode) {
+    el.textContent = `${marathonLock}F ・ 次 ${10 - marathonLines}`;
+  }
+}
 
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
@@ -4239,9 +4639,12 @@ const OPT_DEFAULTS = {
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
+  digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
+  sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
+  sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
 };
 // [最小, 最大, 刻み]
-const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1] };
 // DAS/ARR の上下限（ミリ秒）
 const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
 const FRAME_MS = 1000 / 60;
@@ -4262,12 +4665,22 @@ let opts = Object.assign({}, OPT_DEFAULTS);
 // ソフトドロップの速さ（1秒あたりに落ちる行数）。5までは従来どおり、6以上は大きく加速する。
 // ミリ秒間隔で持つと1フレーム(約17ms)未満の指定が頭打ちになるため、行数で持って端数を積む。
 const SOFT_DROP_RPS = [8, 10, 12, 15, 20, 32, 55, 90, 150, 600];
+// SDF（Soft Drop Factor）: 他のテトリスと同じ「重力の何倍で落ちるか」での指定。
+// 41 は ∞ 扱いで、押した瞬間に最下段まで落ちる。
+const SDF_MIN = 5, SDF_MAX = 41;
 function softDropRows() {
-  return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+  if (!opts.sdfMode) return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+  if (opts.sdf >= SDF_MAX) return TROW * 60;        // ∞（1フレームで最下段）
+  // 落下設定が0G（自由落下なし）だと倍率が効かないので、1G相当を下敷きにする
+  const baseG = Math.max(1, gravSpeed);
+  return gravRowsPerFrame(baseG) * 60 * opts.sdf;   // 行/秒
 }
 function softDropRate() { return 1000 / softDropRows(); }   // 参考: 1行あたりのミリ秒
 // 接地してから固定されるまでのミリ秒
-function lockDelayMs() { return opts.lockFrames * 1000 / 60; }
+function lockDelayMs() {
+  // マラソン中は進行に応じて短くなる専用の値を使う
+  return (marathonMode ? marathonLock : opts.lockFrames) * 1000 / 60;
+}
 
 function saveOptions() {
   try { localStorage.setItem('tetren_options', JSON.stringify(opts)); } catch(e) {}
@@ -4285,6 +4698,7 @@ function loadOptions() {
 function applyOptions() {
   const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
+  check('optDigOnLock', opts.digOnLock);
   // 表示系のスイッチも設定から復元する
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
@@ -4294,6 +4708,16 @@ function applyOptions() {
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
+  check('optSdfMode', opts.sdfMode);
+  put('optSdfVal', opts.sdf >= SDF_MAX ? '∞' : opts.sdf);
+  // SDFで指定するときは、従来の「ソフトドロップ速度」は隠す
+  const softRow = document.getElementById('optSoftRow');
+  const sdfRow  = document.getElementById('optSdfRow');
+  if (softRow) softRow.style.display = opts.sdfMode ? 'none' : '';
+  if (sdfRow)  sdfRow.style.display  = opts.sdfMode ? '' : 'none';
+  put('optSdfNote', opts.sdfMode
+    ? ('いまの落下設定だと毎秒 ' + (opts.sdf >= SDF_MAX ? '∞' : Math.round(softDropRows())) + ' 行')
+    : '');
   put('optLockFramesVal', opts.lockFrames);
   const inF = opts.inputUnit === 'F';
   put('optDasVal', inF ? msToF(opts.dasMs) : opts.dasMs);
@@ -4462,7 +4886,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.20.1';
+const APP_VERSION = '1.25.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4701,6 +5125,7 @@ function resetGameState(fullReset = true) {
   updateGravDisplay();
   downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
+  pendingDigRows = 0; digStaged = false; rollNextDigRows();
   if (fullReset) {
     // 自動せりあがりは止めるが、間隔の設定値（ミノごと/秒数とその数値）は
     // 続けて練習できるよう残しておく
@@ -4738,6 +5163,8 @@ function switchVersion() { location.href = 'tetren_mobile.html'; }
 initKeyConfig();
 loadSkin();
 loadPanelPos();   // 保存した枠の位置を復元する
+loadDigMulti();   // 複数段せりあがりの設定を復元する
+rollNextDigRows();   // 予告する段数を先に決めておく
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
