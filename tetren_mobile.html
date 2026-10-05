@@ -25,6 +25,8 @@ html, body {
   background:#111827; height:100%;
   font-family:'Arial',sans-serif; color:#eee;
   user-select:none; -webkit-user-select:none;
+  /* 長押しの選択メニューはcalloutを切らないと止まらない（PC版と同じ対策） */
+  -webkit-touch-callout:none;
   overflow:hidden; touch-action:manipulation;
 }
 #wrap {
@@ -338,13 +340,46 @@ input:checked + .tgl::after { transform:translateX(10px); }
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます">
+    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
       <span>配置編集</span>
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
       <span class="tgl"></span>
     </label>
     <button class="side-btn" id="ctrlPosResetBtn" style="display:none;margin-top:4px;"
       onclick="resetCtrlPos()">配置を<br>元に戻す</button>
+    <!-- 表示サイズは普段使わないので、配置編集をONにしたときだけ出す -->
+    <div id="viewScaleBox" style="display:none;">
+      <div class="m-lbl" style="margin:4px 0 0;">盤面サイズ</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="盤面を小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('boardScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="boardScaleVal">100</span> %</div>
+        <button class="di-btn" title="盤面を大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('boardScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('boardScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
+      <div class="m-lbl" style="margin:4px 0 0;">NEXT/HOLD</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="NEXT・HOLDを小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('miniScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="miniScaleVal">100</span> %</div>
+        <button class="di-btn" title="NEXT・HOLDを大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('miniScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('miniScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
+      <div class="m-lbl" style="margin:4px 0 0;">メニュー</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn" title="左のボタンを小さくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('menuScale',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="menuScaleVal">100</span> %</div>
+        <button class="di-btn" title="左のボタンを大きくする（長押しで連続）"
+          onmousedown="startRepeat(()=>stepViewScale('menuScale',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',1))" ontouchend="stopRepeat()">›</button>
+      </div>
+    </div>
     <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
     <div class="di-row" style="margin-top:0;">
       <button class="di-btn"
@@ -1495,6 +1530,23 @@ function openMiss(){
 function closeMiss(){
   document.getElementById('missOverlay').classList.remove('open');
 }
+// 表示の大きさ（盤面／NEXT・HOLD／メニュー）を変える。
+// 変えたらレイアウトを組み直して描き直す。
+const VIEW_SCALES = [['boardScale','boardScaleVal'], ['miniScale','miniScaleVal'], ['menuScale','menuScaleVal']];
+function syncViewScaleLabels(){
+  VIEW_SCALES.forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = opts[key] || 100;
+  });
+}
+function stepViewScale(key, d){
+  const [min,max,step] = OPT_RANGE[key];
+  opts[key] = Math.max(min, Math.min(max, (opts[key] || 100) + d * step));
+  saveOptions();
+  syncViewScaleLabels();
+  initLayout(); applyCtrlPos();
+  if (board) draw();
+}
 function setPickMulti(on){
   missPick.multi=on; missPick.sel.clear();
   // 次に開いたときも同じ状態になるよう覚えておく
@@ -1577,8 +1629,12 @@ updateMissAgainBtn();
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
                        dasMs:167, arrMs:33, inputUnit:'ms',
-                       missMulti:false };   // ミノ欠けの「複数選択」スイッチ
-const OPT_RANGE    = { holeKeep:[10,100,10] };
+                       missMulti:false,     // ミノ欠けの「複数選択」スイッチ
+                       // 表示の大きさ（％）。タブレットで好みの比率にできる。
+                       // 盤面・NEXT/HOLD・左メニューはそれぞれ余白の都合が違うので別々に持つ
+                       boardScale:100, miniScale:100, menuScale:100 };
+const OPT_RANGE    = { holeKeep:[10,100,10],
+                       boardScale:[50,200,5], miniScale:[50,200,5], menuScale:[60,200,5] };
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 function saveOptions(){
@@ -1597,6 +1653,7 @@ function loadOptions(){
   applyOptions();
 }
 function applyOptions(){
+  syncViewScaleLabels();
   const check = (id,v) => { const el = document.getElementById(id); if(el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
   // 表示系のスイッチも設定から復元する（地形編集はスマホ版ではボタンなので対象外）
@@ -1855,6 +1912,8 @@ function setLayoutEdit(on){
   document.body.classList.toggle('layout-edit', on);
   const sw = document.getElementById('layoutEditSw'); if(sw) sw.checked = on;
   const rb = document.getElementById('ctrlPosResetBtn'); if(rb) rb.style.display = on ? '' : 'none';
+  // 盤面・NEXT・メニューの大きさも編集中だけ出す（普段はメニューを短くしておきたい）
+  const vs = document.getElementById('viewScaleBox'); if(vs) vs.style.display = on ? 'block' : 'none';
   // 編集中は盤面を動かさず、終えたときに空いたぶんをまとめて反映する
   if(!on){ initLayout(); applyCtrlPos(); if(board) draw(); }
 }
@@ -1935,25 +1994,30 @@ function initLayout(){
   const tablet = Math.min(vw, vh) >= 600;
   const CELL_MAX = tablet ? 46 : 28;   // 1マスの最大px
   const CTRL_H   = tablet ? 92 : 66;   // 操作ボタンの高さ
+  // 表示倍率。盤面とは別に、NEXT/HOLD と左メニューも好みの大きさにできる。
+  const miniScale = (opts.miniScale || 100) / 100;
+  const menuScale = (opts.menuScale || 100) / 100;
   // HOLD/NEXT のミノ1マス。枠の幅はこれに合わせるので先に決める。
-  MINI_BS = tablet ? 24 : 15;
+  MINI_BS = Math.max(8, Math.round((tablet ? 24 : 15) * miniScale));
   // ボタン類の寸法をCSS側へ渡す
   const root = document.documentElement.style;
   root.setProperty('--ctrl-h',      CTRL_H + 'px');
   root.setProperty('--ctrl-fs',     (tablet ? 42 : 30) + 'px');
   root.setProperty('--ctrl-lbl-fs', (tablet ? 12 : 9) + 'px');
-  root.setProperty('--opt-pad',     (tablet ? 18 : 12) + 'px');
-  root.setProperty('--opt-fs',      (tablet ? 17 : 13) + 'px');
-  root.setProperty('--side-pad',    (tablet ? 9 : 6) + 'px');
-  root.setProperty('--side-fs',     (tablet ? 12 : 9) + 'px');
+  root.setProperty('--opt-pad',     Math.round((tablet ? 18 : 12) * menuScale) + 'px');
+  root.setProperty('--opt-fs',      Math.round((tablet ? 17 : 13) * menuScale) + 'px');
+  root.setProperty('--side-pad',    Math.round((tablet ? 9 : 6) * menuScale) + 'px');
+  // 文字は小さくしすぎると読めないので下限を置く
+  root.setProperty('--side-fs',     Math.max(7, Math.round((tablet ? 12 : 9) * menuScale)) + 'px');
   // タブレットはボタンを正方形に保つ（横に伸ばすと押しにくく、見た目も間延びする）
   root.setProperty('--ctrl-col', tablet ? CTRL_H + 'px' : '1fr');
   root.setProperty('--opt-col',  tablet ? Math.round(CTRL_H * 1.45) + 'px' : '1fr');
 
   // サイドカラム幅。タブレットでは HOLD/NEXT の中身（ミノ4マス分）に合わせる。
   // 画面幅いっぱいに広げると、中身に対して枠だけが横長になる。
-  const sideW = tablet ? Math.max(100, MINI_BS*4 + 24)
-                       : Math.max(44, Math.min(62, Math.floor(vw*0.15)));
+  // メニューを大きくしたぶんも列幅に要る。NEXT側とメニュー側の必要幅の大きいほうを採る。
+  const sideW = tablet ? Math.max(Math.round(100 * menuScale), MINI_BS*4 + 24)
+                       : Math.round(Math.max(44, Math.min(62, Math.floor(vw*0.15))) * menuScale);
   // タブレットは左右にボタンを置くための余白を残す（片側あたり画面幅の13%）
   const reserve = tablet ? Math.floor(vw * 0.13) : 0;
   // 利用可能ボード幅
@@ -1976,6 +2040,15 @@ function initLayout(){
   for(let b = maxBS; b >= minBS; b--){
     if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; break; }
   }
+  // ここまでが「ボタンも全部収まる」自動サイズ。
+  // タブレットでは画面に対して小さくなりがちなので、好みで広げられるようにする。
+  // 操作ボタンは配置編集で動かせるので、盤面が縦いっぱいまで伸びても困らない。
+  const scale = (opts.boardScale || 100) / 100;
+  if (scale !== 1) {
+    const byW = Math.floor((vw - 8) / COLS);                 // 横は画面からはみ出さない
+    const byH = Math.floor((vh - (tablet ? 44 : 34) - 8) / ROWS);  // 縦はスタッツ分だけ残す
+    BS = Math.max(minBS, Math.min(Math.round(BS * scale), byW, byH));
+  }
 
   const bw=COLS*BS, bh=ROWS*BS;
   boardCanvas.width=bw; boardCanvas.height=bh;
@@ -1995,6 +2068,16 @@ function initLayout(){
 
   // 中央要素の幅をボードに合わせる
   // （カラーパレットも入れないと、マスが横一列に伸びて画面外まではみ出す）
+  // 操作ボタンの列幅。タブレットは正方形を保つ固定幅だが、
+  // NEXTやメニューを大きくして盤面が細くなると3列が盤面からはみ出すので、
+  // 盤面幅に収まるところまで詰める（はみ出すとNEXTの下に潜り込む）。
+  if (tablet) {
+    const colW = Math.max(48, Math.min(CTRL_H, Math.floor((bw - 4*2) / 3)));
+    root.setProperty('--ctrl-col', colW + 'px');
+    root.setProperty('--ctrl-h',   colW + 'px');
+    root.setProperty('--ctrl-fs',  Math.round(42 * colW / CTRL_H) + 'px');
+    root.setProperty('--opt-col',  Math.min(Math.round(colW * 1.45), Math.floor((bw - 4) / 2)) + 'px');
+  }
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
@@ -2032,7 +2115,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.20.1';
+const APP_VERSION = '1.28.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -2201,15 +2284,18 @@ function shotPointerDown(e, win, mode){
   });
 })();
 
+// 保存した設定の読み込みは initLayout() より先に。
+// 盤面・NEXT・メニューの倍率は opts から読むので、
+// 後回しにすると初期表示だけ既定の大きさのままになる。
+loadOptions();
+loadGravSpeed();
+loadDigSetting();
+
 initPalette();
 initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
-
-loadOptions();
-loadGravSpeed();
-loadDigSetting();
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
