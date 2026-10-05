@@ -1800,6 +1800,8 @@ function setLayoutEdit(on){
   document.body.classList.toggle('layout-edit', on);
   const sw = document.getElementById('layoutEditSw'); if(sw) sw.checked = on;
   const rb = document.getElementById('ctrlPosResetBtn'); if(rb) rb.style.display = on ? '' : 'none';
+  // 編集中は盤面を動かさず、終えたときに空いたぶんをまとめて反映する
+  if(!on){ initLayout(); applyCtrlPos(); if(board) draw(); }
 }
 function resetCtrlPos(){
   ctrlPos = {};
@@ -1833,9 +1835,8 @@ function resetCtrlPos(){
       el.style.top  = r.top  + 'px';
       ctrlPos[id] = { x:Math.round(r.left), y:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height) };
       el.style.height = Math.round(r.height) + 'px';
-      initLayout();                       // 抜けたぶん中央カラムを詰める
-      const r2 = el.getBoundingClientRect();
-      el.style.left = r2.left + 'px'; el.style.top = r2.top + 'px';
+      // ここで initLayout() を呼ぶと盤面の大きさが変わり、動かしている最中に
+      // 画面全体がずれてしまう。作り直しは編集を終えたときにまとめて行う。
     }
     const rr = target.getBoundingClientRect();
     const pt = e.touches ? e.touches[0] : e;
@@ -1976,7 +1977,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.13.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
