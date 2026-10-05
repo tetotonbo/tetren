@@ -389,49 +389,49 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <canvas id="boardCanvas"></canvas>
 
     <div class="ctrl-pad" id="ctrlPad">
-      <div class="ctrl-row r3" data-ctrl="move">
-        <button class="ctrl-btn" id="btnLeft"
+      <div class="ctrl-row r3">
+        <button class="ctrl-btn" data-ctrl="left" id="btnLeft"
           onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
           onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')">
           ←<span class="ctrl-lbl">左</span>
         </button>
-        <button class="ctrl-btn" id="btnSoft"
+        <button class="ctrl-btn" data-ctrl="soft" id="btnSoft"
           onmousedown="if(!gameOver)startSoftDropBtn()"
           onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()">
           ↓<span class="ctrl-lbl">ソフト</span>
         </button>
-        <button class="ctrl-btn" id="btnRight"
+        <button class="ctrl-btn" data-ctrl="right" id="btnRight"
           onmousedown="if(!gameOver){moveH(1);pressDir('R')}"
           onmouseup="releaseDir('R')" onmouseleave="releaseDir('R')">
           →<span class="ctrl-lbl">右</span>
         </button>
       </div>
-      <div class="ctrl-row r2" data-ctrl="rotate">
-        <button class="ctrl-btn"
+      <div class="ctrl-row r2">
+        <button class="ctrl-btn" data-ctrl="rotL"
           onmousedown="if(!gameOver)rotate(-1)"
           ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
         </button>
-        <button class="ctrl-btn"
+        <button class="ctrl-btn" data-ctrl="rotR"
           onmousedown="if(!gameOver)rotate(1)"
           ontouchstart="e.preventDefault();if(!gameOver)rotate(1)">
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
-      <div class="ctrl-row r2" data-ctrl="drop">
-        <button class="ctrl-btn ctrl-hold" onclick="if(!gameOver)doHold()">
+      <div class="ctrl-row r2">
+        <button class="ctrl-btn ctrl-hold" data-ctrl="hold" onclick="if(!gameOver)doHold()">
           ⇪<span class="ctrl-lbl">HOLD</span>
         </button>
-        <button class="ctrl-btn ctrl-hard" onclick="if(!gameOver)hardDrop()">
+        <button class="ctrl-btn ctrl-hard" data-ctrl="drop" onclick="if(!gameOver)hardDrop()">
           ⬇<span class="ctrl-lbl">DROP</span>
         </button>
       </div>
     </div>
 
-    <div id="opts" data-ctrl="opts">
-      <button class="opt-btn"
+    <div id="opts">
+      <button class="opt-btn" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
-      <button class="opt-btn"
+      <button class="opt-btn" data-ctrl="undo"
         onclick="if(!gameOver&&undoStack.length)undo()">戻す ↩</button>
     </div>
     <div id="colorPaletteWrap"></div>
@@ -1321,13 +1321,15 @@ function drawBoard(){
   }
 }
 
+// HOLD/NEXT に描くミノの1マスの大きさ。initLayout() が盤面の大きさから決める。
+let MINI_BS = 15;
 function drawMini(ctx,type,yOff,w,h){
   if(!type) return;
   const cells=PIECE_DEF[type].cells[0],color=PIECE_DEF[type].color;
   const minC=Math.min(...cells.map(c=>c[1])),maxC=Math.max(...cells.map(c=>c[1]));
   const minR=Math.min(...cells.map(c=>c[0])),maxR=Math.max(...cells.map(c=>c[0]));
   const bw=maxC-minC+1,bh=maxR-minR+1;
-  const bs=Math.min(Math.floor((w-4)/(bw)),Math.floor((h-4)/(bh)),15);
+  const bs=Math.min(Math.floor((w-4)/(bw)),Math.floor((h-4)/(bh)),MINI_BS);
   const sx=Math.floor((w-bw*bs)/2),sy=yOff+Math.floor((h-bh*bs)/2);
   ctx.save();
   for(const[r,c] of cells){
@@ -1738,8 +1740,8 @@ function paletteMetrics(boardW){
 }
 
 // ===== 操作ボタンの配置（タブレットで指が届く位置へ動かせるようにする）=====
-// グループ単位で動かす。左右+ソフト / 回転 / HOLD+DROP / 捨てる+戻す の4つ。
-const CTRL_GROUPS = ['move','rotate','drop','opts'];
+// ボタン1個ずつ動かせる。好きな位置に散らして配置できる。
+const CTRL_GROUPS = ['left','soft','right','rotL','rotR','hold','drop','discard','undo'];
 let ctrlPos = {};        // {id:{x,y}} 画面左上からのpx。未設定なら既定の位置のまま
 let layoutEdit = false;
 
@@ -1855,9 +1857,15 @@ function initLayout(){
   // 利用可能ボード幅
   const availW=vw-sideW*2-5*2-8; // gaps + padding
   // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。
-  // 配置編集で外に出したグループは中央カラムの高さを食わないので差し引く。
-  const ctrlH = CTRL_GROUPS.filter(g => g !== 'opts' && !ctrlPos[g]).length * (CTRL_H + 4);
-  const optsH = ctrlPos.opts ? 0 : (tablet ? 70 : 60);
+  // 外に出したボタンは中央カラムの高さを食わないので、
+  // 「まだ行に残っているボタンがあるか」で行ごとに数える。
+  const inFlow = el => el && !el.classList.contains('moved');
+  let ctrlH = 0;
+  document.querySelectorAll('#ctrlPad .ctrl-row').forEach(row => {
+    if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
+  });
+  const optsEl = document.getElementById('opts');
+  const optsH = (optsEl && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
   const fixedH = (tablet ? 44 : 34) + ctrlH + optsH + 4*4 + 8;
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
@@ -1875,9 +1883,12 @@ function initLayout(){
   document.getElementById('leftCol').style.width=actualSide+'px';
   document.getElementById('rightCol').style.width=actualSide+'px';
 
-  const holdH=Math.floor(actualSide*0.85);
-  holdCanvas.width=actualSide-6; holdCanvas.height=holdH;
-  nextCanvas.width=actualSide-6; nextCanvas.height=holdH*NEXT_SHOW;
+  // HOLD/NEXT はミノの大きさに合わせる。
+  // 枠をサイドカラム幅に合わせると、タブレットでは中身に対して枠だけが巨大になる。
+  MINI_BS = Math.max(10, Math.min(tablet ? 26 : 15, Math.floor(BS * 0.85)));
+  const itemH = MINI_BS * 2 + 10;          // ミノは最大2段 + 余白
+  holdCanvas.width=actualSide-6; holdCanvas.height=itemH;
+  nextCanvas.width=actualSide-6; nextCanvas.height=itemH*NEXT_SHOW;
 
   // 中央要素の幅をボードに合わせる
   // （カラーパレットも入れないと、マスが横一列に伸びて画面外まではみ出す）
@@ -1918,7 +1929,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.12.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
