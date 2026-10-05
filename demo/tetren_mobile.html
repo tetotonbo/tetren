@@ -1896,8 +1896,9 @@ function initLayout(){
   document.getElementById('leftCol').style.width=actualSide+'px';
   document.getElementById('rightCol').style.width=actualSide+'px';
 
-  // HOLD/NEXT はミノの大きさに合わせる（横も縦も）
-  const itemH = MINI_BS * 2 + 10;          // ミノは最大2段 + 余白
+  // HOLD/NEXT はミノの大きさに合わせる（横も縦も）。
+  // 縦の余白はスマホのほうを厚くする。NEXTが5個並ぶので、詰まって見えやすいため。
+  const itemH = MINI_BS * 2 + (tablet ? 10 : 22);   // ミノは最大2段 + 余白
   const miniW = Math.min(actualSide - 6, MINI_BS * 4 + 10);   // ミノは最大4マス幅
   holdCanvas.width=miniW; holdCanvas.height=itemH;
   nextCanvas.width=miniW; nextCanvas.height=itemH*NEXT_SHOW;
@@ -1941,7 +1942,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.12.3';
+const APP_VERSION = '1.12.4';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
