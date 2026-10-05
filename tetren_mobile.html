@@ -494,7 +494,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 </div>
 
 <div id="overlay">
-  <h1>テト練（β版）<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
+  <h1>テト練<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
   <div class="sub">タッチ操作でプレイ</div>
   <button id="startBtn">スタート</button>
 </div>
@@ -1788,7 +1788,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.11.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
