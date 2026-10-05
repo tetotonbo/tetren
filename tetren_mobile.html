@@ -609,10 +609,13 @@ function newBag() {
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
+// その巡の何番目かを 1〜7 で持つ。巡の終わりが必ず7になるよう、
+// ミノ欠けなどで巡が短いときは途中の番号から始める（4ミノなら 4,5,6,7）。
+let bagIndex = 1;
 function fillQ() {
   while(nextQ.length < NEXT_SHOW+1){
-    const isNew=(bag.length===0); if(isNew) bag=newBag();
-    nextQ.push({type:bag.shift(), newBag:isNew});
+    const isNew=(bag.length===0); if(isNew){ bag=newBag(); bagIndex = 8 - bag.length; }
+    nextQ.push({type:bag.shift(), newBag:isNew, idx:bagIndex++});
   }
 }
 
@@ -1374,6 +1377,16 @@ function drawNext(){
       nextCtx.restore();
     }
     drawMini(nextCtx,item.type,i*itemH,nextCanvas.width,itemH);
+    // 右端に、その巡の何番目かを薄く出す
+    if(item.idx){
+      nextCtx.save();
+      nextCtx.fillStyle='rgba(148,163,184,0.5)';
+      nextCtx.font='bold '+(MINI_BS>=20?12:10)+'px sans-serif';
+      // 枠が狭くミノが横幅いっぱいに来るので、上の余白に置いて重ならないようにする
+      nextCtx.textAlign='right'; nextCtx.textBaseline='top';
+      nextCtx.fillText(String(item.idx), nextCanvas.width-4, i*itemH+3);
+      nextCtx.restore();
+    }
   }
 }
 
@@ -1993,7 +2006,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.16.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

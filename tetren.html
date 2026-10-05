@@ -1531,11 +1531,14 @@ function newBag() {
   }
   return a;
 }
+// その巡の何番目かを 1〜7 で持つ。巡の終わりが必ず7になるよう、
+// ミノ欠けなどで巡が短いときは途中の番号から始める（4ミノなら 4,5,6,7）。
+let bagIndex = 1;
 function fillQ() {
   while (nextQ.length < NEXT_SHOW+1) {
     const isNew = (bag.length === 0); // バッグ補充タイミング = 新しい巡の先頭
-    if (isNew) bag = newBag();
-    nextQ.push({ type: bag.shift(), newBag: isNew });
+    if (isNew) { bag = newBag(); bagIndex = 8 - bag.length; }
+    nextQ.push({ type: bag.shift(), newBag: isNew, idx: bagIndex++ });
   }
 }
 
@@ -2851,6 +2854,16 @@ function drawNext() {
     // ぷよテト風: 原作同様、2番目以降は少し小さく表示
     const miniBs = (ppt2Theme && i > 0) ? 15 : 18;
     drawMini(nextCtx, item.type, i*84, 100, 84, false, miniBs);
+    // 右端に、その巡の何番目かを薄く出す
+    if (item.idx) {
+      nextCtx.save();
+      nextCtx.fillStyle = 'rgba(148,163,184,0.5)';
+      nextCtx.font = 'bold 11px sans-serif';
+      nextCtx.textAlign = 'right';
+      nextCtx.textBaseline = 'middle';
+      nextCtx.fillText(String(item.idx), 94, i*84 + 42);
+      nextCtx.restore();
+    }
   }
 }
 
@@ -4265,7 +4278,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.16.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
