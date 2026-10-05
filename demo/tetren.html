@@ -1110,6 +1110,16 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
     <div class="cfg-pane" id="cfgPaneMisc">
       <div class="opt-row">
+        <span class="opt-label">ミノ設置直後にせりあがり
+          <span class="opt-note">せりあがりの「時間経過」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optDigOnLock"
+            onchange="setOption('digOnLock', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
         <div class="opt-step">
@@ -2069,6 +2079,8 @@ function toggleDigMode() {
   digMode = !digMode;
   digCount = 0;
   timeDigLastTs = 0;
+  pendingDigRows = 0;   // 溜まっていたぶんは持ち越さない
+  rollNextDigRows();
   const btn = document.getElementById('digBtn');
   if (digMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
@@ -2123,6 +2135,7 @@ function restoreRenWalls() {
 
 // ===== デカミノモード =====
 function toggleDekaMode() {
+  closeDigPanel();
   dekaMode = !dekaMode;
   const btn = document.getElementById('dekaModeBtn');
   // 盤面リセット
@@ -2149,6 +2162,7 @@ function toggleDekaMode() {
 }
 
 function toggleRenMode() {
+  closeDigPanel();
   renMode = !renMode;
   const btn = document.getElementById('renModeBtn');
   if (renMode) {
@@ -2169,8 +2183,9 @@ function toggleRenMode() {
     setupRenTerrain();
   } else {
     btn.style.background = '#374151'; // グレー = OFF
-    // 地形クリア（可視行のみ）
-    for (let r = BUF; r < TROW; r++)
+    // 地形クリア。壁は REN_WALL_TOP（21段目）から積んでいるので、
+    // 可視行だけ消すとそこに壁が残ってしまう。バッファ行まで含めて消す。
+    for (let r = 0; r < TROW; r++)
       for (let c = 0; c < COLS; c++) board[r][c] = null;
     // RENリセット
     ren = 0;
@@ -2215,6 +2230,7 @@ const pick = {
 };
 
 function openDpc() {
+  closeDigPanel();
   document.getElementById('dpcOverlay').classList.add('open');
   renderPieceGrid('dpc');
 }
@@ -2222,6 +2238,7 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 function openMiss() {
+  closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
@@ -2434,12 +2451,26 @@ function resetTerrain() {
 }
 
 // ===== おじゃまブロック競り上がり =====
-// 自動せりあがりの入り口。複数段のときはその回数ぶん積む。
-function addGarbageRows(sameHole) {
-  const n = pickDigRows();
+// 自動せりあがりの入り口。予告した段数ぶん積んでから、次の段数を引き直す。
+function addGarbageRows(sameHole, rows) {
+  const n = Math.max(1, rows || nextDigRows);
   let ok = true;
   for (let i = 0; i < n; i++) ok = addGarbage(sameHole, n > 1) && ok;
+  rollNextDigRows();
   return ok;
+}
+// 時間経過ぶんを溜める（「ミノ設置直後にせりあがり」がONのとき）
+function queueDigRows() {
+  pendingDigRows += Math.max(1, nextDigRows);
+  rollNextDigRows();
+}
+// ミノを置いた直後に、溜まっているぶんをまとめて上げる
+function flushPendingDig() {
+  if (!pendingDigRows) return;
+  const n = pendingDigRows;
+  pendingDigRows = 0;
+  for (let i = 0; i < n; i++) addGarbage(false, n > 1);
+  updateDigCounter();
 }
 function addGarbage(sameHole, multi) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
@@ -2674,6 +2705,8 @@ function lock() {
     updateDigCounter();
     if (digCount % digInterval === 0) addGarbageRows(false);
   }
+  // 時間経過タイプで溜まっていたぶんを、ここでまとめて上げる
+  if (digMode && digTriggerType === 'time' && opts.digOnLock) flushPendingDig();
 
   spawn();
   draw();
@@ -2770,6 +2803,31 @@ function pieceAxisPos(row, col, type) {
   if (type === 'I') return [(vc+2)*BS, (vr+2)*BS];
   if (type === 'O') return [(vc+1)*BS, (vr+1)*BS];
   return [(vc+1)*BS + BS/2, (vr+1)*BS + BS/2];
+}
+
+// 次に何段上がるかを盤面の下端に予告として出す。
+// 溜まっているぶん（ミノ設置待ち）があれば、それも並べて出す。
+function drawDigPreview() {
+  if (!digMode) return;
+  if (!digMulti.on && !pendingDigRows) return;   // 1段ずつで溜まりも無いなら出さない
+  const H = 18;
+  const y = ROWS * BS - H;                        // 盤面の最下段に重ねる
+  boardCtx.save();
+  boardCtx.fillStyle = 'rgba(8,10,18,0.72)';
+  boardCtx.fillRect(0, y, COLS * BS, H);
+  boardCtx.font = 'bold 12px sans-serif';
+  boardCtx.textBaseline = 'middle';
+  if (digMulti.on) {
+    boardCtx.fillStyle = '#93c5fd';
+    boardCtx.textAlign = 'left';
+    boardCtx.fillText('次 ' + nextDigRows + '段', 6, y + H / 2);
+  }
+  if (pendingDigRows) {
+    boardCtx.fillStyle = '#fca5a5';
+    boardCtx.textAlign = 'right';
+    boardCtx.fillText('溜まり ' + pendingDigRows + '段', COLS * BS - 6, y + H / 2);
+  }
+  boardCtx.restore();
 }
 
 function drawBoard() {
@@ -2925,6 +2983,7 @@ function drawBoard() {
       boardCtx.restore();
     }
   }
+  drawDigPreview();   // 予告は地形の上に重ねる
   boardCtx.restore(); // translate(0, PEEK) を戻す
 }
 
@@ -3100,7 +3159,8 @@ function loop(ts) {
     if (!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
     if (remainMs <= 0) {
-      addGarbageRows(false);
+      // 「ミノ設置直後にせりあがり」がONなら、ここでは上げずに溜めておく
+      if (opts.digOnLock) queueDigRows(); else addGarbageRows(false);
       timeDigLastTs = ts;
       updateDigCounter(timeDigInterval);
     } else {
@@ -4395,6 +4455,12 @@ function updateDigMultiBtn() {
   if (!btn) return;
   btn.style.background = digMulti.on ? '#16a34a' : '#374151';
 }
+// 次に何段上がるかを先に決めておき、盤面下部に予告として出す。
+// 「ミノ設置直後にせりあがり」のときは、時間で溜まったぶんもここに足す。
+let nextDigRows = 1;    // 次のせりあがりで上がる段数（予告）
+let pendingDigRows = 0; // 設置待ちで溜まっている段数
+function rollNextDigRows() { nextDigRows = pickDigRows(); updateDigCounter(); }
+
 // 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う。
 function pickDigRows() {
   if (!digMulti.on) return 1;
@@ -4409,14 +4475,21 @@ function pickDigRows() {
 }
 
 // せりあがり設定の開閉
-function toggleDigPanel() {
+function setDigPanelOpen(open) {
   const box = document.getElementById('digPanel');
   if (!box) return;
-  const open = box.style.display === 'none' || !box.style.display;
-  box.style.display = open ? '' : 'none';
+  // '' だと「閉じている」と区別できないので、必ず値を入れる
+  box.style.display = open ? 'block' : 'none';
   const btn = document.getElementById('digOpenBtn');
   if (btn) btn.style.background = open ? '#4b5563' : '#374151';
 }
+function digPanelOpen() {
+  const box = document.getElementById('digPanel');
+  return !!box && box.style.display === 'block';
+}
+function toggleDigPanel() { setDigPanelOpen(!digPanelOpen()); }
+// 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
+function closeDigPanel() { setDigPanelOpen(false); }
 
 // ===== マラソン（進むほど速くなる） =====
 // 1Gから始めて、10ライン消すごとに1Gずつ上がる。
@@ -4433,6 +4506,7 @@ function nextMarathonLock(cur) {
   return Math.max(1, cur - step);
 }
 function toggleMarathon() {
+  closeDigPanel();
   marathonMode = !marathonMode;
   const btn = document.getElementById('marathonBtn');
   if (marathonMode) {
@@ -4489,6 +4563,7 @@ const OPT_DEFAULTS = {
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
+  digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
 };
 // [最小, 最大, 刻み]
 const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5] };
@@ -4538,6 +4613,7 @@ function loadOptions() {
 function applyOptions() {
   const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
+  check('optDigOnLock', opts.digOnLock);
   // 表示系のスイッチも設定から復元する
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
@@ -4715,7 +4791,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.22.0';
+const APP_VERSION = '1.23.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4954,6 +5030,7 @@ function resetGameState(fullReset = true) {
   updateGravDisplay();
   downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
+  pendingDigRows = 0; rollNextDigRows();
   if (fullReset) {
     // 自動せりあがりは止めるが、間隔の設定値（ミノごと/秒数とその数値）は
     // 続けて練習できるよう残しておく
@@ -4992,6 +5069,7 @@ initKeyConfig();
 loadSkin();
 loadPanelPos();   // 保存した枠の位置を復元する
 loadDigMulti();   // 複数段せりあがりの設定を復元する
+rollNextDigRows();   // 予告する段数を先に決めておく
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
