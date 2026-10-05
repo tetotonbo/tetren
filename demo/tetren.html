@@ -313,14 +313,29 @@ body.ppt2-theme #nextCanvas {
 #aboutPanel p:last-of-type { margin-bottom:0; }
 #aboutPanel h3 { font-size:12px; color:#9ca3af; margin:14px 0 6px; }
 #aboutPanel a { color:#818cf8; }
+/* 複数段せりあがりの割合入力 */
+#digMultiRows { display:grid; grid-template-columns:repeat(2,1fr); gap:4px 12px; }
+.dm-row { display:flex; align-items:center; gap:6px; font-size:12px; color:#d1d5db; }
+.dm-row span.dm-lbl { flex:0 0 38px; color:#9ca3af; }
+.dm-row input {
+  flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
+  border:1px solid #374151; border-radius:5px;
+  padding:4px 6px; font-size:12px; text-align:right;
+}
+.dm-total {
+  display:flex; align-items:center; justify-content:flex-end; gap:10px;
+  margin-top:10px; font-size:12px; color:#d1d5db;
+}
+.dm-total.ng { color:#f87171; }
+.dm-sep { border-top:1px solid #374151; margin:12px 0 4px; }
 
 /* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
-#dpcOverlay, #missOverlay, #aboutOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #digMultiOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #digMultiPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
@@ -786,9 +801,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
       <div class="panel-label">せりあがり</div>
-      <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
+      <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
+      <button id="digOpenBtn" class="toggle-btn"
         style="background:#374151;"
+        title="せりあがりの設定とスタートボタンを開きます"
+        onclick="toggleDigPanel()">せりあがり</button>
+      <div id="digPanel" style="display:none;">
+      <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
+        style="background:#374151;margin-top:8px;"
         onclick="toggleDigMode()">スタート</button>
+      <button id="digMultiBtn" class="toggle-btn"
+        style="background:#374151;margin-top:6px;"
+        title="1回のせりあがりで何段上げるかを、段数ごとの割合で決めます"
+        onclick="openDigMulti()">複数段</button>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;font-size:11px;color:#d1d5db;">
         <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
           <input type="radio" name="digTriggerType" id="digTypeMino"
@@ -822,6 +847,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
       <div id="digCounter"
         style="text-align:center;margin-top:6px;min-height:40px;line-height:1.35;color:#9ca3af;font-size:10px;"></div>
+      </div>
     </div>
 
   </div>
@@ -943,6 +969,45 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
       <button class="imp-btn imp-primary" id="missStartBtn" style="display:none;"
         onclick="startMissMulti()">開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- 複数段せりあがり: 段数ごとの出現割合と、そのときの穴継続率 -->
+<div id="digMultiOverlay">
+  <div id="digMultiPanel">
+    <div class="imp-head">
+      <span class="imp-title">複数段せりあがり</span>
+      <button class="imp-x" title="閉じる" onclick="closeDigMulti()">×</button>
+    </div>
+    <label class="tgl-row" style="margin:0 0 10px;"
+      title="ONにすると、1回のせりあがりで下の割合に従って段数を決めます">
+      <span>複数段にする</span>
+      <input type="checkbox" id="digMultiSw" onchange="setDigMultiOn(this.checked)">
+      <span class="tgl"></span>
+    </label>
+    <div class="imp-hint" style="margin:0 0 8px;">
+      1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。
+    </div>
+    <div id="digMultiRows"></div>
+    <div class="dm-total">
+      合計 <span id="digMultiTotal">100</span>％
+      <button class="imp-btn" style="padding:4px 10px;font-size:11px;"
+        onclick="normalizeDigMulti()" title="合計がちょうど100％になるように割り振り直します">100％にそろえる</button>
+    </div>
+    <div class="dm-sep"></div>
+    <div class="opt-row" style="border-bottom:none;">
+      <span class="opt-label">複数段のときの穴継続率
+        <span class="opt-note">複数段で上がるとき、直前の穴と同じ列になる確率（10％＝完全ランダム）</span></span>
+      <div class="opt-step">
+        <button class="step-btn" onclick="stepDigMultiHole(-1)">‹</button>
+        <span class="opt-val"><span id="digMultiHoleVal">40</span><span class="opt-unit"> %</span></span>
+        <button class="step-btn" onclick="stepDigMultiHole(1)">›</button>
+      </div>
+    </div>
+    <div class="imp-actions">
+      <button class="imp-btn" onclick="resetDigMulti()">初期値に戻す</button>
+      <button class="imp-btn imp-primary" onclick="closeDigMulti()">閉じる</button>
     </div>
   </div>
 </div>
@@ -2369,13 +2434,20 @@ function resetTerrain() {
 }
 
 // ===== おじゃまブロック競り上がり =====
-function addGarbage(sameHole) {
+// 自動せりあがりの入り口。複数段のときはその回数ぶん積む。
+function addGarbageRows(sameHole) {
+  const n = pickDigRows();
+  let ok = true;
+  for (let i = 0; i < n; i++) ok = addGarbage(sameHole, n > 1) && ok;
+  return ok;
+}
+function addGarbage(sameHole, multi) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
   // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
   let holeCol;
   if (lastGarbageCol === null) {
     holeCol = Math.floor(Math.random() * COLS);
-  } else if (sameHole === true || Math.random() * 100 < opts.holeKeep) {
+  } else if (sameHole === true || Math.random() * 100 < (multi ? digMulti.hole : opts.holeKeep)) {
     holeCol = lastGarbageCol;
   } else {
     // 外れたときは「直前以外」から選ぶ。こうすると設定値がそのまま
@@ -2600,7 +2672,7 @@ function lock() {
   if (digMode && digTriggerType === 'mino') {
     digCount++;
     updateDigCounter();
-    if (digCount % digInterval === 0) addGarbage(false);
+    if (digCount % digInterval === 0) addGarbageRows(false);
   }
 
   spawn();
@@ -3028,7 +3100,7 @@ function loop(ts) {
     if (!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
     if (remainMs <= 0) {
-      addGarbage(false);
+      addGarbageRows(false);
       timeDigLastTs = ts;
       updateDigCounter(timeDigInterval);
     } else {
@@ -3824,6 +3896,9 @@ function applyImport() {
   document.getElementById('aboutOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'aboutOverlay') closeAbout();
   });
+  document.getElementById('digMultiOverlay').addEventListener('mousedown', e => {
+    if (e.target.id === 'digMultiOverlay') closeDigMulti();
+  });
   document.getElementById('importOverlay').addEventListener('mousedown', e => {
     if (e.target.id === 'importOverlay') closeImport();
   });
@@ -4233,6 +4308,116 @@ function resetPanelPos() {
 })();
 window.addEventListener('resize', applyPanelPos);
 
+// ===== 複数段せりあがり =====
+// 1回のせりあがりで何段上げるかを、段数ごとの割合（合計100％）で決める。
+// 複数段のときは穴の続きやすさも別に持てるようにしてある。
+const DIG_MULTI_DEFAULT = { on:false, w:[100,0,0,0,0,0,0,0,0,0], hole:40 };
+let digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+
+function loadDigMulti() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_digmulti'); } catch(e) {}
+  if (raw) {
+    try {
+      const v = JSON.parse(raw);
+      if (v && Array.isArray(v.w) && v.w.length === 10) digMulti = v;
+    } catch(e) {}
+  }
+  renderDigMulti();
+  updateDigMultiBtn();
+}
+function saveDigMulti() {
+  try { localStorage.setItem('tetren_digmulti', JSON.stringify(digMulti)); } catch(e) {}
+}
+function openDigMulti()  { document.getElementById('digMultiOverlay').classList.add('open'); renderDigMulti(); }
+function closeDigMulti() { document.getElementById('digMultiOverlay').classList.remove('open'); }
+function setDigMultiOn(on) { digMulti.on = on; saveDigMulti(); updateDigMultiBtn(); }
+function stepDigMultiHole(d) {
+  digMulti.hole = Math.max(10, Math.min(100, digMulti.hole + d * 10));
+  saveDigMulti(); renderDigMulti();
+}
+function resetDigMulti() {
+  digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+  saveDigMulti(); renderDigMulti(); updateDigMultiBtn();
+}
+function digMultiTotal() { return digMulti.w.reduce((a,b)=>a+b, 0); }
+// 合計が100になるよう、いまの比率のまま割り振り直す
+function normalizeDigMulti() {
+  const t = digMultiTotal();
+  if (t <= 0) { digMulti.w = [100,0,0,0,0,0,0,0,0,0]; }
+  else {
+    const scaled = digMulti.w.map(v => v * 100 / t);
+    const floored = scaled.map(v => Math.floor(v));
+    let rest = 100 - floored.reduce((a,b)=>a+b, 0);
+    // 端数が大きい順に1ずつ配る
+    const order = scaled.map((v,i)=>[v - Math.floor(v), i]).sort((a,b)=>b[0]-a[0]);
+    for (let k = 0; k < rest; k++) floored[order[k % 10][1]]++;
+    digMulti.w = floored;
+  }
+  saveDigMulti(); renderDigMulti();
+}
+function renderDigMulti() {
+  const box = document.getElementById('digMultiRows');
+  if (!box) return;
+  box.innerHTML = '';
+  digMulti.w.forEach((v, i) => {
+    const row = document.createElement('div');
+    row.className = 'dm-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'dm-lbl';
+    lbl.textContent = (i + 1) + '段';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min = '0'; inp.max = '100'; inp.value = v;
+    inp.addEventListener('input', () => {
+      const n = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));
+      digMulti.w[i] = n;
+      saveDigMulti();
+      updateDigMultiTotal();
+    });
+    const pct = document.createElement('span');
+    pct.textContent = '％';
+    row.appendChild(lbl); row.appendChild(inp); row.appendChild(pct);
+    box.appendChild(row);
+  });
+  const sw = document.getElementById('digMultiSw'); if (sw) sw.checked = digMulti.on;
+  const hv = document.getElementById('digMultiHoleVal'); if (hv) hv.textContent = digMulti.hole;
+  updateDigMultiTotal();
+}
+function updateDigMultiTotal() {
+  const t = digMultiTotal();
+  const el = document.getElementById('digMultiTotal');
+  if (el) el.textContent = t;
+  const box = el && el.parentElement;
+  if (box) box.classList.toggle('ng', t !== 100);
+}
+function updateDigMultiBtn() {
+  const btn = document.getElementById('digMultiBtn');
+  if (!btn) return;
+  btn.style.background = digMulti.on ? '#16a34a' : '#374151';
+}
+// 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う。
+function pickDigRows() {
+  if (!digMulti.on) return 1;
+  const t = digMultiTotal();
+  if (t <= 0) return 1;
+  let r = Math.random() * t;
+  for (let i = 0; i < 10; i++) {
+    r -= digMulti.w[i];
+    if (r < 0) return i + 1;
+  }
+  return 1;
+}
+
+// せりあがり設定の開閉
+function toggleDigPanel() {
+  const box = document.getElementById('digPanel');
+  if (!box) return;
+  const open = box.style.display === 'none' || !box.style.display;
+  box.style.display = open ? '' : 'none';
+  const btn = document.getElementById('digOpenBtn');
+  if (btn) btn.style.background = open ? '#4b5563' : '#374151';
+}
+
 // ===== マラソン（進むほど速くなる） =====
 // 1Gから始めて、10ライン消すごとに1Gずつ上がる。
 // 20Gに達したあとさらに10ライン消すと、15Gへ戻す代わりに
@@ -4530,7 +4715,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.21.0';
+const APP_VERSION = '1.22.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4806,6 +4991,7 @@ function switchVersion() { location.href = 'tetren_mobile.html'; }
 initKeyConfig();
 loadSkin();
 loadPanelPos();   // 保存した枠の位置を復元する
+loadDigMulti();   // 複数段せりあがりの設定を復元する
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
