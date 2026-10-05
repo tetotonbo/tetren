@@ -2858,7 +2858,7 @@ function drawNext() {
     if (item.idx) {
       nextCtx.save();
       nextCtx.fillStyle = 'rgba(148,163,184,0.5)';
-      nextCtx.font = 'bold 11px sans-serif';
+      nextCtx.font = 'bold 9px sans-serif';
       nextCtx.textAlign = 'right';
       nextCtx.textBaseline = 'middle';
       nextCtx.fillText(String(item.idx), 94, i*84 + 42);
@@ -4278,7 +4278,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.16.0';
+const APP_VERSION = '1.16.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

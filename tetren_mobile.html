@@ -1381,7 +1381,7 @@ function drawNext(){
     if(item.idx){
       nextCtx.save();
       nextCtx.fillStyle='rgba(148,163,184,0.5)';
-      nextCtx.font='bold '+(MINI_BS>=20?12:10)+'px sans-serif';
+      nextCtx.font='bold '+(MINI_BS>=20?10:8)+'px sans-serif';
       // 枠が狭くミノが横幅いっぱいに来るので、上の余白に置いて重ならないようにする
       nextCtx.textAlign='right'; nextCtx.textBaseline='top';
       nextCtx.fillText(String(item.idx), nextCanvas.width-4, i*itemH+3);
@@ -2006,7 +2006,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.16.0';
+const APP_VERSION = '1.16.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
