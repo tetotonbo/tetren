@@ -4653,6 +4653,7 @@ const OPT_DEFAULTS = {
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
+  ctrlOpen: false,    // 「ボタン操作」パネルを開いた状態にしておくか（iPadなど、開きっぱなしで使う人向け）
 };
 // [最小, 最大, 刻み]
 const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1] };
@@ -4716,6 +4717,7 @@ function applyOptions() {
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   if (document.getElementById('terrainToggle')) setTerrainMode(opts.terrainEdit);
+  setCtrlButtons(!!opts.ctrlOpen);
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   put('optHoleKeepVal',   opts.holeKeep);
   put('optSoftSpeedVal',  opts.softSpeed);
@@ -4897,7 +4899,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.25.1';
+const APP_VERSION = '1.29.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5111,10 +5113,20 @@ document.addEventListener('keyup', e=>{
 });
 
 // ===== 操作ボタンの表示切り替え =====
+// 開閉は設定に保存する。キーボードのない端末では開きっぱなしで使うので、
+// 読み込みのたびに閉じていると毎回押し直すことになる。
+function setCtrlButtons(open) {
+  const box = document.getElementById('ctrlHidden');
+  if (!box) return;
+  box.classList.toggle('open', open);
+  const arrow = document.getElementById('ctrlToggleArrow');
+  if (arrow) arrow.textContent = open ? '▲' : '▼';
+}
 function toggleCtrlButtons() {
   const box = document.getElementById('ctrlHidden');
-  const open = box.classList.toggle('open');
-  document.getElementById('ctrlToggleArrow').textContent = open ? '▲' : '▼';
+  setCtrlButtons(!box.classList.contains('open'));
+  opts.ctrlOpen = box.classList.contains('open');
+  saveOptions();
 }
 
 // ===== オーバーレイ =====
