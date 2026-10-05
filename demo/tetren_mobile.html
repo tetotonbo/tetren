@@ -48,6 +48,8 @@ html, body {
   text-transform:uppercase; text-align:center; margin-bottom:2px;
 }
 canvas { display:block; }
+/* HOLD/NEXT はミノに合わせた幅なので、パネル内で中央に置く */
+#holdCanvas, #nextCanvas { margin:0 auto; }
 #boardCanvas { border:2px solid #374151; border-radius:2px; }
 #center-col {
   display:flex; flex-direction:column;
@@ -71,9 +73,11 @@ canvas { display:block; }
 .layout-edit [data-ctrl] > * { pointer-events:none; }
 /* 自分で動かしたグループは画面に固定する */
 [data-ctrl].moved { position:fixed; z-index:6; }
-.ctrl-row { display:grid; gap:4px; }
-.ctrl-row.r2 { grid-template-columns:repeat(2,1fr); }
-.ctrl-row.r3 { grid-template-columns:repeat(3,1fr); }
+.ctrl-row { display:grid; gap:4px; justify-content:space-between; }
+/* 列幅は initLayout() が決める。スマホは 1fr で横いっぱい、
+   タブレットは固定幅にしてボタンを正方形に保ち、横に伸ばさない。 */
+.ctrl-row.r2 { grid-template-columns:repeat(2,var(--ctrl-col,1fr)); }
+.ctrl-row.r3 { grid-template-columns:repeat(3,var(--ctrl-col,1fr)); }
 .ctrl-btn {
   /* 高さと文字サイズは initLayout() が画面幅から決める（タブレットでは大きくする） */
   height:var(--ctrl-h, 66px); background:#1f2937; color:#e5e7eb;
@@ -93,8 +97,8 @@ canvas { display:block; }
 .ctrl-btn.ctrl-hard { background:#1e3a5f; border-color:#2563eb; color:#93c5fd; }
 .ctrl-btn.ctrl-hard:active { background:#1d4ed8; }
 #opts {
-  display:grid; grid-template-columns:repeat(2,1fr);
-  gap:4px; flex-shrink:0;
+  display:grid; grid-template-columns:repeat(2,var(--opt-col,1fr));
+  gap:4px; flex-shrink:0; justify-content:space-between;
 }
 .opt-btn {
   padding:var(--opt-pad, 12px) 4px; background:#1f2937; color:#d1d5db;
@@ -1840,8 +1844,9 @@ function initLayout(){
   // タブレットは短辺が600px以上。スマホ用の上限のままだと画面を使い切れないので緩める。
   const tablet = Math.min(vw, vh) >= 600;
   const CELL_MAX = tablet ? 46 : 28;   // 1マスの最大px
-  const SIDE_MAX = tablet ? 108 : 62;  // サイドカラムの最大px
-  const CTRL_H   = tablet ? 96 : 66;   // 操作ボタンの高さ
+  const CTRL_H   = tablet ? 92 : 66;   // 操作ボタンの高さ
+  // HOLD/NEXT のミノ1マス。枠の幅はこれに合わせるので先に決める。
+  MINI_BS = tablet ? 24 : 15;
   // ボタン類の寸法をCSS側へ渡す
   const root = document.documentElement.style;
   root.setProperty('--ctrl-h',      CTRL_H + 'px');
@@ -1851,11 +1856,18 @@ function initLayout(){
   root.setProperty('--opt-fs',      (tablet ? 17 : 13) + 'px');
   root.setProperty('--side-pad',    (tablet ? 9 : 6) + 'px');
   root.setProperty('--side-fs',     (tablet ? 12 : 9) + 'px');
+  // タブレットはボタンを正方形に保つ（横に伸ばすと押しにくく、見た目も間延びする）
+  root.setProperty('--ctrl-col', tablet ? CTRL_H + 'px' : '1fr');
+  root.setProperty('--opt-col',  tablet ? Math.round(CTRL_H * 1.45) + 'px' : '1fr');
 
-  // サイドカラム幅: 画面幅の15%、最小44px
-  const sideW=Math.max(44,Math.min(SIDE_MAX,Math.floor(vw*0.15)));
+  // サイドカラム幅。タブレットでは HOLD/NEXT の中身（ミノ4マス分）に合わせる。
+  // 画面幅いっぱいに広げると、中身に対して枠だけが横長になる。
+  const sideW = tablet ? Math.max(100, MINI_BS*4 + 24)
+                       : Math.max(44, Math.min(62, Math.floor(vw*0.15)));
+  // タブレットは左右にボタンを置くための余白を残す（片側あたり画面幅の13%）
+  const reserve = tablet ? Math.floor(vw * 0.13) : 0;
   // 利用可能ボード幅
-  const availW=vw-sideW*2-5*2-8; // gaps + padding
+  const availW=vw-reserve*2-sideW*2-5*2-8; // 余白 + gaps + padding
   // 盤面以外の高さ（stats_bar + ctrl + opts + gaps）。
   // 外に出したボタンは中央カラムの高さを食わないので、
   // 「まだ行に残っているボタンがあるか」で行ごとに数える。
@@ -1878,17 +1890,17 @@ function initLayout(){
   const bw=COLS*BS, bh=ROWS*BS;
   boardCanvas.width=bw; boardCanvas.height=bh;
 
-  // サイドカラム幅を再計算してセット
-  const actualSide=Math.floor((vw-bw-5*2-8)/2);
+  // サイドカラム幅。スマホは余った幅で埋め、タブレットは中身に合わせた幅のまま。
+  // #wrap は中央寄せなので、余ったぶんは左右の空きとしてボタン配置に使える。
+  const actualSide = tablet ? sideW : Math.floor((vw-bw-5*2-8)/2);
   document.getElementById('leftCol').style.width=actualSide+'px';
   document.getElementById('rightCol').style.width=actualSide+'px';
 
-  // HOLD/NEXT はミノの大きさに合わせる。
-  // 枠をサイドカラム幅に合わせると、タブレットでは中身に対して枠だけが巨大になる。
-  MINI_BS = Math.max(10, Math.min(tablet ? 26 : 15, Math.floor(BS * 0.85)));
+  // HOLD/NEXT はミノの大きさに合わせる（横も縦も）
   const itemH = MINI_BS * 2 + 10;          // ミノは最大2段 + 余白
-  holdCanvas.width=actualSide-6; holdCanvas.height=itemH;
-  nextCanvas.width=actualSide-6; nextCanvas.height=itemH*NEXT_SHOW;
+  const miniW = Math.min(actualSide - 6, MINI_BS * 4 + 10);   // ミノは最大4マス幅
+  holdCanvas.width=miniW; holdCanvas.height=itemH;
+  nextCanvas.width=miniW; nextCanvas.height=itemH*NEXT_SHOW;
 
   // 中央要素の幅をボードに合わせる
   // （カラーパレットも入れないと、マスが横一列に伸びて画面外まではみ出す）
@@ -1929,7 +1941,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.12.1';
+const APP_VERSION = '1.12.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
