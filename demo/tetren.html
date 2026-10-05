@@ -826,6 +826,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
           style="background:#374151;"
           title="10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります"
           onclick="toggleMarathon()">マラソン</button>
+        <button id="sprintBtn" class="toggle-btn"
+          style="background:#374151;"
+          title="40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります"
+          onclick="toggleSprint()">40LINE</button>
+        <!-- 40LINE中だけ、タイムと最高記録を出す -->
+        <div id="sprintPanel" style="display:none;text-align:center;">
+          <div id="sprintTimeVal"
+            style="font-size:22px;font-weight:bold;letter-spacing:1px;line-height:1.1;color:#e5e7eb;">--.--</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;white-space:nowrap;">
+            <span id="sprintLinesVal">0 / 40</span> ・ BEST <span id="sprintBestVal">--.--</span>
+          </div>
+        </div>
         <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
         <button id="digOpenBtn" class="toggle-btn"
           style="background:#374151;"
@@ -2186,6 +2198,7 @@ function restoreRenWalls() {
 
 // ===== デカミノモード =====
 function toggleDekaMode() {
+  stopSprint();
   closeDigPanel();
   dekaMode = !dekaMode;
   const btn = document.getElementById('dekaModeBtn');
@@ -2213,6 +2226,7 @@ function toggleDekaMode() {
 }
 
 function toggleRenMode() {
+  stopSprint();
   closeDigPanel();
   renMode = !renMode;
   const btn = document.getElementById('renModeBtn');
@@ -2281,6 +2295,7 @@ const pick = {
 };
 
 function openDpc() {
+  stopSprint();
   closeDigPanel();
   document.getElementById('dpcOverlay').classList.add('open');
   renderPieceGrid('dpc');
@@ -2289,6 +2304,7 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 function openMiss() {
+  stopSprint();
   closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   pick.miss.sel.clear();
@@ -2746,6 +2762,7 @@ function lock() {
 
   const cleared = clearLines();
   marathonOnClear(cleared);   // マラソン中は消した行数で段階を進める
+  sprintOnClear(cleared);     // 40LINE中は40行に届いたら時計を止める
   if (renMode) restoreRenWalls(); // RENモード：壁を常時維持
 
   // パーフェクトクリア判定
@@ -3246,6 +3263,9 @@ function loop(ts) {
       updateDigCounter(Math.max(0.1, Math.ceil(remainMs / 100) / 10));
     }
   }
+
+  // 40LINE：計測中はタイムを出し続ける
+  if (sprintMode && sprintStartMs && !sprintEndMs) updateSprintPanel();
 
   rafId = requestAnimationFrame(loop);
 }
@@ -4072,6 +4092,7 @@ const KC_ACTIONS = [
   { id:'dpcAgain',   label:'DPCセット再',    d:[  'KeyR',      null        ] },
   { id:'missAgain',  label:'ミノ欠け再セット', d:[  'KeyM',      null        ] },
   { id:'restart',    label:'リスタート',     d:[  'KeyN',      null        ] },
+  { id:'sprintAgain',label:'40LINE再スタート', d:['KeyT',      null        ] },
 ];
 
 // keyConfig[id] = [key1|null, key2|null]
@@ -4153,6 +4174,7 @@ const GP_ACTIONS = [
   { id:'dpcAgain',   label:'DPCセット再',      d:['b7', null ] },
   { id:'missAgain',  label:'ミノ欠け再セット', d:[null, null ] },
   { id:'restart',    label:'リスタート',       d:['b9', null ] },
+  { id:'sprintAgain',label:'40LINE再スタート', d:[null, null ] },
 ];
 const GP_AXIS_ON = 0.55;    // スティックをこれ以上倒したら「押した」とみなす
 const GP_AXIS_OFF = 0.35;   // 戻すときは緩めにしてバタつきを防ぐ
@@ -4239,6 +4261,7 @@ function pollGamepad() {
   // ゲームオーバー中でも効く操作
   if (hit('restart'))  startGame();
   if (hit('missAgain')) repeatMiss();
+  if (hit('sprintAgain')) restartSprint();
 
   if (!gameOver) {
     // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
@@ -4574,7 +4597,7 @@ function digPanelOpen() {
   const box = document.getElementById('digPanel');
   return !!box && box.style.display === 'block';
 }
-function toggleDigPanel() { setDigPanelOpen(!digPanelOpen()); }
+function toggleDigPanel() { stopSprint(); setDigPanelOpen(!digPanelOpen()); }
 // 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
 function closeDigPanel() { setDigPanelOpen(false); }
 
@@ -4593,6 +4616,7 @@ function nextMarathonLock(cur) {
   return Math.max(1, cur - step);
 }
 function toggleMarathon() {
+  stopSprint();
   closeDigPanel();
   marathonMode = !marathonMode;
   const btn = document.getElementById('marathonBtn');
@@ -4635,6 +4659,115 @@ function updateMarathonInfo() {
   if (marathonMode) {
     el.textContent = `${marathonLock}F ・ 次 ${10 - marathonLines}`;
   }
+}
+
+// ===== 40LINE（40ライン消すまでのタイムを計る） =====
+// ボタンを押したら3秒数えてから計測を始める。カウントダウン中は
+// gameOver を立てて止める（操作ボタンもループもこのフラグを見ている）。
+const SPRINT_GOAL = 40;
+let sprintMode = false;
+let sprintCountdown = 0;     // 3→2→1。0以外の間は操作を受け付けない
+let sprintTimerId = null;
+let sprintStartMs = 0;       // 計測開始時刻。0なら未スタート
+let sprintEndMs = 0;         // 達成時刻。0なら計測中
+let sprintLines = 0;
+let sprintBest = null;       // ミリ秒。未記録ならnull
+
+function loadSprintBest() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_sprint_best'); } catch (e) {}
+  const v = parseFloat(raw);
+  sprintBest = (Number.isFinite(v) && v > 0) ? v : null;
+  updateSprintPanel();
+}
+function saveSprintBest() {
+  try { localStorage.setItem('tetren_sprint_best', String(sprintBest)); } catch (e) {}
+}
+// 0.01秒まで出す。1分を超えたときだけ分を付ける
+function fmtSprint(ms) {
+  const t = Math.max(0, ms);
+  const m = Math.floor(t / 60000);
+  const sec = Math.floor(t % 60000 / 1000);
+  const cs = Math.floor(t % 1000 / 10);
+  const head = m ? (m + ':' + String(sec).padStart(2, '0')) : String(sec);
+  return head + '.' + String(cs).padStart(2, '0');
+}
+function updateSprintPanel() {
+  const tv = document.getElementById('sprintTimeVal');
+  if (!tv) return;
+  if (sprintCountdown)       tv.textContent = sprintCountdown;
+  else if (!sprintStartMs)   tv.textContent = '--.--';
+  else                       tv.textContent = fmtSprint((sprintEndMs || performance.now()) - sprintStartMs);
+  tv.style.color = sprintEndMs ? '#4ade80' : (sprintCountdown ? '#fbbf24' : '#e5e7eb');
+  const lv = document.getElementById('sprintLinesVal');
+  if (lv) lv.textContent = sprintLines + ' / ' + SPRINT_GOAL;
+  const bv = document.getElementById('sprintBestVal');
+  if (bv) bv.textContent = (sprintBest === null) ? '--.--' : fmtSprint(sprintBest);
+}
+function startSprint() {
+  clearInterval(sprintTimerId);
+  sprintLines = 0; sprintStartMs = 0; sprintEndMs = 0;
+  startGame();              // まっさらな盤面で始める
+  gameOver = true;          // カウントダウンの間は落下も操作も止める
+  sprintCountdown = 3;
+  updateSprintPanel();
+  sprintTimerId = setInterval(() => {
+    if (!sprintMode) { clearInterval(sprintTimerId); sprintTimerId = null; return; }
+    sprintCountdown--;
+    if (sprintCountdown > 0) { updateSprintPanel(); return; }
+    clearInterval(sprintTimerId); sprintTimerId = null;
+    // 止めていたぶんの時間を持ち越さないよう、溜めていた値を捨ててから再開する
+    gameOver = false;
+    lastSoftDrop = 0; gravAccum = 0; softAccum = 0; timeDigLastTs = 0;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+    sprintStartMs = performance.now();
+    updateSprintPanel();
+  }, 1000);
+}
+function toggleSprint() {
+  if (sprintMode) { stopSprint(); return; }
+  closeDigPanel();
+  // ほかのモードとは同時に使えない（この時点ではまだOFFなので、
+  // 各トグルが呼ぶ stopSprint() は何もしない）
+  if (marathonMode) toggleMarathon();
+  if (renMode)      toggleRenMode();
+  if (dekaMode)     toggleDekaMode();
+  sprintMode = true;
+  document.getElementById('sprintBtn').style.background = '#16a34a';
+  document.getElementById('sprintPanel').style.display = 'block';
+  startSprint();
+}
+// ほかのモードボタンを押したときはここを通って表示ごと引っ込める
+function stopSprint() {
+  if (!sprintMode) return;
+  sprintMode = false;
+  clearInterval(sprintTimerId); sprintTimerId = null;
+  // カウントダウン中に抜けたときは、止めていた盤面を動かし直す
+  if (sprintCountdown) {
+    sprintCountdown = 0;
+    gameOver = false;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+  }
+  document.getElementById('sprintBtn').style.background = '#374151';
+  document.getElementById('sprintPanel').style.display = 'none';
+}
+// キーコンフィグの「40LINE再スタート」。OFFのときは押した扱いで始める
+function restartSprint() {
+  if (sprintMode) startSprint();
+  else            toggleSprint();
+}
+// 消した行数を受け取って、40ラインに届いたら時計を止める
+function sprintOnClear(n) {
+  if (!sprintMode || !n || !sprintStartMs || sprintEndMs) return;
+  sprintLines = Math.min(SPRINT_GOAL, sprintLines + n);
+  if (sprintLines >= SPRINT_GOAL) {
+    sprintEndMs = performance.now();
+    const t = sprintEndMs - sprintStartMs;
+    if (sprintBest === null || t < sprintBest) { sprintBest = t; saveSprintBest(); }
+  }
+  updateSprintPanel();
 }
 
 // ===== その他の設定 =====
@@ -4899,7 +5032,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.29.0';
+const APP_VERSION = '1.30.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5084,10 +5217,17 @@ function shotPointerDown(e, win, mode) {
 document.addEventListener('keydown', e=>{
   // カンペ画像の貼り付けダイアログを開いている間はゲーム操作を止める
   if (document.getElementById('shotOverlay').classList.contains('open')) return;
+  // 40LINEのカウントダウン中は、やり直し以外は受け付けない
+  if (sprintCountdown) {
+    if (kcMatch('sprintAgain', e.code)) { e.preventDefault(); if (!e.repeat) restartSprint(); }
+    return;
+  }
   // リスタートはゲームオーバー時も有効
   if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
   // ミノ欠けはゲームを始め直す操作なので、リスタートと同じくゲームオーバー中も効かせる
   if (kcMatch('missAgain', e.code)) { e.preventDefault(); if (!e.repeat) repeatMiss(); return; }
+  // 40LINEもゲームを始め直す操作なので、ゲームオーバー中も効かせる
+  if (kcMatch('sprintAgain', e.code)) { e.preventDefault(); if (!e.repeat) restartSprint(); return; }
   if (gameOver) return;
   // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
@@ -5187,6 +5327,7 @@ initKeyConfig();
 loadSkin();
 loadPanelPos();   // 保存した枠の位置を復元する
 loadDigMulti();   // 複数段せりあがりの設定を復元する
+loadSprintBest(); // 40LINEの最高記録を復元する
 rollNextDigRows();   // 予告する段数を先に決めておく
 loadOptions();
 loadGravSpeed();
