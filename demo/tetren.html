@@ -811,14 +811,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
           style="background:#374151;"
           title="10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります"
           onclick="toggleMarathon()">マラソン</button>
+        <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
+        <button id="digOpenBtn" class="toggle-btn"
+          style="background:#374151;"
+          title="せりあがりの設定とスタートボタンを開きます"
+          onclick="toggleDigPanel()">せりあがり</button>
       </div>
-      <div style="border-top:1px solid #374151;margin:10px 0 8px;"></div>
-      <div class="panel-label">せりあがり</div>
-      <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
-      <button id="digOpenBtn" class="toggle-btn"
-        style="background:#374151;"
-        title="せりあがりの設定とスタートボタンを開きます"
-        onclick="toggleDigPanel()">せりあがり</button>
       <div id="digPanel" style="display:none;">
       <button id="digBtn" title="設定した間隔でおじゃまを自動でせり上げる" class="toggle-btn"
         style="background:#374151;margin-top:8px;"
@@ -4836,7 +4834,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.24.2';
+const APP_VERSION = '1.24.3';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
