@@ -75,8 +75,12 @@ body {
 .btn-group .garb-btn + .garb-btn { border-left:1px solid #4b5563; }
 .garb-btn:hover { background:#6d28d9; }
 /* 配置編集。枠をドラッグで好きな位置へ動かせるようにする */
+.ctrl-edit-row {
+  display:flex; align-items:center; gap:8px;
+  padding:4px 2px; border-bottom:1px solid #374151; margin-bottom:2px;
+}
 .layout-edit [data-pos] {
-  outline:2px dashed #818cf8; outline-offset:2px; border-radius:8px;
+  outline:2px dashed #818cf8; outline-offset:2px; border-radius:10px;
   cursor:move; user-select:none;
 }
 .layout-edit [data-pos] * { pointer-events:none; }
@@ -517,7 +521,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div class="side" style="align-items:flex-end;">
 
     <!-- HOLD -->
-    <div class="panel" id="holdPanel" data-pos="hold">
+    <div class="panel" id="holdPanel">
       <div class="panel-label">HOLD</div>
       <canvas id="holdCanvas" width="100" height="80"></canvas>
       <!-- 連続HOLDの可否。HOLDの機能なのでこの枠の中に置く -->
@@ -531,7 +535,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 落下設定 -->
-    <div class="panel" style="width:108px;" data-pos="grav">
+    <div class="panel" style="width:108px;">
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
         <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
@@ -548,7 +552,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- デザイン -->
-    <div class="panel" style="width:108px;" data-pos="design">
+    <div class="panel" style="width:108px;">
       <div class="panel-label">デザイン</div>
       <label class="tgl-row" style="margin-bottom:8px;"
         title="ミノがどこに落ちるかを薄く表示する">
@@ -564,19 +568,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
-      <label class="tgl-row" style="margin-top:8px;"
-        title="ONにすると、枠をドラッグで好きな位置に動かせます">
-        <span>配置編集</span>
-        <input type="checkbox" id="layoutEditSw"
-          onchange="setLayoutEdit(this.checked)">
-        <span class="tgl"></span>
-      </label>
-      <button id="posResetBtn" class="garb-btn" style="display:none;margin-top:8px;background:#374151;font-size:11px;"
-        onclick="resetPanelPos()">配置を元に戻す</button>
     </div>
 
     <!-- 地形操作 -->
-    <div class="panel" style="width:108px;" data-pos="terrain">
+    <div class="panel" style="width:108px;">
       <div class="panel-label">地形操作</div>
       <label class="tgl-row" title="ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます">
         <span>地形編集</span>
@@ -607,13 +602,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
       title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
 
     <!-- LINES -->
-    <div class="panel" style="text-align:center;width:108px;" data-pos="lines">
+    <div class="panel" style="text-align:center;width:108px;">
       <div class="panel-label">LINES</div>
       <div class="stat-val" id="linesEl">0</div>
     </div>
 
     <!-- キーコンフィグ -->
-    <div class="panel" style="width:108px;" data-pos="setting">
+    <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
       <!-- デモ版と、タッチ端末（iPadなど）で出す版切り替え -->
       <button id="verSwitchBtn" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
@@ -634,7 +629,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 操作ボタンパッド -->
-    <div class="ctrl-pad" data-pos="pad">
+    <div class="ctrl-pad">
       <!-- ミノを捨てる・戻す（常時表示） -->
       <div class="ctrl-row r2">
         <button class="ctrl-btn"
@@ -656,9 +651,20 @@ input:checked + .tgl::after { transform:translateX(16px); }
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
       </button>
       <div id="ctrlHidden">
+        <!-- 開いたボタンの配置を自分で決められるようにする -->
+        <div class="ctrl-edit-row">
+          <label class="tgl-row" style="flex:1;"
+            title="ONにすると、下のボタンをドラッグで好きな位置に動かせます">
+            <span>配置編集</span>
+            <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+            <span class="tgl"></span>
+          </label>
+          <button id="posResetBtn" class="ctrl-reset" style="display:none;flex:0 0 auto;width:auto;padding:6px 10px;font-size:11px;"
+            onclick="resetPanelPos()">元に戻す</button>
+        </div>
         <!-- 左右・ソフトドロップ -->
         <div class="ctrl-row r3">
-          <button class="ctrl-btn"
+          <button data-pos="left" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
             onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')"
             ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
@@ -666,7 +672,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
             title="左移動">
             ←<span class="ctrl-lbl">左</span>
           </button>
-          <button class="ctrl-btn"
+          <button data-pos="soft" class="ctrl-btn"
             onmousedown="if(!gameOver)startSoftDropBtn()"
             onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
             ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
@@ -674,7 +680,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
             title="ソフトドロップ">
             ↓<span class="ctrl-lbl">ソフト</span>
           </button>
-          <button class="ctrl-btn"
+          <button data-pos="right" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(1);pressDir('R')}"
             onmouseup="releaseDir('R')" onmouseleave="releaseDir('R')"
             ontouchstart="e.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
@@ -685,13 +691,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </div>
         <!-- 回転 -->
         <div class="ctrl-row r2">
-          <button class="ctrl-btn"
+          <button data-pos="rotL" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(-1)"
             ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
             title="反時計回り回転">
             ↺<span class="ctrl-lbl">左回転</span>
           </button>
-          <button class="ctrl-btn"
+          <button data-pos="rotR" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(1)"
             ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
             title="時計回り回転">
@@ -700,12 +706,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </div>
         <!-- ホールド・ハードドロップ -->
         <div class="ctrl-row r2">
-          <button class="ctrl-btn ctrl-hold"
+          <button data-pos="hold" class="ctrl-btn ctrl-hold"
             onclick="if(!gameOver)doHold()"
             title="ホールド">
             ⇪<span class="ctrl-lbl">HOLD</span>
           </button>
-          <button class="ctrl-btn ctrl-hard"
+          <button data-pos="drop" class="ctrl-btn ctrl-hard"
             onclick="if(!gameOver)hardDrop()"
             title="ハードドロップ">
             ⬇<span class="ctrl-lbl">HARD DROP</span>
@@ -719,13 +725,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
   <div class="side" id="rightSide">
 
     <!-- NEXT -->
-    <div class="panel" id="nextPanel" data-pos="next">
+    <div class="panel" id="nextPanel">
       <div class="panel-label">NEXT</div>
       <canvas id="nextCanvas" width="100" height="420"></canvas>
     </div>
 
     <!-- モード（デカミノ / REN / DPCセット） -->
-    <div class="panel" style="min-width:116px;" data-pos="mode">
+    <div class="panel" style="min-width:116px;">
       <div class="panel-label">モード</div>
       <div class="mode-buttons">
         <div class="btn-group">
@@ -4385,7 +4391,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.18.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
