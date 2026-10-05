@@ -869,6 +869,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="imp-actions">
+      <button class="imp-btn" onclick="startMissRandom()"
+        title="抜くミノの数（0〜6個）も種類もランダムに決めて始めます。↻を押すたびに引き直します">ランダム</button>
       <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
       <button class="imp-btn imp-primary" id="missStartBtn" style="display:none;"
         onclick="startMissMulti()">開始</button>
@@ -2220,6 +2222,22 @@ function updateDpcAgainBtn() {
 }
 updateDpcAgainBtn();
 
+// --- ミノ欠け（ランダム）: 抜くミノの数（0〜6個）も種類も毎回くじ引きで決める ---
+// 0個のときは何も抜かないので、通常どおり7ミノで始まる。
+function randomMissTypes() {
+  const n = Math.floor(Math.random() * 7);        // 0〜6個
+  const a = ALL_TYPES.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
+}
+function startMissRandom() {
+  const types = randomMissTypes();
+  applyMissTypes(types, { random:true, types });
+}
+
 // --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
 function setMissingPiece(type) {
   applyMissTypes([type], { multi:false, type });
@@ -2242,7 +2260,9 @@ function startMissMulti() {
 }
 function repeatMiss() {
   if (!lastMiss) { openMiss(); return; }
-  if (lastMiss.multi) applyMissMulti(lastMiss.types);
+  // ランダムで始めたときは、押すたびに引き直す
+  if (lastMiss.random) startMissRandom();
+  else if (lastMiss.multi) applyMissMulti(lastMiss.types);
   else setMissingPiece(lastMiss.type);
 }
 function updateMissAgainBtn() {
@@ -2250,9 +2270,11 @@ function updateMissAgainBtn() {
   if (!btn) return;
   btn.style.opacity = lastMiss ? '1' : '0.45';
   btn.title = !lastMiss ? 'まだミノを選んでいません（押すと選択画面が開きます）'
-    : lastMiss.multi
-      ? `前回選んだ ${lastMiss.types.join('・')} を抜いて、もう一度始めます`
-      : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度ミノ欠けで始めます`;
+    : lastMiss.random
+      ? `ランダムで引き直します（前回は ${lastMiss.types.length ? lastMiss.types.join('・') + ' を抜いた' : '何も抜かなかった'}）`
+      : lastMiss.multi
+        ? `前回選んだ ${lastMiss.types.join('・')} を抜いて、もう一度始めます`
+        : `前回選んだ ${lastMiss.type} ミノを抜いて、もう一度ミノ欠けで始めます`;
 }
 updateMissAgainBtn();
 
@@ -4243,7 +4265,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.14.1';
+const APP_VERSION = '1.15.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
