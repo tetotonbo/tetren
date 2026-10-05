@@ -261,6 +261,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .pick-sw input:checked + .tgl { background:#16a34a; }
 .pick-sw input:checked + .tgl::after { transform:translateX(16px); }
 .pick-note { font-size:10px; color:#9ca3af; margin:8px 0 0; line-height:1.6; text-align:center; }
+/* ランダムで抜く個数を選ぶ行 */
+.rand-row { display:flex; gap:4px; margin:6px 0 0; }
+.rand-num {
+  flex:1; background:#0d1117; color:#e5e7eb;
+  border:1px solid #374151; border-radius:6px;
+  padding:8px 0; font-size:13px; font-weight:bold; cursor:pointer;
+}
 #aboutLink { color:#6b7280; text-decoration:underline; font-size:10px; }
 #aboutPanel p { margin:0 0 10px; font-size:11px; color:#d1d5db; line-height:1.9; text-align:left; }
 #aboutPanel h3 { font-size:11px; color:#9ca3af; margin:12px 0 5px; text-align:left; }
@@ -505,7 +512,16 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <button class="dpc-close" id="missStartBtn" style="display:none;background:#4f46e5;color:#fff;"
       onclick="startMissMulti()">開始</button>
-    <button class="dpc-close" onclick="startMissRandom()">ランダム</button>
+    <button class="dpc-close" onclick="toggleMissRandRow()">ランダム</button>
+    <div class="rand-row" id="missRandRow" style="display:none;">
+      <button class="rand-num" onclick="startMissRandom(0)">0</button>
+      <button class="rand-num" onclick="startMissRandom(1)">1</button>
+      <button class="rand-num" onclick="startMissRandom(2)">2</button>
+      <button class="rand-num" onclick="startMissRandom(3)">3</button>
+      <button class="rand-num" onclick="startMissRandom(4)">4</button>
+      <button class="rand-num" onclick="startMissRandom(5)">5</button>
+      <button class="rand-num" onclick="startMissRandom(6)">6</button>
+    </div>
     <button class="dpc-close" onclick="closeMiss()">キャンセル</button>
   </div>
 </div>
@@ -1469,6 +1485,7 @@ const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
 function openMiss(){
   missPick.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   missPick.sel.clear();
+  const rr=document.getElementById('missRandRow'); if(rr) rr.style.display='none';
   document.getElementById('missOverlay').classList.add('open');
   drawMissGrid();
 }
@@ -1508,15 +1525,22 @@ function drawMissGrid(){
 }
 // ランダム: 抜くミノの数（0〜6個）も種類も毎回くじ引きで決める。
 // 0個のときは何も抜かないので、通常どおり7ミノで始まる。
-function randomMissTypes(){
-  const n = Math.floor(Math.random() * 7);        // 0〜6個
+// 指定された個数だけ、ランダムに選んで返す
+function randomMissTypes(n){
   const a = ALL_TYPES.slice();
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a.slice(0, n);
+  return a.slice(0, Math.max(0, Math.min(6, n)));
 }
-function startMissRandom(){
-  const types = randomMissTypes();
-  applyMissTypes(types, { random:true, types });
+// 個数は覚えておき、↻ では種類だけを引き直す
+function startMissRandom(n){
+  const types = randomMissTypes(n);
+  applyMissTypes(types, { random:true, n, types });
+}
+// ランダムを押したら、消す個数を選ぶ行を出す
+function toggleMissRandRow(){
+  const row=document.getElementById('missRandRow');
+  if(!row) return;
+  row.style.display = (row.style.display==='none' || !row.style.display) ? '' : 'none';
 }
 function setMissingPiece(type){ applyMissTypes([type], {multi:false, type}); }
 function applyMissMulti(types){
@@ -1533,7 +1557,7 @@ function startMissMulti(){ if(missValid()) applyMissMulti([...missPick.sel]); }
 function repeatMiss(){
   if(!lastMiss){ openMiss(); return; }
   // ランダムで始めたときは、押すたびに引き直す
-  if(lastMiss.random) startMissRandom();
+  if(lastMiss.random) startMissRandom(lastMiss.n);
   else if(lastMiss.multi) applyMissMulti(lastMiss.types);
   else setMissingPiece(lastMiss.type);
 }
@@ -2002,7 +2026,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.19.1';
+const APP_VERSION = '1.20.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
