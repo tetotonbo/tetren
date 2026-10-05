@@ -599,8 +599,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
-      <!-- デモ版でだけ出る版切り替え（本番では非表示） -->
-      <button id="verSwitchBtn" title="スマホ版の画面に切り替える（デモ版のみ）" class="kc-open-btn"
+      <!-- デモ版と、タッチ端末（iPadなど）で出す版切り替え -->
+      <button id="verSwitchBtn" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
         style="display:none;background:#374151;"
         onclick="switchVersion()">📱 スマホ版へ</button>
       <div id="verLabel"></div>
@@ -4286,7 +4286,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.16.3';
+const APP_VERSION = '1.17.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -4557,7 +4557,10 @@ document.getElementById('startBtn').addEventListener('click', startGame);
 // URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
 function isDemoBuild() { return location.pathname.indexOf('/demo/') >= 0; }
 function switchVersion() { location.href = 'tetren_mobile.html'; }
-if (isDemoBuild()) {
+// iPadOS は既定でデスクトップ用として動くため、PC版に来てしまうことがある。
+// タッチ端末ならスマホ版へ移れるボタンを出しておく。
+const isTouchDevice = navigator.maxTouchPoints > 1;
+if (isDemoBuild() || isTouchDevice) {
   const vb = document.getElementById('verSwitchBtn');
   if (vb) vb.style.display = '';
 }

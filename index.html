@@ -32,7 +32,11 @@
 </script>
 <script>
   // 端末に合わせて自動で振り分ける。JSが動かない環境では下のリンクから選べる。
-  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+  const ua = navigator.userAgent;
+  // iPadOS 13以降のSafariは既定で「デスクトップ用サイト」として動くため、
+  // UAに iPad が入らず Macintosh を名乗る。タッチの有無で拾い直す。
+  const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  if (/iPhone|iPad|iPod|Android/i.test(ua) || isIPadOS) {
     location.replace('tetren_mobile.html');
   } else {
     location.replace('tetren.html');
