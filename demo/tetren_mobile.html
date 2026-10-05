@@ -2115,7 +2115,7 @@ addTouchBtn('btnSoft',
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.28.0';
+const APP_VERSION = '1.28.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -2284,15 +2284,18 @@ function shotPointerDown(e, win, mode){
   });
 })();
 
+// 保存した設定の読み込みは initLayout() より先に。
+// 盤面・NEXT・メニューの倍率は opts から読むので、
+// 後回しにすると初期表示だけ既定の大きさのままになる。
+loadOptions();
+loadGravSpeed();
+loadDigSetting();
+
 initPalette();
 initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
-
-loadOptions();
-loadGravSpeed();
-loadDigSetting();
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
