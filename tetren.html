@@ -907,6 +907,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab"        id="cfgTabPad" title="ゲームパッドのボタン割り当て" onclick="switchConfigTab('pad')">コントローラ</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
@@ -919,6 +920,26 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div id="kcRows"></div>
       <div class="kc-btns">
         <button onclick="resetKeyConfig()" title="キーの割り当てを初期状態に戻す"
+          style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    </div>
+
+    <div class="cfg-pane" id="cfgPanePad">
+      <div class="imp-hint" id="gpStatus" style="margin:0 0 10px;"></div>
+      <div class="imp-hint" style="margin:0 0 10px;">
+        割り当てを変えたい欄を押してから、コントローラのボタンを押してください。<br>
+        スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。
+      </div>
+      <div id="kcHeader">
+        <span class="kc-label">操作</span>
+        <span class="kc-slot-head">スロット 1</span>
+        <span class="kc-slot-head">スロット 2</span>
+      </div>
+      <div id="gpRows"></div>
+      <div class="kc-btns">
+        <button onclick="resetGamepadConfig()" title="ボタンの割り当てを初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
@@ -2835,6 +2856,7 @@ function changeGravSpeed(delta) {
 // ===== ゲームループ =====
 let rafId;
 function loop(ts) {
+  pollGamepad();          // コントローラは毎フレーム読む
   if (gameOver) return;
 
   // ↓キー押しっぱなし：ブラウザのキーリピートに頼らずポーリング
@@ -3763,6 +3785,210 @@ function renderKcBtn(id, slot) {
   btn.style.color = code ? '#f9fafb' : '#6b7280';
 }
 
+
+// ===== ゲームパッド =====
+// どのコントローラでも使えるよう、ボタン番号は固定せず「押して覚えさせる」方式にする。
+// 既定値は標準配置（Xbox互換）を入れてあるので、多くの機種はつなぐだけで動く。
+// 入力の表し方: ボタンは 'b3'、スティック／トリガーは 'a0+' 'a1-' のように軸と向きで持つ。
+const GP_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',           d:['b14','a0-'] },
+  { id:'moveRight',  label:'右移動',           d:['b15','a0+'] },
+  { id:'softDrop',   label:'ソフトドロップ',   d:['b13','a1+'] },
+  { id:'hardDrop',   label:'ハードドロップ',   d:['b12','a1-'] },
+  { id:'rotateCW',   label:'時計回り回転',     d:['b0', 'b3' ] },
+  { id:'rotateCCW',  label:'反時計回り回転',   d:['b1', 'b2' ] },
+  { id:'hold',       label:'ホールド',         d:['b4', 'b5' ] },
+  { id:'discard',    label:'ミノを捨てる',     d:[null, null ] },
+  { id:'undo',       label:'1手戻す',          d:['b6', null ] },
+  { id:'dpcAgain',   label:'DPCセット再',      d:['b7', null ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:[null, null ] },
+  { id:'restart',    label:'リスタート',       d:['b9', null ] },
+];
+const GP_AXIS_ON = 0.55;    // スティックをこれ以上倒したら「押した」とみなす
+const GP_AXIS_OFF = 0.35;   // 戻すときは緩めにしてバタつきを防ぐ
+
+let gpConfig = {};
+let gpPrev = {};            // 入力ID → 直前に押されていたか
+let gpWaiting = null;       // 割り当て待ち {id, slot, btn}
+
+function loadGamepadConfig() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_gamepad'); } catch(e) {}
+  let parsed = null;
+  if (raw) { try { parsed = JSON.parse(raw); } catch(e) {} }
+  GP_ACTIONS.forEach(a => {
+    gpConfig[a.id] = (parsed && Array.isArray(parsed[a.id])) ? parsed[a.id] : [...a.d];
+  });
+}
+function saveGamepadConfig() {
+  try { localStorage.setItem('tetren_gamepad', JSON.stringify(gpConfig)); } catch(e) {}
+}
+function resetGamepadConfig() {
+  GP_ACTIONS.forEach(a => { gpConfig[a.id] = [...a.d]; });
+  saveGamepadConfig();
+  buildGpRows();
+}
+// 表示名。ボタン番号そのままだと分かりにくいので、標準配置の呼び名も添える
+const GP_NAMES = {
+  b0:'ボタン1 (A)', b1:'ボタン2 (B)', b2:'ボタン3 (X)', b3:'ボタン4 (Y)',
+  b4:'L1', b5:'R1', b6:'L2', b7:'R2', b8:'SELECT', b9:'START',
+  b10:'Lスティック押込', b11:'Rスティック押込',
+  b12:'十字 上', b13:'十字 下', b14:'十字 左', b15:'十字 右', b16:'ホーム',
+  'a0-':'Lスティック 左', 'a0+':'Lスティック 右',
+  'a1-':'Lスティック 上', 'a1+':'Lスティック 下',
+  'a2-':'Rスティック 左', 'a2+':'Rスティック 右',
+  'a3-':'Rスティック 上', 'a3+':'Rスティック 下',
+};
+function gpDisplayName(code) {
+  if (!code) return '—';
+  return GP_NAMES[code] || code;
+}
+
+// つながっているパッドを1つ返す（複数あれば最初に見つかったもの）
+function activeGamepad() {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const g of list) if (g && g.connected) return g;
+  return null;
+}
+// いま押されている入力IDの集合を作る
+function gpPressed(g) {
+  const set = {};
+  g.buttons.forEach((b, i) => { if (b && (b.pressed || b.value > 0.5)) set['b'+i] = true; });
+  g.axes.forEach((v, i) => {
+    const prevPos = gpPrev['a'+i+'+'], prevNeg = gpPrev['a'+i+'-'];
+    if (v >=  (prevPos ? GP_AXIS_OFF : GP_AXIS_ON)) set['a'+i+'+'] = true;
+    if (v <= -(prevNeg ? GP_AXIS_OFF : GP_AXIS_ON)) set['a'+i+'-'] = true;
+  });
+  return set;
+}
+function gpHas(id, set) {
+  const c = gpConfig[id];
+  return !!c && ((c[0] && set[c[0]]) || (c[1] && set[c[1]]));
+}
+
+let gpActPrev = {};   // 操作ID → 直前に押されていたか
+function pollGamepad() {
+  const g = activeGamepad();
+  if (!g) return;
+  const set = gpPressed(g);
+
+  // 割り当て待ちなら、最初に押された入力を拾って終了
+  if (gpWaiting) {
+    for (const code in set) {
+      if (!gpPrev[code]) { assignGpCode(code); break; }
+    }
+    gpPrev = set;
+    return;
+  }
+
+  const now = {};
+  GP_ACTIONS.forEach(a => { now[a.id] = gpHas(a.id, set); });
+  const hit = id => now[id] && !gpActPrev[id];       // 押した瞬間だけ
+  const off = id => !now[id] && gpActPrev[id];       // 離した瞬間だけ
+
+  // ゲームオーバー中でも効く操作
+  if (hit('restart'))  startGame();
+  if (hit('missAgain')) repeatMiss();
+
+  if (!gameOver) {
+    // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
+    if (hit('moveLeft'))  { moveH(-1); pressDir('L'); }
+    if (off('moveLeft'))  releaseDir('L');
+    if (hit('moveRight')) { moveH(+1); pressDir('R'); }
+    if (off('moveRight')) releaseDir('R');
+    if (hit('softDrop'))  { if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); } }
+    if (off('softDrop'))  downHeld = false;
+    if (hit('rotateCW'))  rotate(1);
+    if (hit('rotateCCW')) rotate(-1);
+    if (hit('hardDrop'))  hardDrop();
+    if (hit('hold'))      doHold();
+    if (hit('discard'))   discardPiece();
+    if (hit('undo'))      undo();
+    if (hit('dpcAgain'))  repeatDpc();
+  }
+  gpActPrev = now;
+  gpPrev = set;
+}
+
+// 接続状況の表示（設定画面のコントローラタブ）
+function updateGpStatus() {
+  const el = document.getElementById('gpStatus');
+  if (!el) return;
+  const g = activeGamepad();
+  el.textContent = g ? ('接続中: ' + g.id) : 'コントローラが見つかりません。接続してから、どれかボタンを押してください。';
+  el.style.color = g ? '#4ade80' : '#9ca3af';
+}
+window.addEventListener('gamepadconnected',    updateGpStatus);
+window.addEventListener('gamepaddisconnected', updateGpStatus);
+
+// --- 割り当てUI ---
+function gpBtnId(id, slot) { return 'gp_' + id + '_' + slot; }
+function startGpWait(id, slot, btn) {
+  if (gpWaiting) renderGpBtn(gpWaiting.id, gpWaiting.slot);
+  gpWaiting = { id, slot, btn };
+  btn.textContent = 'ボタンを押す…';
+  btn.classList.add('waiting');
+}
+function assignGpCode(code) {
+  if (!gpWaiting) return;
+  const { id, slot } = gpWaiting;
+  // 他の操作に同じ入力が割り当たっていたら外す（二重割り当てを防ぐ）
+  GP_ACTIONS.forEach(a => {
+    [0,1].forEach(s => {
+      if ((a.id !== id || s !== slot) && gpConfig[a.id][s] === code) {
+        gpConfig[a.id][s] = null; renderGpBtn(a.id, s);
+      }
+    });
+  });
+  gpConfig[id][slot] = code;
+  gpWaiting = null;
+  saveGamepadConfig();
+  renderGpBtn(id, slot);
+}
+function renderGpBtn(id, slot) {
+  const btn = document.getElementById(gpBtnId(id, slot));
+  if (!btn) return;
+  const code = gpConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = gpDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+function buildGpRows() {
+  const container = document.getElementById('gpRows');
+  if (!container) return;
+  container.innerHTML = '';
+  GP_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = gpBtnId(a.id, slot);
+      btn.textContent = gpDisplayName(gpConfig[a.id][slot]);
+      if (!gpConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startGpWait(a.id, slot, btn);
+      const del = document.createElement('button');
+      del.className = 'kc-del';
+      del.textContent = '×';
+      del.title = 'クリア';
+      del.onclick = () => { gpConfig[a.id][slot] = null; saveGamepadConfig(); renderGpBtn(a.id, slot); };
+      wrap.appendChild(btn); wrap.appendChild(del);
+      row.appendChild(wrap);
+    });
+    container.appendChild(row);
+  });
+  updateGpStatus();
+}
+loadGamepadConfig();
+// 設定画面を開いている間も割り当てを拾えるよう、ループとは別に回しておく
+setInterval(() => { if (gpWaiting || gameOver) pollGamepad(); }, 1000/60);
+
 // ===== その他の設定 =====
 const OPT_DEFAULTS = {
   multiHold: true,    // 連続ホールド許可（OFFで通常ルール）
@@ -3862,7 +4088,8 @@ function resetOptions() {
 
 // ===== 設定モーダル =====
 function switchConfigTab(name) {
-  const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'], misc:['cfgTabMisc','cfgPaneMisc'] };
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], pad:['cfgTabPad','cfgPanePad'],
+                 skin:['cfgTabSkin','cfgPaneSkin'], misc:['cfgTabMisc','cfgPaneMisc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     document.getElementById(tab).classList.toggle('active', k === name);
@@ -3870,6 +4097,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'misc') applyOptions();
+  if (name === 'pad')  buildGpRows();
 }
 
 // スキン一覧（見本つき）を描き直す
@@ -3985,7 +4213,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.11.1';
+const APP_VERSION = '1.14.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
