@@ -2080,6 +2080,7 @@ function toggleDigMode() {
   digCount = 0;
   timeDigLastTs = 0;
   pendingDigRows = 0;   // 溜まっていたぶんは持ち越さない
+  digStaged = false;
   rollNextDigRows();
   const btn = document.getElementById('digBtn');
   if (digMode) {
@@ -2472,6 +2473,12 @@ function flushPendingDig() {
   for (let i = 0; i < n; i++) addGarbage(false, n > 1);
   updateDigCounter();
 }
+// 攻撃したぶんだけ溜まりを減らす（相殺）。0以下になればせりあがらない。
+function offsetPendingDig(atk) {
+  if (!atk || !pendingDigRows) return;
+  pendingDigRows = Math.max(0, pendingDigRows - atk);
+  updateDigCounter();
+}
 function addGarbage(sameHole, multi) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
   // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
@@ -2697,6 +2704,7 @@ function lock() {
   // REN更新
   if (cleared > 0) { ren++; } else { ren = 0; }
 
+  const wasB2B = b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared, tSpin, isPerfect);
 
   // せりあがり自動モード（ミノごと）
@@ -2705,8 +2713,11 @@ function lock() {
     updateDigCounter();
     if (digCount % digInterval === 0) addGarbageRows(false);
   }
-  // 時間経過タイプで溜まっていたぶんを、ここでまとめて上げる
-  if (digMode && digTriggerType === 'time' && opts.digOnLock) flushPendingDig();
+  // 時間経過タイプ: 置いた攻撃で相殺してから、残りを上げる
+  if (digMode && digTriggerType === 'time') {
+    offsetPendingDig(attackPower(cleared, tSpin, wasB2B, isPerfect));
+    if (opts.digOnLock) flushPendingDig();
+  }
 
   spawn();
   draw();
@@ -2803,6 +2814,29 @@ function pieceAxisPos(row, col, type) {
   if (type === 'I') return [(vc+2)*BS, (vr+2)*BS];
   if (type === 'O') return [(vc+1)*BS, (vr+1)*BS];
   return [(vc+1)*BS + BS/2, (vr+1)*BS + BS/2];
+}
+
+// ===== 火力（相殺に使う攻撃ライン数） =====
+// ぷよぷよテトリス2の表に合わせている。
+//   通常消し : 1→0 / 2→1 / 3→2 / 4(テトリス)→4
+//   Tスピン  : ミニ→0 / シングル→2 / ダブル→4 / トリプル→6
+//   REN      : 11REN以降はすべて5
+//   B2B      : テトリス・Tスピンを続けたとき +1
+//   パフェ   : +10
+const ATK_LINE  = [0, 0, 1, 2, 4];          // 消したライン数で引く
+const ATK_TSPIN = [0, 2, 4, 6];             // Tスピンの消しライン数で引く（1〜3）
+const ATK_REN   = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5];  // REN数で引く（11以降は5）
+const ATK_PERFECT = 10;
+function attackPower(cleared, tSpin, wasB2B, isPerfect) {
+  if (!cleared) return 0;
+  let a;
+  if (tSpin === 'mini')      a = 0;
+  else if (tSpin === 'full') a = ATK_TSPIN[cleared] ?? 0;
+  else                       a = ATK_LINE[cleared] ?? 0;
+  if (wasB2B && (cleared === 4 || tSpin === 'full')) a += 1;   // B2B
+  a += ATK_REN[Math.min(ren, 11)];                             // REN（renはここでは加算済み）
+  if (isPerfect) a += ATK_PERFECT;                             // パーフェクトクリア
+  return a;
 }
 
 // 次に何段上がるかを盤面の下端に予告として出す。
@@ -3158,9 +3192,14 @@ function loop(ts) {
   if (digMode && digTriggerType === 'time') {
     if (!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
+    // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
+    if (remainMs <= 1000 && !digStaged) { queueDigRows(); digStaged = true; }
     if (remainMs <= 0) {
-      // 「ミノ設置直後にせりあがり」がONなら、ここでは上げずに溜めておく
-      if (opts.digOnLock) queueDigRows(); else addGarbageRows(false);
+      // 溜まりが限界を超えていたら、相殺を待たず一気に積んで終わらせる
+      if (pendingDigRows >= DIG_PENDING_LIMIT) flushPendingDig();
+      // 「ミノ設置直後にせりあがり」がONのときは、置くまで溜めたままにする
+      else if (!opts.digOnLock) flushPendingDig();
+      digStaged = false;
       timeDigLastTs = ts;
       updateDigCounter(timeDigInterval);
     } else {
@@ -4459,6 +4498,9 @@ function updateDigMultiBtn() {
 // 「ミノ設置直後にせりあがり」のときは、時間で溜まったぶんもここに足す。
 let nextDigRows = 1;    // 次のせりあがりで上がる段数（予告）
 let pendingDigRows = 0; // 設置待ちで溜まっている段数
+let digStaged = false;  // この周期ぶんを溜まりへ積んだか（1秒前に積む）
+// パフェで10ライン相殺できるので、それでも返せない量になったら終わりにする
+const DIG_PENDING_LIMIT = 30;   // これ以上溜まったら相殺を待たず一気に積む
 function rollNextDigRows() { nextDigRows = pickDigRows(); updateDigCounter(); }
 
 // 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う。
@@ -4791,7 +4833,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.23.0';
+const APP_VERSION = '1.24.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5030,7 +5072,7 @@ function resetGameState(fullReset = true) {
   updateGravDisplay();
   downHeld=false; lastSoftDrop=0; softAccum=0;
   digCount=0; timeDigLastTs=0; // 進捗カウンターは毎回リセット
-  pendingDigRows = 0; rollNextDigRows();
+  pendingDigRows = 0; digStaged = false; rollNextDigRows();
   if (fullReset) {
     // 自動せりあがりは止めるが、間隔の設定値（ミノごと/秒数とその数値）は
     // 続けて練習できるよう残しておく
