@@ -130,6 +130,7 @@ canvas { display:block; }
   transition:background .1s;
 }
 .side-btn:active { background:#374151; }
+/* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
 #colorPaletteWrap {
   display:none; flex-wrap:wrap; gap:4px;
   justify-content:center; padding:5px;
@@ -526,7 +527,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
     <button class="side-btn" data-ui="reset" onclick="startGame()"
-      style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
+      style="margin-top:4px;">リセット</button>
+    <!-- 片方だけ戻したいとき用 -->
+    <button class="side-btn" data-ui="resetTerrain" onclick="resetTerrainOnly()"
+      style="margin-top:3px;" title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
+    <button class="side-btn" data-ui="resetQueue" onclick="resetQueueOnly()"
+      style="margin-top:3px;" title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
     <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
     <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:4px;"
@@ -574,12 +580,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <div class="ctrl-row r2">
         <button class="ctrl-btn" data-ctrl="rotL"
           onmousedown="if(!gameOver)rotate(-1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)">
+          ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
         </button>
         <button class="ctrl-btn" data-ctrl="rotR"
           onmousedown="if(!gameOver)rotate(1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(1)">
+          ontouchstart="event.preventDefault();if(!gameOver)rotate(1)">
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
@@ -657,6 +663,11 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <label class="pick-sw">
       <span>複数選択</span>
       <input type="checkbox" id="missMultiSw" onchange="setPickMulti(this.checked)">
+      <span class="tgl"></span>
+    </label>
+    <label class="pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
+      <span>現在の地形を維持する</span>
+      <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
       <span class="tgl"></span>
     </label>
     <div id="missGrid"></div>
@@ -1755,6 +1766,34 @@ function attackPower(cleared, tSpin, wasB2B, isPerfect){
   return a;
 }
 
+// ===== 部分リセット =====
+// 地形だけ消す。ミノの順番・HOLD・スコアはそのまま続ける
+function resetTerrainOnly(){
+  for(let r=0;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
+  lastGarbageCol=null;
+  autoGroup=[];
+  undoStack=[];              // 消した地形には戻せないので履歴も捨てる
+  if(renMode) setupRenTerrain();   // RENモードは壁が前提なので敷き直す
+  ren=0;
+  resetLock();
+  draw();
+}
+// ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
+function resetQueueOnly(){
+  bag=[]; nextQ=[]; bagIndex=1;
+  holdType=null; canHold=true;
+  undoStack=[];              // ツモが変わるので履歴は捨てる
+  resetLock();
+  // spawn() をそのまま使うと、積んでいる途中だとゲームオーバー扱いになってしまう。
+  // ここは盤面を残したまま引き直すだけなので、置ける高さへ逃がす
+  fillQ();
+  cur = mkPiece(nextQ.shift().type);
+  resumeDAS();
+  lastWasRotation = false; lastKickIndex = 0;
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  updUI(); draw();
+}
+
 // ===== ミノを捨てる =====
 function discardPiece(){resetLock();spawn();draw();}
 
@@ -2212,6 +2251,7 @@ const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
 
 function openMiss(){
   missPick.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  const ks = document.getElementById('missKeepSw'); if(ks) ks.checked = !!opts.missKeep;
   missPick.sel.clear();
   const rr=document.getElementById('missRandRow'); if(rr) rr.style.display='none';
   document.getElementById('missOverlay').classList.add('open');
@@ -2278,11 +2318,11 @@ function randomMissTypes(n){
 }
 // 個数は覚えておき、↻ では種類だけを引き直す。
 // n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
-function startMissRandom(n){
+function startMissRandom(n, record){
   const any = (n === null || n === undefined);
   const count = any ? Math.floor(Math.random() * 7) : n;
   const types = randomMissTypes(count);
-  applyMissTypes(types, { random:true, n: any ? null : n, types });
+  applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow(){
@@ -2290,24 +2330,42 @@ function toggleMissRandRow(){
   if(!row) return;
   row.style.display = (row.style.display==='none' || !row.style.display) ? '' : 'none';
 }
-function setMissingPiece(type){ applyMissTypes([type], {multi:false, type}); }
-function applyMissMulti(types){
+function setMissingPiece(type, record){ applyMissTypes([type], {multi:false, type}, record); }
+function applyMissMulti(types, record){
   if(!types.length || types.length>=7) return;
-  applyMissTypes(types, {multi:true, types:types.slice()});
+  applyMissTypes(types, {multi:true, types:types.slice()}, record);
 }
-function applyMissTypes(types, last){
+// 「現在の地形を維持する」で覚えた盤面。null なら毎回まっさらから始める
+let missTerrain = null;
+function setMissKeep(on){
+  opts.missKeep = on;
+  saveOptions();
+}
+// 覚えた地形を盤面へ戻す。いま出ているミノが埋まってしまうときは上へ逃がす
+function restoreMissTerrain(){
+  if(!missTerrain) return;
+  board = missTerrain.map(r=>[...r]);
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  resetLock();
+  draw();
+}
+// record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
+function applyMissTypes(types, last, record = true){
   lastMiss=last; updateMissAgainBtn();
   firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
+  // 選択画面から始めたときは、いまの地形を覚え直す（OFFなら忘れる）
+  if(record) missTerrain = opts.missKeep ? board.map(r=>[...r]) : null;
   closeMiss();
   startGame();              // 盤面もツモも最初から
+  restoreMissTerrain();     // 覚えてあれば、消したぶんを戻す
 }
 function startMissMulti(){ if(missValid()) applyMissMulti([...missPick.sel]); }
 function repeatMiss(){
   if(!lastMiss){ openMiss(); return; }
-  // ランダムで始めたときは、押すたびに引き直す
-  if(lastMiss.random) startMissRandom(lastMiss.n);
-  else if(lastMiss.multi) applyMissMulti(lastMiss.types);
-  else setMissingPiece(lastMiss.type);
+  // ランダムで始めたときは、押すたびに引き直す（地形は覚えたものを使い回す）
+  if(lastMiss.random) startMissRandom(lastMiss.n, false);
+  else if(lastMiss.multi) applyMissMulti(lastMiss.types, false);
+  else setMissingPiece(lastMiss.type, false);
 }
 function updateMissAgainBtn(){
   const btn=document.getElementById('missAgainBtn');
@@ -2322,6 +2380,7 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true,
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
+                       missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
                        // 盤面・NEXT/HOLD・左メニューはそれぞれ余白の都合が違うので別々に持つ
                        boardScale:100, miniScale:100, menuScale:100 };
@@ -3287,6 +3346,8 @@ const UI_ITEMS = [
   { id:'dig',         label:'せりあがり' },
   { id:'shot',        label:'カンペ画像' },
   { id:'reset',       label:'リセット' },
+  { id:'resetTerrain',label:'地形のみリセット' },
+  { id:'resetQueue',  label:'ミノ順のみリセット' },
   { id:'verSwitch',   label:'PC版へ' },
   { id:'undoDiscard', label:'ミノ捨てる・戻す' },
 ];
@@ -3346,7 +3407,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.37.1';
+const APP_VERSION = '1.41.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

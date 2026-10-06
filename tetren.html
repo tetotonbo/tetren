@@ -78,10 +78,6 @@ body {
 .btn-group .garb-btn + .garb-btn { border-left:1px solid #4b5563; }
 .garb-btn:hover { background:#6d28d9; }
 /* 配置編集。枠をドラッグで好きな位置へ動かせるようにする */
-.ctrl-edit-row {
-  display:flex; align-items:center; gap:8px;
-  padding:4px 2px; border-bottom:1px solid #374151; margin-bottom:2px;
-}
 .layout-edit [data-pos] {
   outline:2px dashed #818cf8; outline-offset:2px; border-radius:10px;
   cursor:move; user-select:none; position:relative;
@@ -412,13 +408,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 .ctrl-toggle:hover { background:#374151; color:#e5e7eb; }
 /* リセット。捨てる・戻すの2つ分の幅で、色だけ少し変えて区別する */
+/* リセット系。見た目はほかのボタンと同じにそろえてある */
 .ctrl-reset {
-  width:100%; background:#2b2328; color:#b49ba1;
-  border:1px solid #4a3a40; border-radius:8px;
+  width:100%; background:#1f2937; color:#9ca3af;
+  border:1px solid #374151; border-radius:8px;
   padding:8px 0; font-size:13px; font-weight:bold;
   cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
 }
-.ctrl-reset:hover { background:#3c2d34; color:#e8cdd2; }
+.reset-row { display:flex; gap:6px; }
+.reset-row .ctrl-reset { flex:1; min-width:0; }
+/* 地形だけ・ミノ順だけの部分リセット。全体リセットより一回り小さくする */
+.ctrl-reset.partial { padding:6px 0; font-size:11px; letter-spacing:0; }
+.ctrl-reset:hover { background:#374151; color:#e5e7eb; }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
@@ -656,6 +657,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
+      <!-- 操作ボタンや枠の配置を自分で決められるようにする -->
+      <div data-ui="layout">
+        <label class="tgl-row" style="margin-top:8px;"
+          title="ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます">
+          <span>配置編集</span>
+          <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+          <span class="tgl"></span>
+        </label>
+        <button id="posResetBtn" class="garb-btn"
+          style="display:none;background:#374151;margin-top:6px;padding:6px 0;font-size:11px;"
+          onclick="resetPanelPos()">元に戻す</button>
+      </div>
     </div>
 
     <!-- 地形操作 -->
@@ -745,16 +758,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <!-- リセット。誤爆すると痛いので、主張は控えめにしつつ他のボタンと色を変える -->
       <button data-pos="reset" data-ui="reset" class="ctrl-reset" onclick="resetTerrain()"
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
-      <!-- 操作ボタンの配置を自分で決められるようにする -->
-      <div class="ctrl-edit-row" data-ui="layout">
-        <label class="tgl-row" style="flex:1;"
-          title="ONにすると、操作ボタンをドラッグで動かせます。右下のつまみで大きさも変えられます">
-          <span>配置編集</span>
-          <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
-          <span class="tgl"></span>
-        </label>
-        <button id="posResetBtn" class="ctrl-reset" style="display:none;flex:0 0 auto;width:auto;padding:6px 10px;font-size:11px;"
-          onclick="resetPanelPos()">元に戻す</button>
+      <!-- 片方だけ戻したいとき用。全体リセットと間違えないよう一回り小さくする -->
+      <!-- grid ではなく flex。片方だけ隠したときに、残ったほうが横いっぱいに広がる -->
+      <div class="reset-row">
+        <button class="ctrl-reset partial" data-pos="resetTerrain" data-ui="resetTerrain" onclick="resetTerrainOnly()"
+          title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
+        <button class="ctrl-reset partial" data-pos="resetQueue" data-ui="resetQueue" onclick="resetQueueOnly()"
+          title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
       <button id="ctrlToggleBtn" data-ui="ctrl" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
@@ -766,7 +776,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="left" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
             onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
+            ontouchstart="event.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
             ontouchend="releaseDir('L')"
             title="左移動">
             ←<span class="ctrl-lbl">左</span>
@@ -774,7 +784,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="soft" class="ctrl-btn"
             onmousedown="if(!gameOver)startSoftDropBtn()"
             onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
-            ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
+            ontouchstart="event.preventDefault();if(!gameOver)startSoftDropBtn()"
             ontouchend="stopSoftDropBtn()"
             title="ソフトドロップ">
             ↓<span class="ctrl-lbl">ソフト</span>
@@ -782,7 +792,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="right" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(1);pressDir('R')}"
             onmouseup="releaseDir('R')" onmouseleave="releaseDir('R')"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
+            ontouchstart="event.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
             ontouchend="releaseDir('R')"
             title="右移動">
             →<span class="ctrl-lbl">右</span>
@@ -792,13 +802,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <div class="ctrl-row r2">
           <button data-pos="rotL" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(-1)"
-            ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
+            ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)"
             title="反時計回り回転">
             ↺<span class="ctrl-lbl">左回転</span>
           </button>
           <button data-pos="rotR" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(1)"
-            ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
+            ontouchstart="event.preventDefault();if(!gameOver)rotate(1)"
             title="時計回り回転">
             ↻<span class="ctrl-lbl">右回転</span>
           </button>
@@ -1018,6 +1028,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <label class="tgl-row pick-sw" title="ONにすると複数のミノを選べます。選んだミノをまとめて1巡目から抜きます">
       <span>複数選択</span>
       <input type="checkbox" id="missMultiSw" onchange="setPickMulti('miss', this.checked)">
+      <span class="tgl"></span>
+    </label>
+    <label class="tgl-row pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
+      <span>現在の地形を維持する</span>
+      <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
       <span class="tgl"></span>
     </label>
     <div id="missGrid"></div>
@@ -2355,6 +2370,7 @@ function openMiss() {
   stopSprint();
   closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
   document.getElementById('missOverlay').classList.add('open');
@@ -2505,11 +2521,11 @@ function randomMissTypes(n) {
 }
 // 個数は覚えておき、↻ では種類だけを引き直す。
 // n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
-function startMissRandom(n) {
+function startMissRandom(n, record) {
   const any = (n === null || n === undefined);
   const count = any ? Math.floor(Math.random() * 7) : n;
   const types = randomMissTypes(count);
-  applyMissTypes(types, { random:true, n: any ? null : n, types });
+  applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
@@ -2519,20 +2535,38 @@ function toggleMissRandRow() {
 }
 
 // --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
-function setMissingPiece(type) {
-  applyMissTypes([type], { multi:false, type });
+function setMissingPiece(type, record) {
+  applyMissTypes([type], { multi:false, type }, record);
 }
 // --- ミノ欠け（複数選択）: 選んだミノをまとめて1巡目から抜く ---
-function applyMissMulti(types) {
-  if (!types.length || types.length >= 7) return;
-  applyMissTypes(types, { multi:true, types: types.slice() });
+// 「現在の地形を維持する」で覚えた盤面。null なら毎回まっさらから始める
+let missTerrain = null;
+function setMissKeep(on) {
+  opts.missKeep = on;
+  saveOptions();
 }
-function applyMissTypes(types, last) {
+// 覚えた地形を盤面へ戻す。いま出ているミノが埋まってしまうときは上へ逃がす
+function restoreMissTerrain() {
+  if (!missTerrain) return;
+  board = missTerrain.map(r => [...r]);
+  while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+  resetLock();
+  draw();
+}
+function applyMissMulti(types, record) {
+  if (!types.length || types.length >= 7) return;
+  applyMissTypes(types, { multi:true, types: types.slice() }, record);
+}
+// record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
+function applyMissTypes(types, last, record = true) {
   lastMiss = last;
   updateMissAgainBtn();
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
+  // 選択画面から始めたときは、いまの地形を覚え直す（OFFなら忘れる）
+  if (record) missTerrain = opts.missKeep ? board.map(r => [...r]) : null;
   closeMiss();
   startGame();               // 盤面もツモも最初から
+  restoreMissTerrain();      // 覚えてあれば、消したぶんを戻す
 }
 function startMissMulti() {
   if (!pickValid('miss')) return;
@@ -2540,10 +2574,10 @@ function startMissMulti() {
 }
 function repeatMiss() {
   if (!lastMiss) { openMiss(); return; }
-  // ランダムで始めたときは、押すたびに引き直す
-  if (lastMiss.random) startMissRandom(lastMiss.n);
-  else if (lastMiss.multi) applyMissMulti(lastMiss.types);
-  else setMissingPiece(lastMiss.type);
+  // ランダムで始めたときは、押すたびに引き直す（地形は覚えたものを使い回す）
+  if (lastMiss.random) startMissRandom(lastMiss.n, false);
+  else if (lastMiss.multi) applyMissMulti(lastMiss.types, false);
+  else setMissingPiece(lastMiss.type, false);
 }
 function updateMissAgainBtn() {
   const btn = document.getElementById('missAgainBtn');
@@ -2563,6 +2597,27 @@ updateMissAgainBtn();
 // ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
 function resetTerrain() {
   resetGameState();
+}
+// 地形だけ消す。ミノの順番・HOLD・スコアはそのまま続ける
+function resetTerrainOnly() {
+  for (let r = 0; r < TROW; r++)
+    for (let c = 0; c < COLS; c++) board[r][c] = null;
+  lastGarbageCol = null;
+  autoGroup = [];
+  undoStack = [];              // 消した地形には戻せないので履歴も捨てる
+  if (renMode) setupRenTerrain();   // RENモードは壁が前提なので敷き直す
+  ren = 0;
+  resetLock();
+  draw();
+}
+// ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
+function resetQueueOnly() {
+  bag = []; nextQ = []; bagIndex = 1;
+  holdType = null; canHold = true;
+  undoStack = [];              // ツモが変わるので履歴は捨てる
+  resetLock();
+  spawn(true);                 // 積んでいる途中でも詰まらないよう、置ける高さへ逃がす
+  updUI(); draw();
 }
 
 // ===== おじゃまブロック競り上がり =====
@@ -4860,6 +4915,7 @@ const OPT_DEFAULTS = {
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
+  missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
@@ -4989,6 +5045,8 @@ const UI_ITEMS = [
   { id:'dig',         label:'せりあがり' },
   { id:'undoDiscard', label:'ミノを捨てる・戻す' },
   { id:'reset',       label:'リセット' },
+  { id:'resetTerrain',label:'地形のみリセット' },
+  { id:'resetQueue',  label:'ミノ順のみリセット' },
   { id:'layout',      label:'配置編集' },
   { id:'ctrl',        label:'ボタン操作' },
 ];
@@ -5185,7 +5243,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.32.1';
+const APP_VERSION = '1.36.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
