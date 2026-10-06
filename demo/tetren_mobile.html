@@ -130,12 +130,7 @@ canvas { display:block; }
   transition:background .1s;
 }
 .side-btn:active { background:#374151; }
-/* リセット系。PC版・スマホ版で同じ色にそろえてある（両版の中間の落ち着いた赤） */
-.side-btn.reset { background:#53262b; color:#f0d6d8; border-color:#8f4a50; }
-.side-btn.reset:active { background:#6b3138; }
-/* 地形だけ・ミノ順だけの部分リセット。全体リセットより控えめに */
-.side-btn.reset-partial { background:#3a2126; color:#d8b6ba; border-color:#6b3a40; }
-.side-btn.reset-partial:active { background:#4e2b31; }
+/* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
 #colorPaletteWrap {
   display:none; flex-wrap:wrap; gap:4px;
   justify-content:center; padding:5px;
@@ -531,12 +526,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
     <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
-    <button class="side-btn reset" data-ui="reset" onclick="startGame()"
+    <button class="side-btn" data-ui="reset" onclick="startGame()"
       style="margin-top:4px;">リセット</button>
     <!-- 片方だけ戻したいとき用 -->
-    <button class="side-btn reset-partial" data-ui="resetTerrain" onclick="resetTerrainOnly()"
+    <button class="side-btn" data-ui="resetTerrain" onclick="resetTerrainOnly()"
       style="margin-top:3px;" title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
-    <button class="side-btn reset-partial" data-ui="resetQueue" onclick="resetQueueOnly()"
+    <button class="side-btn" data-ui="resetQueue" onclick="resetQueueOnly()"
       style="margin-top:3px;" title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
     <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
@@ -3412,7 +3407,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.40.0';
+const APP_VERSION = '1.41.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

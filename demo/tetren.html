@@ -78,10 +78,6 @@ body {
 .btn-group .garb-btn + .garb-btn { border-left:1px solid #4b5563; }
 .garb-btn:hover { background:#6d28d9; }
 /* 配置編集。枠をドラッグで好きな位置へ動かせるようにする */
-.ctrl-edit-row {
-  display:flex; align-items:center; gap:8px;
-  padding:4px 2px; border-bottom:1px solid #374151; margin-bottom:2px;
-}
 .layout-edit [data-pos] {
   outline:2px dashed #818cf8; outline-offset:2px; border-radius:10px;
   cursor:move; user-select:none; position:relative;
@@ -412,21 +408,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 .ctrl-toggle:hover { background:#374151; color:#e5e7eb; }
 /* リセット。捨てる・戻すの2つ分の幅で、色だけ少し変えて区別する */
-/* リセット系。PC版・スマホ版で同じ色にそろえてある（両版の中間の落ち着いた赤） */
+/* リセット系。見た目はほかのボタンと同じにそろえてある */
 .ctrl-reset {
-  width:100%; background:#53262b; color:#f0d6d8;
-  border:1px solid #8f4a50; border-radius:8px;
+  width:100%; background:#1f2937; color:#9ca3af;
+  border:1px solid #374151; border-radius:8px;
   padding:8px 0; font-size:13px; font-weight:bold;
   cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
 }
 .reset-row { display:flex; gap:6px; }
 .reset-row .ctrl-reset { flex:1; min-width:0; }
-/* 地形だけ・ミノ順だけの部分リセット。全体リセットより控えめに */
-.ctrl-reset.partial {
-  background:#3a2126; color:#d8b6ba; border-color:#6b3a40;
-  padding:6px 0; font-size:11px; letter-spacing:0;
-}
-.ctrl-reset:hover { background:#6b3138; color:#ffe9eb; }
+/* 地形だけ・ミノ順だけの部分リセット。全体リセットより一回り小さくする */
+.ctrl-reset.partial { padding:6px 0; font-size:11px; letter-spacing:0; }
+.ctrl-reset:hover { background:#374151; color:#e5e7eb; }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
@@ -664,6 +657,18 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
+      <!-- 操作ボタンや枠の配置を自分で決められるようにする -->
+      <div data-ui="layout">
+        <label class="tgl-row" style="margin-top:8px;"
+          title="ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます">
+          <span>配置編集</span>
+          <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+          <span class="tgl"></span>
+        </label>
+        <button id="posResetBtn" class="garb-btn"
+          style="display:none;background:#374151;margin-top:6px;padding:6px 0;font-size:11px;"
+          onclick="resetPanelPos()">元に戻す</button>
+      </div>
     </div>
 
     <!-- 地形操作 -->
@@ -760,17 +765,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
           title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
         <button class="ctrl-reset partial" data-ui="resetQueue" onclick="resetQueueOnly()"
           title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
-      </div>
-      <!-- 操作ボタンの配置を自分で決められるようにする -->
-      <div class="ctrl-edit-row" data-ui="layout">
-        <label class="tgl-row" style="flex:1;"
-          title="ONにすると、操作ボタンをドラッグで動かせます。右下のつまみで大きさも変えられます">
-          <span>配置編集</span>
-          <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
-          <span class="tgl"></span>
-        </label>
-        <button id="posResetBtn" class="ctrl-reset" style="display:none;flex:0 0 auto;width:auto;padding:6px 10px;font-size:11px;"
-          onclick="resetPanelPos()">元に戻す</button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
       <button id="ctrlToggleBtn" data-ui="ctrl" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
@@ -5249,7 +5243,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.35.0';
+const APP_VERSION = '1.36.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
