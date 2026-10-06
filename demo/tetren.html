@@ -412,13 +412,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 .ctrl-toggle:hover { background:#374151; color:#e5e7eb; }
 /* リセット。捨てる・戻すの2つ分の幅で、色だけ少し変えて区別する */
+/* リセット系。PC版・スマホ版で同じ色にそろえてある（両版の中間の落ち着いた赤） */
 .ctrl-reset {
-  width:100%; background:#2b2328; color:#b49ba1;
-  border:1px solid #4a3a40; border-radius:8px;
+  width:100%; background:#53262b; color:#f0d6d8;
+  border:1px solid #8f4a50; border-radius:8px;
   padding:8px 0; font-size:13px; font-weight:bold;
   cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
 }
-.ctrl-reset:hover { background:#3c2d34; color:#e8cdd2; }
+/* 地形だけ・ミノ順だけの部分リセット。全体リセットより控えめに */
+.ctrl-reset.partial {
+  background:#3a2126; color:#d8b6ba; border-color:#6b3a40;
+  padding:6px 0; font-size:11px; letter-spacing:0;
+}
+.ctrl-reset:hover { background:#6b3138; color:#ffe9eb; }
 #ctrlHidden { display:none; flex-direction:column; gap:6px; }
 #ctrlHidden.open { display:flex; }
 /* ===== 操作ボタンパッド ===== */
@@ -745,6 +751,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <!-- リセット。誤爆すると痛いので、主張は控えめにしつつ他のボタンと色を変える -->
       <button data-pos="reset" data-ui="reset" class="ctrl-reset" onclick="resetTerrain()"
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
+      <!-- 片方だけ戻したいとき用。全体リセットと間違えないよう一回り小さくする -->
+      <div class="ctrl-row r2" data-ui="reset">
+        <button class="ctrl-reset partial" onclick="resetTerrainOnly()"
+          title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
+        <button class="ctrl-reset partial" onclick="resetQueueOnly()"
+          title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
+      </div>
       <!-- 操作ボタンの配置を自分で決められるようにする -->
       <div class="ctrl-edit-row" data-ui="layout">
         <label class="tgl-row" style="flex:1;"
@@ -2587,6 +2600,27 @@ updateMissAgainBtn();
 // ===== リセット（ゲーム開始時と同じ状態に戻す：盤面・ミノ順・B2B等すべて） =====
 function resetTerrain() {
   resetGameState();
+}
+// 地形だけ消す。ミノの順番・HOLD・スコアはそのまま続ける
+function resetTerrainOnly() {
+  for (let r = 0; r < TROW; r++)
+    for (let c = 0; c < COLS; c++) board[r][c] = null;
+  lastGarbageCol = null;
+  autoGroup = [];
+  undoStack = [];              // 消した地形には戻せないので履歴も捨てる
+  if (renMode) setupRenTerrain();   // RENモードは壁が前提なので敷き直す
+  ren = 0;
+  resetLock();
+  draw();
+}
+// ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
+function resetQueueOnly() {
+  bag = []; nextQ = []; bagIndex = 1;
+  holdType = null; canHold = true;
+  undoStack = [];              // ツモが変わるので履歴は捨てる
+  resetLock();
+  spawn(true);                 // 積んでいる途中でも詰まらないよう、置ける高さへ逃がす
+  updUI(); draw();
 }
 
 // ===== おじゃまブロック競り上がり =====
@@ -5210,7 +5244,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.33.0';
+const APP_VERSION = '1.34.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
