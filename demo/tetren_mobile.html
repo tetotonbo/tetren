@@ -580,12 +580,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <div class="ctrl-row r2">
         <button class="ctrl-btn" data-ctrl="rotL"
           onmousedown="if(!gameOver)rotate(-1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)">
+          ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
         </button>
         <button class="ctrl-btn" data-ctrl="rotR"
           onmousedown="if(!gameOver)rotate(1)"
-          ontouchstart="e.preventDefault();if(!gameOver)rotate(1)">
+          ontouchstart="event.preventDefault();if(!gameOver)rotate(1)">
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
@@ -3407,7 +3407,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.41.0';
+const APP_VERSION = '1.41.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

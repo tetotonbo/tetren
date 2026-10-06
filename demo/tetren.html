@@ -776,7 +776,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="left" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(-1);pressDir('L')}"
             onmouseup="releaseDir('L')" onmouseleave="releaseDir('L')"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
+            ontouchstart="event.preventDefault();if(!gameOver){moveH(-1);pressDir('L')}"
             ontouchend="releaseDir('L')"
             title="左移動">
             ←<span class="ctrl-lbl">左</span>
@@ -784,7 +784,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="soft" class="ctrl-btn"
             onmousedown="if(!gameOver)startSoftDropBtn()"
             onmouseup="stopSoftDropBtn()" onmouseleave="stopSoftDropBtn()"
-            ontouchstart="e.preventDefault();if(!gameOver)startSoftDropBtn()"
+            ontouchstart="event.preventDefault();if(!gameOver)startSoftDropBtn()"
             ontouchend="stopSoftDropBtn()"
             title="ソフトドロップ">
             ↓<span class="ctrl-lbl">ソフト</span>
@@ -792,7 +792,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           <button data-pos="right" class="ctrl-btn"
             onmousedown="if(!gameOver){moveH(1);pressDir('R')}"
             onmouseup="releaseDir('R')" onmouseleave="releaseDir('R')"
-            ontouchstart="e.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
+            ontouchstart="event.preventDefault();if(!gameOver){moveH(1);pressDir('R')}"
             ontouchend="releaseDir('R')"
             title="右移動">
             →<span class="ctrl-lbl">右</span>
@@ -802,13 +802,13 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <div class="ctrl-row r2">
           <button data-pos="rotL" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(-1)"
-            ontouchstart="e.preventDefault();if(!gameOver)rotate(-1)"
+            ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)"
             title="反時計回り回転">
             ↺<span class="ctrl-lbl">左回転</span>
           </button>
           <button data-pos="rotR" class="ctrl-btn"
             onmousedown="if(!gameOver)rotate(1)"
-            ontouchstart="e.preventDefault();if(!gameOver)rotate(1)"
+            ontouchstart="event.preventDefault();if(!gameOver)rotate(1)"
             title="時計回り回転">
             ↻<span class="ctrl-lbl">右回転</span>
           </button>
@@ -5243,7 +5243,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.36.1';
+const APP_VERSION = '1.36.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
