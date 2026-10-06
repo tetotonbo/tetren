@@ -284,6 +284,32 @@ input:checked + .tgl::after { transform:translateX(10px); }
 /* クリックで ms ⇄ F を切り替える単位表示 */
 .unit-btn { cursor:pointer; text-decoration:underline dotted; }
 .opt-step .di-btn { width:30px; height:30px; font-size:16px; }
+/* キーコンフィグ。画面が狭いので PC版より一回り小さくする */
+.kc-subtabs { display:flex; gap:4px; margin-bottom:8px; }
+.kc-subtab {
+  background:#1f2937; border:1px solid #374151; border-radius:6px;
+  color:#9ca3af; font-size:11px; font-weight:bold; padding:6px 10px; cursor:pointer;
+}
+.kc-subtab.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.kc-sub { display:none; }
+.kc-sub.active { display:block; }
+.kc-header { display:flex; align-items:center; gap:6px; padding:0 4px 4px; }
+.kc-header .kc-label { font-size:9px; color:#6b7280; font-weight:bold; }
+.kc-header .kc-slot-head { width:86px; flex:0 0 auto; font-size:9px; color:#6b7280; text-align:center; }
+.kc-row { display:flex; align-items:center; gap:6px; padding:5px 4px; border-radius:6px; }
+.kc-row:nth-child(odd) { background:#111827; }
+.kc-label { font-size:11px; color:#e5e7eb; flex:1; min-width:0; }
+.kc-slot { display:flex; align-items:center; gap:2px; width:86px; flex:0 0 auto; }
+.kc-key {
+  flex:1; min-width:0; background:#374151; border:1px solid #4b5563; border-radius:5px;
+  color:#f9fafb; font-size:10px; padding:6px 2px; cursor:pointer;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.kc-key.waiting { background:#1e40af; border-color:#60a5fa; color:#bfdbfe; }
+.kc-del {
+  flex:0 0 auto; width:18px; background:none; border:1px solid #374151;
+  border-radius:4px; color:#6b7280; font-size:10px; cursor:pointer; padding:5px 0;
+}
 .cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
 .cfg-btns button {
   flex:1; padding:9px 0; border:none; border-radius:7px;
@@ -624,11 +650,49 @@ input:checked + .tgl::after { transform:translateX(10px); }
   <div id="cfgPanel">
     <h2>⚙ 設定</h2>
     <div class="cfg-tabs">
-      <button class="cfg-tab active" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
+      <button class="cfg-tab active" id="cfgTabKey" onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab" id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
     </div>
     <div class="cfg-body">
-      <div class="cfg-pane active" id="cfgPaneUi">
+      <div class="cfg-pane active" id="cfgPaneKey">
+        <div class="kc-subtabs">
+          <button class="kc-subtab active" id="kcSubTabKey" onclick="switchKcSub('key')">キーボード</button>
+          <button class="kc-subtab"        id="kcSubTabPad" onclick="switchKcSub('pad')">コントローラ</button>
+        </div>
+        <div class="kc-sub active" id="kcSubPaneKey">
+          <div class="cfg-hint">
+            キーボードをつないだときの割り当てです。欄を押してから、割り当てたいキーを押してください。
+          </div>
+          <div class="kc-header">
+            <span class="kc-label">操作</span>
+            <span class="kc-slot-head">スロット 1</span>
+            <span class="kc-slot-head">スロット 2</span>
+          </div>
+          <div id="kcRows"></div>
+          <div class="cfg-btns">
+            <button onclick="resetKeyConfig()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          </div>
+        </div>
+        <div class="kc-sub" id="kcSubPanePad">
+          <div class="cfg-hint" id="gpStatus"></div>
+          <div class="cfg-hint">
+            欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。<br>
+            左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。
+          </div>
+          <div class="kc-header">
+            <span class="kc-label">操作</span>
+            <span class="kc-slot-head">スロット 1</span>
+            <span class="kc-slot-head">スロット 2</span>
+          </div>
+          <div id="gpRows"></div>
+          <div class="cfg-btns">
+            <button onclick="resetGamepadConfig()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cfg-pane" id="cfgPaneUi">
         <div class="cfg-hint">
           OFFにしたメニューは画面から消えます。使わないものを隠すと、左の列がすっきりします。<br>
           隠しても設定はここからいつでも戻せます。
@@ -1955,6 +2019,7 @@ function changeGravSpeed(delta){
 // ===== ゲームループ =====
 let rafId;
 function loop(ts){
+  pollGamepad();          // コントローラは毎フレーム読む
   if(gameOver) return;
   // ソフトドロップ。キーボード・画面ボタン・長押しのどれも同じ経路を通る
   if(downHeld || softHeld){
@@ -2034,23 +2099,29 @@ function stopSoftDropBtn(){ softHeld = false; }
 
 // ===== キーボード（接続時） =====
 document.addEventListener('keydown',e=>{
-  if(e.code==='KeyN'){e.preventDefault();startGame();return;}
+  // 設定画面を開いている間はゲーム操作を止める
+  if(document.getElementById('cfgOverlay').classList.contains('open')) return;
+  // リスタートとミノ欠けはゲームを始め直す操作なので、ゲームオーバー中も効かせる
+  if(kcMatch('restart',   e.code)){e.preventDefault();startGame();return;}
+  if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
   if(gameOver) return;
   if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();undo();return;}
   const c=e.code;
-  if(c==='ArrowLeft'){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
-  else if(c==='ArrowRight'){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
-  else if(c==='ArrowDown'){e.preventDefault();if(!downHeld){downHeld=true;lastSoftDrop=0;softAccum=0;softDrop();}}
-  else if(c==='ArrowUp'||c==='KeyX'){e.preventDefault();if(!e.repeat)rotate(1);}
-  else if(c==='KeyZ'){e.preventDefault();if(!e.repeat)rotate(-1);}
-  else if(c==='Space'||c==='KeyC'){e.preventDefault();hardDrop();}
-  else if(c==='ShiftLeft'||c==='ShiftRight'){e.preventDefault();doHold();}
-  else if(c==='KeyU'){e.preventDefault();undo();}
+  if      (kcMatch('moveLeft',  c)){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
+  else if (kcMatch('moveRight', c)){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
+  else if (kcMatch('softDrop',  c)){e.preventDefault();if(!downHeld){downHeld=true;lastSoftDrop=0;softAccum=0;softDrop();}}
+  else if (kcMatch('rotateCW',  c)){e.preventDefault();if(!e.repeat)rotate(1);}
+  else if (kcMatch('rotateCCW', c)){e.preventDefault();if(!e.repeat)rotate(-1);}
+  else if (kcMatch('hardDrop',  c)){e.preventDefault();hardDrop();}
+  else if (kcMatch('hold',      c)){e.preventDefault();doHold();}
+  else if (kcMatch('discard',   c)){e.preventDefault();discardPiece();}
+  else if (kcMatch('undo',      c)){e.preventDefault();undo();}
+  else if (kcMatch('dpcAgain',  c)){e.preventDefault();if(!e.repeat)repeatDpc();}
 });
 document.addEventListener('keyup',e=>{
-  if(e.code==='ArrowLeft') releaseDir('L');
-  else if(e.code==='ArrowRight') releaseDir('R');
-  if(e.code==='ArrowDown') downHeld=false;
+  if      (kcMatch('moveLeft',  e.code)) releaseDir('L');
+  else if (kcMatch('moveRight', e.code)) releaseDir('R');
+  if (kcMatch('softDrop', e.code)) downHeld=false;
 });
 
 // ===== オーバーレイ =====
@@ -2349,17 +2420,333 @@ addTouchBtn('btnSoft',
   () => stopSoftDropBtn()
 );
 
+// ===== キーコンフィグ（キーボードをつないだとき用。PC版と同じ tetren_keyconfig を共有）=====
+const KC_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',           d:['ArrowLeft',  null        ] },
+  { id:'moveRight',  label:'右移動',           d:['ArrowRight', null        ] },
+  { id:'softDrop',   label:'ソフトドロップ',   d:['ArrowDown',  null        ] },
+  { id:'rotateCW',   label:'時計回り回転',     d:['ArrowUp',    'KeyX'      ] },
+  { id:'rotateCCW',  label:'反時計回り回転',   d:['KeyZ',       null        ] },
+  { id:'hardDrop',   label:'ハードドロップ',   d:['Space',      'KeyC'      ] },
+  { id:'hold',       label:'ホールド',         d:['ShiftLeft',  'ShiftRight'] },
+  { id:'discard',    label:'ミノを捨てる',     d:['KeyA',       null        ] },
+  { id:'undo',       label:'1手戻す',          d:['KeyU',       null        ] },
+  { id:'dpcAgain',   label:'DPCセット再',      d:['KeyR',       null        ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:['KeyM',       null        ] },
+  { id:'restart',    label:'リスタート',       d:['KeyN',       null        ] },
+];
+let keyConfig = {};
+let kcWaiting = null;   // { id, slot }
+
+// プライベートウィンドウなどでは localStorage 自体が例外になる。
+// 保存できないだけで動くよう、読み書きはすべて握りつぶす。
+function initKeyConfig() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_keyconfig'); } catch (e) {}
+  let parsed = null;
+  if (raw) { try { parsed = JSON.parse(raw); } catch (e) {} }
+  // PC版にしかない操作（40LINE再スタートなど）の割り当ても消さずに持ち回る
+  keyConfig = (parsed && typeof parsed === 'object') ? Object.assign({}, parsed) : {};
+  KC_ACTIONS.forEach(a => { if (!Array.isArray(keyConfig[a.id])) keyConfig[a.id] = [...a.d]; });
+}
+function saveKeyConfig() {
+  try { localStorage.setItem('tetren_keyconfig', JSON.stringify(keyConfig)); } catch (e) {}
+}
+function resetKeyConfig() {
+  KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
+  saveKeyConfig();
+  buildKcRows();
+}
+function kcMatch(id, code) {
+  const c = keyConfig[id];
+  return !!c && (c[0] === code || c[1] === code);
+}
+function keyDisplayName(code) {
+  if (!code) return '—';
+  const map = {
+    'ArrowLeft':'←','ArrowRight':'→','ArrowUp':'↑','ArrowDown':'↓',
+    'Space':'Space','ShiftLeft':'Shift L','ShiftRight':'Shift R',
+    'Enter':'Enter','Backspace':'BS','Tab':'Tab','Escape':'Esc',
+  };
+  if (map[code]) return map[code];
+  if (code.startsWith('Key'))    return code.slice(3);
+  if (code.startsWith('Digit'))  return code.slice(5);
+  if (code.startsWith('Numpad')) return 'Num' + code.slice(6);
+  return code;
+}
+function kcBtnId(id, slot) { return 'kc_' + id + '_' + slot; }
+function renderKcBtn(id, slot) {
+  const btn = document.getElementById(kcBtnId(id, slot));
+  if (!btn) return;
+  const code = keyConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = keyDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+function cancelKcWait() {
+  if (!kcWaiting) return;
+  const { id, slot } = kcWaiting;
+  kcWaiting = null;
+  renderKcBtn(id, slot);
+}
+function startKeyWait(id, slot, btn) {
+  cancelKcWait();
+  kcWaiting = { id, slot };
+  btn.classList.add('waiting');
+  btn.textContent = 'キーを押して…';
+}
+function buildKcRows() {
+  const box = document.getElementById('kcRows');
+  if (!box) return;
+  cancelKcWait();
+  box.innerHTML = '';
+  KC_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = kcBtnId(a.id, slot);
+      btn.textContent = keyDisplayName(keyConfig[a.id][slot]);
+      if (!keyConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startKeyWait(a.id, slot, btn);
+      const del = document.createElement('button');
+      del.className = 'kc-del';
+      del.textContent = '×';
+      del.title = 'クリア';
+      del.onclick = () => { keyConfig[a.id][slot] = null; saveKeyConfig(); renderKcBtn(a.id, slot); };
+      wrap.appendChild(btn); wrap.appendChild(del);
+      row.appendChild(wrap);
+    });
+    box.appendChild(row);
+  });
+}
+// 割り当て待ちのキー取り込み。ゲーム操作より先に受け取る
+document.addEventListener('keydown', e => {
+  if (!kcWaiting) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.code === 'Escape') { cancelKcWait(); return; }
+  const { id, slot } = kcWaiting;
+  keyConfig[id][slot] = e.code;
+  kcWaiting = null;
+  saveKeyConfig();
+  renderKcBtn(id, slot);
+}, true);
+
+// ===== ゲームパッド（PC版と同じ tetren_gamepad を共有）=====
+// どのコントローラでも使えるよう、ボタン番号は固定せず「押して覚えさせる」方式にする。
+// 入力の表し方: ボタンは 'b3'、スティック／トリガーは 'a0+' 'a1-' のように軸と向きで持つ。
+const GP_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',           d:['b14','a0-'] },
+  { id:'moveRight',  label:'右移動',           d:['b15','a0+'] },
+  { id:'softDrop',   label:'ソフトドロップ',   d:['b13','a1+'] },
+  { id:'hardDrop',   label:'ハードドロップ',   d:['b12','a1-'] },
+  { id:'rotateCW',   label:'時計回り回転',     d:['b0', 'b3' ] },
+  { id:'rotateCCW',  label:'反時計回り回転',   d:['b1', 'b2' ] },
+  { id:'hold',       label:'ホールド',         d:['b4', 'b5' ] },
+  { id:'discard',    label:'ミノを捨てる',     d:[null, null ] },
+  { id:'undo',       label:'1手戻す',          d:['b6', null ] },
+  { id:'dpcAgain',   label:'DPCセット再',      d:['b7', null ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:[null, null ] },
+  { id:'restart',    label:'リスタート',       d:['b9', null ] },
+];
+const GP_AXIS_ON = 0.55;    // スティックをこれ以上倒したら「押した」とみなす
+const GP_AXIS_OFF = 0.35;   // 戻すときは緩めにしてバタつきを防ぐ
+let gpConfig = {};
+let gpPrev = {};            // 入力ID → 直前に押されていたか
+let gpActPrev = {};         // 操作ID → 直前に押されていたか
+let gpWaiting = null;       // 割り当て待ち {id, slot, btn}
+
+function loadGamepadConfig() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_gamepad'); } catch (e) {}
+  let parsed = null;
+  if (raw) { try { parsed = JSON.parse(raw); } catch (e) {} }
+  gpConfig = (parsed && typeof parsed === 'object') ? Object.assign({}, parsed) : {};
+  GP_ACTIONS.forEach(a => { if (!Array.isArray(gpConfig[a.id])) gpConfig[a.id] = [...a.d]; });
+}
+function saveGamepadConfig() {
+  try { localStorage.setItem('tetren_gamepad', JSON.stringify(gpConfig)); } catch (e) {}
+}
+function resetGamepadConfig() {
+  GP_ACTIONS.forEach(a => { gpConfig[a.id] = [...a.d]; });
+  saveGamepadConfig();
+  buildGpRows();
+}
+// 表示名。ボタン番号そのままだと分かりにくいので、標準配置の呼び名も添える
+const GP_NAMES = {
+  b0:'ボタン1 (A)', b1:'ボタン2 (B)', b2:'ボタン3 (X)', b3:'ボタン4 (Y)',
+  b4:'L1', b5:'R1', b6:'L2', b7:'R2', b8:'SELECT', b9:'START',
+  b10:'Lスティック押込', b11:'Rスティック押込',
+  b12:'十字 上', b13:'十字 下', b14:'十字 左', b15:'十字 右', b16:'ホーム',
+  'a0-':'Lスティック 左', 'a0+':'Lスティック 右',
+  'a1-':'Lスティック 上', 'a1+':'Lスティック 下',
+  'a2-':'Rスティック 左', 'a2+':'Rスティック 右',
+  'a3-':'Rスティック 上', 'a3+':'Rスティック 下',
+};
+function gpDisplayName(code) { return code ? (GP_NAMES[code] || code) : '—'; }
+function activeGamepad() {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const g of list) if (g && g.connected) return g;
+  return null;
+}
+function gpPressed(g) {
+  const set = {};
+  g.buttons.forEach((b, i) => { if (b && (b.pressed || b.value > 0.5)) set['b' + i] = true; });
+  g.axes.forEach((v, i) => {
+    const prevPos = gpPrev['a' + i + '+'], prevNeg = gpPrev['a' + i + '-'];
+    if (v >=  (prevPos ? GP_AXIS_OFF : GP_AXIS_ON)) set['a' + i + '+'] = true;
+    if (v <= -(prevNeg ? GP_AXIS_OFF : GP_AXIS_ON)) set['a' + i + '-'] = true;
+  });
+  return set;
+}
+function gpHas(id, set) {
+  const c = gpConfig[id];
+  return !!c && ((c[0] && set[c[0]]) || (c[1] && set[c[1]]));
+}
+function pollGamepad() {
+  const g = activeGamepad();
+  if (!g) return;
+  const set = gpPressed(g);
+  // 割り当て待ちなら、最初に押された入力を拾って終了
+  if (gpWaiting) {
+    for (const code in set) { if (!gpPrev[code]) { assignGpCode(code); break; } }
+    gpPrev = set;
+    return;
+  }
+  const now = {};
+  GP_ACTIONS.forEach(a => { now[a.id] = gpHas(a.id, set); });
+  const hit = id => now[id] && !gpActPrev[id];       // 押した瞬間だけ
+  const off = id => !now[id] && gpActPrev[id];       // 離した瞬間だけ
+
+  // ゲームオーバー中でも効く操作
+  if (hit('restart'))   startGame();
+  if (hit('missAgain')) repeatMiss();
+
+  if (!gameOver) {
+    // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
+    if (hit('moveLeft'))  { moveH(-1); pressDir('L'); }
+    if (off('moveLeft'))  releaseDir('L');
+    if (hit('moveRight')) { moveH(+1); pressDir('R'); }
+    if (off('moveRight')) releaseDir('R');
+    if (hit('softDrop'))  { if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); } }
+    if (off('softDrop'))  downHeld = false;
+    if (hit('rotateCW'))  rotate(1);
+    if (hit('rotateCCW')) rotate(-1);
+    if (hit('hardDrop'))  hardDrop();
+    if (hit('hold'))      doHold();
+    if (hit('discard'))   discardPiece();
+    if (hit('undo'))      undo();
+    if (hit('dpcAgain'))  repeatDpc();
+  }
+  gpActPrev = now;
+  gpPrev = set;
+}
+function updateGpStatus() {
+  const el = document.getElementById('gpStatus');
+  if (!el) return;
+  const g = activeGamepad();
+  el.textContent = g ? ('接続中: ' + g.id) : 'コントローラが見つかりません。接続してから、どれかボタンを押してください。';
+  el.style.color = g ? '#4ade80' : '#9ca3af';
+}
+window.addEventListener('gamepadconnected',    updateGpStatus);
+window.addEventListener('gamepaddisconnected', updateGpStatus);
+
+function gpBtnId(id, slot) { return 'gp_' + id + '_' + slot; }
+function renderGpBtn(id, slot) {
+  const btn = document.getElementById(gpBtnId(id, slot));
+  if (!btn) return;
+  const code = gpConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = gpDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+function startGpWait(id, slot, btn) {
+  if (gpWaiting) renderGpBtn(gpWaiting.id, gpWaiting.slot);
+  gpWaiting = { id, slot, btn };
+  btn.textContent = 'ボタンを押す…';
+  btn.classList.add('waiting');
+}
+function assignGpCode(code) {
+  if (!gpWaiting) return;
+  const { id, slot } = gpWaiting;
+  // 他の操作に同じ入力が割り当たっていたら外す（二重割り当てを防ぐ）
+  GP_ACTIONS.forEach(a => {
+    [0, 1].forEach(sl => {
+      if ((a.id !== id || sl !== slot) && gpConfig[a.id][sl] === code) {
+        gpConfig[a.id][sl] = null; renderGpBtn(a.id, sl);
+      }
+    });
+  });
+  gpConfig[id][slot] = code;
+  gpWaiting = null;
+  saveGamepadConfig();
+  renderGpBtn(id, slot);
+}
+function buildGpRows() {
+  const box = document.getElementById('gpRows');
+  if (!box) return;
+  box.innerHTML = '';
+  GP_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = gpBtnId(a.id, slot);
+      btn.textContent = gpDisplayName(gpConfig[a.id][slot]);
+      if (!gpConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startGpWait(a.id, slot, btn);
+      const del = document.createElement('button');
+      del.className = 'kc-del';
+      del.textContent = '×';
+      del.title = 'クリア';
+      del.onclick = () => { gpConfig[a.id][slot] = null; saveGamepadConfig(); renderGpBtn(a.id, slot); };
+      wrap.appendChild(btn); wrap.appendChild(del);
+      row.appendChild(wrap);
+    });
+    box.appendChild(row);
+  });
+  updateGpStatus();
+}
+// 設定画面を開いている間も割り当てを拾えるよう、ループとは別に回しておく
+setInterval(() => { if (gpWaiting || gameOver) pollGamepad(); }, 1000/60);
+
 // ===== 設定モーダル =====
 // PC版と同じ構成のタブ式。いまは「表示」だけで、タブは今後増やす。
 function openConfig() {
   document.getElementById('cfgOverlay').classList.add('open');
-  switchConfigTab('ui');
+  switchConfigTab('key');
 }
 function closeConfig() {
+  cancelKcWait();
+  saveKeyConfig();
   document.getElementById('cfgOverlay').classList.remove('open');
 }
+// キーコンフィグの中の切り替え。開いているほうを覚えておき、戻ったときも同じ面を出す
+let kcSub = 'key';
+function switchKcSub(name) {
+  kcSub = name;
+  document.getElementById('kcSubTabKey').classList.toggle('active', name === 'key');
+  document.getElementById('kcSubTabPad').classList.toggle('active', name === 'pad');
+  document.getElementById('kcSubPaneKey').classList.toggle('active', name === 'key');
+  document.getElementById('kcSubPanePad').classList.toggle('active', name === 'pad');
+  if (name === 'pad') buildGpRows();
+}
 function switchConfigTab(name) {
-  const TABS = { ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     const t = document.getElementById(tab), p = document.getElementById(pane);
@@ -2368,6 +2755,7 @@ function switchConfigTab(name) {
   }
   if (name === 'ui')   renderUiList();
   if (name === 'misc') applyOptions();
+  if (name === 'key')  { buildKcRows(); if (kcSub === 'pad') buildGpRows(); }
 }
 
 // ===== 表示するメニューの切り替え =====
@@ -2445,7 +2833,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.34.0';
+const APP_VERSION = '1.35.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -2617,6 +3005,8 @@ function shotPointerDown(e, win, mode){
 // 保存した設定の読み込みは initLayout() より先に。
 // 盤面・NEXT・メニューの倍率は opts から読むので、
 // 後回しにすると初期表示だけ既定の大きさのままになる。
+initKeyConfig();
+loadGamepadConfig();
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
