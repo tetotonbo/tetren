@@ -677,9 +677,14 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="pick-sw" title="ONにすると、選んだミノを最初からHOLDに入れた状態で始めます。そのぶん1巡目からは抜けます">
+      <span>特定のミノをHOLDする</span>
+      <input type="checkbox" id="missHoldSw" onchange="setMissHoldOn(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
-    <div class="hold-row" id="missHoldRow" title="選んだミノを最初からHOLDに入れた状態で始めます。そのぶん1巡目からは抜けます">
+    <div class="hold-row" id="missHoldRow" style="display:none;" title="最初からHOLDに入れておくミノ">
       <span>HOLD</span>
       <div id="missHoldBtns" style="display:flex;gap:4px;flex:1;"></div>
     </div>
@@ -2225,7 +2230,7 @@ function renderPieceGrid(gridId, onPick){
       // ミノ欠けの複数選択中は、選ばれているミノに印をつける
       if (gridId === 'missGrid' && missPick.multi && missPick.sel.has(type)) btn.classList.add('sel');
       // HOLDに入れると決めたミノは、同時に欠けにはできない
-      if (gridId === 'missGrid' && opts.missHold === type) btn.disabled = true;
+      if (gridId === 'missGrid' && opts.missHoldOn && opts.missHold === type) btn.disabled = true;
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
@@ -2298,28 +2303,39 @@ function setPickMulti(on){
 }
 // 7個すべては抜けない（引けるミノが無くなる）
 function missValid(){ const n=missPick.sel.size; return n>=1 && n<=6; }
-// 「最初からHOLD」の行。欠けに選んでいるミノは選べないようにする
+// 「特定のミノをHOLDする」がONのときだけ出す選択行。
+// 欠けに選んでいるミノは、HOLDには置けないので選べないようにする
 function renderMissHoldRow(){
+  const row=document.getElementById('missHoldRow');
+  if(row) row.style.display = opts.missHoldOn ? '' : 'none';
+  const sw=document.getElementById('missHoldSw');
+  if(sw) sw.checked = !!opts.missHoldOn;
   const box=document.getElementById('missHoldBtns');
   if(!box) return;
   box.innerHTML='';
-  const mk=(type,label)=>{
+  DPC_ROWS.flat().forEach(type=>{   // 上のグリッドと同じ並びにする
     const b=document.createElement('button');
     b.className='rand-num'+(opts.missHold===type?' sel':'');
     b.type='button';
-    b.textContent=label;
-    // 複数選択で欠けに指定しているミノは、HOLDには置けない
-    b.disabled=!!type && missPick.sel.has(type);
+    b.textContent=type;
+    b.disabled=missPick.sel.has(type);
     b.addEventListener('click',()=>setMissHold(type));
     box.appendChild(b);
-  };
-  mk(null,'なし');
-  DPC_ROWS.flat().forEach(t=>mk(t,t));   // 上のグリッドと同じ並びにする
+  });
+}
+// ONにした直後に何も選ばれていない、ということがないよう既定を入れておく
+function setMissHoldOn(on){
+  opts.missHoldOn=on;
+  if(on && (!opts.missHold || missPick.sel.has(opts.missHold))){
+    opts.missHold = DPC_ROWS.flat().find(t=>!missPick.sel.has(t)) || null;
+  }
+  saveOptions();
+  drawMissGrid();   // 欠けに選べなくなるミノが変わる（HOLD行もこの中で描き直す）
 }
 function setMissHold(type){
   opts.missHold=type;
   saveOptions();
-  drawMissGrid();   // 欠けに選べなくなるミノが変わる（HOLD行もこの中で描き直す）
+  drawMissGrid();
 }
 function drawMissGrid(){
   renderPieceGrid('missGrid', type=>{
@@ -2392,7 +2408,7 @@ function applyMissTypes(types, last, record = true){
   firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
-  const hold = opts.missHold;
+  const hold = opts.missHoldOn ? opts.missHold : null;
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if(holdOk){
     firstBagTypes = firstBagTypes.filter(t => t !== hold);
@@ -2428,7 +2444,8 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true,
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
-                       missHold:null,       // ミノ欠けで最初からHOLDに入れておくミノ（nullなら入れない）
+                       missHoldOn:false,    // ミノ欠けで「特定のミノをHOLDする」スイッチ
+                       missHold:null,       // そのときHOLDに入れるミノ
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
                        // 盤面・NEXT/HOLD・左メニューはそれぞれ余白の都合が違うので別々に持つ
                        boardScale:100, miniScale:100, menuScale:100 };
@@ -3455,7 +3472,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.42.0';
+const APP_VERSION = '1.43.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

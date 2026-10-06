@@ -1041,9 +1041,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="tgl-row pick-sw" title="ONにすると、選んだミノを最初からHOLDに入れた状態で始めます。そのぶん1巡目からは抜けます">
+      <span>特定のミノをHOLDする</span>
+      <input type="checkbox" id="missHoldSw" onchange="setMissHoldOn(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
-    <div class="rand-row" id="missHoldRow" title="選んだミノを最初からHOLDに入れた状態で始めます。そのぶん1巡目からは抜けます">
+    <div class="rand-row" id="missHoldRow" style="display:none;" title="最初からHOLDに入れておくミノ">
       <span>HOLD</span>
       <div id="missHoldBtns" style="display:flex;gap:6px;flex:1;"></div>
     </div>
@@ -2408,29 +2413,41 @@ function pickValid(kind) {
 }
 
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
-// 「最初からHOLD」の行。欠けに選んでいるミノは選べないようにする
+// 「特定のミノをHOLDする」がONのときだけ出す選択行。
+// 欠けに選んでいるミノは、HOLDには置けないので選べないようにする
 function renderMissHoldRow() {
+  const row = document.getElementById('missHoldRow');
+  if (row) row.style.display = opts.missHoldOn ? '' : 'none';
+  const sw = document.getElementById('missHoldSw');
+  if (sw) sw.checked = !!opts.missHoldOn;
   const box = document.getElementById('missHoldBtns');
   if (!box) return;
   box.innerHTML = '';
-  const mk = (type, label) => {
+  DPC_ROWS.flat().forEach(type => {
     const b = document.createElement('button');
     b.className = 'rand-num' + (opts.missHold === type ? ' sel' : '');
-    b.textContent = label;
-    // 複数選択で欠けに指定しているミノは、HOLDには置けない
-    b.disabled = !!type && pick.miss.sel.has(type);
-    b.title = type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
+    b.textContent = type;
+    b.disabled = pick.miss.sel.has(type);
+    b.title = type + 'ミノを最初からHOLDに入れる';
     b.addEventListener('click', () => setMissHold(type));
     box.appendChild(b);
-  };
-  mk(null, 'なし');
-  DPC_ROWS.flat().forEach(t => mk(t, t));   // 上のグリッドと同じ並びにする
+  });
+}
+// ONにした直後に何も選ばれていない、ということがないよう既定を入れておく
+function setMissHoldOn(on) {
+  opts.missHoldOn = on;
+  if (on && (!opts.missHold || pick.miss.sel.has(opts.missHold))) {
+    opts.missHold = DPC_ROWS.flat().find(t => !pick.miss.sel.has(t)) || null;
+  }
+  saveOptions();
+  renderMissHoldRow();
+  renderPieceGrid('miss');   // 欠けに選べなくなるミノが変わる
 }
 function setMissHold(type) {
   opts.missHold = type;
   saveOptions();
   renderMissHoldRow();
-  renderPieceGrid('miss');   // 欠けに選べなくなるミノが変わる
+  renderPieceGrid('miss');
 }
 
 function renderPieceGrid(kind) {
@@ -2444,7 +2461,7 @@ function renderPieceGrid(kind) {
     const btn = document.createElement('button');
     btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '');
     // HOLDに入れると決めたミノは、同時に欠けにはできない
-    btn.disabled = (kind === 'miss' && opts.missHold === type);
+    btn.disabled = (kind === 'miss' && opts.missHoldOn && opts.missHold === type);
     btn.title = st.multi
       ? (kind === 'dpc' ? type + 'ミノを1巡目に残す' : type + 'ミノを1巡目から抜く')
       : (kind === 'dpc' ? type + 'ミノをHOLDにセットする' : type + 'ミノを抜いた6ミノで1巡目を回す');
@@ -2603,7 +2620,7 @@ function applyMissTypes(types, last, record = true) {
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
-  const hold = opts.missHold;
+  const hold = opts.missHoldOn ? opts.missHold : null;
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if (holdOk) {
     firstBagTypes = firstBagTypes.filter(t => t !== hold);
@@ -4965,7 +4982,8 @@ const OPT_DEFAULTS = {
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
   missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
-  missHold: null,     // ミノ欠けで最初からHOLDに入れておくミノ（nullなら入れない）
+  missHoldOn: false,  // ミノ欠けで「特定のミノをHOLDする」スイッチ
+  missHold: null,     // そのときHOLDに入れるミノ
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
@@ -5293,7 +5311,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.37.0';
+const APP_VERSION = '1.38.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
