@@ -2229,8 +2229,6 @@ function renderPieceGrid(gridId, onPick){
       btn.appendChild(cv); btn.appendChild(name);
       // ミノ欠けの複数選択中は、選ばれているミノに印をつける
       if (gridId === 'missGrid' && missPick.multi && missPick.sel.has(type)) btn.classList.add('sel');
-      // HOLDに入れると決めたミノは、同時に欠けにはできない
-      if (gridId === 'missGrid' && opts.missHoldOn && opts.missHold === type) btn.disabled = true;
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
@@ -2313,15 +2311,27 @@ function renderMissHoldRow(){
   const box=document.getElementById('missHoldBtns');
   if(!box) return;
   box.innerHTML='';
-  DPC_ROWS.flat().forEach(type=>{   // 上のグリッドと同じ並びにする
+  const mk=(type,label)=>{
     const b=document.createElement('button');
     b.className='rand-num'+(opts.missHold===type?' sel':'');
     b.type='button';
-    b.textContent=type;
-    b.disabled=missPick.sel.has(type);
+    b.textContent=label;
+    // 抜くミノに選ばれているものは、そもそも1巡目に無いのでHOLDにも置けない
+    b.disabled=!!type && missPick.sel.has(type);
     b.addEventListener('click',()=>setMissHold(type));
     box.appendChild(b);
-  });
+  };
+  mk(null,'なし');
+  DPC_ROWS.flat().forEach(t=>mk(t,t));   // 上のグリッドと同じ並びにする
+}
+// 抜くミノに選ばれたらHOLDの指定を外す。抜くミノの選択のほうが主なので、そちらを優先する
+function clearMissHoldIf(types){
+  if(opts.missHold && types.includes(opts.missHold)){
+    opts.missHold=null;
+    saveOptions();
+    return true;
+  }
+  return false;
 }
 // ONにした直後に何も選ばれていない、ということがないよう既定を入れておく
 function setMissHoldOn(on){
@@ -2340,7 +2350,8 @@ function setMissHold(type){
 function drawMissGrid(){
   renderPieceGrid('missGrid', type=>{
     if(missPick.multi){
-      if(missPick.sel.has(type)) missPick.sel.delete(type); else missPick.sel.add(type);
+      if(missPick.sel.has(type)) missPick.sel.delete(type);
+      else { missPick.sel.add(type); clearMissHoldIf([type]); }
       drawMissGrid();
     } else {
       setMissingPiece(type);
@@ -2408,6 +2419,7 @@ function applyMissTypes(types, last, record = true){
   firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
+  clearMissHoldIf(types);   // 単体選択やランダムで抜かれた場合もここで外す
   const hold = opts.missHoldOn ? opts.missHold : null;
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if(holdOk){
@@ -3472,7 +3484,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.43.0';
+const APP_VERSION = '1.44.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

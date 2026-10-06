@@ -2423,15 +2423,27 @@ function renderMissHoldRow() {
   const box = document.getElementById('missHoldBtns');
   if (!box) return;
   box.innerHTML = '';
-  DPC_ROWS.flat().forEach(type => {
+  const mk = (type, label) => {
     const b = document.createElement('button');
     b.className = 'rand-num' + (opts.missHold === type ? ' sel' : '');
-    b.textContent = type;
-    b.disabled = pick.miss.sel.has(type);
-    b.title = type + 'ミノを最初からHOLDに入れる';
+    b.textContent = label;
+    // 抜くミノに選ばれているものは、そもそも1巡目に無いのでHOLDにも置けない
+    b.disabled = !!type && pick.miss.sel.has(type);
+    b.title = type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
     b.addEventListener('click', () => setMissHold(type));
     box.appendChild(b);
-  });
+  };
+  mk(null, 'なし');
+  DPC_ROWS.flat().forEach(t => mk(t, t));   // 上のグリッドと同じ並びにする
+}
+// 抜くミノに選ばれたらHOLDの指定を外す。抜くミノの選択のほうが主なので、そちらを優先する
+function clearMissHoldIf(types) {
+  if (opts.missHold && types.includes(opts.missHold)) {
+    opts.missHold = null;
+    saveOptions();
+    return true;
+  }
+  return false;
 }
 // ONにした直後に何も選ばれていない、ということがないよう既定を入れておく
 function setMissHoldOn(on) {
@@ -2460,8 +2472,6 @@ function renderPieceGrid(kind) {
    types.forEach(type => {
     const btn = document.createElement('button');
     btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '');
-    // HOLDに入れると決めたミノは、同時に欠けにはできない
-    btn.disabled = (kind === 'miss' && opts.missHoldOn && opts.missHold === type);
     btn.title = st.multi
       ? (kind === 'dpc' ? type + 'ミノを1巡目に残す' : type + 'ミノを1巡目から抜く')
       : (kind === 'dpc' ? type + 'ミノをHOLDにセットする' : type + 'ミノを抜いた6ミノで1巡目を回す');
@@ -2477,7 +2487,8 @@ function renderPieceGrid(kind) {
     btn.appendChild(name);
     btn.addEventListener('click', () => {
       if (st.multi) {
-        if (st.sel.has(type)) st.sel.delete(type); else st.sel.add(type);
+        if (st.sel.has(type)) st.sel.delete(type);
+        else { st.sel.add(type); if (kind === 'miss') clearMissHoldIf([type]); }
         renderPieceGrid(kind);
       } else {
         if (kind === 'dpc') setDpcHold(type); else setMissingPiece(type);
@@ -2620,6 +2631,7 @@ function applyMissTypes(types, last, record = true) {
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
+  clearMissHoldIf(types);   // 単体選択やランダムで抜かれた場合もここで外す
   const hold = opts.missHoldOn ? opts.missHold : null;
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if (holdOk) {
@@ -5311,7 +5323,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.38.0';
+const APP_VERSION = '1.39.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
