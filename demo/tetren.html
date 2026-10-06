@@ -503,7 +503,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 #keyconfigModal {
   position:fixed; inset:0; background:rgba(0,0,0,.8);
-  display:none; justify-content:center; align-items:center; z-index:20;
+  display:none; justify-content:center; z-index:20;
+  /* 上端を固定して、中身が増えたぶんは下へ伸ばす。
+     上下中央に置くとタブを切り替えるたびに枠が上下して読みづらい。 */
+  align-items:flex-start; padding:5vh 0;
 }
 #keyconfigBox {
   background:#1f2937; border:1px solid #4b5563; border-radius:12px;
@@ -5182,7 +5185,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.32.0';
+const APP_VERSION = '1.32.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

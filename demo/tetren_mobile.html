@@ -252,7 +252,10 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
 /* ===== 設定モーダル（PC版と同じ構成） ===== */
 /* 画面が狭いので、中身が増えたらパネルの中だけスクロールさせる */
-#cfgPanel { max-height:88vh; display:flex; flex-direction:column; }
+/* 設定だけは上端を固定して、中身が増えたぶんは下へ伸ばす。
+   上下中央に置くとタブを切り替えるたびに枠が上下して読みづらい。 */
+#cfgOverlay { align-items:flex-start; }
+#cfgPanel { max-height:calc(100% - 4px); display:flex; flex-direction:column; }
 .cfg-tabs { display:flex; gap:4px; margin:8px 0 10px; border-bottom:1px solid #374151; flex:0 0 auto; }
 .cfg-tab {
   background:none; border:none; border-bottom:2px solid transparent;
@@ -3343,7 +3346,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.37.0';
+const APP_VERSION = '1.37.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
