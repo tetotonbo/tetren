@@ -503,7 +503,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 #keyconfigModal {
   position:fixed; inset:0; background:rgba(0,0,0,.8);
-  display:none; justify-content:center; align-items:center; z-index:20;
+  display:none; justify-content:center; z-index:20;
+  /* 上端を固定して、中身が増えたぶんは下へ伸ばす。
+     上下中央に置くとタブを切り替えるたびに枠が上下して読みづらい。 */
+  align-items:flex-start; padding:5vh 0;
 }
 #keyconfigBox {
   background:#1f2937; border:1px solid #4b5563; border-radius:12px;
@@ -618,7 +621,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 落下設定 -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-ui="grav">
       <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
       <div class="speed-row">
         <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
@@ -637,7 +640,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- デザイン -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-ui="design">
       <div class="panel-label">デザイン</div>
       <label class="tgl-row" style="margin-bottom:8px;"
         title="ミノがどこに落ちるかを薄く表示する">
@@ -656,7 +659,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- 地形操作 -->
-    <div class="panel" style="width:108px;">
+    <div class="panel" style="width:108px;" data-ui="terrain">
       <div class="panel-label">地形操作</div>
       <label class="tgl-row" title="ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます">
         <span>地形編集</span>
@@ -682,12 +685,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
 
     <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
-    <button class="garb-btn" style="background:#374151;width:108px;"
+    <button class="garb-btn" style="background:#374151;width:108px;" data-ui="shot"
       onclick="openShot()"
       title="画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます">カンペ画像</button>
 
     <!-- LINES -->
-    <div class="panel" style="text-align:center;width:108px;">
+    <div class="panel" style="text-align:center;width:108px;" data-ui="lines">
       <div class="panel-label">LINES</div>
       <div class="stat-val" id="linesEl">0</div>
     </div>
@@ -696,7 +699,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
       <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
-      <button id="verSwitchBtn" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
+      <button id="verSwitchBtn" data-ui="verSwitch" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
         style="background:#374151;"
         onclick="switchVersion()">📱 スマホ版へ</button>
       <div id="verLabel"></div>
@@ -727,7 +730,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- 操作ボタンパッド -->
     <div class="ctrl-pad">
       <!-- ミノを捨てる・戻す（常時表示） -->
-      <div class="ctrl-row r2">
+      <div class="ctrl-row r2" data-ui="undoDiscard">
         <button data-pos="discard" class="ctrl-btn"
           onclick="if(!gameOver)discardPiece()"
           title="現在のミノを捨てて次を出す">
@@ -740,10 +743,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </button>
       </div>
       <!-- リセット。誤爆すると痛いので、主張は控えめにしつつ他のボタンと色を変える -->
-      <button data-pos="reset" class="ctrl-reset" onclick="resetTerrain()"
+      <button data-pos="reset" data-ui="reset" class="ctrl-reset" onclick="resetTerrain()"
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
       <!-- 操作ボタンの配置を自分で決められるようにする -->
-      <div class="ctrl-edit-row">
+      <div class="ctrl-edit-row" data-ui="layout">
         <label class="tgl-row" style="flex:1;"
           title="ONにすると、操作ボタンをドラッグで動かせます。右下のつまみで大きさも変えられます">
           <span>配置編集</span>
@@ -754,10 +757,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onclick="resetPanelPos()">元に戻す</button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
-      <button id="ctrlToggleBtn" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
+      <button id="ctrlToggleBtn" data-ui="ctrl" title="画面上の操作ボタンを開閉する" class="ctrl-toggle" onclick="toggleCtrlButtons()">
         ボタン操作 <span id="ctrlToggleArrow">▼</span>
       </button>
-      <div id="ctrlHidden">
+      <div id="ctrlHidden" data-ui="ctrl">
         <!-- 左右・ソフトドロップ -->
         <div class="ctrl-row r3">
           <button data-pos="left" class="ctrl-btn"
@@ -830,7 +833,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="panel" style="min-width:116px;">
       <div class="panel-label">モード</div>
       <div class="mode-buttons">
-        <div class="btn-group">
+        <div class="btn-group" data-ui="dpc">
           <button class="garb-btn" style="flex:1;background:#374151;"
             onclick="if(!gameOver)openDpc()"
             title="選んだミノをHOLDした状態にして、ミノの順番をリセットします">DPCセット</button>
@@ -838,7 +841,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
             onclick="if(!gameOver)repeatDpc()"
             title="前回選んだミノで、もう一度DPCセットします">↻</button>
         </div>
-        <div class="btn-group">
+        <div class="btn-group" data-ui="miss">
           <button class="garb-btn" style="flex:1;background:#374151;"
             onclick="openMiss()"
             title="選んだミノを最初の1巡から抜いて、ゲームを最初から始めます">ミノ欠け</button>
@@ -846,17 +849,17 @@ input:checked + .tgl::after { transform:translateX(16px); }
             onclick="repeatMiss()"
             title="前回選んだミノで、もう一度ミノ欠けで始めます">↻</button>
         </div>
-        <button id="renModeBtn" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
+        <button id="renModeBtn" data-ui="ren" title="盤面の左右におじゃまの壁を作り、4列だけで練習する" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleRenMode()">REN</button>
-        <button id="dekaModeBtn" title="ミノを4倍の大きさにする" class="toggle-btn"
+        <button id="dekaModeBtn" data-ui="deka" title="ミノを4倍の大きさにする" class="toggle-btn"
           style="background:#374151;"
           onclick="toggleDekaMode()">デカミノ</button>
-        <button id="marathonBtn" class="toggle-btn"
+        <button id="marathonBtn" data-ui="marathon" class="toggle-btn"
           style="background:#374151;"
           title="10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります"
           onclick="toggleMarathon()">マラソン</button>
-        <button id="sprintBtn" class="toggle-btn"
+        <button id="sprintBtn" data-ui="sprint" class="toggle-btn"
           style="background:#374151;"
           title="40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります"
           onclick="toggleSprint()">40LINE</button>
@@ -869,7 +872,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           </div>
         </div>
         <!-- 普段は畳んでおき、このボタンで設定とスタートを出す -->
-        <button id="digOpenBtn" class="toggle-btn"
+        <button id="digOpenBtn" data-ui="dig" class="toggle-btn"
           style="background:#374151;"
           title="せりあがりの設定とスタートボタンを開きます"
           onclick="toggleDigPanel()">せりあがり</button>
@@ -1122,6 +1125,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab"        id="cfgTabUi" title="画面に出すメニューを選ぶ" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
@@ -1171,6 +1175,20 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="cfg-pane" id="cfgPaneSkin">
       <div id="skinList"></div>
       <div class="kc-btns">
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    </div>
+
+    <div class="cfg-pane" id="cfgPaneUi">
+      <div class="imp-hint" style="margin:0 0 10px;">
+        OFFにしたメニューはメイン画面から消えます。使わないものを隠すと画面がすっきりします。<br>
+        設定はいつでもここから戻せます。
+      </div>
+      <div id="uiList"></div>
+      <div class="kc-btns">
+        <button onclick="resetUiHidden()" title="すべてのメニューを表示に戻す"
+          style="background:#374151;color:#d1d5db;">すべて表示</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
       </div>
@@ -4952,6 +4970,81 @@ function resetOptions() {
   applyOptions();
 }
 
+// ===== 表示するメニューの切り替え =====
+// 使わないボタンを隠して画面をすっきりさせるための仕組み。
+// 隠したい要素に data-ui="〇〇" を付けておき、opts.uiHidden でまとめて出し入れする。
+const UI_ITEMS = [
+  { id:'grav',        label:'落下設定' },
+  { id:'design',      label:'デザイン（ゴースト・軸表示）' },
+  { id:'terrain',     label:'地形操作（地形編集・カラー・取り込み）' },
+  { id:'shot',        label:'カンペ画像' },
+  { id:'lines',       label:'LINES' },
+  { id:'verSwitch',   label:'スマホ版へ' },
+  { id:'dpc',         label:'DPCセット' },
+  { id:'miss',        label:'ミノ欠け' },
+  { id:'ren',         label:'REN' },
+  { id:'deka',        label:'デカミノ' },
+  { id:'marathon',    label:'マラソン' },
+  { id:'sprint',      label:'40LINE' },
+  { id:'dig',         label:'せりあがり' },
+  { id:'undoDiscard', label:'ミノを捨てる・戻す' },
+  { id:'reset',       label:'リセット' },
+  { id:'layout',      label:'配置編集' },
+  { id:'ctrl',        label:'ボタン操作' },
+];
+// opts に入れたままだと「デフォルトに戻す」で消したいので、既定値には置かず必要になったら作る
+function uiHiddenMap() {
+  if (!opts.uiHidden || typeof opts.uiHidden !== 'object') opts.uiHidden = {};
+  return opts.uiHidden;
+}
+function isUiHidden(id) { return !!uiHiddenMap()[id]; }
+function applyUiHidden() {
+  const map = uiHiddenMap();
+  document.querySelectorAll('[data-ui]').forEach(el => {
+    // 表示に戻すときは空文字にして、CSS側の指定（.open など）に判断を返す
+    el.style.display = map[el.dataset.ui] ? 'none' : '';
+  });
+  // 隠したボタンから開いた画面が置き去りにならないようにする
+  if (map.dig)    closeDigPanel();
+  if (map.sprint) stopSprint();
+}
+function setUiVisible(id, visible) {
+  const map = uiHiddenMap();
+  if (visible) delete map[id]; else map[id] = true;
+  saveOptions();
+  applyUiHidden();
+}
+function resetUiHidden() {
+  opts.uiHidden = {};
+  saveOptions();
+  applyUiHidden();
+  renderUiList();
+}
+function renderUiList() {
+  const box = document.getElementById('uiList');
+  if (!box) return;
+  box.innerHTML = '';
+  UI_ITEMS.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    const label = document.createElement('span');
+    label.className = 'opt-label';
+    label.textContent = it.label;
+    const tgl = document.createElement('label');
+    tgl.className = 'tgl-row';
+    tgl.style.flex = '0 0 auto';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !isUiHidden(it.id);
+    cb.addEventListener('change', () => setUiVisible(it.id, cb.checked));
+    const knob = document.createElement('span');
+    knob.className = 'tgl';
+    tgl.appendChild(cb); tgl.appendChild(knob);
+    row.appendChild(label); row.appendChild(tgl);
+    box.appendChild(row);
+  });
+}
+
 // ===== 設定モーダル =====
 // キーコンフィグの中の切り替え。開いているほうを覚えておき、戻ったときも同じ面を出す。
 let kcSub = 'key';
@@ -4966,14 +5059,15 @@ function switchKcSub(name) {
   if (name === 'pad') buildGpRows();
 }
 function switchConfigTab(name) {
-  const TABS = { key:['cfgTabKey','cfgPaneKey'],
-                 skin:['cfgTabSkin','cfgPaneSkin'], misc:['cfgTabMisc','cfgPaneMisc'] };
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'],
+                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     document.getElementById(tab).classList.toggle('active', k === name);
     document.getElementById(pane).classList.toggle('active', k === name);
   }
   if (name === 'skin') renderSkinList();
+  if (name === 'ui')   renderUiList();
   if (name === 'misc') applyOptions();
   if (name === 'key' && kcSub === 'pad') buildGpRows();
 }
@@ -5091,7 +5185,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.31.0';
+const APP_VERSION = '1.32.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5395,6 +5489,7 @@ rollNextDigRows();   // 予告する段数を先に決めておく
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
+applyUiHidden();  // 隠す設定を画面に反映する
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);

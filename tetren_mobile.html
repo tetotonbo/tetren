@@ -240,16 +240,109 @@ input:checked + .tgl::after { transform:translateX(10px); }
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay, #missOverlay, #aboutOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #cfgPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2, #missPanel h2, #aboutPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+/* ===== 設定モーダル（PC版と同じ構成） ===== */
+/* 画面が狭いので、中身が増えたらパネルの中だけスクロールさせる */
+/* 設定だけは上端を固定して、中身が増えたぶんは下へ伸ばす。
+   上下中央に置くとタブを切り替えるたびに枠が上下して読みづらい。 */
+#cfgOverlay { align-items:flex-start; }
+#cfgPanel { max-height:calc(100% - 4px); display:flex; flex-direction:column; }
+.cfg-tabs { display:flex; gap:4px; margin:8px 0 10px; border-bottom:1px solid #374151; flex:0 0 auto; }
+.cfg-tab {
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:#9ca3af; font-size:12px; font-weight:bold; cursor:pointer;
+  padding:7px 10px; transition:color .15s, border-color .15s;
+}
+.cfg-tab.active { color:#e5e7eb; border-bottom-color:#6366f1; }
+.cfg-body { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1 1 auto; }
+.cfg-pane { display:none; }
+.cfg-pane.active { display:block; }
+.cfg-hint { font-size:10px; color:#9ca3af; line-height:1.7; margin:0 0 8px; }
+.opt-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 2px; border-bottom:1px solid #374151;
+}
+.opt-row:last-of-type { border-bottom:none; }
+.opt-row input[type=checkbox] { display:none; }
+.opt-label { font-size:12px; color:#e5e7eb; flex:1; min-width:0; line-height:1.5; }
+/* 設定画面のトグル。左の列の .tgl-row は width:100% なのでここでは使わない */
+.cfg-tgl { display:flex; align-items:center; flex:0 0 auto; padding:4px; cursor:pointer; }
+.cfg-tgl input { display:none; }
+.opt-row .tgl { width:34px; height:18px; border-radius:9px; }
+.opt-row .tgl::after { width:14px; height:14px; }
+.opt-row input:checked + .tgl::after { transform:translateX(16px); }
+.opt-note { display:block; font-size:10px; color:#9ca3af; margin-top:3px; line-height:1.6; }
+.opt-step { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+.opt-val { font-size:13px; color:#e2e8f0; min-width:56px; text-align:center; }
+.opt-unit { font-size:10px; color:#6b7280; }
+/* クリックで ms ⇄ F を切り替える単位表示 */
+.unit-btn { cursor:pointer; text-decoration:underline dotted; }
+.opt-step .di-btn { width:30px; height:30px; font-size:16px; }
+/* キーコンフィグ。画面が狭いので PC版より一回り小さくする */
+.kc-subtabs { display:flex; gap:4px; margin-bottom:8px; }
+.kc-subtab {
+  background:#1f2937; border:1px solid #374151; border-radius:6px;
+  color:#9ca3af; font-size:11px; font-weight:bold; padding:6px 10px; cursor:pointer;
+}
+.kc-subtab.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.kc-sub { display:none; }
+.kc-sub.active { display:block; }
+.kc-header { display:flex; align-items:center; gap:6px; padding:0 4px 4px; }
+.kc-header .kc-label { font-size:9px; color:#6b7280; font-weight:bold; }
+.kc-header .kc-slot-head { width:86px; flex:0 0 auto; font-size:9px; color:#6b7280; text-align:center; }
+.kc-row { display:flex; align-items:center; gap:6px; padding:5px 4px; border-radius:6px; }
+.kc-row:nth-child(odd) { background:#111827; }
+.kc-label { font-size:11px; color:#e5e7eb; flex:1; min-width:0; }
+.kc-slot { display:flex; align-items:center; gap:2px; width:86px; flex:0 0 auto; }
+.kc-key {
+  flex:1; min-width:0; background:#374151; border:1px solid #4b5563; border-radius:5px;
+  color:#f9fafb; font-size:10px; padding:6px 2px; cursor:pointer;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.kc-key.waiting { background:#1e40af; border-color:#60a5fa; color:#bfdbfe; }
+.kc-del {
+  flex:0 0 auto; width:18px; background:none; border:1px solid #374151;
+  border-radius:4px; color:#6b7280; font-size:10px; cursor:pointer; padding:5px 0;
+}
+/* スキン選択 */
+#skinList { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.skin-card {
+  background:#111827; border:2px solid #374151; border-radius:8px;
+  padding:8px 6px 6px; cursor:pointer; text-align:center;
+}
+.skin-card.selected { border-color:#6366f1; background:#1e243a; }
+.skin-card canvas { display:block; margin:0 auto 4px; max-width:100%; }
+.skin-name { font-size:11px; font-weight:bold; color:#e5e7eb; }
+/* せりあがりの種別（ミノ / 秒）。狭いので2つを横に並べるだけ */
+.dig-type { display:flex; gap:3px; margin-top:3px; }
+.dig-type label {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:2px;
+  background:#0d1117; border:1px solid #374151; border-radius:6px;
+  padding:5px 0; font-size:9px; color:#9ca3af; cursor:pointer;
+}
+.dig-type input { margin:0; width:10px; height:10px; }
+/* せりあがり予告（盤面の下） */
+#digPreview {
+  display:flex; align-items:center; justify-content:space-between;
+  background:#111827; border:1px solid #374151; border-radius:6px;
+  padding:4px 8px; font-size:10px; font-weight:bold; letter-spacing:0.5px;
+}
+#digPreviewNext    { color:#93c5fd; }
+#digPreviewPending { color:#fca5a5; }
+.cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
+.cfg-btns button {
+  flex:1; padding:9px 0; border:none; border-radius:7px;
+  font-size:13px; font-weight:bold; cursor:pointer;
+}
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a !important; background:#132a1d !important; }
 /* 選択画面の複数選択スイッチ */
@@ -328,19 +421,19 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <span class="tgl"></span>
       </label>
     </div>
-    <label class="tgl-row">
+    <label class="tgl-row" data-ui="ghost">
       <span>ゴースト</span>
       <input type="checkbox" id="ghostCheck" checked
         onchange="setOption('ghost', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row">
+    <label class="tgl-row" data-ui="axis">
       <span>軸表示</span>
       <input type="checkbox" id="axisCheck"
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
+    <label class="tgl-row" data-ui="layout" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
       <span>配置編集</span>
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
       <span class="tgl"></span>
@@ -380,33 +473,48 @@ input:checked + .tgl::after { transform:translateX(10px); }
           ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',1))" ontouchend="stopRepeat()">›</button>
       </div>
     </div>
-    <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
-    <div class="di-row" style="margin-top:0;">
-      <button class="di-btn"
-        onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
-      <button class="di-btn"
-        onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
+    <div data-ui="grav" style="width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn"
+          onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
+        <button class="di-btn"
+          onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
+      </div>
     </div>
-    <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
-    <div class="dpc-side-row">
+    <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
     </div>
-    <div class="dpc-side-row">
+    <div class="dpc-side-row" data-ui="miss">
       <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
-    <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
-    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
-    <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
+    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
+    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
+    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
     <div id="dig-info"></div>
+    <div id="digTypeRow" style="display:none;width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
+      <div class="dig-type">
+        <label><input type="radio" name="digTriggerType" id="digTypeMino"
+          onchange="setDigTriggerType('mino')" checked><span>ミノ</span></label>
+        <label><input type="radio" name="digTriggerType" id="digTypeTime"
+          onchange="setDigTriggerType('time')"><span>秒</span></label>
+      </div>
+    </div>
     <div class="di-row" id="diRow" style="display:none;">
-      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
-      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeDigInterval(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(-1))" ontouchend="stopRepeat()">‹</button>
+      <div class="di-val"><span id="digIntervalVal">3</span><br><span id="digIntervalUnit" style="font-size:8px;color:#6b7280;">個ごと</span></div>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeDigInterval(1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(1))" ontouchend="stopRepeat()">›</button>
     </div>
     <div id="holeRow" style="display:none;width:100%;">
       <div class="m-lbl" style="margin:4px 0 0;">穴継続率</div>
@@ -416,11 +524,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
     </div>
-    <button class="side-btn" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
-    <button class="side-btn" onclick="startGame()"
+    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
+    <button class="side-btn" data-ui="reset" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
+    <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
-    <button class="side-btn" id="verSwitchBtn" style="margin-top:4px;"
+    <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:4px;"
       onclick="switchVersion()">🖥 PC版<br>へ</button>
     <div id="verLabel"></div>
   </div>
@@ -484,7 +593,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
 
-    <div id="opts">
+    <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
+    <div id="digPreview" style="display:none;">
+      <span id="digPreviewNext"></span>
+      <span id="digPreviewPending"></span>
+    </div>
+
+    <div id="opts" data-ui="undoDiscard">
       <button class="opt-btn" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn" data-ctrl="undo"
@@ -577,6 +692,182 @@ input:checked + .tgl::after { transform:translateX(10px); }
   </div>
 </div>
 
+<!-- 設定モーダル -->
+<div id="cfgOverlay">
+  <div id="cfgPanel">
+    <h2>⚙ 設定</h2>
+    <div class="cfg-tabs">
+      <button class="cfg-tab active" id="cfgTabKey" onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab" id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
+      <button class="cfg-tab" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
+      <button class="cfg-tab" id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
+    </div>
+    <div class="cfg-body">
+      <div class="cfg-pane active" id="cfgPaneKey">
+        <div class="kc-subtabs">
+          <button class="kc-subtab active" id="kcSubTabKey" onclick="switchKcSub('key')">キーボード</button>
+          <button class="kc-subtab"        id="kcSubTabPad" onclick="switchKcSub('pad')">コントローラ</button>
+        </div>
+        <div class="kc-sub active" id="kcSubPaneKey">
+          <div class="cfg-hint">
+            キーボードをつないだときの割り当てです。欄を押してから、割り当てたいキーを押してください。
+          </div>
+          <div class="kc-header">
+            <span class="kc-label">操作</span>
+            <span class="kc-slot-head">スロット 1</span>
+            <span class="kc-slot-head">スロット 2</span>
+          </div>
+          <div id="kcRows"></div>
+          <div class="cfg-btns">
+            <button onclick="resetKeyConfig()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          </div>
+        </div>
+        <div class="kc-sub" id="kcSubPanePad">
+          <div class="cfg-hint" id="gpStatus"></div>
+          <div class="cfg-hint">
+            欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。<br>
+            左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。
+          </div>
+          <div class="kc-header">
+            <span class="kc-label">操作</span>
+            <span class="kc-slot-head">スロット 1</span>
+            <span class="kc-slot-head">スロット 2</span>
+          </div>
+          <div id="gpRows"></div>
+          <div class="cfg-btns">
+            <button onclick="resetGamepadConfig()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cfg-pane" id="cfgPaneSkin">
+        <div class="cfg-hint">ミノの見た目を選びます。「ほぼ透明」「完全透明」は記憶して積む練習用で、HOLD/NEXTだけは見えるままにしてあります。</div>
+        <div id="skinList"></div>
+      </div>
+
+      <div class="cfg-pane" id="cfgPaneUi">
+        <div class="cfg-hint">
+          OFFにしたメニューは画面から消えます。使わないものを隠すと、左の列がすっきりします。<br>
+          隠しても設定はここからいつでも戻せます。
+        </div>
+        <div id="uiList"></div>
+        <div class="cfg-btns">
+          <button onclick="resetUiHidden()" style="background:#374151;color:#d1d5db;">すべて表示</button>
+        </div>
+      </div>
+
+      <div class="cfg-pane" id="cfgPaneMisc">
+        <div class="opt-row">
+          <span class="opt-label">連続ホールド
+            <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optMultiHold2" onchange="setOption('multiHold', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">ミノ設置直後にせりあがり
+            <span class="opt-note">せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigOnLock" onchange="setOption('digOnLock', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">ソフトドロップをSDFで指定
+            <span class="opt-note">他のテトリスと同じ「重力の何倍で落ちるか」での指定に切り替えます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optSdfMode" onchange="setOption('sdfMode', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row" id="optSoftRow">
+          <span class="opt-label">ソフトドロップ速度
+            <span class="opt-note">1〜10。大きいほど速く落ちます</span></span>
+          <span class="opt-step">
+            <button class="di-btn" onclick="stepOption('softSpeed',-1)">‹</button>
+            <span class="opt-val" id="optSoftSpeedVal">5</span>
+            <button class="di-btn" onclick="stepOption('softSpeed',1)">›</button>
+          </span>
+        </div>
+
+        <div class="opt-row" id="optSdfRow" style="display:none;">
+          <span class="opt-label">SDF
+            <span class="opt-note">重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。<span id="optSdfNote"></span></span></span>
+          <span class="opt-step">
+            <button class="di-btn"
+              onmousedown="startRepeat(()=>stepOption('sdf',-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',-1))" ontouchend="stopRepeat()">‹</button>
+            <span class="opt-val" id="optSdfVal">6</span>
+            <button class="di-btn"
+              onmousedown="startRepeat(()=>stepOption('sdf',1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startRepeat(()=>stepOption('sdf',1))" ontouchend="stopRepeat()">›</button>
+          </span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">ミノの設置時間
+            <span class="opt-note">接地してから固定されるまで。0にすると接地した瞬間に固定されます</span></span>
+          <span class="opt-step">
+            <button class="di-btn" onclick="stepOption('lockFrames',-1)">‹</button>
+            <span class="opt-val"><span id="optLockFramesVal">30</span><span class="opt-unit"> F</span></span>
+            <button class="di-btn" onclick="stepOption('lockFrames',1)">›</button>
+          </span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">左右の効き始め（DAS）
+            <span class="opt-note">左右を押してから自動で動き出すまでの待ち時間。<span id="optDasAlt"></span>（長押しで連続変更）</span></span>
+          <span class="opt-step">
+            <button class="di-btn"
+              onmousedown="startInputRepeat('dasMs',-1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startInputRepeat('dasMs',-1)" ontouchend="stopRepeat()">‹</button>
+            <span class="opt-val"><span id="optDasVal">167</span><span class="opt-unit unit-btn" id="optDasUnit"
+              onclick="toggleInputUnit()"> ms</span></span>
+            <button class="di-btn"
+              onmousedown="startInputRepeat('dasMs',1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startInputRepeat('dasMs',1)" ontouchend="stopRepeat()">›</button>
+          </span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">左右の連打間隔（ARR）
+            <span class="opt-note">動き出したあと1マス進むごとの間隔。<span id="optArrAlt"></span>。0にすると一気に端まで動きます。単位を押すとフレーム表示に変わります</span></span>
+          <span class="opt-step">
+            <button class="di-btn"
+              onmousedown="startInputRepeat('arrMs',-1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startInputRepeat('arrMs',-1)" ontouchend="stopRepeat()">‹</button>
+            <span class="opt-val"><span id="optArrVal">33</span><span class="opt-unit unit-btn" id="optArrUnit"
+              onclick="toggleInputUnit()"> ms</span></span>
+            <button class="di-btn"
+              onmousedown="startInputRepeat('arrMs',1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+              ontouchstart="event.preventDefault();startInputRepeat('arrMs',1)" ontouchend="stopRepeat()">›</button>
+          </span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">せりあがりの穴継続率
+            <span class="opt-note">次の段も同じ列に穴を開ける確率。10%でほぼランダムになります</span></span>
+          <span class="opt-step">
+            <button class="di-btn" onclick="stepOption('holeKeep',-1)">‹</button>
+            <span class="opt-val"><span id="optHoleKeepVal2">40</span><span class="opt-unit"> %</span></span>
+            <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
+          </span>
+        </div>
+        <div class="cfg-btns">
+          <button onclick="resetOptions()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+        </div>
+      </div>
+    </div>
+    <div class="cfg-btns">
+      <button onclick="closeConfig()" style="background:#16a34a;color:#fff;">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div id="overlay">
   <h1>テト練<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
   <div class="sub">タッチ操作でプレイ</div>
@@ -619,6 +910,302 @@ const KICKS = {
 const STATE_NAMES = ['0','R','2','L'];
 const SCORE_TABLE = [0,100,300,500,800];
 
+// ===== ぷよテト2風テーマ（実際のぷよテト2ミノ画像を使用） =====
+let ppt2Theme = false;   // = (skinId === 'ppt2')。既存の描画分岐がこのフラグを見ている
+const PPT2_COLORS = {
+  I: '#22e5ff',
+  O: '#ffe14d',
+  T: '#e34dff',
+  S: '#5dff6e',
+  Z: '#ff5c5c',
+  J: '#4d7bff',
+  L: '#ffa83d',
+};
+
+// ===== スキン（ミノの見た目）=====
+// style で塗り方を切り替える。色は skin ごとに彩度・明度を変えてある。
+// 注意: 盤面には「色の文字列」が保存されるので、色はスキンをまたいで重複させないこと。
+const SKINS = [
+  { id:'classic', name:'標準', style:'bevel',
+    colors:{ I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#4ade80', Z:'#f87171', J:'#60a5fa', L:'#fb923c' } },
+  { id:'plain',   name:'無地', style:'flat',
+    colors:{ I:'#00b4d8', O:'#f2c200', T:'#9d38d6', S:'#3fbf5f', Z:'#e14b4b', J:'#3d6fd4', L:'#ee8b22' } },
+  { id:'gloss',   name:'グロス', style:'gloss',
+    colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
+  { id:'pastel',  name:'パステル', style:'matte',
+    colors:{ I:'#9ddfe8', O:'#f0dfa0', T:'#cdb0e8', S:'#aadfae', Z:'#eeb0b0', J:'#aec1e8', L:'#eec9a0' } },
+  { id:'retro',   name:'レトロ', style:'dot',
+    colors:{ I:'#3fbecd', O:'#dcc233', T:'#ac57c7', S:'#57b657', Z:'#cf4a4a', J:'#4a69bf', L:'#d78129' } },
+  { id:'glass',   name:'アウトライン', style:'glass',
+    colors:{ I:'#2ee0ff', O:'#ffe24d', T:'#d36bff', S:'#5df08a', Z:'#ff7b7b', J:'#6d9bff', L:'#ffb057' } },
+  { id:'invisible', name:'ほぼ透明', style:'invisible',
+    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
+  // 盤面には一切描かない。HOLD・NEXT・ゴーストだけは「無地」で描いて操作できるようにする
+  { id:'blank',   name:'完全透明', style:'blank',
+    colors:{ I:'#19e9ff', O:'#ffe319', T:'#e219ff', S:'#19ff5e', Z:'#ff1947', J:'#1949ff', L:'#ff9419' } },
+  { id:'mono',    name:'モノクローム', style:'bevel',
+    colors:{ I:'#ededed', O:'#d4d4d4', T:'#bbbbbb', S:'#a2a2a2', Z:'#898989', J:'#707070', L:'#575757' } },
+  { id:'ppt2',    name:'ぷテ', style:'image',
+    colors:PPT2_COLORS },
+];
+let skinId = 'plain';   // 既定は「無地」
+function currentSkin() { return SKINS.find(x => x.id === skinId) || SKINS.find(x => x.id === 'plain'); }
+
+// 盤面には色が保存されるため、どのスキンの色からでもミノ種別に戻せるようにしておく。
+// これでスキンを切り替えたとき、すでに置いたブロックの見た目も追従する。
+const COLOR_TO_TYPE = {};
+for (const sk of SKINS) for (const t in sk.colors) COLOR_TO_TYPE[sk.colors[t]] = t;
+
+// 盤面の空きマスとおじゃまブロックのタイル。
+// ミノ（PPT2_TONE）と同じく、ゲームの画像は使わずコードで描き起こしている。
+// 元の配色をそのまま再現しているので見た目は変わらず、どの倍率でもくっきり出る。
+// ゴースト用の作業キャンバス（中心を抜いたミノ画像を作ってから盤面へ合成する）
+const ppt2GhostCanvas = document.createElement('canvas');
+const ppt2GhostCtx = ppt2GhostCanvas.getContext('2d');
+
+const PPT2_TILE = 60;   // タイル1枚の基準サイズ(px)
+function makePPT2Tile(draw) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = PPT2_TILE;
+  draw(cv.getContext('2d'), PPT2_TILE);
+  return cv;
+}
+// 空きマス: 暗い紫地に、ひとまわり明るい継ぎ目を回す
+const PPT2_BG_TILE = makePPT2Tile((c, s) => {
+  c.fillStyle = '#322d3d';
+  c.fillRect(0, 0, s, s);
+  c.strokeStyle = '#484152';
+  c.lineWidth = s * 0.05;
+  c.strokeRect(c.lineWidth / 2, c.lineWidth / 2, s - c.lineWidth, s - c.lineWidth);
+});
+// おじゃま: 濃い縁取りの内側を、上がわずかに明るい白で埋める
+const PPT2_GARBAGE_TILE = makePPT2Tile((c, s) => {
+  c.fillStyle = '#2c2d33';
+  c.fillRect(0, 0, s, s);
+  const b = s * 0.035;                       // 縁取りの太さ
+  const g = c.createLinearGradient(0, b, 0, s - b);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(1, '#e4e4e4');
+  c.fillStyle = g;
+  c.fillRect(b, b, s - b * 2, s - b * 2);
+});
+
+// 盤面に敷くパターン。boardCtx はこの時点ではまだ無いので、初回描画時に作る。
+let ppt2BgPatternBoard = null;
+function ppt2BgPattern() {
+  if (!ppt2BgPatternBoard) {
+    ppt2BgPatternBoard = boardCtx.createPattern(PPT2_BG_TILE, 'repeat');
+    // タイルは1セル=60pxで描いてあるので、盤面の1セル(BS=30)に合わせて縮める。
+    // 高DPI環境ではキャンバス自体が2倍解像度なので、結果的に等倍で載り輪郭がぼけない。
+    if (ppt2BgPatternBoard.setTransform) {
+      ppt2BgPatternBoard.setTransform(new DOMMatrix().scaleSelf(BS / PPT2_TILE));
+    }
+  }
+  return ppt2BgPatternBoard;
+}
+
+function pieceColor(type) {
+  return currentSkin().colors[type];
+}
+// 16進カラーを白寄りに薄める（amt: 0=元の色, 1=白）
+function lighten(hex, amt) {
+  const n = hex.replace('#', '');
+  const r = parseInt(n.substring(0,2), 16);
+  const g = parseInt(n.substring(2,4), 16);
+  const b = parseInt(n.substring(4,6), 16);
+  const m = v => Math.round(v + (255 - v) * amt);
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
+// 16進カラーを黒寄りに沈める（amt: 0=元の色, 1=黒）
+function darken(hex, amt) {
+  const n = hex.replace('#', '');
+  const m = i => Math.round(parseInt(n.substring(i, i+2), 16) * (1 - amt));
+  return `rgb(${m(0)},${m(2)},${m(4)})`;
+}
+// ぷよテト風セルの配色（元のセル画像から採取した値）。
+// 元画像は低解像度をアップスケールしたものでエッジがぼやけていたため、
+// 同じ配色・構造をキャンバスで描き直している。これならどの倍率でもくっきり出る。
+const PPT2_TONE = {
+  I: { gap:'#1c4363', gloss:'#d3fcfd', top:'#4aa3f7', mid:'#4ca7f7', bot:'#55b9f9', dark:'#2b6299' },
+  O: { gap:'#bd6d29', gloss:'#fef9aa', top:'#f7d648', mid:'#f4cc45', bot:'#fbea51', dark:'#8d5b25' },
+  T: { gap:'#852a9c', gloss:'#f2c9f7', top:'#b248bb', mid:'#a339a8', bot:'#ba49bc', dark:'#5e2f75' },
+  S: { gap:'#1d4328', gloss:'#cbf78b', top:'#65ac33', mid:'#75c13a', bot:'#8ed943', dark:'#5c9737' },
+  Z: { gap:'#6d1f23', gloss:'#f1a877', top:'#d43120', mid:'#ea3f29', bot:'#ec6b52', dark:'#8c1e14' },
+  J: { gap:'#112888', gloss:'#9cdafb', top:'#2150e5', mid:'#265bde', bot:'#408df6', dark:'#16267b' },
+  L: { gap:'#955330', gloss:'#fbe6ac', top:'#ef8533', mid:'#eb8031', bot:'#f2a73c', dark:'#8e431a' },
+};
+
+// ぷよテト風の1マスを描く。描けたらtrue（呼び出し側は他スキンの描画にフォールバックする）
+function drawPPT2Cell(ctx, x, y, w, h, color, alpha) {
+  if (color === GARBAGE_COLOR) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(PPT2_GARBAGE_TILE, x, y, w, h);
+    ctx.restore();
+    return true;
+  }
+  const type = COLOR_TO_TYPE[color];   // 他スキンで置いたブロックもぷよテト柄に読み替える
+  const t = type && PPT2_TONE[type];
+  if (!t) return false;
+  const sz  = Math.min(w, h);
+  const ins = sz * 0.013;              // 継ぎ目の太さ
+  const rad = sz * 0.08;               // 角の丸み（原作は角がきつめ）
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // 1) セル間の継ぎ目（原作の暗い縁）
+  ctx.fillStyle = t.gap;
+  ctx.fillRect(x, y, w, h);
+  // 2) 本体: 上端の艶 → 中間色 → 下端の影
+  roundRectPath(ctx, x+ins, y+ins, w-ins*2, h-ins*2, rad);
+  const g = ctx.createLinearGradient(x, y+ins, x, y+h-ins);
+  g.addColorStop(0.00, t.gloss);
+  g.addColorStop(0.075, t.gloss);      // 上端の艶は細く、切れ際をはっきりさせる
+  g.addColorStop(0.145, t.top);
+  g.addColorStop(0.50, t.mid);
+  g.addColorStop(0.82, t.bot);
+  g.addColorStop(1.00, t.dark);
+  ctx.fillStyle = g;
+  ctx.fill();
+  // 3) 左右のふちを暗くして丸みを出す（本体の形でクリップしてから重ねる）
+  ctx.save();
+  ctx.clip();
+  const side = ctx.createLinearGradient(x, 0, x+w, 0);
+  side.addColorStop(0.00, 'rgba(0,0,0,0.30)');
+  side.addColorStop(0.12, 'rgba(0,0,0,0)');
+  side.addColorStop(0.88, 'rgba(0,0,0,0)');
+  side.addColorStop(1.00, 'rgba(0,0,0,0.22)');
+  ctx.fillStyle = side;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+  ctx.restore();
+  return true;
+}
+
+// 一時的に別スキンで描く。「ほぼ透明」「完全透明」スキンでもHOLD/NEXT/ゴーストは
+// 見えないと操作のしようがないので、そこだけ「無地」で描くために使う。
+function withSkin(id, fn) {
+  const prevId = skinId, prevPpt = ppt2Theme;
+  skinId = id; ppt2Theme = (id === 'ppt2');
+  try { fn(); } finally { skinId = prevId; ppt2Theme = prevPpt; }
+}
+// 透明系スキンのときの代替スキン（それ以外はそのまま）
+function visibleSkinId() {
+  const st = currentSkin().style;
+  return (st === 'invisible' || st === 'blank') ? 'plain' : skinId;
+}
+
+// スキンを適用する（盤面・パレット・背景をまとめて切り替える）
+function applySkin(id) {
+  if (!SKINS.some(x => x.id === id)) id = 'plain';
+  skinId = id;
+  ppt2Theme = (id === 'ppt2');
+  document.body.classList.toggle('ppt2-theme', ppt2Theme);
+  // 地形パレットの色・選択中の描画カラーもスキンに合わせて再計算する
+  terrainColor = paletteColorFor(terrainType);
+  if (document.getElementById('colorPaletteWrap')) initPalette();
+  try { localStorage.setItem('tetren_skin', id); } catch(e) {}
+  if (cur) draw();
+}
+function loadSkin() {
+  let saved = null;
+  try { saved = localStorage.getItem('tetren_skin'); } catch(e) {}
+  applySkin(saved || 'plain');
+}
+
+// 角丸パス（ctx.roundRect が無い環境向けのフォールバック付き）
+function roundRectPath(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
+  ctx.closePath();
+}
+
+// スキンに応じて1マス描く。x,y はセル左上、size は1辺の長さ。
+function drawSkinCell(ctx, x, y, size, color, alpha=1) {
+  // ぷよテト風は画像に枠もハイライトも含まれるのでセル全面に描く
+  if (ppt2Theme && drawPPT2Cell(ctx, x, y, size, size, color, alpha)) return;
+  const isGarbage = (color === GARBAGE_COLOR);
+  const type = isGarbage ? null : COLOR_TO_TYPE[color];
+  const col = type ? currentSkin().colors[type] : color;
+  // おじゃまは見分けやすさ優先で、どのスキンでも同じ描き方にする
+  const style = isGarbage ? 'bevel' : currentSkin().style;
+  const k = size / BS;             // 30px基準の倍率（ミニ表示やデカミノでも崩れないように）
+  const x1 = x + 1, y1 = y + 1, w = size - 2, h = size - 2;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (style === 'gloss') {
+    const g = ctx.createLinearGradient(x1, y1, x1, y1 + h);
+    g.addColorStop(0,    lighten(col, 0.55));
+    g.addColorStop(0.45, col);
+    g.addColorStop(0.5,  darken(col, 0.12));
+    g.addColorStop(1,    darken(col, 0.38));
+    roundRectPath(ctx, x1, y1, w, h, 5*k); ctx.fillStyle = g; ctx.fill();
+    const gl = ctx.createLinearGradient(x1, y1, x1, y1 + h*0.5);
+    gl.addColorStop(0, 'rgba(255,255,255,0.55)');
+    gl.addColorStop(1, 'rgba(255,255,255,0)');
+    roundRectPath(ctx, x1+2.5*k, y1+1.5*k, w-5*k, h*0.40, 4*k); ctx.fillStyle = gl; ctx.fill();
+    roundRectPath(ctx, x1+0.5, y1+0.5, w-1, h-1, 5*k);
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = Math.max(1, k); ctx.stroke();
+  } else if (style === 'matte') {
+    roundRectPath(ctx, x1, y1, w, h, 3*k); ctx.fillStyle = col; ctx.fill();
+    roundRectPath(ctx, x1+1.5*k, y1+1.5*k, w-3*k, h-3*k, 2*k);
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = Math.max(1, k); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,0.10)'; ctx.fillRect(x1, y1 + h - 3*k, w, 3*k);
+  } else if (style === 'dot') {
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.fillStyle = darken(col, 0.22);
+    const d = Math.max(2, Math.round(4*k));
+    for (let yy = y1 + d; yy < y1 + h - d*0.5; yy += d*2)
+      for (let xx = x1 + d; xx < x1 + w - d*0.5; xx += d*2)
+        ctx.fillRect(xx, yy, d, d);
+    ctx.fillStyle = 'rgba(255,255,255,0.32)'; ctx.fillRect(x1, y1, w, Math.max(1, 2*k));
+    ctx.strokeStyle = darken(col, 0.55);
+    ctx.lineWidth = Math.max(1, 2*k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'blank') {
+    // 盤面には何も描かない（置いた場所を完全に記憶する練習用）。
+    // ここで return すると末尾の ctx.restore() を飛ばしてしまい、
+    // save/restore が釣り合わずに以降の描画が崩れるので、何もせず下まで抜ける。
+  } else if (style === 'invisible') {
+    // ほぼ見えない。目を凝らせば分かる程度にだけ色を残す（記憶して積む練習用）
+    ctx.globalAlpha = alpha * 0.03;
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.globalAlpha = alpha * 0.04;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(1, k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'flat') {
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.strokeStyle = darken(col, 0.38);
+    ctx.lineWidth = Math.max(1, k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+  } else if (style === 'glass') {
+    // ほぼ透明。中身はうっすら色が乗る程度で、枠でミノを見分ける
+    ctx.globalAlpha = alpha * 0.13;
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(1.5, 2*k);
+    ctx.strokeRect(x1 + ctx.lineWidth/2, y1 + ctx.lineWidth/2, w - ctx.lineWidth, h - ctx.lineWidth);
+    ctx.globalAlpha = alpha * 0.25;
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillRect(x1 + 3*k, y1 + 3*k, w - 6*k, Math.max(1, 2*k));
+  } else {
+    // bevel（クラシック）
+    ctx.fillStyle = col; ctx.fillRect(x1, y1, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(x1, y1, w, 4*k); ctx.fillRect(x1, y1, 4*k, h);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(x1, y1 + h - 4*k, w, 4*k); ctx.fillRect(x1 + w - 4*k, y1, 4*k, h);
+  }
+  ctx.restore();
+}
+
 // ===== Canvas =====
 const boardCanvas = document.getElementById('boardCanvas');
 const boardCtx    = boardCanvas.getContext('2d');
@@ -638,8 +1225,16 @@ let showGhost = true;
 let showAxis  = false;
 let lastGarbageCol = null;
 let downHeld = false, lastSoftDrop = 0;
-const SOFT_DROP_RATE = 50;
+// 画面ボタン・長押しのソフトドロップもキーボードと同じ経路に流し、
+// 「ソフトドロップ速度／SDF」の設定を1か所で効かせる
+let softHeld = false, softAccum = 0;
 let digMode = false, digCount = 0, digInterval = 3;
+let digTriggerType = 'mino';  // トリガー種別: 'mino'=ミノごと / 'time'=秒数
+let timeDigInterval = 3;      // 何秒ごとに競り上がるか（0.5〜60）
+let timeDigLastTs = 0;        // 秒数モードで直近せりあがりを起こした時刻（ts基準・0=未初期化）
+let pendingDigRows = 0;       // 設置待ちで溜まっている段数
+let digStaged = false;        // この周期ぶんを溜まりへ積んだか（1秒前に積む）
+const DIG_PENDING_LIMIT = 30; // これ以上溜まったら相殺を待たず一気に積む
 let ren = 0;
 let lastWasRotation = false;
 let lastKickIndex = 0;
@@ -744,43 +1339,44 @@ function doHold(){
 
 // ===== ロック =====
 function resetLock(){if(lockTimer){clearTimeout(lockTimer);lockTimer=null;}isLocking=false;}
-function startLock(){if(!isLocking){isLocking=true;lockTimer=setTimeout(lock,500);}}
+function startLock(){if(!isLocking){isLocking=true;lockTimer=setTimeout(lock,lockMs());}}
 
 // ===== 地形編集 =====
-const PALETTE_COLORS = [
-  {label:'オート（なぞった形のミノ色になる）', color:'AUTO'},
-  {label:'おじゃま', color:GARBAGE_COLOR},
-  {label:'I', color:'#22d3ee'},{label:'O', color:'#facc15'},
-  {label:'T', color:'#a855f7'},{label:'S', color:'#4ade80'},
-  {label:'Z', color:'#f87171'},{label:'J', color:'#60a5fa'},
-  {label:'L', color:'#fb923c'},
-];
+// 色ではなく種別で持つ。スキンを変えたら色は pieceColor() から引き直す
+const PALETTE_TYPES = ['AUTO', null, 'I','O','T','S','Z','J','L'];
+let terrainType = null;   // 選択中のパレット種別（おじゃまは null、オートは 'AUTO'）
+function paletteColorFor(type){
+  if(!type || type === 'AUTO') return GARBAGE_COLOR;   // オートはおじゃま色で置き始める
+  return pieceColor(type);
+}
 
 function initPalette(){
   const wrap = document.getElementById('colorPaletteWrap');
+  if(!wrap) return;
   wrap.innerHTML = '';
-  PALETTE_COLORS.forEach(({label, color}) => {
+  PALETTE_TYPES.forEach(type => {
     const btn = document.createElement('button');
-    btn.className = 'color-swatch' + (color===terrainColor?' sel':'');
-    btn.title = label;
-    btn.dataset.color = color;
-    btn.style.background = (color==='AUTO') ? GARBAGE_COLOR : color;
-    if(color==='AUTO'){
+    btn.className = 'color-swatch' + (type===terrainType?' sel':'');
+    btn.title = type==='AUTO' ? 'オート（なぞった形のミノ色になる）' : (type || 'おじゃま');
+    btn.dataset.type = (type === null) ? '' : type;
+    btn.style.background = paletteColorFor(type);
+    if(type==='AUTO'){
       // 「オート」は枠に文字が入らないのでAの1文字だけ載せる
       btn.textContent = 'A';
       btn.style.color = '#e5e7eb';
       btn.style.font = 'bold 14px/1 Arial, sans-serif';
     }
-    btn.addEventListener('click', () => selectTerrainColor(color));
+    btn.addEventListener('click', () => selectTerrainColor(type));
     wrap.appendChild(btn);
   });
 }
 
-function selectTerrainColor(color){
-  terrainColor = color;
+function selectTerrainColor(type){
+  terrainType = type;
+  terrainColor = (type === 'AUTO') ? 'AUTO' : paletteColorFor(type);
   autoGroup = [];   // 色を選び直したら、作りかけのミノは打ち切る
   document.querySelectorAll('.color-swatch').forEach(b => {
-    b.classList.toggle('sel', b.dataset.color===color);
+    b.classList.toggle('sel', (b.dataset.type || null) === type);
   });
 }
 
@@ -839,7 +1435,7 @@ function applyAutoAt(row,col){
   autoGroup.push([row,col]);
   if(autoGroup.length===4){
     const type = AUTO_SHAPES[AUTO_SHAPES._key(autoGroup)];
-    if(type){ const col2=PIECE_DEF[type].color; for(const[r,c] of autoGroup) board[r][c]=col2; }
+    if(type){ const col2=pieceColor(type); for(const[r,c] of autoGroup) board[r][c]=col2; }
     autoGroup = [];   // 次はまたどこからでも置ける
   }
   return true;
@@ -892,9 +1488,9 @@ const SWIPE_REV  = 28;  // 方向転換判定距離(px)
 const DAS_DELAY  = 200; // 連続移動開始遅延(ms)
 const LONG_PRESS = 250; // 長押し判定(ms)
 const MOVE_ITV   = 80;  // 連続移動間隔(ms)
-const SOFT_ITV   = 55;  // ソフトドロップ間隔(ms)
 
 function stopTouchLoops(){
+  softHeld = false;
   if(touchLoopTimer){clearInterval(touchLoopTimer);touchLoopTimer=null;}
   if(touchLongPressTimer){clearTimeout(touchLongPressTimer);touchLongPressTimer=null;}
   if(touchDasTimer){clearTimeout(touchDasTimer);touchDasTimer=null;}
@@ -902,6 +1498,7 @@ function stopTouchLoops(){
 
 // 1マス移動 → DAS後に連続移動開始
 function beginHMove(dir, curX){
+  softHeld = false;
   if(touchLoopTimer){clearInterval(touchLoopTimer);touchLoopTimer=null;}
   if(touchDasTimer){clearTimeout(touchDasTimer);touchDasTimer=null;}
   touchGesture = dir < 0 ? 'left' : 'right';
@@ -931,8 +1528,7 @@ boardCanvas.addEventListener('touchstart', e => {
   touchLongPressTimer = setTimeout(() => {
     if(touchGesture === null && !gameOver){
       touchGesture = 'softDrop';
-      softDrop(); draw();
-      touchLoopTimer = setInterval(() => { if(!gameOver){ softDrop(); draw(); } }, SOFT_ITV);
+      startSoftDropBtn();
     }
   }, LONG_PRESS);
 }, {passive:false});
@@ -1007,20 +1603,48 @@ boardCanvas.addEventListener('touchcancel', () => {
 });
 
 // ===== 掘り練習 =====
+function updateDigIntervalDisplay(){
+  const isTime = digTriggerType === 'time';
+  const v = document.getElementById('digIntervalVal');
+  const u = document.getElementById('digIntervalUnit');
+  if(v) v.textContent = isTime ? timeDigInterval : digInterval;
+  if(u) u.textContent = isTime ? '秒ごと' : '個ごと';
+}
+function setDigTriggerType(type){
+  digTriggerType = type;
+  // ボタンから呼ばれたときだけでなく、復元や初期化でも見た目をそろえる
+  const radio = document.getElementById(type === 'time' ? 'digTypeTime' : 'digTypeMino');
+  if(radio) radio.checked = true;
+  digCount = 0;
+  timeDigLastTs = 0;
+  pendingDigRows = 0;
+  digStaged = false;
+  updateDigIntervalDisplay();
+  updateDigCounter();
+  drawDigPreview();
+  saveDigSetting();
+}
 function changeDigInterval(delta){
-  digInterval=Math.min(20,Math.max(1,digInterval+delta));
-  document.getElementById('digIntervalVal').textContent=digInterval;
+  if(digTriggerType === 'time'){
+    // 全域を0.1秒刻みで調整する（0.5〜60秒）。
+    // 小数の誤差が溜まらないよう毎回1桁に丸める。
+    const next = +(timeDigInterval + delta * 0.1).toFixed(1);
+    timeDigInterval = Math.min(60, Math.max(0.5, next));
+  } else {
+    digInterval = Math.min(20, Math.max(1, digInterval + delta));
+  }
+  updateDigIntervalDisplay();
   updateDigCounter();
   saveDigSetting();
 }
 
 // せりあがりの間隔設定は、リセットしてもページを閉じても保持する。
-// 保存先はPC版と同じ tetren_dig（スマホ版が使うのは「個ごと」の値だけ）
+// 保存先はPC版と同じ tetren_dig
 function saveDigSetting(){
-  let d = {};
-  try { d = JSON.parse(localStorage.getItem('tetren_dig')) || {}; } catch(e) {}
-  d.mino = digInterval;
-  try { localStorage.setItem('tetren_dig', JSON.stringify(d)); } catch(e) {}
+  try {
+    localStorage.setItem('tetren_dig', JSON.stringify(
+      { type: digTriggerType, mino: digInterval, time: timeDigInterval }));
+  } catch(e) {}
 }
 function loadDigSetting(){
   let raw=null;
@@ -1028,20 +1652,27 @@ function loadDigSetting(){
   if(raw){
     try {
       const d = JSON.parse(raw);
+      if(d.type === 'mino' || d.type === 'time') digTriggerType = d.type;
       if(Number.isFinite(d.mino)) digInterval = Math.min(20, Math.max(1, d.mino));
+      if(Number.isFinite(d.time)) timeDigInterval = Math.min(60, Math.max(0.5, d.time));
     } catch(e) {}
   }
-  const el = document.getElementById('digIntervalVal');
-  if(el) el.textContent = digInterval;
+  const radio = document.getElementById(digTriggerType === 'time' ? 'digTypeTime' : 'digTypeMino');
+  if(radio) radio.checked = true;
+  updateDigIntervalDisplay();
 }
 function toggleDigMode(){
   digMode=!digMode; digCount=0;
+  timeDigLastTs=0;
+  pendingDigRows=0;   // 溜まっていたぶんは持ち越さない
+  digStaged=false;
   const btn=document.getElementById('digBtn');
   const diRow=document.getElementById('diRow');
   if(digMode){
     btn.textContent='せりあがり';
     btn.style.cssText='background:#0891b2;border-color:#06b6d4;color:#fff;';
     diRow.style.display='flex';
+    document.getElementById('digTypeRow').style.display='block';
     document.getElementById('holeRow').style.display='block';
     if(renMode){
       renMode=false;
@@ -1061,15 +1692,67 @@ function toggleDigMode(){
     btn.textContent='せりあがり';
     btn.style.cssText='';
     diRow.style.display='none';
+    document.getElementById('digTypeRow').style.display='none';
     document.getElementById('holeRow').style.display='none';
   }
   updateDigCounter();
+  drawDigPreview();
 }
-function updateDigCounter(){
+function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(!digMode){el.textContent='';return;}
-  const next=digInterval-(digCount%digInterval);
-  el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>個で競り上げ`;
+  const isTime = digTriggerType === 'time';
+  const next = isTime
+    ? (remainSecOverride !== undefined ? remainSecOverride : timeDigInterval)
+    : digInterval-(digCount%digInterval);
+  const unit = isTime ? '秒' : '個';
+  el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>${unit}で競り上げ`;
+}
+// 次に何段上がるかを盤面の外に予告として出す
+function drawDigPreview(){
+  const box=document.getElementById('digPreview');
+  if(!box) return;
+  if(!digMode || digTriggerType !== 'time'){ box.style.display='none'; return; }
+  box.style.display='flex';
+  document.getElementById('digPreviewNext').textContent='次 1段';
+  const pend=document.getElementById('digPreviewPending');
+  // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
+  if(opts.digOnLock)       pend.textContent='溜まり '+pendingDigRows+'段';
+  else if(pendingDigRows)  pend.textContent='まもなく '+pendingDigRows+'段';
+  else                     pend.textContent='';
+}
+// 時間経過ぶんを溜める（せりあがりの1秒前に積む）
+function queueDigRows(){ pendingDigRows += 1; }
+// 溜まっているぶんをまとめて上げる
+function flushPendingDig(){
+  if(!pendingDigRows) return;
+  const n=pendingDigRows;
+  pendingDigRows=0;
+  for(let i=0;i<n;i++) addGarbage(false);
+  updateDigCounter();
+  drawDigPreview();
+}
+// 攻撃したぶんだけ溜まりを減らす（相殺）。0以下になればせりあがらない
+function offsetPendingDig(atk){
+  if(!atk || !pendingDigRows) return;
+  pendingDigRows=Math.max(0, pendingDigRows-atk);
+  updateDigCounter(); drawDigPreview();
+}
+// ===== 火力（相殺に使う攻撃ライン数）=====
+const ATK_LINE  = [0, 0, 1, 2, 4];          // 消したライン数で引く
+const ATK_TSPIN = [0, 2, 4, 6];             // Tスピンの消しライン数で引く（1〜3）
+const ATK_REN   = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5];  // REN数で引く（11以降は5）
+const ATK_PERFECT = 10;
+function attackPower(cleared, tSpin, wasB2B, isPerfect){
+  if(!cleared) return 0;
+  let a;
+  if(tSpin === 'mini')      a = 0;
+  else if(tSpin === 'full') a = ATK_TSPIN[cleared] ?? 0;
+  else                      a = ATK_LINE[cleared] ?? 0;
+  if(wasB2B && (cleared === 4 || tSpin === 'full')) a += 1;   // B2B
+  a += ATK_REN[Math.min(ren, 11)];                            // REN（renはここでは加算済み）
+  if(isPerfect) a += ATK_PERFECT;                             // パーフェクトクリア
+  return a;
 }
 
 // ===== ミノを捨てる =====
@@ -1136,7 +1819,7 @@ function lock(){
   saveSnapshot();
   const tSpin=detectTSpin();
   lastWasRotation=false;
-  const col_=PIECE_DEF[cur.type].color;
+  const col_=pieceColor(cur.type);
   if(dekaMode){
     for(const[r,c] of PIECE_DEF[cur.type].cells[cur.state]){
       const lr=cur.row+r,lc=cur.col+c;
@@ -1151,8 +1834,18 @@ function lock(){
   if(renMode) restoreRenWalls();
   const isPerfect=cleared>0&&board.every(row=>row.every(v=>!v));
   if(cleared>0){ren++;}else{ren=0;}
+  const wasB2B=b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared,tSpin,isPerfect);
-  if(digMode){digCount++;updateDigCounter();if(digCount%digInterval===0)addGarbage(false);}
+  // せりあがり（ミノごと）
+  if(digMode && digTriggerType==='mino'){
+    digCount++; updateDigCounter();
+    if(digCount%digInterval===0) addGarbage(false);
+  }
+  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
+  if(digMode && digTriggerType==='time'){
+    offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
+    if(opts.digOnLock) flushPendingDig();
+  }
   spawn(); draw();
 }
 
@@ -1317,30 +2010,29 @@ function toggleRenMode(){
 
 // ===== 描画 =====
 function drawBlock(ctx,c,r,color,alpha=1){
-  ctx.save(); ctx.globalAlpha=alpha;
-  ctx.fillStyle=color; ctx.fillRect(c*BS+1,r*BS+1,BS-2,BS-2);
-  ctx.fillStyle='rgba(255,255,255,0.25)';
-  ctx.fillRect(c*BS+1,r*BS+1,BS-2,4); ctx.fillRect(c*BS+1,r*BS+1,4,BS-2);
-  ctx.fillStyle='rgba(0,0,0,0.25)';
-  ctx.fillRect(c*BS+1,r*BS+BS-5,BS-2,4); ctx.fillRect(c*BS+BS-5,r*BS+1,4,BS-2);
-  ctx.restore();
+  drawSkinCell(ctx, c*BS, r*BS, BS, color, alpha);
 }
 // デカミノモード用: 論理セル1つを2BS×2BSの大きなブロックとして描画
 function drawBigBlock(ctx,c,r,color,alpha=1){
-  const sz=BS*2;
-  ctx.save(); ctx.globalAlpha=alpha;
-  ctx.fillStyle=color; ctx.fillRect(c*BS+1,r*BS+1,sz-2,sz-2);
-  ctx.fillStyle='rgba(255,255,255,0.25)';
-  ctx.fillRect(c*BS+1,r*BS+1,sz-2,6); ctx.fillRect(c*BS+1,r*BS+1,6,sz-2);
-  ctx.fillStyle='rgba(0,0,0,0.25)';
-  ctx.fillRect(c*BS+1,r*BS+sz-7,sz-2,6); ctx.fillRect(c*BS+sz-7,r*BS+1,6,sz-2);
-  ctx.restore();
+  drawSkinCell(ctx, c*BS, r*BS, BS*2, color, alpha);
 }
 
 function drawBoard(){
-  boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
-  boardCtx.strokeStyle='#1f2937'; boardCtx.lineWidth=0.5;
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
+  if(ppt2Theme){
+    // 空きマスのタイルを敷き詰める（継ぎ目もタイルに含まれる）
+    boardCtx.fillStyle=ppt2BgPattern();
+    boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
+    // 原作同様、盤面最上部に落ちる影
+    const shade=boardCtx.createLinearGradient(0,0,0,BS*1.6);
+    shade.addColorStop(0,'rgba(0,0,10,0.55)');
+    shade.addColorStop(1,'rgba(0,0,10,0)');
+    boardCtx.fillStyle=shade;
+    boardCtx.fillRect(0,0,COLS*BS,BS*1.6);
+  } else {
+    boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
+    boardCtx.strokeStyle='#1f2937'; boardCtx.lineWidth=0.5;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
+  }
   // 固定ブロック
   if(dekaMode){
     for(let r=BUF;r<TROW;r+=2) for(let c=0;c<COLS;c+=2)
@@ -1349,7 +2041,7 @@ function drawBoard(){
     for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) if(board[r][c]) drawBlock(boardCtx,c,r-BUF,board[r][c]);
   }
   if(!gameOver&&showGhost){
-    const gr=ghostRow(),cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    const gr=ghostRow(),cells=PIECE_DEF[cur.type].cells[cur.state],color=pieceColor(cur.type);
     if(dekaMode){
       for(const[r,c] of cells){const vr0=(gr+r)*2-BUF,vc0=(cur.col+c)*2;if(vr0+1>=0)drawBigBlock(boardCtx,vc0,Math.max(vr0,0),color,0.2);}
     } else {
@@ -1357,7 +2049,7 @@ function drawBoard(){
     }
   }
   if(!gameOver){
-    const cells=PIECE_DEF[cur.type].cells[cur.state],color=PIECE_DEF[cur.type].color;
+    const cells=PIECE_DEF[cur.type].cells[cur.state],color=pieceColor(cur.type);
     if(dekaMode){
       for(const[r,c] of cells){const vr0=(cur.row+r)*2-BUF,vc0=(cur.col+c)*2;if(vr0>=-1)drawBigBlock(boardCtx,vc0,Math.max(vr0,0),color);}
     } else {
@@ -1396,20 +2088,18 @@ function drawBoard(){
 let MINI_BS = 15;
 function drawMini(ctx,type,yOff,w,h){
   if(!type) return;
-  const cells=PIECE_DEF[type].cells[0],color=PIECE_DEF[type].color;
+  const cells=PIECE_DEF[type].cells[0];
   const minC=Math.min(...cells.map(c=>c[1])),maxC=Math.max(...cells.map(c=>c[1]));
   const minR=Math.min(...cells.map(c=>c[0])),maxR=Math.max(...cells.map(c=>c[0]));
   const bw=maxC-minC+1,bh=maxR-minR+1;
   const bs=Math.min(Math.floor((w-4)/(bw)),Math.floor((h-4)/(bh)),MINI_BS);
   const sx=Math.floor((w-bw*bs)/2),sy=yOff+Math.floor((h-bh*bs)/2);
-  ctx.save();
-  for(const[r,c] of cells){
-    const px=sx+(c-minC)*bs,py=sy+(r-minR)*bs;
-    ctx.fillStyle=color; ctx.fillRect(px+1,py+1,bs-2,bs-2);
-    ctx.fillStyle='rgba(255,255,255,0.25)';
-    ctx.fillRect(px+1,py+1,bs-2,3); ctx.fillRect(px+1,py+1,3,bs-2);
-  }
-  ctx.restore();
+  // 「ほぼ透明」「完全透明」でもここは見えないと操作できないので、無地で描く
+  withSkin(visibleSkinId(), () => {
+    for(const[r,c] of cells){
+      drawSkinCell(ctx, sx+(c-minC)*bs, sy+(r-minR)*bs, bs, pieceColor(type), 1);
+    }
+  });
 }
 
 function drawHold(){
@@ -1628,13 +2318,29 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
+                       sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
+                       digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
                        // 盤面・NEXT/HOLD・左メニューはそれぞれ余白の都合が違うので別々に持つ
                        boardScale:100, miniScale:100, menuScale:100 };
-const OPT_RANGE    = { holeKeep:[10,100,10],
+const OPT_RANGE    = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1],
                        boardScale:[50,200,5], miniScale:[50,200,5], menuScale:[60,200,5] };
+// DAS/ARR の上下限（ミリ秒）。PC版と同じ
+const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
+const FRAME_MS = 1000 / 60;
+function msToF(ms){ return Math.round(ms / FRAME_MS); }
+// 単位に応じて1目盛り動かす。フレーム表示のときはフレーム境界に丸める
+function stepInput(key, dir){
+  const [min, max] = INPUT_RANGE[key];
+  let v;
+  if (opts.inputUnit === 'F') v = (msToF(opts[key]) + dir) * FRAME_MS;
+  else                        v = opts[key] + dir;
+  setOption(key, Math.round(Math.min(max, Math.max(min, v))));
+}
+function startInputRepeat(key, dir){ startRepeat(() => stepInput(key, dir)); }
+function toggleInputUnit(){ setOption('inputUnit', opts.inputUnit === 'F' ? 'ms' : 'F'); }
 let opts = Object.assign({}, OPT_DEFAULTS);
 
 function saveOptions(){
@@ -1661,9 +2367,44 @@ function applyOptions(){
   check('axisCheck',  opts.axis);
   showGhost = opts.ghost;
   showAxis  = opts.axis;
-  const hk = document.getElementById('optHoleKeepVal');
-  if(hk) hk.textContent = opts.holeKeep;
+  check('optMultiHold2', opts.multiHold);
+  check('optDigOnLock', opts.digOnLock);
+  check('optSdfMode', opts.sdfMode);
+  const put = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  put('optHoleKeepVal',  opts.holeKeep);
+  put('optHoleKeepVal2', opts.holeKeep);
+  put('optSoftSpeedVal', opts.softSpeed);
+  put('optSdfVal', opts.sdf >= SDF_MAX ? '∞' : opts.sdf);
+  // SDFで指定するときは、従来の「ソフトドロップ速度」は隠す
+  const softRow = document.getElementById('optSoftRow');
+  const sdfRow  = document.getElementById('optSdfRow');
+  if (softRow) softRow.style.display = opts.sdfMode ? 'none' : '';
+  if (sdfRow)  sdfRow.style.display  = opts.sdfMode ? '' : 'none';
+  put('optSdfNote', opts.sdfMode
+    ? ('いまの落下設定だと毎秒 ' + (opts.sdf >= SDF_MAX ? '∞' : Math.round(softDropRows())) + ' 行')
+    : '');
+  put('optLockFramesVal', opts.lockFrames);
+  const inF = opts.inputUnit === 'F';
+  put('optDasVal', inF ? msToF(opts.dasMs) : opts.dasMs);
+  put('optArrVal', inF ? msToF(opts.arrMs) : opts.arrMs);
+  put('optDasUnit', inF ? ' F' : ' ms');
+  put('optArrUnit', inF ? ' F' : ' ms');
+  // もう一方の単位を説明文に併記する。0のときは何が起きるかを言葉で出す
+  put('optDasAlt', inF ? ('約' + opts.dasMs + 'ms') : ('約' + msToF(opts.dasMs) + 'フレーム'));
+  put('optArrAlt', opts.arrMs === 0 ? '一気に端まで'
+        : inF ? ('約' + opts.arrMs + 'ms') : ('約' + msToF(opts.arrMs) + 'フレーム'));
+  // 設定を変えたら、押しっぱなしのタイマーを張り直す
+  if (heldKey) { const k = heldKey; heldKey = null; startDAS(k); }
+  drawDigPreview();
   if(cur) draw();
+}
+// 「その他」の設定だけを初期値に戻す（表示の設定や配置は触らない）
+function resetOptions(){
+  const keep = { uiHidden: opts.uiHidden,
+                 boardScale: opts.boardScale, miniScale: opts.miniScale, menuScale: opts.menuScale };
+  opts = Object.assign({}, OPT_DEFAULTS, keep);
+  saveOptions();
+  applyOptions();
 }
 function setOption(key, value){ opts[key] = value; saveOptions(); applyOptions(); }
 function stepOption(key, dir){
@@ -1697,6 +2438,19 @@ window.addEventListener('blur', stopRepeat);
 // 1G = 1行/秒、20G = 1フレームで最下段。間は等比で補間する
 const GRAV_MIN_ROWS = 1 / 60;
 const GRAV_MAX_ROWS = TROW;
+// ソフトドロップ速度（行/秒）。1〜10 の目盛りに対応する。PC版と同じ表
+const SOFT_DROP_RPS = [8, 10, 12, 15, 20, 32, 55, 90, 150, 600];
+// SDF（Soft Drop Factor）: 「重力の何倍で落ちるか」での指定。41は∞
+const SDF_MIN = 5, SDF_MAX = 41;
+function softDropRows(){
+  if (!opts.sdfMode) return SOFT_DROP_RPS[Math.min(10, Math.max(1, opts.softSpeed)) - 1];
+  if (opts.sdf >= SDF_MAX) return TROW * 60;        // ∞（1フレームで最下段）
+  // 落下設定が0G（自由落下なし）だと倍率が効かないので、1G相当を下敷きにする
+  const baseG = Math.max(1, gravSpeed);
+  return gravRowsPerFrame(baseG) * 60 * opts.sdf;   // 行/秒
+}
+// 接地してから固定するまで（ミリ秒）。PC版と同じくフレーム指定を換算する
+function lockMs(){ return opts.lockFrames * 1000 / 60; }
 function gravRowsPerFrame(g){
   if(g <= 1)  return GRAV_MIN_ROWS;
   if(g >= 20) return GRAV_MAX_ROWS;
@@ -1727,8 +2481,18 @@ function changeGravSpeed(delta){
 // ===== ゲームループ =====
 let rafId;
 function loop(ts){
+  pollGamepad();          // コントローラは毎フレーム読む
   if(gameOver) return;
-  if(downHeld&&ts-lastSoftDrop>=SOFT_DROP_RATE){softDrop();lastSoftDrop=ts;}
+  // ソフトドロップ。キーボード・画面ボタン・長押しのどれも同じ経路を通る
+  if(downHeld || softHeld){
+    if(!lastSoftDrop) lastSoftDrop = ts;
+    const dt = Math.min(100, ts - lastSoftDrop);   // タブ復帰時に飛びすぎないよう上限を置く
+    lastSoftDrop = ts;
+    softAccum += softDropRows() * dt / 1000;
+    let n = Math.floor(softAccum);
+    softAccum -= n;
+    while(n-- > 0){ if(!softDrop()){ softAccum = 0; break; } }   // 着地したら端数は捨てる
+  } else { lastSoftDrop = 0; softAccum = 0; }
   // 0G は自由落下しない。1G以上は1フレームあたりの行数ぶん落とす
   if(gravSpeed > 0){
     gravAccum += gravRowsPerFrame(gravSpeed);
@@ -1737,6 +2501,27 @@ function loop(ts){
     if(moved > 0){ resetLock(); draw(); }
     if(!valid(cur,1,0,cur.state)){ gravAccum = 0; if(!isLocking) startLock(); }
   }
+
+  // せりあがり（時間経過）
+  if(digMode && digTriggerType === 'time'){
+    if(!timeDigLastTs) timeDigLastTs = ts;
+    const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
+    // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
+    if(remainMs <= 1000 && !digStaged){ queueDigRows(); digStaged = true; drawDigPreview(); }
+    if(remainMs <= 0){
+      // 溜まりが限界を超えていたら、相殺を待たず一気に積んで終わらせる
+      if(pendingDigRows >= DIG_PENDING_LIMIT) flushPendingDig();
+      // 「ミノ設置直後にせりあがり」がONのときは、置くまで溜めたままにする
+      else if(!opts.digOnLock) flushPendingDig();
+      digStaged = false;
+      timeDigLastTs = ts;
+      updateDigCounter(timeDigInterval);
+      drawDigPreview();
+    } else {
+      updateDigCounter(Math.max(0.1, Math.ceil(remainMs / 100) / 10));
+    }
+  }
+
   rafId=requestAnimationFrame(loop);
 }
 
@@ -1746,7 +2531,6 @@ function loop(ts){
 function dasMs(){ return opts.dasMs; }
 function arrMs(){ return opts.arrMs; }
 let dasTimer=null, arrTimer=null, heldKey=null;
-let softDropBtnTimer=null;
 
 // ARR 1回分の移動。0Fのときは一気に端まで動かす。
 function arrStep(dc){
@@ -1789,32 +2573,38 @@ function resumeDAS(){
   startDAS(key);
 }
 
-// 長押しで連続ソフトドロップ
+// 長押しで連続ソフトドロップ。実際に落とすのはゲームループ側
 function startSoftDropBtn(){
-  softDrop();
-  softDropBtnTimer=setInterval(()=>{ if(!gameOver) softDrop(); else stopSoftDropBtn(); }, 50);
+  softHeld = true; lastSoftDrop = 0; softAccum = 0;
+  softDrop(); draw();
 }
-function stopSoftDropBtn(){if(softDropBtnTimer){clearInterval(softDropBtnTimer);softDropBtnTimer=null;}}
+function stopSoftDropBtn(){ softHeld = false; }
 
 // ===== キーボード（接続時） =====
 document.addEventListener('keydown',e=>{
-  if(e.code==='KeyN'){e.preventDefault();startGame();return;}
+  // 設定画面を開いている間はゲーム操作を止める
+  if(document.getElementById('cfgOverlay').classList.contains('open')) return;
+  // リスタートとミノ欠けはゲームを始め直す操作なので、ゲームオーバー中も効かせる
+  if(kcMatch('restart',   e.code)){e.preventDefault();startGame();return;}
+  if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
   if(gameOver) return;
   if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();undo();return;}
   const c=e.code;
-  if(c==='ArrowLeft'){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
-  else if(c==='ArrowRight'){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
-  else if(c==='ArrowDown'){e.preventDefault();if(!downHeld){downHeld=true;lastSoftDrop=0;softDrop();}}
-  else if(c==='ArrowUp'||c==='KeyX'){e.preventDefault();if(!e.repeat)rotate(1);}
-  else if(c==='KeyZ'){e.preventDefault();if(!e.repeat)rotate(-1);}
-  else if(c==='Space'||c==='KeyC'){e.preventDefault();hardDrop();}
-  else if(c==='ShiftLeft'||c==='ShiftRight'){e.preventDefault();doHold();}
-  else if(c==='KeyU'){e.preventDefault();undo();}
+  if      (kcMatch('moveLeft',  c)){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
+  else if (kcMatch('moveRight', c)){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
+  else if (kcMatch('softDrop',  c)){e.preventDefault();if(!downHeld){downHeld=true;lastSoftDrop=0;softAccum=0;softDrop();}}
+  else if (kcMatch('rotateCW',  c)){e.preventDefault();if(!e.repeat)rotate(1);}
+  else if (kcMatch('rotateCCW', c)){e.preventDefault();if(!e.repeat)rotate(-1);}
+  else if (kcMatch('hardDrop',  c)){e.preventDefault();hardDrop();}
+  else if (kcMatch('hold',      c)){e.preventDefault();doHold();}
+  else if (kcMatch('discard',   c)){e.preventDefault();discardPiece();}
+  else if (kcMatch('undo',      c)){e.preventDefault();undo();}
+  else if (kcMatch('dpcAgain',  c)){e.preventDefault();if(!e.repeat)repeatDpc();}
 });
 document.addEventListener('keyup',e=>{
-  if(e.code==='ArrowLeft') releaseDir('L');
-  else if(e.code==='ArrowRight') releaseDir('R');
-  if(e.code==='ArrowDown') downHeld=false;
+  if      (kcMatch('moveLeft',  e.code)) releaseDir('L');
+  else if (kcMatch('moveRight', e.code)) releaseDir('R');
+  if (kcMatch('softDrop', e.code)) downHeld=false;
 });
 
 // ===== オーバーレイ =====
@@ -1833,7 +2623,7 @@ function startGame(){
   score=0;level=1;lines=0;b2b=false;gameOver=false;
   dropInterval=1000;lastDrop=0;undoStack=[];lastGarbageCol=null;
   gravAccum=0; updateGravDisplay();   // 落下速度そのものは維持する
-  downHeld=false;lastSoftDrop=0; heldDirs.length=0; stopDAS();
+  downHeld=false;softHeld=false;lastSoftDrop=0;softAccum=0; heldDirs.length=0; stopDAS();
   digCount=0; updateDigCounter();
   ren=0; lastWasRotation=false; lastKickIndex=0;
   if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
@@ -2031,7 +2821,9 @@ function initLayout(){
     if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
   });
   const optsEl = document.getElementById('opts');
-  const optsH = (optsEl && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
+  // 「表示」で隠したときは高さも食わない
+  const optsShown = optsEl && optsEl.style.display !== 'none';
+  const optsH = (optsShown && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
   const fixedH = (tablet ? 44 : 34) + ctrlH + optsH + 4*4 + 8;
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
@@ -2052,6 +2844,7 @@ function initLayout(){
 
   const bw=COLS*BS, bh=ROWS*BS;
   boardCanvas.width=bw; boardCanvas.height=bh;
+  ppt2BgPatternBoard = null;   // マスの大きさが変わったので、背景タイルは作り直す
 
   // サイドカラム幅。スマホは余った幅で埋め、タブレットは中身に合わせた幅のまま。
   // #wrap は中央寄せなので、余ったぶんは左右の空きとしてボタン配置に使える。
@@ -2080,6 +2873,7 @@ function initLayout(){
   }
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
+  document.getElementById('digPreview').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
   const palWrap=document.getElementById('colorPaletteWrap');
   palWrap.style.width=bw+'px';
@@ -2111,11 +2905,448 @@ addTouchBtn('btnSoft',
   () => stopSoftDropBtn()
 );
 
+// ===== キーコンフィグ（キーボードをつないだとき用。PC版と同じ tetren_keyconfig を共有）=====
+const KC_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',           d:['ArrowLeft',  null        ] },
+  { id:'moveRight',  label:'右移動',           d:['ArrowRight', null        ] },
+  { id:'softDrop',   label:'ソフトドロップ',   d:['ArrowDown',  null        ] },
+  { id:'rotateCW',   label:'時計回り回転',     d:['ArrowUp',    'KeyX'      ] },
+  { id:'rotateCCW',  label:'反時計回り回転',   d:['KeyZ',       null        ] },
+  { id:'hardDrop',   label:'ハードドロップ',   d:['Space',      'KeyC'      ] },
+  { id:'hold',       label:'ホールド',         d:['ShiftLeft',  'ShiftRight'] },
+  { id:'discard',    label:'ミノを捨てる',     d:['KeyA',       null        ] },
+  { id:'undo',       label:'1手戻す',          d:['KeyU',       null        ] },
+  { id:'dpcAgain',   label:'DPCセット再',      d:['KeyR',       null        ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:['KeyM',       null        ] },
+  { id:'restart',    label:'リスタート',       d:['KeyN',       null        ] },
+];
+let keyConfig = {};
+let kcWaiting = null;   // { id, slot }
+
+// プライベートウィンドウなどでは localStorage 自体が例外になる。
+// 保存できないだけで動くよう、読み書きはすべて握りつぶす。
+function initKeyConfig() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_keyconfig'); } catch (e) {}
+  let parsed = null;
+  if (raw) { try { parsed = JSON.parse(raw); } catch (e) {} }
+  // PC版にしかない操作（40LINE再スタートなど）の割り当ても消さずに持ち回る
+  keyConfig = (parsed && typeof parsed === 'object') ? Object.assign({}, parsed) : {};
+  KC_ACTIONS.forEach(a => { if (!Array.isArray(keyConfig[a.id])) keyConfig[a.id] = [...a.d]; });
+}
+function saveKeyConfig() {
+  try { localStorage.setItem('tetren_keyconfig', JSON.stringify(keyConfig)); } catch (e) {}
+}
+function resetKeyConfig() {
+  KC_ACTIONS.forEach(a => { keyConfig[a.id] = [...a.d]; });
+  saveKeyConfig();
+  buildKcRows();
+}
+function kcMatch(id, code) {
+  const c = keyConfig[id];
+  return !!c && (c[0] === code || c[1] === code);
+}
+function keyDisplayName(code) {
+  if (!code) return '—';
+  const map = {
+    'ArrowLeft':'←','ArrowRight':'→','ArrowUp':'↑','ArrowDown':'↓',
+    'Space':'Space','ShiftLeft':'Shift L','ShiftRight':'Shift R',
+    'Enter':'Enter','Backspace':'BS','Tab':'Tab','Escape':'Esc',
+  };
+  if (map[code]) return map[code];
+  if (code.startsWith('Key'))    return code.slice(3);
+  if (code.startsWith('Digit'))  return code.slice(5);
+  if (code.startsWith('Numpad')) return 'Num' + code.slice(6);
+  return code;
+}
+function kcBtnId(id, slot) { return 'kc_' + id + '_' + slot; }
+function renderKcBtn(id, slot) {
+  const btn = document.getElementById(kcBtnId(id, slot));
+  if (!btn) return;
+  const code = keyConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = keyDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+function cancelKcWait() {
+  if (!kcWaiting) return;
+  const { id, slot } = kcWaiting;
+  kcWaiting = null;
+  renderKcBtn(id, slot);
+}
+function startKeyWait(id, slot, btn) {
+  cancelKcWait();
+  kcWaiting = { id, slot };
+  btn.classList.add('waiting');
+  btn.textContent = 'キーを押して…';
+}
+function buildKcRows() {
+  const box = document.getElementById('kcRows');
+  if (!box) return;
+  cancelKcWait();
+  box.innerHTML = '';
+  KC_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = kcBtnId(a.id, slot);
+      btn.textContent = keyDisplayName(keyConfig[a.id][slot]);
+      if (!keyConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startKeyWait(a.id, slot, btn);
+      const del = document.createElement('button');
+      del.className = 'kc-del';
+      del.textContent = '×';
+      del.title = 'クリア';
+      del.onclick = () => { keyConfig[a.id][slot] = null; saveKeyConfig(); renderKcBtn(a.id, slot); };
+      wrap.appendChild(btn); wrap.appendChild(del);
+      row.appendChild(wrap);
+    });
+    box.appendChild(row);
+  });
+}
+// 割り当て待ちのキー取り込み。ゲーム操作より先に受け取る
+document.addEventListener('keydown', e => {
+  if (!kcWaiting) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.code === 'Escape') { cancelKcWait(); return; }
+  const { id, slot } = kcWaiting;
+  keyConfig[id][slot] = e.code;
+  kcWaiting = null;
+  saveKeyConfig();
+  renderKcBtn(id, slot);
+}, true);
+
+// ===== ゲームパッド（PC版と同じ tetren_gamepad を共有）=====
+// どのコントローラでも使えるよう、ボタン番号は固定せず「押して覚えさせる」方式にする。
+// 入力の表し方: ボタンは 'b3'、スティック／トリガーは 'a0+' 'a1-' のように軸と向きで持つ。
+const GP_ACTIONS = [
+  { id:'moveLeft',   label:'左移動',           d:['b14','a0-'] },
+  { id:'moveRight',  label:'右移動',           d:['b15','a0+'] },
+  { id:'softDrop',   label:'ソフトドロップ',   d:['b13','a1+'] },
+  { id:'hardDrop',   label:'ハードドロップ',   d:['b12','a1-'] },
+  { id:'rotateCW',   label:'時計回り回転',     d:['b0', 'b3' ] },
+  { id:'rotateCCW',  label:'反時計回り回転',   d:['b1', 'b2' ] },
+  { id:'hold',       label:'ホールド',         d:['b4', 'b5' ] },
+  { id:'discard',    label:'ミノを捨てる',     d:[null, null ] },
+  { id:'undo',       label:'1手戻す',          d:['b6', null ] },
+  { id:'dpcAgain',   label:'DPCセット再',      d:['b7', null ] },
+  { id:'missAgain',  label:'ミノ欠け再セット', d:[null, null ] },
+  { id:'restart',    label:'リスタート',       d:['b9', null ] },
+];
+const GP_AXIS_ON = 0.55;    // スティックをこれ以上倒したら「押した」とみなす
+const GP_AXIS_OFF = 0.35;   // 戻すときは緩めにしてバタつきを防ぐ
+let gpConfig = {};
+let gpPrev = {};            // 入力ID → 直前に押されていたか
+let gpActPrev = {};         // 操作ID → 直前に押されていたか
+let gpWaiting = null;       // 割り当て待ち {id, slot, btn}
+
+function loadGamepadConfig() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_gamepad'); } catch (e) {}
+  let parsed = null;
+  if (raw) { try { parsed = JSON.parse(raw); } catch (e) {} }
+  gpConfig = (parsed && typeof parsed === 'object') ? Object.assign({}, parsed) : {};
+  GP_ACTIONS.forEach(a => { if (!Array.isArray(gpConfig[a.id])) gpConfig[a.id] = [...a.d]; });
+}
+function saveGamepadConfig() {
+  try { localStorage.setItem('tetren_gamepad', JSON.stringify(gpConfig)); } catch (e) {}
+}
+function resetGamepadConfig() {
+  GP_ACTIONS.forEach(a => { gpConfig[a.id] = [...a.d]; });
+  saveGamepadConfig();
+  buildGpRows();
+}
+// 表示名。ボタン番号そのままだと分かりにくいので、標準配置の呼び名も添える
+const GP_NAMES = {
+  b0:'ボタン1 (A)', b1:'ボタン2 (B)', b2:'ボタン3 (X)', b3:'ボタン4 (Y)',
+  b4:'L1', b5:'R1', b6:'L2', b7:'R2', b8:'SELECT', b9:'START',
+  b10:'Lスティック押込', b11:'Rスティック押込',
+  b12:'十字 上', b13:'十字 下', b14:'十字 左', b15:'十字 右', b16:'ホーム',
+  'a0-':'Lスティック 左', 'a0+':'Lスティック 右',
+  'a1-':'Lスティック 上', 'a1+':'Lスティック 下',
+  'a2-':'Rスティック 左', 'a2+':'Rスティック 右',
+  'a3-':'Rスティック 上', 'a3+':'Rスティック 下',
+};
+function gpDisplayName(code) { return code ? (GP_NAMES[code] || code) : '—'; }
+function activeGamepad() {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const g of list) if (g && g.connected) return g;
+  return null;
+}
+function gpPressed(g) {
+  const set = {};
+  g.buttons.forEach((b, i) => { if (b && (b.pressed || b.value > 0.5)) set['b' + i] = true; });
+  g.axes.forEach((v, i) => {
+    const prevPos = gpPrev['a' + i + '+'], prevNeg = gpPrev['a' + i + '-'];
+    if (v >=  (prevPos ? GP_AXIS_OFF : GP_AXIS_ON)) set['a' + i + '+'] = true;
+    if (v <= -(prevNeg ? GP_AXIS_OFF : GP_AXIS_ON)) set['a' + i + '-'] = true;
+  });
+  return set;
+}
+function gpHas(id, set) {
+  const c = gpConfig[id];
+  return !!c && ((c[0] && set[c[0]]) || (c[1] && set[c[1]]));
+}
+function pollGamepad() {
+  const g = activeGamepad();
+  if (!g) return;
+  const set = gpPressed(g);
+  // 割り当て待ちなら、最初に押された入力を拾って終了
+  if (gpWaiting) {
+    for (const code in set) { if (!gpPrev[code]) { assignGpCode(code); break; } }
+    gpPrev = set;
+    return;
+  }
+  const now = {};
+  GP_ACTIONS.forEach(a => { now[a.id] = gpHas(a.id, set); });
+  const hit = id => now[id] && !gpActPrev[id];       // 押した瞬間だけ
+  const off = id => !now[id] && gpActPrev[id];       // 離した瞬間だけ
+
+  // ゲームオーバー中でも効く操作
+  if (hit('restart'))   startGame();
+  if (hit('missAgain')) repeatMiss();
+
+  if (!gameOver) {
+    // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
+    if (hit('moveLeft'))  { moveH(-1); pressDir('L'); }
+    if (off('moveLeft'))  releaseDir('L');
+    if (hit('moveRight')) { moveH(+1); pressDir('R'); }
+    if (off('moveRight')) releaseDir('R');
+    if (hit('softDrop'))  { if (!downHeld) { downHeld = true; lastSoftDrop = 0; softAccum = 0; softDrop(); } }
+    if (off('softDrop'))  downHeld = false;
+    if (hit('rotateCW'))  rotate(1);
+    if (hit('rotateCCW')) rotate(-1);
+    if (hit('hardDrop'))  hardDrop();
+    if (hit('hold'))      doHold();
+    if (hit('discard'))   discardPiece();
+    if (hit('undo'))      undo();
+    if (hit('dpcAgain'))  repeatDpc();
+  }
+  gpActPrev = now;
+  gpPrev = set;
+}
+function updateGpStatus() {
+  const el = document.getElementById('gpStatus');
+  if (!el) return;
+  const g = activeGamepad();
+  el.textContent = g ? ('接続中: ' + g.id) : 'コントローラが見つかりません。接続してから、どれかボタンを押してください。';
+  el.style.color = g ? '#4ade80' : '#9ca3af';
+}
+window.addEventListener('gamepadconnected',    updateGpStatus);
+window.addEventListener('gamepaddisconnected', updateGpStatus);
+
+function gpBtnId(id, slot) { return 'gp_' + id + '_' + slot; }
+function renderGpBtn(id, slot) {
+  const btn = document.getElementById(gpBtnId(id, slot));
+  if (!btn) return;
+  const code = gpConfig[id][slot];
+  btn.classList.remove('waiting');
+  btn.textContent = gpDisplayName(code);
+  btn.style.color = code ? '#f9fafb' : '#6b7280';
+}
+function startGpWait(id, slot, btn) {
+  if (gpWaiting) renderGpBtn(gpWaiting.id, gpWaiting.slot);
+  gpWaiting = { id, slot, btn };
+  btn.textContent = 'ボタンを押す…';
+  btn.classList.add('waiting');
+}
+function assignGpCode(code) {
+  if (!gpWaiting) return;
+  const { id, slot } = gpWaiting;
+  // 他の操作に同じ入力が割り当たっていたら外す（二重割り当てを防ぐ）
+  GP_ACTIONS.forEach(a => {
+    [0, 1].forEach(sl => {
+      if ((a.id !== id || sl !== slot) && gpConfig[a.id][sl] === code) {
+        gpConfig[a.id][sl] = null; renderGpBtn(a.id, sl);
+      }
+    });
+  });
+  gpConfig[id][slot] = code;
+  gpWaiting = null;
+  saveGamepadConfig();
+  renderGpBtn(id, slot);
+}
+function buildGpRows() {
+  const box = document.getElementById('gpRows');
+  if (!box) return;
+  box.innerHTML = '';
+  GP_ACTIONS.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'kc-row';
+    const label = document.createElement('span');
+    label.className = 'kc-label';
+    label.textContent = a.label;
+    row.appendChild(label);
+    [0, 1].forEach(slot => {
+      const wrap = document.createElement('div');
+      wrap.className = 'kc-slot';
+      const btn = document.createElement('button');
+      btn.className = 'kc-key';
+      btn.id = gpBtnId(a.id, slot);
+      btn.textContent = gpDisplayName(gpConfig[a.id][slot]);
+      if (!gpConfig[a.id][slot]) btn.style.color = '#6b7280';
+      btn.onclick = () => startGpWait(a.id, slot, btn);
+      const del = document.createElement('button');
+      del.className = 'kc-del';
+      del.textContent = '×';
+      del.title = 'クリア';
+      del.onclick = () => { gpConfig[a.id][slot] = null; saveGamepadConfig(); renderGpBtn(a.id, slot); };
+      wrap.appendChild(btn); wrap.appendChild(del);
+      row.appendChild(wrap);
+    });
+    box.appendChild(row);
+  });
+  updateGpStatus();
+}
+// 設定画面を開いている間も割り当てを拾えるよう、ループとは別に回しておく
+setInterval(() => { if (gpWaiting || gameOver) pollGamepad(); }, 1000/60);
+
+// ===== 設定モーダル =====
+// PC版と同じ構成のタブ式。いまは「表示」だけで、タブは今後増やす。
+function openConfig() {
+  document.getElementById('cfgOverlay').classList.add('open');
+  switchConfigTab('key');
+}
+function closeConfig() {
+  cancelKcWait();
+  saveKeyConfig();
+  document.getElementById('cfgOverlay').classList.remove('open');
+}
+// キーコンフィグの中の切り替え。開いているほうを覚えておき、戻ったときも同じ面を出す
+let kcSub = 'key';
+function switchKcSub(name) {
+  kcSub = name;
+  document.getElementById('kcSubTabKey').classList.toggle('active', name === 'key');
+  document.getElementById('kcSubTabPad').classList.toggle('active', name === 'pad');
+  document.getElementById('kcSubPaneKey').classList.toggle('active', name === 'key');
+  document.getElementById('kcSubPanePad').classList.toggle('active', name === 'pad');
+  if (name === 'pad') buildGpRows();
+}
+function switchConfigTab(name) {
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'],
+                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
+  for (const k in TABS) {
+    const [tab, pane] = TABS[k];
+    const t = document.getElementById(tab), p = document.getElementById(pane);
+    if (t) t.classList.toggle('active', k === name);
+    if (p) p.classList.toggle('active', k === name);
+  }
+  if (name === 'skin') renderSkinList();
+  if (name === 'ui')   renderUiList();
+  if (name === 'misc') applyOptions();
+  if (name === 'key')  { buildKcRows(); if (kcSub === 'pad') buildGpRows(); }
+}
+
+// ===== スキン選択 =====
+function renderSkinList() {
+  const list = document.getElementById('skinList');
+  if (!list) return;
+  list.innerHTML = '';
+  const sample = ['I','O','T','Z'];   // 見本に使うミノ
+  const bs = 24;
+  SKINS.forEach(sk => {
+    const card = document.createElement('button');
+    card.className = 'skin-card' + (sk.id === skinId ? ' selected' : '');
+    card.type = 'button';
+    const cv = document.createElement('canvas');
+    cv.width = bs * sample.length; cv.height = bs;
+    const cx = cv.getContext('2d');
+    // 見本を描く間だけスキンを差し替える
+    withSkin(sk.id, () => {
+      sample.forEach((t, i) => drawSkinCell(cx, i * bs, 0, bs, sk.colors[t], 1));
+    });
+    const name = document.createElement('div');
+    name.className = 'skin-name'; name.textContent = sk.name;
+    card.appendChild(cv); card.appendChild(name);
+    card.addEventListener('click', () => { applySkin(sk.id); renderSkinList(); });
+    list.appendChild(card);
+  });
+}
+
+// ===== 表示するメニューの切り替え =====
+// 使わないボタンを隠して画面をすっきりさせる。PC版と同じ仕組みで、
+// data-ui="〇〇" を付けた要素を opts.uiHidden でまとめて出し入れする。
+const UI_ITEMS = [
+  { id:'ghost',       label:'ゴースト' },
+  { id:'axis',        label:'軸表示' },
+  { id:'layout',      label:'配置編集' },
+  { id:'grav',        label:'落下設定' },
+  { id:'terrain',     label:'地形編集' },
+  { id:'dpc',         label:'DPCセット' },
+  { id:'miss',        label:'ミノ欠け' },
+  { id:'deka',        label:'デカミノモード' },
+  { id:'ren',         label:'RENモード' },
+  { id:'dig',         label:'せりあがり' },
+  { id:'shot',        label:'カンペ画像' },
+  { id:'reset',       label:'リセット' },
+  { id:'verSwitch',   label:'PC版へ' },
+  { id:'undoDiscard', label:'ミノ捨てる・戻す' },
+];
+// 既定値には置かない。「すべて表示」で丸ごと消したいため
+function uiHiddenMap() {
+  if (!opts.uiHidden || typeof opts.uiHidden !== 'object') opts.uiHidden = {};
+  return opts.uiHidden;
+}
+function isUiHidden(id) { return !!uiHiddenMap()[id]; }
+function applyUiHidden() {
+  const map = uiHiddenMap();
+  document.querySelectorAll('[data-ui]').forEach(el => {
+    // 戻すときは空文字にして、CSS側の指定に判断を返す
+    el.style.display = map[el.dataset.ui] ? 'none' : '';
+  });
+  // 「ミノ捨てる・戻す」を隠すと中央カラムの高さが変わるので組み直す
+  initLayout(); applyCtrlPos();
+  if (board) draw();
+}
+function setUiVisible(id, visible) {
+  const map = uiHiddenMap();
+  if (visible) delete map[id]; else map[id] = true;
+  saveOptions();
+  applyUiHidden();
+}
+function resetUiHidden() {
+  opts.uiHidden = {};
+  saveOptions();
+  applyUiHidden();
+  renderUiList();
+}
+function renderUiList() {
+  const box = document.getElementById('uiList');
+  if (!box) return;
+  box.innerHTML = '';
+  UI_ITEMS.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    const label = document.createElement('span');
+    label.className = 'opt-label';
+    label.textContent = it.label;
+    const tgl = document.createElement('label');
+    tgl.className = 'cfg-tgl';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !isUiHidden(it.id);
+    cb.addEventListener('change', () => setUiVisible(it.id, cb.checked));
+    const knob = document.createElement('span');
+    knob.className = 'tgl';
+    tgl.appendChild(cb); tgl.appendChild(knob);
+    row.appendChild(label); row.appendChild(tgl);
+    box.appendChild(row);
+  });
+}
+
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.28.1';
+const APP_VERSION = '1.37.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -2287,6 +3518,9 @@ function shotPointerDown(e, win, mode){
 // 保存した設定の読み込みは initLayout() より先に。
 // 盤面・NEXT・メニューの倍率は opts から読むので、
 // 後回しにすると初期表示だけ既定の大きさのままになる。
+initKeyConfig();
+loadGamepadConfig();
+loadSkin();
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
@@ -2296,6 +3530,8 @@ initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
+applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
+drawDigPreview();  // せりあがりの予告は、ONのときだけ出す
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
