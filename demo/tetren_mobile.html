@@ -319,6 +319,22 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .skin-card.selected { border-color:#6366f1; background:#1e243a; }
 .skin-card canvas { display:block; margin:0 auto 4px; max-width:100%; }
 .skin-name { font-size:11px; font-weight:bold; color:#e5e7eb; }
+/* せりあがりの種別（ミノ / 秒）。狭いので2つを横に並べるだけ */
+.dig-type { display:flex; gap:3px; margin-top:3px; }
+.dig-type label {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:2px;
+  background:#0d1117; border:1px solid #374151; border-radius:6px;
+  padding:5px 0; font-size:9px; color:#9ca3af; cursor:pointer;
+}
+.dig-type input { margin:0; width:10px; height:10px; }
+/* せりあがり予告（盤面の下） */
+#digPreview {
+  display:flex; align-items:center; justify-content:space-between;
+  background:#111827; border:1px solid #374151; border-radius:6px;
+  padding:4px 8px; font-size:10px; font-weight:bold; letter-spacing:0.5px;
+}
+#digPreviewNext    { color:#93c5fd; }
+#digPreviewPending { color:#fca5a5; }
 .cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
 .cfg-btns button {
   flex:1; padding:9px 0; border:none; border-radius:7px;
@@ -479,10 +495,23 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
     <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
     <div id="dig-info"></div>
+    <div id="digTypeRow" style="display:none;width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
+      <div class="dig-type">
+        <label><input type="radio" name="digTriggerType" id="digTypeMino"
+          onchange="setDigTriggerType('mino')" checked><span>ミノ</span></label>
+        <label><input type="radio" name="digTriggerType" id="digTypeTime"
+          onchange="setDigTriggerType('time')"><span>秒</span></label>
+      </div>
+    </div>
     <div class="di-row" id="diRow" style="display:none;">
-      <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span style="font-size:8px;color:#6b7280;">個ごと</span></div>
-      <button class="di-btn" onclick="changeDigInterval(+1)">›</button>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeDigInterval(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(-1))" ontouchend="stopRepeat()">‹</button>
+      <div class="di-val"><span id="digIntervalVal">3</span><br><span id="digIntervalUnit" style="font-size:8px;color:#6b7280;">個ごと</span></div>
+      <button class="di-btn"
+        onmousedown="startRepeat(()=>changeDigInterval(1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+        ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(1))" ontouchend="stopRepeat()">›</button>
     </div>
     <div id="holeRow" style="display:none;width:100%;">
       <div class="m-lbl" style="margin:4px 0 0;">穴継続率</div>
@@ -559,6 +588,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
           ⬇<span class="ctrl-lbl">DROP</span>
         </button>
       </div>
+    </div>
+
+    <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
+    <div id="digPreview" style="display:none;">
+      <span id="digPreviewNext"></span>
+      <span id="digPreviewPending"></span>
     </div>
 
     <div id="opts" data-ui="undoDiscard">
@@ -724,6 +759,15 @@ input:checked + .tgl::after { transform:translateX(10px); }
             <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません</span></span>
           <label class="cfg-tgl">
             <input type="checkbox" id="optMultiHold2" onchange="setOption('multiHold', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">ミノ設置直後にせりあがり
+            <span class="opt-note">せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigOnLock" onchange="setOption('digOnLock', this.checked)">
             <span class="tgl"></span>
           </label>
         </div>
@@ -1182,6 +1226,12 @@ let downHeld = false, lastSoftDrop = 0;
 // 「ソフトドロップ速度／SDF」の設定を1か所で効かせる
 let softHeld = false, softAccum = 0;
 let digMode = false, digCount = 0, digInterval = 3;
+let digTriggerType = 'mino';  // トリガー種別: 'mino'=ミノごと / 'time'=秒数
+let timeDigInterval = 3;      // 何秒ごとに競り上がるか（0.5〜60）
+let timeDigLastTs = 0;        // 秒数モードで直近せりあがりを起こした時刻（ts基準・0=未初期化）
+let pendingDigRows = 0;       // 設置待ちで溜まっている段数
+let digStaged = false;        // この周期ぶんを溜まりへ積んだか（1秒前に積む）
+const DIG_PENDING_LIMIT = 30; // これ以上溜まったら相殺を待たず一気に積む
 let ren = 0;
 let lastWasRotation = false;
 let lastKickIndex = 0;
@@ -1550,20 +1600,48 @@ boardCanvas.addEventListener('touchcancel', () => {
 });
 
 // ===== 掘り練習 =====
+function updateDigIntervalDisplay(){
+  const isTime = digTriggerType === 'time';
+  const v = document.getElementById('digIntervalVal');
+  const u = document.getElementById('digIntervalUnit');
+  if(v) v.textContent = isTime ? timeDigInterval : digInterval;
+  if(u) u.textContent = isTime ? '秒ごと' : '個ごと';
+}
+function setDigTriggerType(type){
+  digTriggerType = type;
+  // ボタンから呼ばれたときだけでなく、復元や初期化でも見た目をそろえる
+  const radio = document.getElementById(type === 'time' ? 'digTypeTime' : 'digTypeMino');
+  if(radio) radio.checked = true;
+  digCount = 0;
+  timeDigLastTs = 0;
+  pendingDigRows = 0;
+  digStaged = false;
+  updateDigIntervalDisplay();
+  updateDigCounter();
+  drawDigPreview();
+  saveDigSetting();
+}
 function changeDigInterval(delta){
-  digInterval=Math.min(20,Math.max(1,digInterval+delta));
-  document.getElementById('digIntervalVal').textContent=digInterval;
+  if(digTriggerType === 'time'){
+    // 全域を0.1秒刻みで調整する（0.5〜60秒）。
+    // 小数の誤差が溜まらないよう毎回1桁に丸める。
+    const next = +(timeDigInterval + delta * 0.1).toFixed(1);
+    timeDigInterval = Math.min(60, Math.max(0.5, next));
+  } else {
+    digInterval = Math.min(20, Math.max(1, digInterval + delta));
+  }
+  updateDigIntervalDisplay();
   updateDigCounter();
   saveDigSetting();
 }
 
 // せりあがりの間隔設定は、リセットしてもページを閉じても保持する。
-// 保存先はPC版と同じ tetren_dig（スマホ版が使うのは「個ごと」の値だけ）
+// 保存先はPC版と同じ tetren_dig
 function saveDigSetting(){
-  let d = {};
-  try { d = JSON.parse(localStorage.getItem('tetren_dig')) || {}; } catch(e) {}
-  d.mino = digInterval;
-  try { localStorage.setItem('tetren_dig', JSON.stringify(d)); } catch(e) {}
+  try {
+    localStorage.setItem('tetren_dig', JSON.stringify(
+      { type: digTriggerType, mino: digInterval, time: timeDigInterval }));
+  } catch(e) {}
 }
 function loadDigSetting(){
   let raw=null;
@@ -1571,20 +1649,27 @@ function loadDigSetting(){
   if(raw){
     try {
       const d = JSON.parse(raw);
+      if(d.type === 'mino' || d.type === 'time') digTriggerType = d.type;
       if(Number.isFinite(d.mino)) digInterval = Math.min(20, Math.max(1, d.mino));
+      if(Number.isFinite(d.time)) timeDigInterval = Math.min(60, Math.max(0.5, d.time));
     } catch(e) {}
   }
-  const el = document.getElementById('digIntervalVal');
-  if(el) el.textContent = digInterval;
+  const radio = document.getElementById(digTriggerType === 'time' ? 'digTypeTime' : 'digTypeMino');
+  if(radio) radio.checked = true;
+  updateDigIntervalDisplay();
 }
 function toggleDigMode(){
   digMode=!digMode; digCount=0;
+  timeDigLastTs=0;
+  pendingDigRows=0;   // 溜まっていたぶんは持ち越さない
+  digStaged=false;
   const btn=document.getElementById('digBtn');
   const diRow=document.getElementById('diRow');
   if(digMode){
     btn.textContent='せりあがり';
     btn.style.cssText='background:#0891b2;border-color:#06b6d4;color:#fff;';
     diRow.style.display='flex';
+    document.getElementById('digTypeRow').style.display='block';
     document.getElementById('holeRow').style.display='block';
     if(renMode){
       renMode=false;
@@ -1604,15 +1689,67 @@ function toggleDigMode(){
     btn.textContent='せりあがり';
     btn.style.cssText='';
     diRow.style.display='none';
+    document.getElementById('digTypeRow').style.display='none';
     document.getElementById('holeRow').style.display='none';
   }
   updateDigCounter();
+  drawDigPreview();
 }
-function updateDigCounter(){
+function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(!digMode){el.textContent='';return;}
-  const next=digInterval-(digCount%digInterval);
-  el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>個で競り上げ`;
+  const isTime = digTriggerType === 'time';
+  const next = isTime
+    ? (remainSecOverride !== undefined ? remainSecOverride : timeDigInterval)
+    : digInterval-(digCount%digInterval);
+  const unit = isTime ? '秒' : '個';
+  el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>${unit}で競り上げ`;
+}
+// 次に何段上がるかを盤面の外に予告として出す
+function drawDigPreview(){
+  const box=document.getElementById('digPreview');
+  if(!box) return;
+  if(!digMode || digTriggerType !== 'time'){ box.style.display='none'; return; }
+  box.style.display='flex';
+  document.getElementById('digPreviewNext').textContent='次 1段';
+  const pend=document.getElementById('digPreviewPending');
+  // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
+  if(opts.digOnLock)       pend.textContent='溜まり '+pendingDigRows+'段';
+  else if(pendingDigRows)  pend.textContent='まもなく '+pendingDigRows+'段';
+  else                     pend.textContent='';
+}
+// 時間経過ぶんを溜める（せりあがりの1秒前に積む）
+function queueDigRows(){ pendingDigRows += 1; }
+// 溜まっているぶんをまとめて上げる
+function flushPendingDig(){
+  if(!pendingDigRows) return;
+  const n=pendingDigRows;
+  pendingDigRows=0;
+  for(let i=0;i<n;i++) addGarbage(false);
+  updateDigCounter();
+  drawDigPreview();
+}
+// 攻撃したぶんだけ溜まりを減らす（相殺）。0以下になればせりあがらない
+function offsetPendingDig(atk){
+  if(!atk || !pendingDigRows) return;
+  pendingDigRows=Math.max(0, pendingDigRows-atk);
+  updateDigCounter(); drawDigPreview();
+}
+// ===== 火力（相殺に使う攻撃ライン数）=====
+const ATK_LINE  = [0, 0, 1, 2, 4];          // 消したライン数で引く
+const ATK_TSPIN = [0, 2, 4, 6];             // Tスピンの消しライン数で引く（1〜3）
+const ATK_REN   = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5];  // REN数で引く（11以降は5）
+const ATK_PERFECT = 10;
+function attackPower(cleared, tSpin, wasB2B, isPerfect){
+  if(!cleared) return 0;
+  let a;
+  if(tSpin === 'mini')      a = 0;
+  else if(tSpin === 'full') a = ATK_TSPIN[cleared] ?? 0;
+  else                      a = ATK_LINE[cleared] ?? 0;
+  if(wasB2B && (cleared === 4 || tSpin === 'full')) a += 1;   // B2B
+  a += ATK_REN[Math.min(ren, 11)];                            // REN（renはここでは加算済み）
+  if(isPerfect) a += ATK_PERFECT;                             // パーフェクトクリア
+  return a;
 }
 
 // ===== ミノを捨てる =====
@@ -1694,8 +1831,18 @@ function lock(){
   if(renMode) restoreRenWalls();
   const isPerfect=cleared>0&&board.every(row=>row.every(v=>!v));
   if(cleared>0){ren++;}else{ren=0;}
+  const wasB2B=b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared,tSpin,isPerfect);
-  if(digMode){digCount++;updateDigCounter();if(digCount%digInterval===0)addGarbage(false);}
+  // せりあがり（ミノごと）
+  if(digMode && digTriggerType==='mino'){
+    digCount++; updateDigCounter();
+    if(digCount%digInterval===0) addGarbage(false);
+  }
+  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
+  if(digMode && digTriggerType==='time'){
+    offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
+    if(opts.digOnLock) flushPendingDig();
+  }
   spawn(); draw();
 }
 
@@ -2169,6 +2316,7 @@ updateMissAgainBtn();
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
+                       digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
@@ -2217,6 +2365,7 @@ function applyOptions(){
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   check('optMultiHold2', opts.multiHold);
+  check('optDigOnLock', opts.digOnLock);
   check('optSdfMode', opts.sdfMode);
   const put = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   put('optHoleKeepVal',  opts.holeKeep);
@@ -2243,6 +2392,7 @@ function applyOptions(){
         : inF ? ('約' + opts.arrMs + 'ms') : ('約' + msToF(opts.arrMs) + 'フレーム'));
   // 設定を変えたら、押しっぱなしのタイマーを張り直す
   if (heldKey) { const k = heldKey; heldKey = null; startDAS(k); }
+  drawDigPreview();
   if(cur) draw();
 }
 // 「その他」の設定だけを初期値に戻す（表示の設定や配置は触らない）
@@ -2348,6 +2498,27 @@ function loop(ts){
     if(moved > 0){ resetLock(); draw(); }
     if(!valid(cur,1,0,cur.state)){ gravAccum = 0; if(!isLocking) startLock(); }
   }
+
+  // せりあがり（時間経過）
+  if(digMode && digTriggerType === 'time'){
+    if(!timeDigLastTs) timeDigLastTs = ts;
+    const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
+    // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
+    if(remainMs <= 1000 && !digStaged){ queueDigRows(); digStaged = true; drawDigPreview(); }
+    if(remainMs <= 0){
+      // 溜まりが限界を超えていたら、相殺を待たず一気に積んで終わらせる
+      if(pendingDigRows >= DIG_PENDING_LIMIT) flushPendingDig();
+      // 「ミノ設置直後にせりあがり」がONのときは、置くまで溜めたままにする
+      else if(!opts.digOnLock) flushPendingDig();
+      digStaged = false;
+      timeDigLastTs = ts;
+      updateDigCounter(timeDigInterval);
+      drawDigPreview();
+    } else {
+      updateDigCounter(Math.max(0.1, Math.ceil(remainMs / 100) / 10));
+    }
+  }
+
   rafId=requestAnimationFrame(loop);
 }
 
@@ -2699,6 +2870,7 @@ function initLayout(){
   }
   document.getElementById('ctrlPad').style.width=bw+'px';
   document.getElementById('opts').style.width=bw+'px';
+  document.getElementById('digPreview').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
   const palWrap=document.getElementById('colorPaletteWrap');
   palWrap.style.width=bw+'px';
@@ -3171,7 +3343,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.36.0';
+const APP_VERSION = '1.37.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -3356,6 +3528,7 @@ loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
 applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
+drawDigPreview();  // せりあがりの予告は、ONのときだけ出す
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
