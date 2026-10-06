@@ -346,6 +346,15 @@ input:checked + .tgl::after { transform:translateX(10px); }
 }
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a !important; background:#132a1d !important; }
+/* HOLDに指定したミノ。抜くミノ（緑）と見分けがつくよう色を変える */
+.dpc-btn { position:relative; }
+.dpc-btn.hold { border-color:#6366f1 !important; background:#1e243a !important; }
+.dpc-hold-badge {
+  position:absolute; top:3px; right:3px;
+  background:#6366f1; color:#fff; border-radius:4px;
+  padding:1px 4px; font-size:8px; font-weight:bold; letter-spacing:0.5px;
+  line-height:1.4; pointer-events:none;
+}
 /* 選択画面の複数選択スイッチ */
 .pick-sw { display:flex; align-items:center; justify-content:space-between; gap:8px;
   cursor:pointer; font-size:12px; color:#d1d5db; user-select:none; margin:0 0 10px; }
@@ -2229,6 +2238,14 @@ function renderPieceGrid(gridId, onPick){
       btn.appendChild(cv); btn.appendChild(name);
       // ミノ欠けの複数選択中は、選ばれているミノに印をつける
       if (gridId === 'missGrid' && missPick.multi && missPick.sel.has(type)) btn.classList.add('sel');
+      // HOLDに指定したミノには印をつける
+      if (gridId === 'missGrid' && opts.missHoldOn && opts.missHold === type) {
+        btn.classList.add('hold');
+        const badge = document.createElement('span');
+        badge.className = 'dpc-hold-badge';
+        badge.textContent = 'HOLD';
+        btn.appendChild(badge);
+      }
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
@@ -3484,7 +3501,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.44.0';
+const APP_VERSION = '1.44.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

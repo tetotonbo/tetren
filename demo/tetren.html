@@ -361,6 +361,15 @@ button, label, .ctrl-lbl, [data-pos] {
 .dpc-btn:hover { border-color:#9ca3af; background:#1b2230; }
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a; background:#132a1d; }
+/* HOLDに指定したミノ。抜くミノ（緑）と見分けがつくよう色を変える */
+.dpc-btn { position:relative; }
+.dpc-btn.hold { border-color:#6366f1; background:#1e243a; }
+.dpc-hold-badge {
+  position:absolute; top:4px; right:4px;
+  background:#6366f1; color:#fff; border-radius:4px;
+  padding:1px 5px; font-size:9px; font-weight:bold; letter-spacing:0.5px;
+  line-height:1.4; pointer-events:none;
+}
 /* 選択画面の複数選択スイッチ */
 .pick-sw { margin:0 0 10px; }
 .pick-note { font-size:11px; color:#9ca3af; margin:8px 0 0; line-height:1.6; }
@@ -2471,7 +2480,8 @@ function renderPieceGrid(kind) {
    row.className = 'dpc-row';
    types.forEach(type => {
     const btn = document.createElement('button');
-    btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '');
+    const isHold = (kind === 'miss' && opts.missHoldOn && opts.missHold === type);
+    btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '') + (isHold ? ' hold' : '');
     btn.title = st.multi
       ? (kind === 'dpc' ? type + 'ミノを1巡目に残す' : type + 'ミノを1巡目から抜く')
       : (kind === 'dpc' ? type + 'ミノをHOLDにセットする' : type + 'ミノを抜いた6ミノで1巡目を回す');
@@ -2485,6 +2495,12 @@ function renderPieceGrid(kind) {
     name.textContent = type;
     btn.appendChild(cv);
     btn.appendChild(name);
+    if (isHold) {
+      const badge = document.createElement('span');
+      badge.className = 'dpc-hold-badge';
+      badge.textContent = 'HOLD';
+      btn.appendChild(badge);
+    }
     btn.addEventListener('click', () => {
       if (st.multi) {
         if (st.sel.has(type)) st.sel.delete(type);
@@ -5323,7 +5339,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.39.0';
+const APP_VERSION = '1.39.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
