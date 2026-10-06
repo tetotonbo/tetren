@@ -761,9 +761,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <!-- 片方だけ戻したいとき用。全体リセットと間違えないよう一回り小さくする -->
       <!-- grid ではなく flex。片方だけ隠したときに、残ったほうが横いっぱいに広がる -->
       <div class="reset-row">
-        <button class="ctrl-reset partial" data-ui="resetTerrain" onclick="resetTerrainOnly()"
+        <button class="ctrl-reset partial" data-pos="resetTerrain" data-ui="resetTerrain" onclick="resetTerrainOnly()"
           title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
-        <button class="ctrl-reset partial" data-ui="resetQueue" onclick="resetQueueOnly()"
+        <button class="ctrl-reset partial" data-pos="resetQueue" data-ui="resetQueue" onclick="resetQueueOnly()"
           title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
       </div>
       <!-- 残りの操作ボタンは普段は隠しておき、このボタンで出し入れする -->
@@ -5243,7 +5243,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.36.0';
+const APP_VERSION = '1.36.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
