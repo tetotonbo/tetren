@@ -1020,6 +1020,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <input type="checkbox" id="missMultiSw" onchange="setPickMulti('miss', this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="tgl-row pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
+      <span>現在の地形を維持する</span>
+      <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missRandRow" style="display:none;">
@@ -2355,6 +2360,7 @@ function openMiss() {
   stopSprint();
   closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
   document.getElementById('missOverlay').classList.add('open');
@@ -2505,11 +2511,11 @@ function randomMissTypes(n) {
 }
 // 個数は覚えておき、↻ では種類だけを引き直す。
 // n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
-function startMissRandom(n) {
+function startMissRandom(n, record) {
   const any = (n === null || n === undefined);
   const count = any ? Math.floor(Math.random() * 7) : n;
   const types = randomMissTypes(count);
-  applyMissTypes(types, { random:true, n: any ? null : n, types });
+  applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
@@ -2519,20 +2525,38 @@ function toggleMissRandRow() {
 }
 
 // --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
-function setMissingPiece(type) {
-  applyMissTypes([type], { multi:false, type });
+function setMissingPiece(type, record) {
+  applyMissTypes([type], { multi:false, type }, record);
 }
 // --- ミノ欠け（複数選択）: 選んだミノをまとめて1巡目から抜く ---
-function applyMissMulti(types) {
-  if (!types.length || types.length >= 7) return;
-  applyMissTypes(types, { multi:true, types: types.slice() });
+// 「現在の地形を維持する」で覚えた盤面。null なら毎回まっさらから始める
+let missTerrain = null;
+function setMissKeep(on) {
+  opts.missKeep = on;
+  saveOptions();
 }
-function applyMissTypes(types, last) {
+// 覚えた地形を盤面へ戻す。いま出ているミノが埋まってしまうときは上へ逃がす
+function restoreMissTerrain() {
+  if (!missTerrain) return;
+  board = missTerrain.map(r => [...r]);
+  while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+  resetLock();
+  draw();
+}
+function applyMissMulti(types, record) {
+  if (!types.length || types.length >= 7) return;
+  applyMissTypes(types, { multi:true, types: types.slice() }, record);
+}
+// record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
+function applyMissTypes(types, last, record = true) {
   lastMiss = last;
   updateMissAgainBtn();
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
+  // 選択画面から始めたときは、いまの地形を覚え直す（OFFなら忘れる）
+  if (record) missTerrain = opts.missKeep ? board.map(r => [...r]) : null;
   closeMiss();
   startGame();               // 盤面もツモも最初から
+  restoreMissTerrain();      // 覚えてあれば、消したぶんを戻す
 }
 function startMissMulti() {
   if (!pickValid('miss')) return;
@@ -2540,10 +2564,10 @@ function startMissMulti() {
 }
 function repeatMiss() {
   if (!lastMiss) { openMiss(); return; }
-  // ランダムで始めたときは、押すたびに引き直す
-  if (lastMiss.random) startMissRandom(lastMiss.n);
-  else if (lastMiss.multi) applyMissMulti(lastMiss.types);
-  else setMissingPiece(lastMiss.type);
+  // ランダムで始めたときは、押すたびに引き直す（地形は覚えたものを使い回す）
+  if (lastMiss.random) startMissRandom(lastMiss.n, false);
+  else if (lastMiss.multi) applyMissMulti(lastMiss.types, false);
+  else setMissingPiece(lastMiss.type, false);
 }
 function updateMissAgainBtn() {
   const btn = document.getElementById('missAgainBtn');
@@ -4860,6 +4884,7 @@ const OPT_DEFAULTS = {
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
+  missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
@@ -5185,7 +5210,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.32.1';
+const APP_VERSION = '1.33.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

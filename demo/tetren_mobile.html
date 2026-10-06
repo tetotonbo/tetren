@@ -659,6 +659,11 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <input type="checkbox" id="missMultiSw" onchange="setPickMulti(this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
+      <span>現在の地形を維持する</span>
+      <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <button class="dpc-close" id="missStartBtn" style="display:none;background:#4f46e5;color:#fff;"
@@ -2212,6 +2217,7 @@ const missPick={ multi:false, sel:new Set() };  // 選択画面の状態
 
 function openMiss(){
   missPick.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
+  const ks = document.getElementById('missKeepSw'); if(ks) ks.checked = !!opts.missKeep;
   missPick.sel.clear();
   const rr=document.getElementById('missRandRow'); if(rr) rr.style.display='none';
   document.getElementById('missOverlay').classList.add('open');
@@ -2278,11 +2284,11 @@ function randomMissTypes(n){
 }
 // 個数は覚えておき、↻ では種類だけを引き直す。
 // n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
-function startMissRandom(n){
+function startMissRandom(n, record){
   const any = (n === null || n === undefined);
   const count = any ? Math.floor(Math.random() * 7) : n;
   const types = randomMissTypes(count);
-  applyMissTypes(types, { random:true, n: any ? null : n, types });
+  applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow(){
@@ -2290,24 +2296,42 @@ function toggleMissRandRow(){
   if(!row) return;
   row.style.display = (row.style.display==='none' || !row.style.display) ? '' : 'none';
 }
-function setMissingPiece(type){ applyMissTypes([type], {multi:false, type}); }
-function applyMissMulti(types){
+function setMissingPiece(type, record){ applyMissTypes([type], {multi:false, type}, record); }
+function applyMissMulti(types, record){
   if(!types.length || types.length>=7) return;
-  applyMissTypes(types, {multi:true, types:types.slice()});
+  applyMissTypes(types, {multi:true, types:types.slice()}, record);
 }
-function applyMissTypes(types, last){
+// 「現在の地形を維持する」で覚えた盤面。null なら毎回まっさらから始める
+let missTerrain = null;
+function setMissKeep(on){
+  opts.missKeep = on;
+  saveOptions();
+}
+// 覚えた地形を盤面へ戻す。いま出ているミノが埋まってしまうときは上へ逃がす
+function restoreMissTerrain(){
+  if(!missTerrain) return;
+  board = missTerrain.map(r=>[...r]);
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  resetLock();
+  draw();
+}
+// record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
+function applyMissTypes(types, last, record = true){
   lastMiss=last; updateMissAgainBtn();
   firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
+  // 選択画面から始めたときは、いまの地形を覚え直す（OFFなら忘れる）
+  if(record) missTerrain = opts.missKeep ? board.map(r=>[...r]) : null;
   closeMiss();
   startGame();              // 盤面もツモも最初から
+  restoreMissTerrain();     // 覚えてあれば、消したぶんを戻す
 }
 function startMissMulti(){ if(missValid()) applyMissMulti([...missPick.sel]); }
 function repeatMiss(){
   if(!lastMiss){ openMiss(); return; }
-  // ランダムで始めたときは、押すたびに引き直す
-  if(lastMiss.random) startMissRandom(lastMiss.n);
-  else if(lastMiss.multi) applyMissMulti(lastMiss.types);
-  else setMissingPiece(lastMiss.type);
+  // ランダムで始めたときは、押すたびに引き直す（地形は覚えたものを使い回す）
+  if(lastMiss.random) startMissRandom(lastMiss.n, false);
+  else if(lastMiss.multi) applyMissMulti(lastMiss.types, false);
+  else setMissingPiece(lastMiss.type, false);
 }
 function updateMissAgainBtn(){
   const btn=document.getElementById('missAgainBtn');
@@ -2322,6 +2346,7 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true,
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
+                       missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
                        // 盤面・NEXT/HOLD・左メニューはそれぞれ余白の都合が違うので別々に持つ
                        boardScale:100, miniScale:100, menuScale:100 };
@@ -3346,7 +3371,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.37.1';
+const APP_VERSION = '1.38.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
