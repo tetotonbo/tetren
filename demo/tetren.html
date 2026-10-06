@@ -419,6 +419,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
   padding:8px 0; font-size:13px; font-weight:bold;
   cursor:pointer; letter-spacing:1px; transition:background .15s, color .15s;
 }
+.reset-row { display:flex; gap:6px; }
+.reset-row .ctrl-reset { flex:1; min-width:0; }
 /* 地形だけ・ミノ順だけの部分リセット。全体リセットより控えめに */
 .ctrl-reset.partial {
   background:#3a2126; color:#d8b6ba; border-color:#6b3a40;
@@ -752,10 +754,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button data-pos="reset" data-ui="reset" class="ctrl-reset" onclick="resetTerrain()"
         title="盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする">リセット</button>
       <!-- 片方だけ戻したいとき用。全体リセットと間違えないよう一回り小さくする -->
-      <div class="ctrl-row r2" data-ui="reset">
-        <button class="ctrl-reset partial" onclick="resetTerrainOnly()"
+      <!-- grid ではなく flex。片方だけ隠したときに、残ったほうが横いっぱいに広がる -->
+      <div class="reset-row">
+        <button class="ctrl-reset partial" data-ui="resetTerrain" onclick="resetTerrainOnly()"
           title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
-        <button class="ctrl-reset partial" onclick="resetQueueOnly()"
+        <button class="ctrl-reset partial" data-ui="resetQueue" onclick="resetQueueOnly()"
           title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
       </div>
       <!-- 操作ボタンの配置を自分で決められるようにする -->
@@ -5048,6 +5051,8 @@ const UI_ITEMS = [
   { id:'dig',         label:'せりあがり' },
   { id:'undoDiscard', label:'ミノを捨てる・戻す' },
   { id:'reset',       label:'リセット' },
+  { id:'resetTerrain',label:'地形のみリセット' },
+  { id:'resetQueue',  label:'ミノ順のみリセット' },
   { id:'layout',      label:'配置編集' },
   { id:'ctrl',        label:'ボタン操作' },
 ];
@@ -5244,7 +5249,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.34.0';
+const APP_VERSION = '1.35.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

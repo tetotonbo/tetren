@@ -534,9 +534,9 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <button class="side-btn reset" data-ui="reset" onclick="startGame()"
       style="margin-top:4px;">リセット</button>
     <!-- 片方だけ戻したいとき用 -->
-    <button class="side-btn reset-partial" data-ui="reset" onclick="resetTerrainOnly()"
+    <button class="side-btn reset-partial" data-ui="resetTerrain" onclick="resetTerrainOnly()"
       style="margin-top:3px;" title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
-    <button class="side-btn reset-partial" data-ui="reset" onclick="resetQueueOnly()"
+    <button class="side-btn reset-partial" data-ui="resetQueue" onclick="resetQueueOnly()"
       style="margin-top:3px;" title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
     <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
@@ -3351,6 +3351,8 @@ const UI_ITEMS = [
   { id:'dig',         label:'せりあがり' },
   { id:'shot',        label:'カンペ画像' },
   { id:'reset',       label:'リセット' },
+  { id:'resetTerrain',label:'地形のみリセット' },
+  { id:'resetQueue',  label:'ミノ順のみリセット' },
   { id:'verSwitch',   label:'PC版へ' },
   { id:'undoDiscard', label:'ミノ捨てる・戻す' },
 ];
@@ -3410,7 +3412,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.39.0';
+const APP_VERSION = '1.40.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
