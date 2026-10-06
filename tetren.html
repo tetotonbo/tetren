@@ -361,6 +361,15 @@ button, label, .ctrl-lbl, [data-pos] {
 .dpc-btn:hover { border-color:#9ca3af; background:#1b2230; }
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a; background:#132a1d; }
+/* HOLDに指定したミノ。抜くミノ（緑）と見分けがつくよう色を変える */
+.dpc-btn { position:relative; }
+.dpc-btn.hold { border-color:#6366f1; background:#1e243a; }
+.dpc-hold-badge {
+  position:absolute; top:4px; right:4px;
+  background:#6366f1; color:#fff; border-radius:4px;
+  padding:1px 5px; font-size:9px; font-weight:bold; letter-spacing:0.5px;
+  line-height:1.4; pointer-events:none;
+}
 /* 選択画面の複数選択スイッチ */
 .pick-sw { margin:0 0 10px; }
 .pick-note { font-size:11px; color:#9ca3af; margin:8px 0 0; line-height:1.6; }
@@ -377,6 +386,12 @@ button, label, .ctrl-lbl, [data-pos] {
 }
 .rand-num:hover { background:#1b2230; border-color:#9ca3af; }
 .rand-num.rand-any { flex:0 0 auto; padding:7px 12px; font-size:11px; }
+/* 最初からHOLDしておくミノ。ランダム行と同じ見た目にそろえる */
+.rand-num.sel { background:#1e243a; border-color:#6366f1; color:#c7d2fe; }
+.rand-num:disabled { opacity:0.3; cursor:default; }
+.rand-num:disabled:hover { background:#0d1117; border-color:#374151; }
+/* 欠けに選べないミノ（HOLDに指定しているもの） */
+.dpc-btn:disabled { opacity:0.3; cursor:default; }
 .dpc-name {
   display:block; line-height:1; margin-top:6px;
   font-size:11px; font-weight:bold; color:#9ca3af; letter-spacing:1px;
@@ -1035,8 +1050,17 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="tgl-row pick-sw" title="ONにすると、選んだミノを最初からHOLDに入れた状態で始めます。そのぶん1巡目からは抜けます">
+      <span>特定のミノをHOLDする</span>
+      <input type="checkbox" id="missHoldSw" onchange="setMissHoldOn(this.checked)">
+      <span class="tgl"></span>
+    </label>
     <div id="missGrid"></div>
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
+    <div class="rand-row" id="missHoldRow" style="display:none;" title="最初からHOLDに入れておくミノ">
+      <span>HOLD</span>
+      <div id="missHoldBtns" style="display:flex;gap:6px;flex:1;"></div>
+    </div>
     <div class="rand-row" id="missRandRow" style="display:none;">
       <span>抜く数</span>
       <button class="rand-num" onclick="startMissRandom(0)" title="何も抜かずに始めます">0</button>
@@ -2371,6 +2395,7 @@ function openMiss() {
   closeDigPanel();
   pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
+  renderMissHoldRow();
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
   document.getElementById('missOverlay').classList.add('open');
@@ -2397,6 +2422,55 @@ function pickValid(kind) {
 }
 
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
+// 「特定のミノをHOLDする」がONのときだけ出す選択行。
+// 欠けに選んでいるミノは、HOLDには置けないので選べないようにする
+function renderMissHoldRow() {
+  const row = document.getElementById('missHoldRow');
+  if (row) row.style.display = opts.missHoldOn ? '' : 'none';
+  const sw = document.getElementById('missHoldSw');
+  if (sw) sw.checked = !!opts.missHoldOn;
+  const box = document.getElementById('missHoldBtns');
+  if (!box) return;
+  box.innerHTML = '';
+  const mk = (type, label) => {
+    const b = document.createElement('button');
+    b.className = 'rand-num' + (opts.missHold === type ? ' sel' : '');
+    b.textContent = label;
+    // 抜くミノに選ばれているものは、そもそも1巡目に無いのでHOLDにも置けない
+    b.disabled = !!type && pick.miss.sel.has(type);
+    b.title = type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
+    b.addEventListener('click', () => setMissHold(type));
+    box.appendChild(b);
+  };
+  mk(null, 'なし');
+  DPC_ROWS.flat().forEach(t => mk(t, t));   // 上のグリッドと同じ並びにする
+}
+// 抜くミノに選ばれたらHOLDの指定を外す。抜くミノの選択のほうが主なので、そちらを優先する
+function clearMissHoldIf(types) {
+  if (opts.missHold && types.includes(opts.missHold)) {
+    opts.missHold = null;
+    saveOptions();
+    return true;
+  }
+  return false;
+}
+// ONにした直後に何も選ばれていない、ということがないよう既定を入れておく
+function setMissHoldOn(on) {
+  opts.missHoldOn = on;
+  if (on && (!opts.missHold || pick.miss.sel.has(opts.missHold))) {
+    opts.missHold = DPC_ROWS.flat().find(t => !pick.miss.sel.has(t)) || null;
+  }
+  saveOptions();
+  renderMissHoldRow();
+  renderPieceGrid('miss');   // 欠けに選べなくなるミノが変わる
+}
+function setMissHold(type) {
+  opts.missHold = type;
+  saveOptions();
+  renderMissHoldRow();
+  renderPieceGrid('miss');
+}
+
 function renderPieceGrid(kind) {
   const st = pick[kind];
   const grid = document.getElementById(kind === 'dpc' ? 'dpcGrid' : 'missGrid');
@@ -2406,7 +2480,8 @@ function renderPieceGrid(kind) {
    row.className = 'dpc-row';
    types.forEach(type => {
     const btn = document.createElement('button');
-    btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '');
+    const isHold = (kind === 'miss' && opts.missHoldOn && opts.missHold === type);
+    btn.className = 'dpc-btn' + (st.sel.has(type) ? ' sel' : '') + (isHold ? ' hold' : '');
     btn.title = st.multi
       ? (kind === 'dpc' ? type + 'ミノを1巡目に残す' : type + 'ミノを1巡目から抜く')
       : (kind === 'dpc' ? type + 'ミノをHOLDにセットする' : type + 'ミノを抜いた6ミノで1巡目を回す');
@@ -2420,9 +2495,16 @@ function renderPieceGrid(kind) {
     name.textContent = type;
     btn.appendChild(cv);
     btn.appendChild(name);
+    if (isHold) {
+      const badge = document.createElement('span');
+      badge.className = 'dpc-hold-badge';
+      badge.textContent = 'HOLD';
+      btn.appendChild(badge);
+    }
     btn.addEventListener('click', () => {
       if (st.multi) {
-        if (st.sel.has(type)) st.sel.delete(type); else st.sel.add(type);
+        if (st.sel.has(type)) st.sel.delete(type);
+        else { st.sel.add(type); if (kind === 'miss') clearMissHoldIf([type]); }
         renderPieceGrid(kind);
       } else {
         if (kind === 'dpc') setDpcHold(type); else setMissingPiece(type);
@@ -2441,6 +2523,7 @@ function renderPieceGrid(kind) {
     start.disabled = !pickValid(kind);
     start.style.opacity = pickValid(kind) ? '1' : '0.45';
   }
+  if (kind === 'miss') renderMissHoldRow();
   const note = document.getElementById(kind === 'dpc' ? 'dpcMultiNote' : 'missMultiNote');
   if (note) {
     note.style.display = st.multi ? '' : 'none';
@@ -2562,11 +2645,22 @@ function applyMissTypes(types, last, record = true) {
   lastMiss = last;
   updateMissAgainBtn();
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
+  // 最初からHOLDに入れるミノは、1巡目からも抜く
+  //（1巡目の途中でHOLDへ逃がした状態を再現するため）
+  clearMissHoldIf(types);   // 単体選択やランダムで抜かれた場合もここで外す
+  const hold = opts.missHoldOn ? opts.missHold : null;
+  const holdOk = !!hold && firstBagTypes.includes(hold);
+  if (holdOk) {
+    firstBagTypes = firstBagTypes.filter(t => t !== hold);
+    if (!firstBagTypes.length) firstBagTypes = null;   // 残り0なら通常の7種1巡に戻す
+  }
   // 選択画面から始めたときは、いまの地形を覚え直す（OFFなら忘れる）
   if (record) missTerrain = opts.missKeep ? board.map(r => [...r]) : null;
   closeMiss();
   startGame();               // 盤面もツモも最初から
+  if (holdOk) { holdType = hold; canHold = true; }
   restoreMissTerrain();      // 覚えてあれば、消したぶんを戻す
+  updUI(); draw();
 }
 function startMissMulti() {
   if (!pickValid('miss')) return;
@@ -4916,6 +5010,8 @@ const OPT_DEFAULTS = {
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
   missMulti: false,   // ミノ欠けの「複数選択」スイッチ
   missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
+  missHoldOn: false,  // ミノ欠けで「特定のミノをHOLDする」スイッチ
+  missHold: null,     // そのときHOLDに入れるミノ
   digOnLock: false,   // ミノを置いた直後にせりあがる（時間経過タイプのみ）
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
@@ -5243,7 +5339,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.36.2';
+const APP_VERSION = '1.39.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
