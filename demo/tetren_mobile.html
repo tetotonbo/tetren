@@ -240,16 +240,48 @@ input:checked + .tgl::after { transform:translateX(10px); }
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay, #missOverlay, #aboutOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #cfgPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2, #missPanel h2, #aboutPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+/* ===== 設定モーダル（PC版と同じ構成） ===== */
+/* 画面が狭いので、中身が増えたらパネルの中だけスクロールさせる */
+#cfgPanel { max-height:88vh; display:flex; flex-direction:column; }
+.cfg-tabs { display:flex; gap:4px; margin:8px 0 10px; border-bottom:1px solid #374151; flex:0 0 auto; }
+.cfg-tab {
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:#9ca3af; font-size:12px; font-weight:bold; cursor:pointer;
+  padding:7px 10px; transition:color .15s, border-color .15s;
+}
+.cfg-tab.active { color:#e5e7eb; border-bottom-color:#6366f1; }
+.cfg-body { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1 1 auto; }
+.cfg-pane { display:none; }
+.cfg-pane.active { display:block; }
+.cfg-hint { font-size:10px; color:#9ca3af; line-height:1.7; margin:0 0 8px; }
+.opt-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 2px; border-bottom:1px solid #374151;
+}
+.opt-row:last-of-type { border-bottom:none; }
+.opt-row input[type=checkbox] { display:none; }
+.opt-label { font-size:12px; color:#e5e7eb; flex:1; min-width:0; line-height:1.5; }
+/* 設定画面のトグル。左の列の .tgl-row は width:100% なのでここでは使わない */
+.cfg-tgl { display:flex; align-items:center; flex:0 0 auto; padding:4px; cursor:pointer; }
+.cfg-tgl input { display:none; }
+.opt-row .tgl { width:34px; height:18px; border-radius:9px; }
+.opt-row .tgl::after { width:14px; height:14px; }
+.opt-row input:checked + .tgl::after { transform:translateX(16px); }
+.cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
+.cfg-btns button {
+  flex:1; padding:9px 0; border:none; border-radius:7px;
+  font-size:13px; font-weight:bold; cursor:pointer;
+}
 /* 複数選択で選ばれているミノ */
 .dpc-btn.sel { border-color:#16a34a !important; background:#132a1d !important; }
 /* 選択画面の複数選択スイッチ */
@@ -328,19 +360,19 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <span class="tgl"></span>
       </label>
     </div>
-    <label class="tgl-row">
+    <label class="tgl-row" data-ui="ghost">
       <span>ゴースト</span>
       <input type="checkbox" id="ghostCheck" checked
         onchange="setOption('ghost', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row">
+    <label class="tgl-row" data-ui="axis">
       <span>軸表示</span>
       <input type="checkbox" id="axisCheck"
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
-    <label class="tgl-row" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
+    <label class="tgl-row" data-ui="layout" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
       <span>配置編集</span>
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
       <span class="tgl"></span>
@@ -380,28 +412,30 @@ input:checked + .tgl::after { transform:translateX(10px); }
           ontouchstart="event.preventDefault();startRepeat(()=>stepViewScale('menuScale',1))" ontouchend="stopRepeat()">›</button>
       </div>
     </div>
-    <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
-    <div class="di-row" style="margin-top:0;">
-      <button class="di-btn"
-        onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
-      <button class="di-btn"
-        onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
-        ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
+    <div data-ui="grav" style="width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
+      <div class="di-row" style="margin-top:0;">
+        <button class="di-btn"
+          onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
+        <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
+        <button class="di-btn"
+          onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
+          ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
+      </div>
     </div>
-    <button class="side-btn" id="terrainBtn" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
-    <div class="dpc-side-row">
+    <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
     </div>
-    <div class="dpc-side-row">
+    <div class="dpc-side-row" data-ui="miss">
       <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
-    <button class="side-btn" id="dekaModeBtn" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
-    <button class="side-btn" id="renModeBtn" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
-    <button class="side-btn" id="digBtn" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
+    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
+    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
+    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
     <div id="dig-info"></div>
     <div class="di-row" id="diRow" style="display:none;">
       <button class="di-btn" onclick="changeDigInterval(-1)">‹</button>
@@ -416,11 +450,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
     </div>
-    <button class="side-btn" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
-    <button class="side-btn" onclick="startGame()"
+    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
+    <button class="side-btn" data-ui="reset" onclick="startGame()"
       style="margin-top:4px;background:#7f1d1d;border-color:#ef4444;color:#fff;">リセット</button>
+    <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
-    <button class="side-btn" id="verSwitchBtn" style="margin-top:4px;"
+    <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:4px;"
       onclick="switchVersion()">🖥 PC版<br>へ</button>
     <div id="verLabel"></div>
   </div>
@@ -484,7 +519,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
 
-    <div id="opts">
+    <div id="opts" data-ui="undoDiscard">
       <button class="opt-btn" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn" data-ctrl="undo"
@@ -574,6 +609,29 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <h3>ご要望・不具合の報告</h3>
     <p>YouTube「<a href="https://www.youtube.com/@Tonbo_tetris" target="_blank" rel="noopener">とんぼ_テトリス初心者講座</a>」のコメントまでお寄せください。</p>
     <button class="dpc-close" onclick="closeAbout()">閉じる</button>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div id="cfgOverlay">
+  <div id="cfgPanel">
+    <h2>⚙ 設定</h2>
+    <div class="cfg-tabs">
+      <button class="cfg-tab active" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
+    </div>
+    <div class="cfg-body">
+      <div class="cfg-pane active" id="cfgPaneUi">
+        <div class="cfg-hint">
+          OFFにしたメニューは画面から消えます。使わないものを隠すと、左の列がすっきりします。<br>
+          隠しても設定はここからいつでも戻せます。
+        </div>
+        <div id="uiList"></div>
+      </div>
+    </div>
+    <div class="cfg-btns">
+      <button onclick="resetUiHidden()" style="background:#374151;color:#d1d5db;">すべて表示</button>
+      <button onclick="closeConfig()" style="background:#16a34a;color:#fff;">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -2031,7 +2089,9 @@ function initLayout(){
     if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
   });
   const optsEl = document.getElementById('opts');
-  const optsH = (optsEl && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
+  // 「表示」で隠したときは高さも食わない
+  const optsShown = optsEl && optsEl.style.display !== 'none';
+  const optsH = (optsShown && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
   const fixedH = (tablet ? 44 : 34) + ctrlH + optsH + 4*4 + 8;
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
@@ -2111,11 +2171,102 @@ addTouchBtn('btnSoft',
   () => stopSoftDropBtn()
 );
 
+// ===== 設定モーダル =====
+// PC版と同じ構成のタブ式。いまは「表示」だけで、タブは今後増やす。
+function openConfig() {
+  document.getElementById('cfgOverlay').classList.add('open');
+  switchConfigTab('ui');
+}
+function closeConfig() {
+  document.getElementById('cfgOverlay').classList.remove('open');
+}
+function switchConfigTab(name) {
+  const TABS = { ui:['cfgTabUi','cfgPaneUi'] };
+  for (const k in TABS) {
+    const [tab, pane] = TABS[k];
+    const t = document.getElementById(tab), p = document.getElementById(pane);
+    if (t) t.classList.toggle('active', k === name);
+    if (p) p.classList.toggle('active', k === name);
+  }
+  if (name === 'ui') renderUiList();
+}
+
+// ===== 表示するメニューの切り替え =====
+// 使わないボタンを隠して画面をすっきりさせる。PC版と同じ仕組みで、
+// data-ui="〇〇" を付けた要素を opts.uiHidden でまとめて出し入れする。
+const UI_ITEMS = [
+  { id:'ghost',       label:'ゴースト' },
+  { id:'axis',        label:'軸表示' },
+  { id:'layout',      label:'配置編集' },
+  { id:'grav',        label:'落下設定' },
+  { id:'terrain',     label:'地形編集' },
+  { id:'dpc',         label:'DPCセット' },
+  { id:'miss',        label:'ミノ欠け' },
+  { id:'deka',        label:'デカミノモード' },
+  { id:'ren',         label:'RENモード' },
+  { id:'dig',         label:'せりあがり' },
+  { id:'shot',        label:'カンペ画像' },
+  { id:'reset',       label:'リセット' },
+  { id:'verSwitch',   label:'PC版へ' },
+  { id:'undoDiscard', label:'ミノ捨てる・戻す' },
+];
+// 既定値には置かない。「すべて表示」で丸ごと消したいため
+function uiHiddenMap() {
+  if (!opts.uiHidden || typeof opts.uiHidden !== 'object') opts.uiHidden = {};
+  return opts.uiHidden;
+}
+function isUiHidden(id) { return !!uiHiddenMap()[id]; }
+function applyUiHidden() {
+  const map = uiHiddenMap();
+  document.querySelectorAll('[data-ui]').forEach(el => {
+    // 戻すときは空文字にして、CSS側の指定に判断を返す
+    el.style.display = map[el.dataset.ui] ? 'none' : '';
+  });
+  // 「ミノ捨てる・戻す」を隠すと中央カラムの高さが変わるので組み直す
+  initLayout(); applyCtrlPos();
+  if (board) draw();
+}
+function setUiVisible(id, visible) {
+  const map = uiHiddenMap();
+  if (visible) delete map[id]; else map[id] = true;
+  saveOptions();
+  applyUiHidden();
+}
+function resetUiHidden() {
+  opts.uiHidden = {};
+  saveOptions();
+  applyUiHidden();
+  renderUiList();
+}
+function renderUiList() {
+  const box = document.getElementById('uiList');
+  if (!box) return;
+  box.innerHTML = '';
+  UI_ITEMS.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    const label = document.createElement('span');
+    label.className = 'opt-label';
+    label.textContent = it.label;
+    const tgl = document.createElement('label');
+    tgl.className = 'cfg-tgl';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !isUiHidden(it.id);
+    cb.addEventListener('change', () => setUiVisible(it.id, cb.checked));
+    const knob = document.createElement('span');
+    knob.className = 'tgl';
+    tgl.appendChild(cb); tgl.appendChild(knob);
+    row.appendChild(label); row.appendChild(tgl);
+    box.appendChild(row);
+  });
+}
+
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.28.1';
+const APP_VERSION = '1.33.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -2296,6 +2447,7 @@ initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
+applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
 // （オーバーレイはゲームオーバー時の「もう一度」でだけ使う）
