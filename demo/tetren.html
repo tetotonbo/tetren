@@ -713,6 +713,15 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="garb-btn" style="background:#374151;margin-top:6px;" data-ui="mirror"
         onclick="if(!gameOver)mirrorTerrain()"
         title="地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります">⇄ 反転</button>
+      <!-- 同じ場面を何度も練習するための控え -->
+      <div class="reset-row" style="margin-top:6px;" data-ui="terrainSave">
+        <button class="garb-btn" id="saveTerrainBtn" style="background:#374151;flex:1;min-width:0;"
+          onclick="if(!gameOver)saveTerrain()"
+          title="いまの地形を覚えます。もう一度押すと覚え直します">記録</button>
+        <button class="garb-btn" id="loadTerrainBtn" style="background:#374151;flex:1;min-width:0;"
+          onclick="if(!gameOver)loadTerrain()"
+          title="覚えた地形に戻します。積んだミノは消えます">復元</button>
+      </div>
     </div>
 
     <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
@@ -2796,6 +2805,31 @@ function isStackOverflow() {
     for (let c = MID_COL_L; c <= MID_COL_R; c++)
       if (board[r][c]) return true;
   return false;
+}
+
+// ===== 地形の記録／復元 =====
+// 同じ場面を何度も練習するための控え。ページを開き直すと消える（盤面自体と同じ扱い）
+let savedTerrain = null;
+function updateTerrainSaveBtn() {
+  const b = document.getElementById('loadTerrainBtn');
+  if (!b) return;
+  b.disabled = !savedTerrain;
+  b.style.opacity = savedTerrain ? '1' : '0.45';
+}
+function saveTerrain() {
+  savedTerrain = board.map(r => [...r]);
+  updateTerrainSaveBtn();
+  // 押しても画面が変わらないので、覚えたことが分かるよう一瞬だけ色を変える
+  const b = document.getElementById('saveTerrainBtn');
+  if (b) { b.style.background = '#16a34a'; setTimeout(() => { b.style.background = '#374151'; }, 350); }
+}
+function loadTerrain() {
+  if (!savedTerrain) return;
+  board = savedTerrain.map(r => [...r]);
+  // 戻した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
+  while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+  resetLock();
+  draw();
 }
 
 // ===== 地形の左右反転 =====
@@ -5153,6 +5187,7 @@ const UI_ITEMS = [
   { id:'design',      label:'デザイン（ゴースト・軸表示）' },
   { id:'terrain',     label:'地形操作（地形編集・カラー・取り込み）' },
   { id:'mirror',      label:'反転（地形の左右反転）' },
+  { id:'terrainSave', label:'記録・復元（地形の控え）' },
   { id:'shot',        label:'カンペ画像' },
   { id:'lines',       label:'LINES' },
   { id:'verSwitch',   label:'スマホ版へ' },
@@ -5363,7 +5398,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.40.0';
+const APP_VERSION = '1.41.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5668,6 +5703,7 @@ loadOptions();
 loadGravSpeed();
 loadDigSetting();
 applyUiHidden();  // 隠す設定を画面に反映する
+updateTerrainSaveBtn();   // 控えが無いうちは「復元」を押せなくする
 
 // 初期描画
 holdCtx.fillStyle='#0d1117'; holdCtx.fillRect(0,0,100,80);
