@@ -503,6 +503,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
     <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <button class="side-btn" data-ui="mirror" onclick="if(!gameOver)mirrorTerrain()" style="margin-top:4px;"
+      title="地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります">⇄ 反転</button>
     <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
@@ -1859,6 +1861,26 @@ function addGarbage(sameHole){
     gameOver=true;
     setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);
   }
+}
+
+// ===== 地形の左右反転 =====
+// 左右に映すと L は J、S は Z の形になる。見た目だけ元の色が残っていると
+// 「この地形はどのミノで作ったか」が読めなくなるので、色も入れ替える。
+const MIRROR_TYPE = { L:'J', J:'L', S:'Z', Z:'S' };
+function mirrorTerrain(){
+  for(let r=0;r<TROW;r++){
+    board[r].reverse();
+    for(let c=0;c<COLS;c++){
+      const col=board[r][c];
+      if(!col) continue;
+      const m=MIRROR_TYPE[COLOR_TO_TYPE[col]];   // おじゃま・I・O・T はそのまま
+      if(m) board[r][c]=pieceColor(m);
+    }
+  }
+  // 反転した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  resetLock();
+  draw();
 }
 
 // ===== スナップショット =====
@@ -3433,6 +3455,7 @@ const UI_ITEMS = [
   { id:'layout',      label:'配置編集' },
   { id:'grav',        label:'落下設定' },
   { id:'terrain',     label:'地形編集' },
+  { id:'mirror',      label:'反転（地形の左右反転）' },
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
   { id:'deka',        label:'デカミノモード' },
@@ -3501,7 +3524,7 @@ function renderUiList() {
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
 function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.44.1';
+const APP_VERSION = '1.45.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
