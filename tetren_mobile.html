@@ -39,7 +39,7 @@ html, body {
 }
 .side-col {
   display:flex; flex-direction:column;
-  align-items:center; gap:5px; flex-shrink:0;
+  align-items:center; gap:3px; flex-shrink:0;
   /* 項目が増えて画面より長くなっても、全体を押し広げずカラム内でスクロールする */
   max-height:100%; overflow-y:auto; overflow-x:hidden;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
@@ -62,10 +62,10 @@ canvas { display:block; }
   background:#1f2937; border:1px solid #374151;
   border-radius:6px; overflow:hidden; flex-shrink:0;
 }
-.stat-col { flex:1; padding:3px 4px; }
-.stat-col + .stat-col { border-left:1px solid #374151; }
+/* ライン数だけの1行。ラベルと数字を横に並べて高さを抑える */
+.stat-col { flex:1; padding:2px 4px; display:flex; align-items:baseline; justify-content:center; gap:6px; }
 .stat-lbl { font-size:8px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
-.stat-val { font-size:15px; font-weight:bold; color:#fff; line-height:1.1; }
+.stat-val { font-size:13px; font-weight:bold; color:#fff; line-height:1.2; }
 .ctrl-pad { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
 /* 配置編集中。枠を出し、ボタン自体の反応は止めてドラッグだけを拾う */
 .layout-edit [data-ctrl] {
@@ -152,7 +152,7 @@ canvas { display:block; }
 #dig-info {
   font-size:9px; color:#6b7280; text-align:center; line-height:1.5;
 }
-.di-row { display:flex; align-items:center; gap:2px; margin-top:3px; }
+.di-row { display:flex; align-items:center; gap:2px; margin-top:2px; }
 .di-btn {
   background:#374151; color:#fff; border:none;
   width:20px; height:20px; border-radius:3px;
@@ -183,7 +183,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 
 /* ===== バージョン表示 ===== */
 #verLabel {
-  margin-top:4px; text-align:center; font-size:8px;
+  margin-top:2px; text-align:center; font-size:8px;
   color:#4b5563; letter-spacing:0.5px;
 }
 
@@ -281,7 +281,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .opt-row .tgl { width:34px; height:18px; border-radius:9px; }
 .opt-row .tgl::after { width:14px; height:14px; }
 .opt-row input:checked + .tgl::after { transform:translateX(16px); }
-.opt-note { display:block; font-size:10px; color:#9ca3af; margin-top:3px; line-height:1.6; }
+.opt-note { display:block; font-size:10px; color:#9ca3af; margin-top:2px; line-height:1.6; }
 .opt-step { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
 .opt-val { font-size:13px; color:#e2e8f0; min-width:56px; text-align:center; }
 .opt-unit { font-size:10px; color:#6b7280; }
@@ -324,7 +324,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .skin-card canvas { display:block; margin:0 auto 4px; max-width:100%; }
 .skin-name { font-size:11px; font-weight:bold; color:#e5e7eb; }
 /* せりあがりの種別（ミノ / 秒）。狭いので2つを横に並べるだけ */
-.dig-type { display:flex; gap:3px; margin-top:3px; }
+.dig-type { display:flex; gap:3px; margin-top:2px; }
 .dig-type label {
   flex:1; display:flex; align-items:center; justify-content:center; gap:2px;
   background:#0d1117; border:1px solid #374151; border-radius:6px;
@@ -385,6 +385,19 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #aboutPanel p { margin:0 0 10px; font-size:11px; color:#d1d5db; line-height:1.9; text-align:left; }
 #aboutPanel h3 { font-size:11px; color:#9ca3af; margin:12px 0 5px; text-align:left; }
 #aboutPanel a { color:#818cf8; }
+/* バージョン履歴。長いので枠の中だけスクロールさせる */
+#aboutPanel { max-height:86vh; overflow-y:auto; }
+.ver-log {
+  max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  background:#0d1117; border:1px solid #374151; border-radius:6px; padding:7px 9px;
+  text-align:left;
+}
+.vl-item + .vl-item { margin-top:7px; border-top:1px solid #273244; padding-top:7px; }
+.vl-head { display:flex; align-items:baseline; gap:6px; }
+.vl-no { font-size:11px; font-weight:bold; color:#c7d2fe; }
+.vl-date { font-size:9px; color:#6b7280; }
+.ver-log ul { margin:3px 0 0 15px; padding:0; }
+.ver-log li { font-size:10px; color:#d1d5db; line-height:1.7; }
 #dpcPanel .sub2, #missPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
 .dpc-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px; }
 .dpc-btn {
@@ -399,7 +412,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
   background:#16a34a; color:#fff; font-size:13px; font-weight:bold; cursor:pointer;
 }
 /* サイドの DPC / ↻ を1行に並べる */
-.dpc-side-row { display:flex; gap:3px; width:100%; margin-top:4px; }
+.dpc-side-row { display:flex; gap:3px; width:100%; margin-top:2px; }
 .dpc-side-row .side-btn { margin-top:0; }
 .dpc-side-row .side-btn.again { flex:0 0 26px; font-size:13px; padding:6px 0; }
 #overlay {
@@ -431,7 +444,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <div class="mini-panel" style="padding:5px 3px;">
       <div class="m-lbl">HOLD</div>
       <canvas id="holdCanvas"></canvas>
-      <label class="tgl-row" style="margin-top:4px;" title="OFFにするとミノを置くまで再ホールドできません">
+      <label class="tgl-row" style="margin-top:2px;" title="OFFにするとミノを置くまで再ホールドできません">
         <span>連続</span>
         <input type="checkbox" id="optMultiHold" checked
           onchange="setOption('multiHold', this.checked)">
@@ -455,7 +468,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
       <span class="tgl"></span>
     </label>
-    <button class="side-btn" id="ctrlPosResetBtn" style="display:none;margin-top:4px;"
+    <button class="side-btn" id="ctrlPosResetBtn" style="display:none;margin-top:2px;"
       onclick="resetCtrlPos()">配置を<br>元に戻す</button>
     <!-- 表示サイズは普段使わないので、配置編集をONにしたときだけ出す -->
     <div id="viewScaleBox" style="display:none;">
@@ -502,7 +515,18 @@ input:checked + .tgl::after { transform:translateX(10px); }
           ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
       </div>
     </div>
-    <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:4px;">地形編集</button>
+    <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:2px;">地形編集</button>
+    <button class="side-btn" data-ui="mirror" onclick="if(!gameOver)mirrorTerrain()" style="margin-top:2px;"
+      title="地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります">⇄ 反転</button>
+    <!-- 同じ場面を何度も練習するための控え -->
+    <div class="dpc-side-row" data-ui="terrainSave">
+      <button class="side-btn" id="saveTerrainBtn" style="flex:1;"
+        onclick="if(!gameOver)saveTerrain()"
+        title="いまの地形を覚えます。もう一度押すと覚え直します">記録</button>
+      <button class="side-btn" id="loadTerrainBtn" style="flex:1;"
+        onclick="if(!gameOver)loadTerrain()"
+        title="覚えた地形に戻します。積んだミノは消えます">復元</button>
+    </div>
     <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
@@ -511,9 +535,9 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
-    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:4px;">デカミノ<br>モード</button>
-    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:4px;">REN<br>モード</button>
-    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:4px;">せりあがり</button>
+    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ<br>モード</button>
+    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN<br>モード</button>
+    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:2px;">せりあがり</button>
     <div id="dig-info"></div>
     <div id="digTypeRow" style="display:none;width:100%;">
       <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
@@ -541,35 +565,28 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
     </div>
-    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:4px;">カンペ<br>画像</button>
+    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:2px;">カンペ<br>画像</button>
     <button class="side-btn" data-ui="reset" onclick="startGame()"
-      style="margin-top:4px;">リセット</button>
+      style="margin-top:2px;">リセット</button>
     <!-- 片方だけ戻したいとき用 -->
     <button class="side-btn" data-ui="resetTerrain" onclick="resetTerrainOnly()"
-      style="margin-top:3px;" title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
+      style="margin-top:2px;" title="盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま">地形のみ</button>
     <button class="side-btn" data-ui="resetQueue" onclick="resetQueueOnly()"
-      style="margin-top:3px;" title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
-    <button class="side-btn" onclick="openConfig()" style="margin-top:4px;">⚙ 設定</button>
+      style="margin-top:2px;" title="ミノの順番とHOLDだけ引き直します。盤面はそのまま">ミノ順のみ</button>
+    <button class="side-btn" onclick="openConfig()" style="margin-top:2px;">⚙ 設定</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
-    <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:4px;"
+    <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:2px;"
       onclick="switchVersion()">🖥 PC版<br>へ</button>
     <div id="verLabel"></div>
   </div>
 
   <!-- 中央: ボード + コントロール + オプション -->
   <div id="center-col">
+    <!-- 消したライン数だけを出す。盤面を広く使いたいので一段薄くしてある -->
     <div id="stats-bar">
       <div class="stat-col">
-        <div class="stat-lbl">SCORE</div>
-        <div class="stat-val" id="scoreEl">0</div>
-      </div>
-      <div class="stat-col">
-        <div class="stat-lbl">LV</div>
-        <div class="stat-val" id="levelEl">1</div>
-      </div>
-      <div class="stat-col">
-        <div class="stat-lbl">LINE</div>
-        <div class="stat-val" id="linesEl">0</div>
+        <span class="stat-lbl">LINE</span>
+        <span class="stat-val" id="linesEl">0</span>
       </div>
     </div>
 
@@ -719,11 +736,102 @@ input:checked + .tgl::after { transform:translateX(10px); }
 <div id="aboutOverlay">
   <div id="aboutPanel">
     <h2>このサイトについて</h2>
+    <!-- 履歴は長いので、案内とタブで分ける -->
+    <div class="cfg-tabs">
+      <button class="cfg-tab active" id="aboutTabInfo" onclick="switchAboutTab('info')">概要</button>
+      <button class="cfg-tab"        id="aboutTabLog"  onclick="switchAboutTab('log')">バージョン履歴</button>
+    </div>
+    <div class="cfg-pane active" id="aboutPaneInfo">
     <p>テト練は、個人が趣味で作っている<strong>非公式</strong>のテトリス練習ツールです。特定のゲームのメーカーや公式サイトとは関係ありません。</p>
     <h3>利用について</h3>
     <p>紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。<br>URLを添えていただけると嬉しいです。</p>
     <h3>ご要望・不具合の報告</h3>
     <p>YouTube「<a href="https://www.youtube.com/@Tonbo_tetris" target="_blank" rel="noopener">とんぼ_テトリス初心者講座</a>」のコメントまでお寄せください。</p>
+    </div>
+    <div class="cfg-pane" id="aboutPaneLog">
+    <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.46.0 / 1.41.0</span><span class="vl-date">2026-10-07</span></div><ul><li>反転の下に 「記録」「復元」 を追加。同じ場面を何度も練習するための控え</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.45.0 / 1.40.0</span><span class="vl-date">2026-10-07</span></div><ul><li>「⇄ 反転」 を追加。いまの地形を左右反転する</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.44.1 / 1.39.1</span><span class="vl-date">2026-10-06</span></div><ul><li>HOLDに指定したミノを、上のミノ選択でもひと目で分かるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.44.0 / 1.39.0</span><span class="vl-date">2026-10-06</span></div><ul><li>HOLDの選択行に 「なし」 を戻した（スイッチをONのまま、HOLDだけ外せる）</li><li>抜くミノの選択を優先するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.43.0 / 1.38.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けのHOLD指定を 「特定のミノをHOLDする」スイッチ で出し入れするようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.42.0 / 1.37.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けの選択画面に 「HOLD」行 を追加。最初からHOLDに入れておくミノを固定できる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.41.1 / 1.36.2</span><span class="vl-date">2026-10-06</span></div><ul><li>タッチ操作のとき、左右ボタンを長押ししてもDAS/ARRが効かない不具合を修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.36.1</span><span class="vl-date">2026-10-06</span></div><ul><li>配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.41.0 / 1.36.0</span><span class="vl-date">2026-10-06</span></div><ul><li>リセット3つの色をほかのボタンと同じに戻した（赤系はやめ）</li><li>配置編集のスイッチを左上の「デザイン」の枠へ移動した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.40.0 / 1.35.0</span><span class="vl-date">2026-10-06</span></div><ul><li>「表示」で リセット・地形のみ・ミノ順のみを別々にON/OFF できるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.39.0 / 1.34.0</span><span class="vl-date">2026-10-06</span></div><ul><li>リセットボタンの色を両版でそろえた。PC版は暗すぎ、スマホ版は赤が強すぎたので中間の落ち着いた赤にした</li><li>リセットとは別に 「地形のみ」「ミノ順のみ」 のボタンを追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.38.0 / 1.33.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けの選択画面に 「現在の地形を維持する」 スイッチを追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.37.1 / 1.32.1</span><span class="vl-date">2026-10-06</span></div><ul><li>設定画面でタブを切り替えると、枠が上下に動いてしまうのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.37.0</span><span class="vl-date">2026-10-06</span></div><ul><li>せりあがりに 「時間経過」タイプ を追加。PC版と同じ挙動にそろえた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.36.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「スキン」タブ を追加。PC版と同じ10種類から選べる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.35.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「キーコンフィグ」タブ を追加（キーボード／コントローラ）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.34.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「その他」タブ を追加。PC版と同じ項目を並べた</li><li>これまで固定値だった ソフトドロップ速度と設置時間 を、PC版と同じ計算（softDropRows() / lockMs()）に置き換えた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.33.0</span><span class="vl-date">2026-10-06</span></div><ul><li>左の列に 「⚙ 設定」 を追加し、PC版と同じタブ式の設定画面を用意した</li><li>設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる（14項目）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.32.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.31.0</span><span class="vl-date">2026-10-06</span></div><ul><li>カウントダウンを盤面の上に大きく表示するようにした（数字＋READY、半透明の暗幕つき）</li><li>40ライン達成でその場で止まるようにした</li><li>リセットやリスタートで抜けたときは、重ねた表示を消して計測値も初期化する</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.30.0</span><span class="vl-date">2026-10-06</span></div><ul><li>モードに 「40LINE」 を追加（マラソンの下）。40ライン消すまでの時間を計る</li><li>キーコンフィグに 「40LINE再スタート」（既定 T）を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.29.0</span><span class="vl-date">2026-10-06</span></div><ul><li>「ボタン操作」パネルの開閉状態を保存するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.28.1</span><span class="vl-date">2026-10-05</span></div><ul><li>保存した表示倍率が再読み込み後に効かない不具合を修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.28.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面サイズ・NEXT/HOLD・メニューの3つを 「配置編集」ONのときだけ表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.27.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面だけでなく NEXT/HOLD と 左メニュー の大きさも 50〜200％ で調整できるようにした</li><li>NEXTやメニューを広げて盤面が細くなったとき、操作ボタンの3列が盤面幅をはみ出して NEXTの枠の下に潜り込む問題を修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.26.1 / 1.25.1</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadでボタンを長押しすると文字として選択され、範囲選択になる問題を修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.26.0</span><span class="vl-date">2026-10-05</span></div><ul><li>左の列に 「画面サイズ」 を追加。盤面の大きさを 50〜200％ で調整できる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.25.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ソフトドロップを SDF（Soft Drop Factor）で指定できるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.4</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadなどのタッチ端末で、ボタンをドラッグするとページも一緒にスクロールしてしまうのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.3</span><span class="vl-date">2026-10-05</span></div><ul><li>せりあがりをモード枠の中へ移した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.2</span><span class="vl-date">2026-10-05</span></div><ul><li>予告を盤面の外（すぐ下）に移した。地形に重ならない</li><li>せりあがりが動いている間は常に表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.1</span><span class="vl-date">2026-10-05</span></div><ul><li>相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる</li><li>溜まりが 30段以上になったら、相殺を待たずに一気に積んでゲームオーバーにする</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.23.0</span><span class="vl-date">2026-10-05</span></div><ul><li>RENモードをOFFに戻すと21段目におじゃまが残っていたのを修正</li><li>せりあがりの設定を、「せりあがり」ボタンの再押下でも、他のモード（DPCセット・ミノ欠け・REN・デカミノ・マラソン）を触ったときも畳むようにした</li><li>盤面の下端に予告を表示するようにした</li><li>設定の「その他」に 「ミノ設置直後にせりあがり」 を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.22.0</span><span class="vl-date">2026-10-05</span></div><ul><li>せりあがりの設定（タイプ・秒数／ミノ数・穴継続率）とスタートボタンを既定で畳んだ</li><li>複数段 ボタンを追加。1回のせりあがりで何段上がるかを決められる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.21.0</span><span class="vl-date">2026-10-05</span></div><ul><li>マラソン をデカミノの下に追加。進むほど速くなるモード</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.20.1</span><span class="vl-date">2026-10-05</span></div><ul><li>個数を選ぶ行の 6 の右に「ランダム」 を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.20.0</span><span class="vl-date">2026-10-05</span></div><ul><li>抜く数を選んでからランダムに決める方式に変更</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.19.1</span><span class="vl-date">2026-10-05</span></div><ul><li>版の切り替えボタンを本番でも常に表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.19.0</span><span class="vl-date">2026-10-05</span></div><ul><li>対象に ミノを捨てる・戻す・リセット を追加。合計10個になった</li><li>大きさも変えられるようにした</li><li>配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.18.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集 を追加。「ボタン操作」で開く操作ボタンの配置を自分で決められる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.17.0</span><span class="vl-date">2026-10-05</span></div><ul><li>iPad が PC版に飛んでいた問題を修正</li><li>版の切り替えボタンを、デモ版以外でも出すようにした（迷ったときに自力で移れるように）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.3</span><span class="vl-date">2026-10-05</span></div><ul><li>右の枠のボタン（DPCセット・ミノ欠け・REN・デカミノ・せりあがり）の高さを詰めた</li><li>1.16.2 で右の枠のボタンの色を落としたが、意図と違ったため元に戻した（背景 #374151・文字 #fff）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.1</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT の巡内番号を小さくした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.0</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT の右側に、その巡の何番目か（1〜7） を薄く表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.15.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ミノ選択画面に 「ランダム」ボタン を追加</li><li>PC版とスマホ版でバージョンがずれていたので、この版で 1.15.0 に揃えた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.14.1</span><span class="vl-date">2026-10-05</span></div><ul><li>コントローラの設定を、独立したタブから キーコンフィグの中 へ移した</li><li>kcHeader のIDがキーボード側とコントローラ側で重複していたのを、クラス指定に直した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.14.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ゲームパッドに対応。設定に「コントローラ」タブを追加</li><li>左右移動はキーボードと同じ経路に流しているので、DAS/ARR の設定がそのまま効く</li><li>リスタートとミノ欠け再セットは、キーボードと同じくゲームオーバー中でも反応する</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.2</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔を広げた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.0</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集で ボタンの大きさも変えられる ようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.4</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔に余裕を持たせた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.3</span><span class="vl-date">2026-10-05</span></div><ul><li>横幅を中身に合わせるようにした。これまでは高さだけ中身に合わせ、幅はサイドカラムや盤面に追従していたため横長になっていた</li><li>左右に余白を残すようにした（片側あたり画面幅の13%）</li><li>スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集で動かす単位をグループからボタン1個ずつに変更</li><li>HOLD・NEXT の枠をミノの大きさに合わせた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.0</span><span class="vl-date">2026-10-05</span></div><ul><li>「配置編集」スイッチ を追加。ONにすると操作ボタンをドラッグで好きな位置に動かせる</li><li>タブレット幅でレイアウトが広がるようにした（短辺600px以上を判定）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.11.1</span><span class="vl-date">2026-10-05</span></div><ul><li>スタート画面の「β版」表記を削除（スマホ版・PC版）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.11.0</span><span class="vl-date">2026-10-05</span></div><ul><li>キーコンフィグに 「ミノ欠け再セット」 を追加（PC版、既定は M キー）</li><li>ミノ欠けの 「複数選択」スイッチの状態を保存 するようにした（PC版・スマホ版）</li><li>スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.10.1</span><span class="vl-date">2026-10-05</span></div><ul><li>リセットを右の枠から操作パッドへ移し、「ミノを捨てる・戻す」と同じ幅（2ボタン分）で「ボタン操作」の上に配置</li><li>「このサイトについて」のリンクが2行に折り返していたのを1行に収めた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.10.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面の空きマスとおじゃまブロックに使っていた埋め込み画像2枚を削除し、同じ見た目をコードで描くようにした</li><li>「このサイトについて」 を追加（PC版・スマホ版・入口ページ）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.9.1</span><span class="vl-date">2026-10-05</span></div><ul><li>「1欠け」を 「ミノ欠け」 に改称（ボタン・ダイアログ見出し・ツールチップ）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.9.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ミノ選択画面に 複数選択スイッチ を追加（PC版・スマホ版）</li><li>↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す</li><li>1巡目の差し替えを firstBagTypes に一本化し、単体・複数を同じ仕組みで扱うようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.8.0</span><span class="vl-date">2026-10-04</span></div><ul><li>1欠け ボタンを DPCセットの下に追加（PC版・スマホ版）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.7.1</span><span class="vl-date">2026-10-04</span></div><ul><li>DAS/ARR を ミリ秒で指定できるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.7.0</span><span class="vl-date">2026-10-04</span></div><ul><li>左右の DAS（効き始めまでの待ち時間）と ARR（連打間隔）を設定できるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.3</span><span class="vl-date">2026-10-04</span></div><ul><li>左右キーを長押ししても自動連打が効かなくなることがある問題を修正</li><li>ハードドロップなどで次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐようにした（spawn() で resumeDAS()）</li><li>左右移動がブラウザのキーリピートと DAS/ARR の二重入力になっていたのをやめ、DAS/ARR に一本化した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.2</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面が暗い場面でゴーストを検出できず、操作中のミノが地形として残っていたのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.1</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノが地形として残る経路を塞いだ。これまでは位置を特定できたときは「その形のマス」だけを除外していたため、位置の推定を誤ると見えている部分が残っていた。位置が分かっている場合も、宙に浮いた同じ色のかたまりを合わせて除外するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.0</span><span class="vl-date">2026-10-04</span></div><ul><li>Enter で「この地形を取り込む」を実行できるようにした。Escape でダイアログを閉じる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.2</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノの位置が特定できなかったとき、盤面に見えている部分が設置済みブロックとして残ってしまうのを修正。ゴーストと同じ色で宙に浮いているかたまりを探して地形から取り除くようにした（地形のオーバーハングと区別するため、かたまり全体がどこにも乗っていないことを条件にしている）</li><li>位置が特定できないときにゴーストの位置へ置いていたのをやめ、通常の出現位置から始めるようにした。ゴーストの位置に置くと取り込んだ直後に着地済みの状態になってしまうため</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.1</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面の背景が青い場面で、空きマスがミノとして誤検出されていたのを修正。空きマスを弾く条件に彩度を使っていたが、青い盤面では空きマスの彩度が60を超えることがあったため、明るさだけで判定するようにした（ぷよテトのミノは一番暗いJでも明るさ235あるので、明るさ105未満は確実に空き）</li><li>操作中のミノが盤面の上に見切れて1マスしか見えていない場合も位置を特定できるようにした</li><li>位置を特定できなかった場合は、ゴーストの位置ではなく通常の出現位置から始めるようにした（ゴースト位置に置くと着地済みの状態になってしまうため）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.0</span><span class="vl-date">2026-10-01</span></div><ul><li>1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた</li><li>ゴーストと操作中のミノを検出できるようにした。ぷよテトのゴーストは「暗い半透明＋ドット模様」で描かれており、セル中央の代表色では暗いマスに見えてしまうため、明るい側の画素の色でも判定するようにした</li><li>操作中のミノが盤面の上に見切れていても検出できるようにした（見えている2マス以上が一致すれば確定）</li><li>読み取り枠を下端基準にした。21段目が3分の1ほど覗いているぶん、上端基準では毎回ずれていた</li><li>ミノの参照色を実機スクショの実測値に更新した（水色と青の判別が紙一重で、取り違えることがあった）</li><li>おじゃまの明るさ条件を 120超 → 105超 に緩めた（グレーのおじゃまも拾える）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.4.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.4.0</span><span class="vl-date">2026-09-30</span></div><ul><li>取り込んだ地形が高くてもゲームオーバーにしないようにした。出現位置がふさがっている場合はミノを置ける高さまで上に逃がす。ゲームオーバー中に取り込んだ場合も、その地形から再開できる</li><li>ぷよぷよテトリス以外のゲーム画面からも取り込めるようにした。おじゃまの判定を「明るさの絶対値」から「その画像の空きマスよりはっきり明るい無彩色」に変更したため、白でもグレーでもおじゃまとして拾える</li><li>操作ボタン3つ（この地形を取り込む／自動検出しなおす／別の画像）を読み取り結果の下（右カラム）へ移動。縦に長い画像でもボタンを探さずに済むようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.3.0</span><span class="vl-date">2026-09-30</span></div><ul><li>画面上のON/OFFスイッチをすべて保存するようにした。ゴースト・軸表示・地形編集（PC版）を tetren_options に追加（連続HOLDは従来から保存済み）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.2.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.2.0</span><span class="vl-date">2026-09-30</span></div><ul><li>カンペ画像を何枚でも並べられるようにした。ウィンドウのバーに「追加」ボタン（「変更」の左）を新設し、押すともう1枚出せる。あわせて「画像を変更」を「変更」に短縮</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.1.0</span><span class="vl-date">2026-09-29</span></div><ul><li>せりあがりの間隔設定（種別・ミノ数・秒数）を保存して、リセットやページを閉じても保持するようにした（tetren_dig）。PC版・スマホ版とも</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.0.0</span><span class="vl-date">2026-09-29</span></div><ul><li>カンペ画像 — 画像を画面に重ねて表示する。ドラッグ＆ドロップ／ファイル選択／貼り付けの3通りで読み込み、位置とサイズを自由に変更できる（左右の辺・下辺・下の両隅でリサイズ）。最前面固定のON/OFF切り替えに対応</li><li>主要なボタンにツールチップ（マウスオーバーで出る説明）を追加</li><li>落下速度をリセット後もページを閉じても保持するようにした（tetren_grav に保存）</li><li>落下設定を「デザイン」枠から独立させ、HOLDの直下へ移動</li><li>落下速度の ‹ › を長押しで連続変更できるようにした（PC版・スマホ版とも）</li><li>スキン一覧から説明文を削除し、名称を整理（クラシック→標準、ぷよテト風→ぷテ、透明→ほぼ透明）</li><li>ほか32件</li></ul></div>
+    </div>
+    </div>
     <button class="dpc-close" onclick="closeAbout()">閉じる</button>
   </div>
 </div>
@@ -1416,8 +1524,15 @@ function selectTerrainColor(type){
   });
 }
 
+// 入り切りは設定として覚える。PC版は terrainEdit を使っているが、
+// 既定の状態が違う（PCはON／スマホはOFF）ので、スマホ版は別のキーで持つ。
 function toggleTerrainMode(){
-  terrainMode = !terrainMode;
+  setTerrainMode(!terrainMode);
+  opts.terrainEditM = terrainMode;
+  saveOptions();
+}
+function setTerrainMode(on){
+  terrainMode = !!on;
   const btn = document.getElementById('terrainBtn');
   const wrap = document.getElementById('colorPaletteWrap');
   if(terrainMode){
@@ -1861,6 +1976,51 @@ function addGarbage(sameHole){
   }
 }
 
+// ===== 地形の記録／復元 =====
+// 同じ場面を何度も練習するための控え。ページを開き直すと消える（盤面自体と同じ扱い）
+let savedTerrain = null;
+function updateTerrainSaveBtn(){
+  const b=document.getElementById('loadTerrainBtn');
+  if(!b) return;
+  b.disabled=!savedTerrain;
+  b.style.opacity=savedTerrain?'1':'0.45';
+}
+function saveTerrain(){
+  savedTerrain=board.map(r=>[...r]);
+  updateTerrainSaveBtn();
+  // 押しても画面が変わらないので、覚えたことが分かるよう一瞬だけ色を変える
+  const b=document.getElementById('saveTerrainBtn');
+  if(b){ b.style.background='#16a34a'; setTimeout(()=>{ b.style.background=''; },350); }
+}
+function loadTerrain(){
+  if(!savedTerrain) return;
+  board=savedTerrain.map(r=>[...r]);
+  // 戻した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  resetLock();
+  draw();
+}
+
+// ===== 地形の左右反転 =====
+// 左右に映すと L は J、S は Z の形になる。見た目だけ元の色が残っていると
+// 「この地形はどのミノで作ったか」が読めなくなるので、色も入れ替える。
+const MIRROR_TYPE = { L:'J', J:'L', S:'Z', Z:'S' };
+function mirrorTerrain(){
+  for(let r=0;r<TROW;r++){
+    board[r].reverse();
+    for(let c=0;c<COLS;c++){
+      const col=board[r][c];
+      if(!col) continue;
+      const m=MIRROR_TYPE[COLOR_TO_TYPE[col]];   // おじゃま・I・O・T はそのまま
+      if(m) board[r][c]=pieceColor(m);
+    }
+  }
+  // 反転した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
+  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  resetLock();
+  draw();
+}
+
 // ===== スナップショット =====
 function saveSnapshot(){
   undoStack.push({board:board.map(r=>[...r]),cur:{...cur},holdType,canHold,bag:[...bag],nextQ:[...nextQ],score,level,lines,b2b,ren,dropInterval,digCount});
@@ -2010,8 +2170,6 @@ function addScore(cleared,tSpin,isPerfect){
   showClearMessage(cleared,tSpin,isB2B,ren,isPerfect);
 }
 function updUI(){
-  document.getElementById('scoreEl').textContent=score.toLocaleString();
-  document.getElementById('levelEl').textContent=level;
   document.getElementById('linesEl').textContent=lines;
 }
 
@@ -2473,6 +2631,7 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true,
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
+                       terrainEditM:false,  // 地形編集の入り切り（スマホ版用。PC版の terrainEdit とは既定が違う）
                        missHoldOn:false,    // ミノ欠けで「特定のミノをHOLDする」スイッチ
                        missHold:null,       // そのときHOLDに入れるミノ
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
@@ -2515,7 +2674,7 @@ function applyOptions(){
   syncViewScaleLabels();
   const check = (id,v) => { const el = document.getElementById(id); if(el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
-  // 表示系のスイッチも設定から復元する（地形編集はスマホ版ではボタンなので対象外）
+  // 表示系のスイッチも設定から復元する（地形編集はボタンなので applyTerrainEdit() で別に戻す）
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
   showGhost = opts.ghost;
@@ -2977,7 +3136,7 @@ function initLayout(){
   // 「表示」で隠したときは高さも食わない
   const optsShown = optsEl && optsEl.style.display !== 'none';
   const optsH = (optsShown && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
-  const fixedH = (tablet ? 44 : 34) + ctrlH + optsH + 4*4 + 8;
+  const fixedH = (tablet ? 32 : 22) + ctrlH + optsH + 4*4 + 8;
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
   const minBS = editing ? 10 : 16;
@@ -2991,7 +3150,7 @@ function initLayout(){
   const scale = (opts.boardScale || 100) / 100;
   if (scale !== 1) {
     const byW = Math.floor((vw - 8) / COLS);                 // 横は画面からはみ出さない
-    const byH = Math.floor((vh - (tablet ? 44 : 34) - 8) / ROWS);  // 縦はスタッツ分だけ残す
+    const byH = Math.floor((vh - (tablet ? 32 : 22) - 8) / ROWS);  // 縦はスタッツ分だけ残す
     BS = Math.max(minBS, Math.min(Math.round(BS * scale), byW, byH));
   }
 
@@ -3433,6 +3592,8 @@ const UI_ITEMS = [
   { id:'layout',      label:'配置編集' },
   { id:'grav',        label:'落下設定' },
   { id:'terrain',     label:'地形編集' },
+  { id:'mirror',      label:'反転（地形の左右反転）' },
+  { id:'terrainSave', label:'記録・復元（地形の控え）' },
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
   { id:'deka',        label:'デカミノモード' },
@@ -3499,9 +3660,18 @@ function renderUiList() {
 
 // ===== バージョン =====
 // 採番ルールと変更履歴は CHANGELOG.md を参照（PC版と同じ番号を使う）
-function openAbout(){ document.getElementById('aboutOverlay').classList.add('open'); }
+function openAbout(){ switchAboutTab('info'); document.getElementById('aboutOverlay').classList.add('open'); }
+function switchAboutTab(name){
+  const TABS = { info:['aboutTabInfo','aboutPaneInfo'], log:['aboutTabLog','aboutPaneLog'] };
+  for(const k in TABS){
+    const [tab, pane] = TABS[k];
+    const t=document.getElementById(tab), p=document.getElementById(pane);
+    if(t) t.classList.toggle('active', k===name);
+    if(p) p.classList.toggle('active', k===name);
+  }
+}
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.44.1';
+const APP_VERSION = '1.48.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -3685,7 +3855,9 @@ initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
+setTerrainMode(!!opts.terrainEditM);   // 地形編集の入り切りを復元する
 applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
+updateTerrainSaveBtn();   // 控えが無いうちは「復元」を押せなくする
 drawDigPreview();  // せりあがりの予告は、ONのときだけ出す
 
 // 最初のスタート画面は出さず、読み込んだらそのまま始める
