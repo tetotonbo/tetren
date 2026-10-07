@@ -710,6 +710,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="garb-btn" style="background:#374151;margin-top:6px;"
         onclick="openImport()"
         title="ぷよテトのゲーム画面のスクショから地形を読み取ります">地形取り込み</button>
+      <button class="garb-btn" style="background:#374151;margin-top:6px;" data-ui="mirror"
+        onclick="if(!gameOver)mirrorTerrain()"
+        title="地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります">⇄ 反転</button>
     </div>
 
     <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
@@ -2793,6 +2796,26 @@ function isStackOverflow() {
     for (let c = MID_COL_L; c <= MID_COL_R; c++)
       if (board[r][c]) return true;
   return false;
+}
+
+// ===== 地形の左右反転 =====
+// 左右に映すと L は J、S は Z の形になる。見た目だけ元の色が残っていると
+// 「この地形はどのミノで作ったか」が読めなくなるので、色も入れ替える。
+const MIRROR_TYPE = { L:'J', J:'L', S:'Z', Z:'S' };
+function mirrorTerrain() {
+  for (let r = 0; r < TROW; r++) {
+    board[r].reverse();
+    for (let c = 0; c < COLS; c++) {
+      const col = board[r][c];
+      if (!col) continue;
+      const m = MIRROR_TYPE[COLOR_TO_TYPE[col]];   // おじゃま・I・O・T はそのまま
+      if (m) board[r][c] = pieceColor(m);
+    }
+  }
+  // 反転した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
+  while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
+  resetLock();
+  draw();
 }
 
 // ===== 地形を強制的に一段下にシフト（addGarbageの逆方向） =====
@@ -5129,6 +5152,7 @@ const UI_ITEMS = [
   { id:'grav',        label:'落下設定' },
   { id:'design',      label:'デザイン（ゴースト・軸表示）' },
   { id:'terrain',     label:'地形操作（地形編集・カラー・取り込み）' },
+  { id:'mirror',      label:'反転（地形の左右反転）' },
   { id:'shot',        label:'カンペ画像' },
   { id:'lines',       label:'LINES' },
   { id:'verSwitch',   label:'スマホ版へ' },
@@ -5339,7 +5363,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.39.1';
+const APP_VERSION = '1.40.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
