@@ -1181,6 +1181,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.46.0 / 1.41.0</span><span class="vl-date">2026-10-07</span></div><ul><li>反転の下に 「記録」「復元」 を追加。同じ場面を何度も練習するための控え</li></ul></div>
@@ -5507,7 +5508,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.43.0';
+const APP_VERSION = '1.43.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5783,8 +5784,8 @@ function resetGameState(fullReset = true) {
   ren=0; lastWasRotation=false; lastKickIndex=0;
   if(clearMsgTimer){clearTimeout(clearMsgTimer);clearMsgTimer=null;}
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
-  // 地形 → ロック解除（編集可）状態にリセット
-  setTerrainMode(true);
+  // 地形編集の入り切りは設定として覚えてあるので、リセットでも勝手に戻さない
+  setTerrainMode(opts.terrainEdit);
   autoGroup = [];
   // RENモードONならスタート時に地形セット
   if (renMode) setupRenTerrain();

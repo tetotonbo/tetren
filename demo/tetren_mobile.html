@@ -750,6 +750,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.46.0 / 1.41.0</span><span class="vl-date">2026-10-07</span></div><ul><li>反転の下に 「記録」「復元」 を追加。同じ場面を何度も練習するための控え</li></ul></div>
@@ -1523,8 +1524,15 @@ function selectTerrainColor(type){
   });
 }
 
+// 入り切りは設定として覚える。PC版は terrainEdit を使っているが、
+// 既定の状態が違う（PCはON／スマホはOFF）ので、スマホ版は別のキーで持つ。
 function toggleTerrainMode(){
-  terrainMode = !terrainMode;
+  setTerrainMode(!terrainMode);
+  opts.terrainEditM = terrainMode;
+  saveOptions();
+}
+function setTerrainMode(on){
+  terrainMode = !!on;
   const btn = document.getElementById('terrainBtn');
   const wrap = document.getElementById('colorPaletteWrap');
   if(terrainMode){
@@ -2623,6 +2631,7 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true,
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
+                       terrainEditM:false,  // 地形編集の入り切り（スマホ版用。PC版の terrainEdit とは既定が違う）
                        missHoldOn:false,    // ミノ欠けで「特定のミノをHOLDする」スイッチ
                        missHold:null,       // そのときHOLDに入れるミノ
                        // 表示の大きさ（％）。タブレットで好みの比率にできる。
@@ -2665,7 +2674,7 @@ function applyOptions(){
   syncViewScaleLabels();
   const check = (id,v) => { const el = document.getElementById(id); if(el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
-  // 表示系のスイッチも設定から復元する（地形編集はスマホ版ではボタンなので対象外）
+  // 表示系のスイッチも設定から復元する（地形編集はボタンなので applyTerrainEdit() で別に戻す）
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
   showGhost = opts.ghost;
@@ -3662,7 +3671,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.48.0';
+const APP_VERSION = '1.48.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -3846,6 +3855,7 @@ initLayout();
 loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の高さ計算に反映する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
+setTerrainMode(!!opts.terrainEditM);   // 地形編集の入り切りを復元する
 applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
 updateTerrainSaveBtn();   // 控えが無いうちは「復元」を押せなくする
 drawDigPreview();  // せりあがりの予告は、ONのときだけ出す
