@@ -1181,6 +1181,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.0 / 1.44.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「復元」でミノの順番も引き直すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
@@ -2545,6 +2546,8 @@ function pickValid(kind) {
 }
 
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
+// HOLDするミノを「おまかせ」にするときの印。始めるたびに残ったミノから引き直す
+const HOLD_RANDOM = '?';
 // 「特定のミノをHOLDする」がONのときだけ出す選択行。
 // 欠けに選んでいるミノは、HOLDには置けないので選べないようにする
 function renderMissHoldRow() {
@@ -2555,18 +2558,20 @@ function renderMissHoldRow() {
   const box = document.getElementById('missHoldBtns');
   if (!box) return;
   box.innerHTML = '';
-  const mk = (type, label) => {
+  const mk = (type, label, extra) => {
     const b = document.createElement('button');
-    b.className = 'rand-num' + (opts.missHold === type ? ' sel' : '');
+    b.className = 'rand-num' + (opts.missHold === type ? ' sel' : '') + (extra ? ' ' + extra : '');
     b.textContent = label;
     // 抜くミノに選ばれているものは、そもそも1巡目に無いのでHOLDにも置けない
-    b.disabled = !!type && pick.miss.sel.has(type);
-    b.title = type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
+    b.disabled = !!type && type !== HOLD_RANDOM && pick.miss.sel.has(type);
+    b.title = type === HOLD_RANDOM ? '残ったミノから毎回ランダムに選ぶ'
+            : type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
     b.addEventListener('click', () => setMissHold(type));
     box.appendChild(b);
   };
   mk(null, 'なし');
   DPC_ROWS.flat().forEach(t => mk(t, t));   // 上のグリッドと同じ並びにする
+  mk(HOLD_RANDOM, 'ランダム', 'rand-any');
 }
 // 抜くミノに選ばれたらHOLDの指定を外す。抜くミノの選択のほうが主なので、そちらを優先する
 function clearMissHoldIf(types) {
@@ -2771,7 +2776,11 @@ function applyMissTypes(types, last, record = true) {
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
   clearMissHoldIf(types);   // 単体選択やランダムで抜かれた場合もここで外す
-  const hold = opts.missHoldOn ? opts.missHold : null;
+  let hold = opts.missHoldOn ? opts.missHold : null;
+  // 「ランダム」は始めるたびに引き直す（↻ でも毎回変わる）
+  if (hold === HOLD_RANDOM) {
+    hold = firstBagTypes.length ? firstBagTypes[Math.floor(Math.random() * firstBagTypes.length)] : null;
+  }
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if (holdOk) {
     firstBagTypes = firstBagTypes.filter(t => t !== hold);
@@ -5508,7 +5517,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.44.0';
+const APP_VERSION = '1.45.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
