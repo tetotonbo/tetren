@@ -740,7 +740,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           title="いまの地形を覚えます。もう一度押すと覚え直します">記録</button>
         <button class="garb-btn" id="loadTerrainBtn" style="background:#374151;flex:1;min-width:0;"
           onclick="if(!gameOver)loadTerrain()"
-          title="覚えた地形に戻します。積んだミノは消えます">復元</button>
+          title="覚えた地形に戻し、ミノの順番も引き直します">復元</button>
       </div>
     </div>
 
@@ -1181,6 +1181,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.0 / 1.44.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「復元」でミノの順番も引き直すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
@@ -2936,10 +2937,9 @@ function saveTerrain() {
 function loadTerrain() {
   if (!savedTerrain) return;
   board = savedTerrain.map(r => [...r]);
-  // 戻した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
-  while (!valid(cur, 0, 0, cur.state) && cur.row > 0) cur.row--;
-  resetLock();
-  draw();
+  // 同じ地形を別のツモで繰り返せるよう、ミノの順番も引き直す。
+  // 埋まってしまうときに置ける高さへ逃がす処理も、この中でやっている。
+  resetQueueOnly();
 }
 
 // ===== 地形の左右反転 =====
@@ -5508,7 +5508,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.43.1';
+const APP_VERSION = '1.44.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
