@@ -525,7 +525,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
         title="いまの地形を覚えます。もう一度押すと覚え直します">記録</button>
       <button class="side-btn" id="loadTerrainBtn" style="flex:1;"
         onclick="if(!gameOver)loadTerrain()"
-        title="覚えた地形に戻します。積んだミノは消えます">復元</button>
+        title="覚えた地形に戻し、ミノの順番も引き直します">復元</button>
     </div>
     <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
@@ -750,6 +750,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.0 / 1.44.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「復元」でミノの順番も引き直すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
@@ -1995,10 +1997,9 @@ function saveTerrain(){
 function loadTerrain(){
   if(!savedTerrain) return;
   board=savedTerrain.map(r=>[...r]);
-  // 戻した地形にいまのミノが埋まってしまうことがあるので、置ける高さへ逃がす
-  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
-  resetLock();
-  draw();
+  // 同じ地形を別のツモで繰り返せるよう、ミノの順番も引き直す。
+  // 埋まってしまうときに置ける高さへ逃がす処理も、この中でやっている。
+  resetQueueOnly();
 }
 
 // ===== 地形の左右反転 =====
@@ -2476,6 +2477,8 @@ function setPickMulti(on){
 }
 // 7個すべては抜けない（引けるミノが無くなる）
 function missValid(){ const n=missPick.sel.size; return n>=1 && n<=6; }
+// HOLDするミノを「おまかせ」にするときの印。始めるたびに残ったミノから引き直す
+const HOLD_RANDOM = '?';
 // 「特定のミノをHOLDする」がONのときだけ出す選択行。
 // 欠けに選んでいるミノは、HOLDには置けないので選べないようにする
 function renderMissHoldRow(){
@@ -2486,18 +2489,20 @@ function renderMissHoldRow(){
   const box=document.getElementById('missHoldBtns');
   if(!box) return;
   box.innerHTML='';
-  const mk=(type,label)=>{
+  const mk=(type,label,extra)=>{
     const b=document.createElement('button');
-    b.className='rand-num'+(opts.missHold===type?' sel':'');
+    b.className='rand-num'+(opts.missHold===type?' sel':'')+(extra?' '+extra:'');
     b.type='button';
     b.textContent=label;
     // 抜くミノに選ばれているものは、そもそも1巡目に無いのでHOLDにも置けない
-    b.disabled=!!type && missPick.sel.has(type);
+    b.disabled=!!type && type!==HOLD_RANDOM && missPick.sel.has(type);
+    b.title = type===HOLD_RANDOM ? '残ったミノから毎回ランダムに選ぶ' : '';
     b.addEventListener('click',()=>setMissHold(type));
     box.appendChild(b);
   };
   mk(null,'なし');
   DPC_ROWS.flat().forEach(t=>mk(t,t));   // 上のグリッドと同じ並びにする
+  mk(HOLD_RANDOM,'ランダム','rand-any');
 }
 // 抜くミノに選ばれたらHOLDの指定を外す。抜くミノの選択のほうが主なので、そちらを優先する
 function clearMissHoldIf(types){
@@ -2595,7 +2600,11 @@ function applyMissTypes(types, last, record = true){
   // 最初からHOLDに入れるミノは、1巡目からも抜く
   //（1巡目の途中でHOLDへ逃がした状態を再現するため）
   clearMissHoldIf(types);   // 単体選択やランダムで抜かれた場合もここで外す
-  const hold = opts.missHoldOn ? opts.missHold : null;
+  let hold = opts.missHoldOn ? opts.missHold : null;
+  // 「ランダム」は始めるたびに引き直す（↻ でも毎回変わる）
+  if(hold === HOLD_RANDOM){
+    hold = firstBagTypes.length ? firstBagTypes[Math.floor(Math.random()*firstBagTypes.length)] : null;
+  }
   const holdOk = !!hold && firstBagTypes.includes(hold);
   if(holdOk){
     firstBagTypes = firstBagTypes.filter(t => t !== hold);
@@ -3671,7 +3680,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.48.1';
+const APP_VERSION = '1.50.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
