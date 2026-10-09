@@ -273,6 +273,9 @@ input:checked + .tgl::after { transform:translateX(10px); }
   padding:9px 2px; border-bottom:1px solid #374151;
 }
 .opt-row:last-of-type { border-bottom:none; }
+/* 前提の設定がOFFで、いま触れない行 */
+.opt-row.opt-off { opacity:0.4; }
+.opt-row.opt-off label { cursor:default; }
 .opt-row input[type=checkbox] { display:none; }
 .opt-label { font-size:12px; color:#e5e7eb; flex:1; min-width:0; line-height:1.5; }
 /* 設定画面のトグル。左の列の .tgl-row は width:100% なのでここでは使わない */
@@ -750,6 +753,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.0 / 1.44.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「復元」でミノの順番も引き直すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
@@ -917,6 +921,24 @@ input:checked + .tgl::after { transform:translateX(10px); }
             <span class="opt-note">せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
           <label class="cfg-tgl">
             <input type="checkbox" id="optDigOnLock" onchange="setOption('digOnLock', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row" id="optDigOffsetRow">
+          <span class="opt-label">相殺
+            <span class="opt-note">ミノを置いたときの攻撃ぶんだけ、溜まっているせりあがりを打ち消します。OFFにすると打ち消さず、溜まったぶんがそのまま上がります</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigOffset" onchange="setOption('digOffset', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row" id="optDigHoldRow">
+          <span class="opt-label">ライン消去中はせりあがりしない
+            <span class="opt-note">ラインを消したミノを置いたときは、せりあがりを次に置くまで保留します。相殺がONのときだけ使えます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigHoldOnClear" onchange="setOption('digHoldOnClear', this.checked)">
             <span class="tgl"></span>
           </label>
         </div>
@@ -2068,8 +2090,10 @@ function lock(){
   }
   // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
   if(digMode && digTriggerType==='time'){
-    offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
-    if(opts.digOnLock) flushPendingDig();
+    if(opts.digOffset) offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
+    // 「ライン消去中はせりあがりしない」: 消したときは次に置くまで持ち越す
+    const holdByClear = opts.digHoldOnClear && cleared > 0;
+    if(opts.digOnLock && !holdByClear) flushPendingDig();
   }
   spawn(); draw();
 }
@@ -2637,6 +2661,8 @@ updateMissAgainBtn();
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
+                       digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
+                       digHoldOnClear:false,   // ラインを消したときはせりあがりを保留する
                        dasMs:167, arrMs:33, inputUnit:'ms',
                        missMulti:false,     // ミノ欠けの「複数選択」スイッチ
                        missKeep:false,      // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
@@ -2690,6 +2716,17 @@ function applyOptions(){
   showAxis  = opts.axis;
   check('optMultiHold2', opts.multiHold);
   check('optDigOnLock', opts.digOnLock);
+  check('optDigOffset', opts.digOffset);
+  check('optDigHoldOnClear', opts.digHoldOnClear);
+  // 前提の設定がOFFのあいだは触らせない（相殺は設置直後ONが前提、
+  // 保留はさらに相殺ONが前提）
+  const setEnabled = (rowId, inputId, on) => {
+    const row=document.getElementById(rowId), el=document.getElementById(inputId);
+    if(row) row.classList.toggle('opt-off', !on);
+    if(el) el.disabled = !on;
+  };
+  setEnabled('optDigOffsetRow', 'optDigOffset', !!opts.digOnLock);
+  setEnabled('optDigHoldRow',   'optDigHoldOnClear', !!opts.digOnLock && !!opts.digOffset);
   check('optSdfMode', opts.sdfMode);
   const put = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   put('optHoleKeepVal',  opts.holeKeep);
@@ -3680,7 +3717,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.50.0';
+const APP_VERSION = '1.51.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
