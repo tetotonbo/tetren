@@ -270,6 +270,8 @@ button, label, .ctrl-lbl, [data-pos] {
 }
 
 /* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
+/* バーの×。文字ボタンより少し詰める */
+.sw-btn.sw-x { padding:2px 8px; font-size:14px; line-height:1; }
 #shotOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
@@ -287,14 +289,13 @@ button, label, .ctrl-lbl, [data-pos] {
 #shotDrop:hover, #shotDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
 #shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
 
-/* 浮かせるウィンドウ本体（何枚でも出せる）。最前面ONなら全部の上、OFFなら盤面の裏へ回る */
+/* 浮かせるウィンドウ本体（何枚でも出せる）。常にいちばん手前に出す */
 .shot-win {
   position:fixed; width:420px; height:300px;
   background:#0f131c; border:1px solid #374151; border-radius:8px;
   box-shadow:0 10px 34px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
   display:flex; flex-direction:column;
 }
-.shot-win.unpinned { z-index:1; }
 .shot-bar {
   display:flex; align-items:center; gap:6px; padding:5px 6px;
   background:#1f2735; cursor:move; user-select:none; flex:0 0 auto;
@@ -1040,7 +1041,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <input type="file" id="shotFile" accept="image/*" style="display:none">
     <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
     <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
-      <button class="imp-btn" onclick="pinAllShots()" title="裏に回したカンペ画像をすべて手前に戻す">すべて最前面に</button>
       <button class="imp-btn" onclick="closeAllShots(); closeShot();" title="表示中のカンペ画像をすべて消す">すべて消す</button>
     </div>
     <div class="imp-actions">
@@ -1202,6 +1202,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.0 / 1.48.0</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像のウィンドウから 「最前面」「追加」「変更」を外し、閉じるを × にした</li><li>画面のどこでも、画像を貼り付ければカンペ画像として出るようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.52.0 / 1.47.0</span><span class="vl-date">2026-10-10</span></div><ul><li>NEXTとHOLDをダブルクリック（スマホ版はダブルタップ）すると、ミノを選んで差し替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
@@ -5641,7 +5642,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.47.0';
+const APP_VERSION = '1.48.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -5669,13 +5670,10 @@ function closeAbout() { document.getElementById('aboutOverlay').classList.remove
 // ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====
 const SHOT_BAR_H = 28;        // タイトルバーのおおよその高さ
 let shotSeq = 0;              // 新しいウィンドウを少しずつずらして出すためのカウンタ
-let shotTarget = null;        // 画像を差し替える対象。null なら新規に1枚追加する
 
 function shotWins() { return [...document.querySelectorAll('.shot-win')]; }
 
-// ダイアログを開く。win を渡すとその1枚を差し替え、省略すると新規追加になる
-function openShot(win) {
-  shotTarget = win || null;
+function openShot() {
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
   document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
@@ -5683,18 +5681,8 @@ function openShot(win) {
 }
 function closeShot() {
   document.getElementById('shotOverlay').classList.remove('open');
-  shotTarget = null;
 }
 function closeAllShots() { shotWins().forEach(w => w.remove()); }
-function pinAllShots()   { shotWins().forEach(w => setShotPin(w, true)); }
-
-function setShotPin(win, on) {
-  win.classList.toggle('unpinned', !on);
-  const btn = win.querySelector('[data-act="pin"]');
-  btn.classList.toggle('on', on);
-  btn.textContent = on ? '最前面 ON' : '最前面 OFF';
-  btn.blur();                 // フォーカスが残るとキー操作を食うため
-}
 
 // ウィンドウを1枚作る
 function createShotWindow() {
@@ -5703,10 +5691,7 @@ function createShotWindow() {
   win.innerHTML =
     '<div class="shot-bar">' +
       '<span class="sw-title">カンペ</span>' +
-      '<button class="sw-btn on" data-act="pin" title="ONなら常に手前、OFFなら盤面の裏に回る">最前面 ON</button>' +
-      '<button class="sw-btn" data-act="add" title="カンペ画像をもう1枚追加する">追加</button>' +
-      '<button class="sw-btn" data-act="change" title="この画像を別の画像に差し替える">変更</button>' +
-      '<button class="sw-btn" data-act="close" title="この画像を閉じる">閉じる</button>' +
+      '<button class="sw-btn sw-x" data-act="close" title="この画像を閉じる">×</button>' +
     '</div>' +
     '<div class="shot-body"><img alt=""></div>' +
     '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
@@ -5722,11 +5707,10 @@ function createShotWindow() {
 function loadShotImage(src) {
   const img = new Image();
   img.onload = () => {
-    const replacing = shotTarget && document.body.contains(shotTarget);
-    const win = replacing ? shotTarget : createShotWindow();
+    const win = createShotWindow();
     win.querySelector('img').src = src;
-    // 新規のときだけ画像の縦横比に合わせた大きさ・位置で出す（差し替えは今の枠を保つ）
-    if (!replacing) {
+    // 画像の縦横比に合わせた大きさ・位置で出す
+    {
       const maxW = Math.min(520, window.innerWidth * 0.45);
       const maxH = window.innerHeight * 0.7 - SHOT_BAR_H;
       const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
@@ -5800,11 +5784,17 @@ function shotPointerDown(e, win, mode) {
     const dt = e.dataTransfer;
     if (dt.files && dt.files[0]) loadShotFile(dt.files[0]);
   });
-  // ⌘V / Ctrl+V での貼り付け（このダイアログが開いている間だけ）
+  // ⌘V / Ctrl+V での貼り付け。ダイアログを開いていなくても、
+  // 画像を貼れば1枚カンペとして出す（地形取り込みを開いている間はそちらが受け取る）
   window.addEventListener('paste', e => {
-    if (!document.getElementById('shotOverlay').classList.contains('open')) return;
+    if (document.getElementById('importOverlay').classList.contains('open')) return;
+    if (!e.clipboardData) return;
     for (const item of e.clipboardData.items) {
-      if (item.type.startsWith('image/')) { loadShotFile(item.getAsFile()); break; }
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        loadShotFile(item.getAsFile());
+        break;
+      }
     }
   });
   document.getElementById('shotOverlay').addEventListener('mousedown', e => {
@@ -5824,10 +5814,7 @@ function shotPointerDown(e, win, mode) {
     if (!btn) return;
     const win = btn.closest('.shot-win');
     const act = btn.dataset.act;
-    if (act === 'pin')         setShotPin(win, win.classList.contains('unpinned'));
-    else if (act === 'add')    openShot();        // 対象なし＝新規追加
-    else if (act === 'change') openShot(win);
-    else if (act === 'close')  win.remove();
+    if (act === 'close') win.remove();
   });
 })();
 

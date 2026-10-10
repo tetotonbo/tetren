@@ -216,7 +216,6 @@ input:checked + .tgl::after { transform:translateX(10px); }
   box-shadow:0 10px 30px rgba(0,0,0,0.55); overflow:hidden; z-index:300;
   display:flex; flex-direction:column;
 }
-.shot-win.unpinned { z-index:1; }
 .shot-bar {
   display:flex; align-items:center; gap:4px; padding:4px 5px;
   background:#1f2735; touch-action:none; user-select:none; flex:0 0 auto;
@@ -229,7 +228,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
   border-radius:4px; padding:3px 6px; white-space:nowrap;
   -webkit-tap-highlight-color:transparent;
 }
-.sw-btn.on { background:#4f46e5; color:#fff; }
+/* バーの×。文字ボタンより少し詰める */
+.sw-btn.sw-x { padding:2px 8px; font-size:14px; line-height:1; }
 .shot-body { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; background:#000; }
 .shot-body img { width:100%; height:100%; object-fit:contain; display:block; -webkit-user-drag:none; }
 .sw-rs { position:absolute; touch-action:none; }
@@ -672,7 +672,6 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <input type="file" id="shotFile" accept="image/*" style="display:none">
     <div class="shot-act" id="shotCtrls" style="display:none;">
-      <button onclick="pinAllShots()">すべて最前面に</button>
       <button onclick="closeAllShots(); closeShot();">すべて消す</button>
     </div>
     <div class="shot-act">
@@ -764,6 +763,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.0 / 1.48.0</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像のウィンドウから 「最前面」「追加」「変更」を外し、閉じるを × にした</li><li>画面のどこでも、画像を貼り付ければカンペ画像として出るようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.52.0 / 1.47.0</span><span class="vl-date">2026-10-10</span></div><ul><li>NEXTとHOLDをダブルクリック（スマホ版はダブルタップ）すると、ミノを選んで差し替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
@@ -3779,7 +3779,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.52.0';
+const APP_VERSION = '1.53.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -3795,31 +3795,18 @@ const APP_VERSION = '1.52.0';
 // ===== カンペ画像（画面に重ねて表示する参考画像。何枚でも並べられる） =====
 const SHOT_BAR_H = 24;
 let shotSeq = 0;              // 新しいウィンドウを少しずつずらして出すためのカウンタ
-let shotTarget = null;        // 画像を差し替える対象。null なら新規に1枚追加する
 
 function shotWins(){ return [...document.querySelectorAll('.shot-win')]; }
 
-// ダイアログを開く。win を渡すとその1枚を差し替え、省略すると新規追加になる
-function openShot(win){
-  shotTarget = win || null;
+function openShot(){
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
   document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
 }
 function closeShot(){
   document.getElementById('shotOverlay').classList.remove('open');
-  shotTarget = null;
 }
 function closeAllShots(){ shotWins().forEach(w => w.remove()); }
-function pinAllShots(){ shotWins().forEach(w => setShotPin(w, true)); }
-
-function setShotPin(win, on){
-  win.classList.toggle('unpinned', !on);
-  const btn = win.querySelector('[data-act="pin"]');
-  btn.classList.toggle('on', on);
-  btn.textContent = on ? '最前面 ON' : '最前面 OFF';
-  btn.blur();
-}
 
 function createShotWindow(){
   const win = document.createElement('div');
@@ -3827,10 +3814,7 @@ function createShotWindow(){
   win.innerHTML =
     '<div class="shot-bar">' +
       '<span class="sw-title">カンペ</span>' +
-      '<button class="sw-btn on" data-act="pin">最前面 ON</button>' +
-      '<button class="sw-btn" data-act="add">追加</button>' +
-      '<button class="sw-btn" data-act="change">変更</button>' +
-      '<button class="sw-btn" data-act="close">閉じる</button>' +
+      '<button class="sw-btn sw-x" data-act="close">×</button>' +
     '</div>' +
     '<div class="shot-body"><img alt=""></div>' +
     '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
@@ -3845,10 +3829,9 @@ function createShotWindow(){
 function loadShotImage(src){
   const img = new Image();
   img.onload = () => {
-    const replacing = shotTarget && document.body.contains(shotTarget);
-    const win = replacing ? shotTarget : createShotWindow();
+    const win = createShotWindow();
     win.querySelector('img').src = src;
-    if(!replacing){
+    {
       const maxW = Math.min(280, window.innerWidth * 0.7);
       const maxH = window.innerHeight * 0.5 - SHOT_BAR_H;
       const sc = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
@@ -3918,10 +3901,15 @@ function shotPointerDown(e, win, mode){
     const dt = e.dataTransfer;
     if(dt.files && dt.files[0]) loadShotFile(dt.files[0]);
   });
+  // 貼り付けはダイアログを開いていなくても受ける。画像を貼れば1枚カンペとして出す
   window.addEventListener('paste', e => {
-    if(!document.getElementById('shotOverlay').classList.contains('open')) return;
+    if(!e.clipboardData) return;
     for(const item of e.clipboardData.items){
-      if(item.type.startsWith('image/')){ loadShotFile(item.getAsFile()); break; }
+      if(item.type.startsWith('image/')){
+        e.preventDefault();
+        loadShotFile(item.getAsFile());
+        break;
+      }
     }
   });
   document.getElementById('shotOverlay').addEventListener('pointerdown', e => {
@@ -3941,10 +3929,7 @@ function shotPointerDown(e, win, mode){
     if(!btn) return;
     const win = btn.closest('.shot-win');
     const act = btn.dataset.act;
-    if(act === 'pin')         setShotPin(win, win.classList.contains('unpinned'));
-    else if(act === 'add')    openShot();
-    else if(act === 'change') openShot(win);
-    else if(act === 'close')  win.remove();
+    if(act === 'close') win.remove();
   });
 })();
 
