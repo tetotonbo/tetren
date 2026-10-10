@@ -360,12 +360,12 @@ button, label, .ctrl-lbl, [data-pos] {
 .dm-sep { border-top:1px solid #374151; margin:12px 0 4px; }
 
 /* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
-#dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay, #swapOverlay {
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #digMultiOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel, #digMultiPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #digMultiOverlay.open, #swapOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #digMultiPanel, #swapPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   width:min(460px, 94vw); padding:16px 18px 18px;
   box-shadow:0 18px 50px rgba(0,0,0,0.6);
@@ -648,7 +648,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- HOLD -->
     <div class="panel" id="holdPanel">
       <div class="panel-label">HOLD</div>
-      <canvas id="holdCanvas" width="100" height="80"></canvas>
+      <canvas id="holdCanvas" width="100" height="80"
+        title="ダブルクリックでミノを変更できます"></canvas>
       <!-- 連続HOLDの可否。HOLDの機能なのでこの枠の中に置く -->
       <label class="tgl-row" style="margin-top:6px;"
         title="OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）">
@@ -885,7 +886,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- NEXT -->
     <div class="panel" id="nextPanel">
       <div class="panel-label">NEXT</div>
-      <canvas id="nextCanvas" width="100" height="420"></canvas>
+      <canvas id="nextCanvas" width="100" height="420"
+        title="ダブルクリックでそのミノを変更できます"></canvas>
     </div>
 
     <!-- モード（デカミノ / REN / DPCセット） -->
@@ -1048,6 +1050,22 @@ input:checked + .tgl::after { transform:translateX(16px); }
 </div>
 
 <!-- DPCセットダイアログ（HOLDするミノを選ぶ） -->
+<!-- HOLD/NEXT のミノ差し替え -->
+<div id="swapOverlay">
+  <div id="swapPanel">
+    <div class="imp-head">
+      <span class="imp-title" id="swapTitle">ミノを変更</span>
+      <button class="imp-x" title="閉じる" onclick="closeSwap()">×</button>
+    </div>
+    <div class="imp-hint" style="margin:0 0 12px;">置き換えたいミノを選んでください。</div>
+    <div id="swapGrid"></div>
+    <div class="imp-actions">
+      <button class="imp-btn" id="swapEmptyBtn" onclick="swapTo(null)">空にする</button>
+      <button class="imp-btn" onclick="closeSwap()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <div id="dpcOverlay">
   <div id="dpcPanel">
     <div class="imp-head">
@@ -1184,6 +1202,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.52.0 / 1.47.0</span><span class="vl-date">2026-10-10</span></div><ul><li>NEXTとHOLDをダブルクリック（スマホ版はダブルタップ）すると、ミノを選んで差し替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
@@ -2514,6 +2533,72 @@ function discardPiece() {
   spawn(); // 現在のピースを破棄して次を出現させる
   draw();
 }
+
+// ===== HOLD / NEXT のミノ差し替え =====
+// 練習中に「この場面でこのミノが来たら」を試せるよう、
+// HOLDとNEXTの中身をダブルクリックで入れ替えられるようにする。
+let swapTarget = null;   // { kind:'hold' } または { kind:'next', index:i }
+function openSwap(target) {
+  if (gameOver) return;
+  swapTarget = target;
+  document.getElementById('swapTitle').textContent =
+    target.kind === 'hold' ? 'HOLDのミノを変更' : ('NEXT ' + (target.index + 1) + '番目のミノを変更');
+  // 空にできるのはHOLDだけ（NEXTは必ず何か入っている）
+  document.getElementById('swapEmptyBtn').style.display = target.kind === 'hold' ? '' : 'none';
+  renderSwapGrid();
+  document.getElementById('swapOverlay').classList.add('open');
+}
+function closeSwap() {
+  document.getElementById('swapOverlay').classList.remove('open');
+  swapTarget = null;
+}
+function swapTo(type) {
+  if (!swapTarget) return;
+  if (swapTarget.kind === 'hold') {
+    holdType = type;
+    canHold = true;          // 入れ替えたぶんはホールド権を戻す
+  } else {
+    fillQ();
+    const item = nextQ[swapTarget.index];
+    if (item) item.type = type;   // 巡の区切りと番号はそのまま残す
+  }
+  closeSwap();
+  updUI(); draw();
+}
+function renderSwapGrid() {
+  const grid = document.getElementById('swapGrid');
+  grid.innerHTML = '';
+  DPC_ROWS.forEach(types => {
+    const row = document.createElement('div');
+    row.className = 'dpc-row';
+    types.forEach(type => {
+      const btn = document.createElement('button');
+      btn.className = 'dpc-btn';
+      const cv = document.createElement('canvas');
+      cv.width = 84; cv.height = 56;
+      const cx = cv.getContext('2d');
+      setupHiDPICanvas(cv, cx);
+      drawMini(cx, type, 0, 84, 56, false, 14);
+      const name = document.createElement('span');
+      name.className = 'dpc-name';
+      name.textContent = type;
+      btn.appendChild(cv); btn.appendChild(name);
+      btn.addEventListener('click', () => swapTo(type));
+      row.appendChild(btn);
+    });
+    grid.appendChild(row);
+  });
+}
+holdCanvas.addEventListener('dblclick', e => {
+  e.preventDefault();
+  openSwap({ kind:'hold' });
+});
+nextCanvas.addEventListener('dblclick', e => {
+  e.preventDefault();
+  const r = nextCanvas.getBoundingClientRect();
+  const i = Math.floor((e.clientY - r.top) / (r.height / NEXT_SHOW));
+  openSwap({ kind:'next', index: Math.max(0, Math.min(NEXT_SHOW - 1, i)) });
+});
 
 // ===== DPCセット／ミノ欠け（ミノを選んで練習を始める） =====
 // この2つは「選択画面を出して、選んだミノで1巡目を組み直す」という同じ骨格なので、
@@ -5556,7 +5641,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.46.1';
+const APP_VERSION = '1.47.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

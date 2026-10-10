@@ -241,16 +241,16 @@ input:checked + .tgl::after { transform:translateX(10px); }
             background:linear-gradient(135deg, transparent 50%, #6b7280 50%); }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay, #swapOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open { display:flex; }
-#dpcPanel, #missPanel, #aboutPanel, #cfgPanel {
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open, #swapOverlay.open { display:flex; }
+#dpcPanel, #missPanel, #aboutPanel, #cfgPanel, #swapPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2, #swapPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
 /* ===== 設定モーダル（PC版と同じ構成） ===== */
 /* 画面が狭いので、中身が増えたらパネルの中だけスクロールさせる */
 /* 設定だけは上端を固定して、中身が増えたぶんは下へ伸ばす。
@@ -682,6 +682,17 @@ input:checked + .tgl::after { transform:translateX(10px); }
 </div>
 
 <!-- DPCセット: HOLDに入れるミノを選ぶ -->
+<!-- HOLD/NEXT のミノ差し替え -->
+<div id="swapOverlay">
+  <div id="swapPanel">
+    <h2 id="swapTitle">ミノを変更</h2>
+    <div class="sub2">置き換えたいミノを選んでください</div>
+    <div id="swapGrid"></div>
+    <button class="dpc-close" id="swapEmptyBtn" style="background:#374151;" onclick="swapTo(null)">空にする</button>
+    <button class="dpc-close" onclick="closeSwap()">キャンセル</button>
+  </div>
+</div>
+
 <div id="dpcOverlay">
   <div id="dpcPanel">
     <h2>DPCセット</h2>
@@ -753,6 +764,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.52.0 / 1.47.0</span><span class="vl-date">2026-10-10</span></div><ul><li>NEXTとHOLDをダブルクリック（スマホ版はダブルタップ）すると、ミノを選んで差し替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
@@ -2437,6 +2449,56 @@ function renderPieceGrid(gridId, onPick){
   });
 }
 function renderDpcGrid(){ renderPieceGrid('dpcGrid', setDpcHold); }
+
+// ===== HOLD / NEXT のミノ差し替え =====
+// 練習中に「この場面でこのミノが来たら」を試せるよう、
+// HOLDとNEXTの中身をダブルタップで入れ替えられるようにする。
+let swapTarget = null;   // { kind:'hold' } または { kind:'next', index:i }
+function openSwap(target){
+  if(gameOver) return;
+  swapTarget = target;
+  document.getElementById('swapTitle').textContent =
+    target.kind === 'hold' ? 'HOLDのミノを変更' : ('NEXT ' + (target.index + 1) + '番目のミノを変更');
+  // 空にできるのはHOLDだけ（NEXTは必ず何か入っている）
+  document.getElementById('swapEmptyBtn').style.display = target.kind === 'hold' ? '' : 'none';
+  renderPieceGrid('swapGrid', swapTo);
+  document.getElementById('swapOverlay').classList.add('open');
+}
+function closeSwap(){
+  document.getElementById('swapOverlay').classList.remove('open');
+  swapTarget = null;
+}
+function swapTo(type){
+  if(!swapTarget) return;
+  if(swapTarget.kind === 'hold'){
+    holdType = type;
+    canHold = true;          // 入れ替えたぶんはホールド権を戻す
+  } else {
+    fillQ();
+    const item = nextQ[swapTarget.index];
+    if(item) item.type = type;   // 巡の区切りと番号はそのまま残す
+  }
+  closeSwap();
+  updUI(); draw();
+}
+// ダブルタップの判定。スマホではdblclickが来ないことがあるので自前で見る
+function addDoubleTap(el, fn){
+  let last = 0;
+  const hit = e => {
+    const now = Date.now();
+    if(now - last < 350){ last = 0; e.preventDefault(); fn(e); }
+    else last = now;
+  };
+  el.addEventListener('touchend', hit, { passive:false });
+  el.addEventListener('dblclick', e => { e.preventDefault(); fn(e); });   // マウス接続時
+}
+addDoubleTap(holdCanvas, () => openSwap({ kind:'hold' }));
+addDoubleTap(nextCanvas, e => {
+  const r = nextCanvas.getBoundingClientRect();
+  const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - r.top;
+  const i = Math.floor(y / (r.height / NEXT_SHOW));
+  openSwap({ kind:'next', index: Math.max(0, Math.min(NEXT_SHOW - 1, i)) });
+});
 function setDpcHold(type){
   lastDpcType=type; updateDpcAgainBtn();
   // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
@@ -3717,7 +3779,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.51.1';
+const APP_VERSION = '1.52.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
