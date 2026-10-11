@@ -466,6 +466,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
         onchange="setOption('axis', this.checked)">
       <span class="tgl"></span>
     </label>
+    <label class="tgl-row" data-ui="grid" title="盤面のマス目の線を表示する">
+      <span>グリッド</span>
+      <input type="checkbox" id="gridCheck" checked
+        onchange="setOption('grid', this.checked)">
+      <span class="tgl"></span>
+    </label>
     <label class="tgl-row" data-ui="layout" title="ONにすると操作ボタンをドラッグで動かせます。盤面やNEXTの大きさもここで変えられます">
       <span>配置編集</span>
       <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
@@ -763,6 +769,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.54.0 / 1.49.0</span><span class="vl-date">2026-10-11</span></div><ul><li>デザインに「グリッド」のON/OFFスイッチを追加。盤面のマス目の線を消せるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.2 / 1.48.2</span><span class="vl-date">2026-10-11</span></div><ul><li>スキンが「完全透明」「ほぼ透明」のとき、地形編集でミノの色を選んでも置いたマスが見えなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.1 / 1.48.1</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像が重なっているとき、触った1枚がいちばん手前に出るようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.0 / 1.48.0</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像のウィンドウから 「最前面」「追加」「変更」を外し、閉じるを × にした</li><li>画面のどこでも、画像を貼り付ければカンペ画像として出るようにした</li></ul></div>
@@ -1154,8 +1161,9 @@ function makePPT2Tile(draw) {
   return cv;
 }
 // 空きマス: 暗い紫地に、ひとまわり明るい継ぎ目を回す
+const PPT2_BG_COLOR = '#322d3d';   // グリッド線OFFのときは、継ぎ目のないこの地色だけで塗る
 const PPT2_BG_TILE = makePPT2Tile((c, s) => {
-  c.fillStyle = '#322d3d';
+  c.fillStyle = PPT2_BG_COLOR;
   c.fillRect(0, 0, s, s);
   c.strokeStyle = '#484152';
   c.lineWidth = s * 0.05;
@@ -1406,6 +1414,7 @@ let undoStack = [];
 const UNDO_MAX = 50;
 let showGhost = true;
 let showAxis  = false;
+let showGrid  = true;   // グリッド線（盤面のマス目）
 let lastGarbageCol = null;
 let downHeld = false, lastSoftDrop = 0;
 // 画面ボタン・長押しのソフトドロップもキーボードと同じ経路に流し、
@@ -2281,8 +2290,9 @@ function drawBigBlock(ctx,c,r,color,alpha=1){
 
 function drawBoard(){
   if(ppt2Theme){
-    // 空きマスのタイルを敷き詰める（継ぎ目もタイルに含まれる）
-    boardCtx.fillStyle=ppt2BgPattern();
+    // 空きマスのタイルを敷き詰める（継ぎ目もタイルに含まれる）。
+    // グリッド線OFFのときは継ぎ目まで消えるよう、タイルの地色で塗るだけにする
+    boardCtx.fillStyle = showGrid ? ppt2BgPattern() : PPT2_BG_COLOR;
     boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
     // 原作同様、盤面最上部に落ちる影
     const shade=boardCtx.createLinearGradient(0,0,0,BS*1.6);
@@ -2292,8 +2302,10 @@ function drawBoard(){
     boardCtx.fillRect(0,0,COLS*BS,BS*1.6);
   } else {
     boardCtx.fillStyle='#0d1117'; boardCtx.fillRect(0,0,COLS*BS,ROWS*BS);
-    boardCtx.strokeStyle='#1f2937'; boardCtx.lineWidth=0.5;
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
+    if(showGrid){
+      boardCtx.strokeStyle='#1f2937'; boardCtx.lineWidth=0.5;
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) boardCtx.strokeRect(c*BS,r*BS,BS,BS);
+    }
   }
   // 固定ブロック
   if(dekaMode){
@@ -2730,7 +2742,7 @@ function updateMissAgainBtn(){
 updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
-const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
+const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -2784,8 +2796,10 @@ function applyOptions(){
   // 表示系のスイッチも設定から復元する（地形編集はボタンなので applyTerrainEdit() で別に戻す）
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
+  check('gridCheck',  opts.grid);
   showGhost = opts.ghost;
   showAxis  = opts.axis;
+  showGrid  = opts.grid;
   check('optMultiHold2', opts.multiHold);
   check('optDigOnLock', opts.digOnLock);
   check('optDigOffset', opts.digOffset);
@@ -3706,6 +3720,7 @@ function renderSkinList() {
 const UI_ITEMS = [
   { id:'ghost',       label:'ゴースト' },
   { id:'axis',        label:'軸表示' },
+  { id:'grid',        label:'グリッド線' },
   { id:'layout',      label:'配置編集' },
   { id:'grav',        label:'落下設定' },
   { id:'terrain',     label:'地形編集' },
@@ -3788,7 +3803,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.53.2';
+const APP_VERSION = '1.54.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
