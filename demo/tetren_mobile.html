@@ -210,35 +210,17 @@ input:checked + .tgl::after { transform:translateX(10px); }
   font-size:11px; font-weight:bold; cursor:pointer;
   background:#374151; color:#d1d5db;
 }
-/* パフェ手順の表示 */
-#pcOverlay {
-  display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
-}
-#pcOverlay.open { display:flex; }
-#pcDialog {
-  background:#161c27; border:1px solid #374151; border-radius:10px;
-  padding:14px 16px 16px; box-shadow:0 18px 50px rgba(0,0,0,0.6);
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-  max-height:92vh; overflow:auto;
-}
-#pcCanvas { border:2px solid #374151; border-radius:2px; display:block; }
-.pc-nav { display:flex; align-items:center; gap:10px; }
+/* パフェ手順のウィンドウ（カンペ画像と同じ .shot-win に乗せる） */
+.pc-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:6px; padding:6px; }
+.pc-cv-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+#pcCanvas { max-width:100%; max-height:100%; border:1px solid #374151; border-radius:2px; }
+.pc-nav { display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto; }
 .pc-nav button {
   background:#374151; color:#e5e7eb; border:none; border-radius:5px;
-  padding:7px 16px; font-size:13px; cursor:pointer;
+  padding:5px 10px; font-size:12px; cursor:pointer; flex:0 0 auto;
 }
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
-#pcStepLabel { font-size:12px; color:#d1d5db; min-width:150px; text-align:center; }
-#pcDialog { padding:10px 12px 12px; }
-.pc-head {
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%; font-size:13px; color:#e5e7eb; font-weight:bold;
-}
-.pc-head button {
-  background:#374151; color:#e5e7eb; border:none; border-radius:4px;
-  padding:3px 10px; font-size:14px; line-height:1; cursor:pointer;
-}
+#pcStepLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
 .pc-nav button { padding:9px 14px; }
 
 .shot-win {
@@ -706,21 +688,6 @@ input:checked + .tgl::after { transform:translateX(10px); }
 </div>
 
 <!-- カンペ画像：貼り付け用ダイアログ -->
-<div id="pcOverlay">
-  <div id="pcDialog">
-    <div class="pc-head">
-      <span>パフェの手順</span>
-      <button onclick="closePcSteps()">×</button>
-    </div>
-    <canvas id="pcCanvas"></canvas>
-    <div class="pc-nav">
-      <button id="pcPrev" onclick="movePcStep(-1)">◀ 前</button>
-      <div id="pcStepLabel"></div>
-      <button id="pcNext" onclick="movePcStep(1)">次 ▶</button>
-    </div>
-  </div>
-</div>
-
 <div id="shotOverlay">
   <div id="shotDialog">
     <h2>カンペ画像</h2>
@@ -822,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.55.0 / 1.50.0</span><span class="vl-date">2026-10-15</span></div><ul><li>「パフェ探索」ボタンを追加。いまの地形と、操作中・HOLD・NEXT のミノだけで</li><li>素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい</li><li>枝刈り3つ</li><li>探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。</li><li>同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す</li><li>最悪ケースで約0.8秒（1段に2マスだけ＝自由度最大の形）。ふつうは10ms未満。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.2</span><span class="vl-date">2026-10-15</span></div><ul><li>マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした</li></ul></div>
@@ -2047,6 +2015,7 @@ function clearPcResult() {
   const b = document.getElementById('pcStepBtn');
   if (b && b.style.display !== 'none') b.style.display = 'none';
   pcSteps = null;
+  closePcSteps();
 }
 
 // ボタンから呼ぶ入口
@@ -2092,6 +2061,7 @@ function searchPerfectClear() {
 // そこで、その手を置く直前の盤面＋これから置くミノ、を1枚ずつ作って送る形にする。
 let pcSteps = null;   // [{type, grid, cells}]（grid は色の2次元配列）
 let pcStep  = 0;
+let pcCell  = 0;      // 1マスの大きさ。窓の大きさに合わせて決める
 
 // 探索結果の手順から、表示用の盤面を順に作る。
 // 色はビット列では分からないので、実際の盤面の色を持ち回って作り直す。
@@ -2117,11 +2087,62 @@ function pcBuildSteps(path, h) {
 
 function openPcSteps() {
   if (!pcSteps || !pcSteps.length) return;
+  closePcSteps();
+  // カンペ画像と同じ浮かぶウィンドウに乗せる。
+  // こうするとゲームの操作をふさがず、移動も大きさ変更も既存の仕組みがそのまま効く。
+  const win = document.createElement('div');
+  win.className = 'shot-win';
+  win.id = 'pcWin';
+  win.innerHTML =
+    '<div class="shot-bar">' +
+      '<span class="sw-title">パフェの手順</span>' +
+      '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
+    '</div>' +
+    '<div class="pc-body">' +
+      '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
+      '<div class="pc-nav">' +
+        '<button id="pcPrev" title="前の手" onclick="movePcStep(-1);this.blur()">◀</button>' +
+        '<div id="pcStepLabel"></div>' +
+        '<button id="pcNext" title="次の手" onclick="movePcStep(1);this.blur()">▶</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
+    '<div class="sw-rs sw-rs-r"  data-dir="r"></div>' +
+    '<div class="sw-rs sw-rs-b"  data-dir="b"></div>' +
+    '<div class="sw-rs sw-rs-bl" data-dir="bl"></div>' +
+    '<div class="sw-rs sw-rs-br" data-dir="br"></div>';
+  document.body.appendChild(win);
+  raiseShot(win);
   pcStep = 0;
-  document.getElementById('pcOverlay').classList.add('open');
+  pcCell = PC_VIEW_CELL;
   drawPcStep();
+  // 大きさ変更に追従させる。ResizeObserver は「描き直すと自分がループ扱い」になって
+  // 抑制されることがあるので、つまみを動かしているポインタで拾う。
+  window.addEventListener('pointermove', fitPcCanvas);
+  window.addEventListener('pointerup',   fitPcCanvas);
+  // 中身に合わせた大きさで出す
+  const cv = document.getElementById('pcCanvas');
+  const w = Math.max(cv.width + 16, 210), h = cv.height + SHOT_BAR_H + PC_NAV_H;
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
+  win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
+  win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
 }
-function closePcSteps() { document.getElementById('pcOverlay').classList.remove('open'); }
+function closePcSteps() {
+  const w = document.getElementById('pcWin');
+  if (w) w.remove();
+  window.removeEventListener('pointermove', fitPcCanvas);
+  window.removeEventListener('pointerup',   fitPcCanvas);
+}
+// 窓の大きさに合わせてマス目を決め直す。
+// キャンバスを引き伸ばすとぼやけるので、サイズが変わったら描き直す。
+function fitPcCanvas() {
+  const wrap = document.querySelector('#pcWin .pc-cv-wrap');
+  if (!wrap || !pcSteps) return;
+  const rows = pcSteps[pcStep].grid.length;
+  const cell = Math.max(6, Math.floor(Math.min(wrap.clientWidth / COLS, wrap.clientHeight / rows)));
+  if (cell !== pcCell) { pcCell = cell; drawPcStep(); }
+}
 function movePcStep(d) {
   pcStep = Math.max(0, Math.min(pcSteps.length - 1, pcStep + d));
   drawPcStep();
@@ -2129,7 +2150,7 @@ function movePcStep(d) {
 function drawPcStep() {
   const s = pcSteps[pcStep];
   const cv = document.getElementById('pcCanvas');
-  const cell = PC_VIEW_CELL;
+  const cell = pcCell;
   const rows = s.grid.length;
   cv.width = COLS * cell; cv.height = rows * cell;
   const g = cv.getContext('2d');
@@ -2155,6 +2176,7 @@ function drawPcStep() {
   document.getElementById('pcNext').disabled = last;
 }
 
+const PC_NAV_H = 46;   // バーの下に付く「前・次」の高さ
 const PC_VIEW_CELL = 16;
 
 // ===== 掘り練習 =====
@@ -2442,7 +2464,6 @@ function undo(){
 
 // ===== ロック処理 =====
 function lock(){
-  clearPcResult();
   if(lockTimer){clearTimeout(lockTimer);lockTimer=null;} isLocking=false;
   saveSnapshot();
   const tSpin=detectTSpin();
@@ -4162,7 +4183,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.56.0';
+const APP_VERSION = '1.57.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
