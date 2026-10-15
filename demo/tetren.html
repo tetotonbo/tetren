@@ -289,6 +289,27 @@ button, label, .ctrl-lbl, [data-pos] {
 #shotDrop:hover, #shotDrop:focus { border-color:#6b7280; background:rgba(255,255,255,0.02); }
 #shotDrop.drag { border-color:#22d3ee; background:rgba(34,211,238,0.08); }
 
+/* パフェ手順の表示 */
+#pcOverlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,6,12,0.82); align-items:center; justify-content:center; padding:20px;
+}
+#pcOverlay.open { display:flex; }
+#pcDialog {
+  background:#161c27; border:1px solid #374151; border-radius:10px;
+  padding:14px 16px 16px; box-shadow:0 18px 50px rgba(0,0,0,0.6);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  max-height:92vh; overflow:auto;
+}
+#pcCanvas { border:2px solid #374151; border-radius:2px; display:block; }
+.pc-nav { display:flex; align-items:center; gap:10px; }
+.pc-nav button {
+  background:#374151; color:#e5e7eb; border:none; border-radius:5px;
+  padding:7px 16px; font-size:13px; cursor:pointer;
+}
+.pc-nav button:disabled { opacity:0.35; cursor:default; }
+#pcStepLabel { font-size:12px; color:#d1d5db; min-width:150px; text-align:center; }
+
 /* 浮かせるウィンドウ本体（何枚でも出せる）。常にいちばん手前に出す */
 .shot-win {
   position:fixed; width:420px; height:300px;
@@ -759,6 +780,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onclick="searchPerfectClear()"
           title="いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます">パフェ探索</button>
         <div id="pcResult" style="display:none;font-size:9px;text-align:center;margin-top:4px;line-height:1.4;"></div>
+        <button class="garb-btn" id="pcStepBtn" style="display:none;background:#1f3a5f;width:100%;margin-top:4px;padding:5px 0;font-size:11px;"
+          onclick="openPcSteps()">手順を見る</button>
       </div>
     </div>
 
@@ -1038,6 +1061,21 @@ input:checked + .tgl::after { transform:translateX(16px); }
 </div>
 
 <!-- スクショ表示：貼り付け用ダイアログ -->
+<div id="pcOverlay">
+  <div id="pcDialog">
+    <div class="imp-head" style="width:100%;">
+      <span class="imp-title">パフェの手順</span>
+      <button class="imp-x" title="閉じる" onclick="closePcSteps()">×</button>
+    </div>
+    <canvas id="pcCanvas"></canvas>
+    <div class="pc-nav">
+      <button id="pcPrev" onclick="movePcStep(-1)">◀ 前</button>
+      <div id="pcStepLabel"></div>
+      <button id="pcNext" onclick="movePcStep(1)">次 ▶</button>
+    </div>
+  </div>
+</div>
+
 <div id="shotOverlay">
   <div id="shotDialog">
     <div class="imp-head">
@@ -1215,6 +1253,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.55.0 / 1.50.0</span><span class="vl-date">2026-10-15</span></div><ul><li>「パフェ探索」ボタンを追加。いまの地形と、操作中・HOLD・NEXT のミノだけで</li><li>素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい</li><li>枝刈り3つ</li><li>探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。</li><li>同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す</li><li>最悪ケースで約0.8秒（1段に2マスだけ＝自由度最大の形）。ふつうは10ms未満。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.2</span><span class="vl-date">2026-10-15</span></div><ul><li>マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.1</span><span class="vl-date">2026-10-14</span></div><ul><li>マラソンでゲームオーバーしたあと、上げた落下速度と詰めた設置時間がそのまま残っていたのを修正</li></ul></div>
@@ -5204,7 +5243,10 @@ function pcPlacements(f, type, cache) {
         for (let y = H - 1; y >= 0; y--) if (g[y] !== PC_FULL_ROW) g[w--] = g[y];
         while (w >= 0) g[w--] = 0;
         const gk = pcKey(g);
-        if (!outSeen.has(gk)) { outSeen.add(gk); out.push(g); }
+        if (!outSeen.has(gk)) {
+          outSeen.add(gk);
+          out.push({ g, cells: cells.map(([a, b]) => [r + a, c + b]) });
+        }
       }
     }
     push(st, r, c - 1); push(st, r, c + 1); push(st, r + 1, c);
@@ -5283,7 +5325,12 @@ function pcSolve(f, seq, i, hold, memo, cache, st) {
     const [type, ni, nhold] = tries[t];
     const list = pcPlacements(f, type, cache);
     for (let j = 0; j < list.length; j++) {
-      if (pcSolve(list[j], seq, ni, nhold, memo, cache, st)) { memo.set(key, true); return true; }
+      if (pcSolve(list[j].g, seq, ni, nhold, memo, cache, st)) {
+        // 成立した。戻りながら手順を積む（最後に逆順にする）
+        st.path.push({ type, cells: list[j].cells });
+        memo.set(key, true);
+        return true;
+      }
       if (st.aborted) return false;
     }
   }
@@ -5295,6 +5342,9 @@ function pcSolve(f, seq, i, hold, memo, cache, st) {
 function clearPcResult() {
   const el = document.getElementById('pcResult');
   if (el && el.style.display !== 'none') el.style.display = 'none';
+  const b = document.getElementById('pcStepBtn');
+  if (b && b.style.display !== 'none') b.style.display = 'none';
+  pcSteps = null;
 }
 
 // ボタンから呼ぶ入口
@@ -5317,14 +5367,93 @@ function searchPerfectClear() {
   for (let k = 1; k <= total; k++) if ((filled + 4 * k) % 10 === 0) maxLines = (filled + 4 * k) / 10;
   if (!maxLines) { show('マス数が合いません（4の倍数で10に届かない）', '#f87171'); return; }
 
-  const st = { nodes: 0, aborted: false, deadline: performance.now() + PC_TIME_MS };
+  const st = { nodes: 0, aborted: false, deadline: performance.now() + PC_TIME_MS, path: [] };
   const t0 = performance.now();
   const ok = pcSolve(pcCrop(rows, maxLines), seq, 0, holdType, new Map(), new Map(), st);
   const ms = Math.round(performance.now() - t0);
+  pcSteps = null;
+  const btn = document.getElementById('pcStepBtn');
+  if (btn) btn.style.display = 'none';
   if (st.aborted)  show('判定できませんでした（時間切れ）', '#9ca3af');
-  else if (ok)     show(`パフェできます（${ms}ms）`, '#4ade80');
+  else if (ok) {
+    st.path.reverse();   // 戻りながら積んだので、置く順に直す
+    pcSteps = pcBuildSteps(st.path, maxLines);
+    show(`パフェできます（${st.path.length}手・${ms}ms）`, '#4ade80');
+    if (btn) btn.style.display = '';
+  }
   else             show(`この並びではできません（${ms}ms）`, '#f87171');
 }
+
+// ===== パフェ手順の表示 =====
+// 探索で見つけた置き方を1手ずつ見せる。
+// 途中でラインが消えると盤面がずれるので、1枚の図にはまとめられない。
+// そこで、その手を置く直前の盤面＋これから置くミノ、を1枚ずつ作って送る形にする。
+let pcSteps = null;   // [{type, grid, cells}]（grid は色の2次元配列）
+let pcStep  = 0;
+
+// 探索結果の手順から、表示用の盤面を順に作る。
+// 色はビット列では分からないので、実際の盤面の色を持ち回って作り直す。
+function pcBuildSteps(path, h) {
+  const n = Math.min(TROW, h + PC_PAD);
+  const base = TROW - n;
+  let grid = [];
+  for (let r = 0; r < n; r++) grid.push(board[base + r].slice());
+  const steps = [];
+  for (const mv of path) {
+    steps.push({ type: mv.type, grid: grid.map(row => row.slice()), cells: mv.cells });
+    const next = grid.map(row => row.slice());
+    for (const [r, c] of mv.cells) next[r][c] = pieceColor(mv.type);
+    // ライン消去。消えた行のぶんだけ上から詰める
+    const kept = next.filter(row => row.some(x => !x));
+    while (kept.length < n) kept.unshift(new Array(COLS).fill(null));
+    grid = kept;
+  }
+  // 最後の1枚（置き終わったあと＝空のはず）も入れておく
+  steps.push({ type: null, grid, cells: [] });
+  return steps;
+}
+
+function openPcSteps() {
+  if (!pcSteps || !pcSteps.length) return;
+  pcStep = 0;
+  document.getElementById('pcOverlay').classList.add('open');
+  drawPcStep();
+}
+function closePcSteps() { document.getElementById('pcOverlay').classList.remove('open'); }
+function movePcStep(d) {
+  pcStep = Math.max(0, Math.min(pcSteps.length - 1, pcStep + d));
+  drawPcStep();
+}
+function drawPcStep() {
+  const s = pcSteps[pcStep];
+  const cv = document.getElementById('pcCanvas');
+  const cell = PC_VIEW_CELL;
+  const rows = s.grid.length;
+  cv.width = COLS * cell; cv.height = rows * cell;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
+  g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
+  // 既にある地形
+  for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++)
+    if (s.grid[r][c]) withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, s.grid[r][c]));
+  // これから置くミノ。白い枠で囲って分かるようにする
+  if (s.type) {
+    const col = pieceColor(s.type);
+    for (const [r, c] of s.cells) {
+      withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, 0.9));
+      g.strokeStyle = '#fff'; g.lineWidth = 2;
+      g.strokeRect(c * cell + 1, r * cell + 1, cell - 2, cell - 2);
+    }
+  }
+  const last = pcStep === pcSteps.length - 1;
+  document.getElementById('pcStepLabel').textContent =
+    last ? `完成（${pcSteps.length - 1}手）` : `${pcStep + 1}手目 / ${pcSteps.length - 1}手　${s.type}ミノ`;
+  document.getElementById('pcPrev').disabled = pcStep === 0;
+  document.getElementById('pcNext').disabled = last;
+}
+
+const PC_VIEW_CELL = 22;
 
 // ===== マラソン（進むほど速くなる） =====
 // 1Gから始めて、10ライン消すごとに1Gずつ上がる。
@@ -5897,7 +6026,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.50.0';
+const APP_VERSION = '1.51.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
