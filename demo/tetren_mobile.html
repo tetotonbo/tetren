@@ -549,13 +549,6 @@ input:checked + .tgl::after { transform:translateX(10px); }
         onclick="if(!gameOver)loadTerrain()"
         title="覚えた地形に戻し、ミノの順番も引き直します">復元</button>
     </div>
-    <div data-ui="pcSearch">
-      <button class="side-btn" style="width:100%;" onclick="searchPerfectClear()"
-        title="いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます">パフェ探索</button>
-      <div id="pcResult" style="display:none;font-size:8px;text-align:center;margin-top:2px;line-height:1.3;"></div>
-      <button class="side-btn" id="pcStepBtn" style="display:none;width:100%;margin-top:2px;background:#1f3a5f;"
-        onclick="openPcSteps()">手順を見る</button>
-    </div>
     <div class="dpc-side-row" data-ui="dpc">
       <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
@@ -563,6 +556,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <div class="dpc-side-row" data-ui="miss">
       <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
+    </div>
+    <div data-ui="pcSearch" style="margin-top:2px;">
+      <button class="side-btn" style="width:100%;" onclick="searchPerfectClear()"
+        title="いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます">パフェ探索</button>
+      <div id="pcResult" style="display:none;font-size:8px;text-align:center;margin-top:2px;line-height:1.3;"></div>
+      <button class="side-btn" id="pcStepBtn" style="display:none;width:100%;margin-top:2px;background:#1f3a5f;"
+        onclick="openPcSteps()">手順を見る</button>
     </div>
     <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ<br>モード</button>
     <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN<br>モード</button>
@@ -789,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
@@ -4102,9 +4103,9 @@ const UI_ITEMS = [
   { id:'terrain',     label:'地形編集' },
   { id:'mirror',      label:'反転（地形の左右反転）' },
   { id:'terrainSave', label:'記録・復元（地形の控え）' },
-  { id:'pcSearch',    label:'パフェ探索' },
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
+  { id:'pcSearch',    label:'パフェ探索' },
   { id:'deka',        label:'デカミノモード' },
   { id:'ren',         label:'RENモード' },
   { id:'dig',         label:'せりあがり' },
@@ -4180,7 +4181,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.57.1';
+const APP_VERSION = '1.57.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

@@ -1229,6 +1229,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
