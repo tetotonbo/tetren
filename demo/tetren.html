@@ -1229,6 +1229,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.0 / 1.53.0</span><span class="vl-date">2026-10-15</span></div><ul><li>キーコンフィグにボタン操作を追加。マウスやタップに持ち替えずに使えるようにした</li><li>パフェ探索の表記を「この並びではできません」→「パフェできません」に変更</li><li>設定を開いている間もキーがゲーム操作として効いてしまっていたのを修正</li><li>キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正</li><li>地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
@@ -4628,7 +4629,50 @@ const KC_ACTIONS = [
   { id:'missAgain',  label:'ミノ欠け再セット', d:[  'KeyM',      null        ] },
   { id:'restart',    label:'リスタート',     d:[  'KeyN',      null        ] },
   { id:'sprintAgain',label:'40LINE再スタート', d:['KeyT',      null        ] },
+  // ここから下はボタンと同じ操作。既定は未割り当て（既存のキーとぶつからないように）
+  { id:'pcSearch',    label:'パフェ探索',       d:[null,         null        ] },
+  { id:'pcSteps',     label:'パフェ手順を見る', d:[null,         null        ] },
+  { id:'saveTerrain', label:'地形を記録',       d:[null,         null        ] },
+  { id:'loadTerrain', label:'地形を復元',       d:[null,         null        ] },
+  { id:'mirror',      label:'地形を反転',       d:[null,         null        ] },
+  { id:'resetTerrain',label:'地形のみリセット', d:[null,         null        ] },
+  { id:'resetQueue',  label:'ミノ順のみリセット',d:[null,        null        ] },
+  { id:'terrainEdit', label:'地形編集の入切',   d:[null,         null        ] },
+  { id:'digMode',     label:'せりあがりの入切', d:[null,         null        ] },
+  { id:'dekaMode',    label:'デカミノの入切',   d:[null,         null        ] },
+  { id:'renMode',     label:'RENの入切',        d:[null,         null        ] },
+  { id:'marathon',    label:'マラソンの入切',   d:[null,         null        ] },
+  { id:'shot',        label:'カンペ画像を開く', d:[null,         null        ] },
 ];
+
+
+// ボタンを押すのと同じ操作。キーを割り当てたときだけ効く（既定は未割り当て）。
+// ゲームオーバー中も使えるようにしたいので、落下操作より前でまとめて見る。
+const KC_BUTTON = {
+  pcSearch:     () => searchPerfectClear(),
+  pcSteps:      () => openPcSteps(),
+  saveTerrain:  () => { if (!gameOver) saveTerrain(); },
+  loadTerrain:  () => { if (!gameOver) loadTerrain(); },
+  mirror:       () => { if (!gameOver) mirrorTerrain(); },
+  resetTerrain: () => resetTerrainOnly(),
+  resetQueue:   () => resetQueueOnly(),
+  terrainEdit:  () => setOption('terrainEdit', !opts.terrainEdit),
+  digMode:      () => toggleDigMode(),
+  dekaMode:     () => toggleDekaMode(),
+  renMode:      () => toggleRenMode(),
+  marathon:     () => toggleMarathon(),
+  shot:         () => openShot(),
+};
+function kcButtonKey(e) {
+  for (const id in KC_BUTTON) {
+    if (kcMatch(id, e.code)) {
+      e.preventDefault();
+      if (!e.repeat) KC_BUTTON[id]();
+      return true;
+    }
+  }
+  return false;
+}
 
 // keyConfig[id] = [key1|null, key2|null]
 let keyConfig = {};
@@ -5357,7 +5401,7 @@ function searchPerfectClear() {
     show(`パフェできます（${st.path.length}手・${ms}ms）`, '#4ade80');
     if (btn) btn.style.display = '';
   }
-  else             show(`この並びではできません（${ms}ms）`, '#f87171');
+  else             show(`パフェできません（${ms}ms）`, '#f87171');
 }
 
 // ===== パフェ手順の表示 =====
@@ -5791,6 +5835,7 @@ function applyOptions() {
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   showGrid  = opts.grid;
+  check('terrainToggle', opts.terrainEdit);
   if (document.getElementById('terrainToggle')) setTerrainMode(opts.terrainEdit);
   setCtrlButtons(!!opts.ctrlOpen);
   const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -6034,6 +6079,7 @@ function startKeyWait(id, slot, btn) {
 document.addEventListener('keydown', e => {
   if (!kcWaiting) return;
   e.preventDefault();
+  e.stopPropagation();   // 割り当てたキーが、そのまま操作としても走らないように
   if (e.code === 'Escape') {
     renderKcBtn(kcWaiting.id, kcWaiting.slot);
     kcWaiting = null;
@@ -6055,7 +6101,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.52.1';
+const APP_VERSION = '1.53.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -6240,8 +6286,9 @@ function shotPointerDown(e, win, mode) {
 
 // ===== キー入力 =====
 document.addEventListener('keydown', e=>{
-  // カンペ画像の貼り付けダイアログを開いている間はゲーム操作を止める
+  // カンペ画像の貼り付けダイアログ・設定を開いている間はゲーム操作を止める
   if (document.getElementById('shotOverlay').classList.contains('open')) return;
+  if (document.getElementById('keyconfigModal').style.display === 'flex') return;
   // 40LINEのカウントダウン中は、やり直し以外は受け付けない
   if (sprintCountdown) {
     if (kcMatch('sprintAgain', e.code)) { e.preventDefault(); if (!e.repeat) restartSprint(); }
@@ -6253,6 +6300,8 @@ document.addEventListener('keydown', e=>{
   if (kcMatch('missAgain', e.code)) { e.preventDefault(); if (!e.repeat) repeatMiss(); return; }
   // 40LINEもゲームを始め直す操作なので、ゲームオーバー中も効かせる
   if (kcMatch('sprintAgain', e.code)) { e.preventDefault(); if (!e.repeat) restartSprint(); return; }
+  // ボタンと同じ操作も、ゲームオーバー中から使えるようにする
+  if (kcButtonKey(e)) return;
   if (gameOver) return;
   // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
