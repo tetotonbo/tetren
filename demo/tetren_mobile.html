@@ -789,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.59.0 / 1.54.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、最後をIミノの縦置きで締めるパフェ（QPC）があれば、そちらの手順を出すようにした</li><li>QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.0 / 1.53.0</span><span class="vl-date">2026-10-15</span></div><ul><li>キーコンフィグにボタン操作を追加。マウスやタップに持ち替えずに使えるようにした</li><li>パフェ探索の表記を「この並びではできません」→「パフェできません」に変更</li><li>設定を開いている間もキーがゲーム操作として効いてしまっていたのを修正</li><li>キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正</li><li>地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
@@ -1919,7 +1920,10 @@ function pcPlacements(f, type, cache) {
         const gk = pcKey(g);
         if (!outSeen.has(gk)) {
           outSeen.add(gk);
-          out.push({ g, holes: pcHoles(g), cells: cells.map(([a, b]) => [r + a, c + b]) });
+          const put = cells.map(([a, b]) => [r + a, c + b]);
+          // 最後をIミノの縦置きで締めるパフェ（QPC）を優先して探すために覚えておく
+          const vertI = (type === 'I') && put.every(x => x[1] === put[0][1]);
+          out.push({ g, holes: pcHoles(g), cells: put, vertI });
         }
       }
     }
@@ -1956,11 +1960,14 @@ function pcHoles(f) {
 }
 
 // 本体。seq は置く順のミノ列、hold は今ホールドしているミノ（無ければ null）
-function pcSolve(f, seq, i, hold, memo, cache, st) {
+// wantQuad=true のときは「最後の1手がIミノの縦置き」で終わる手順だけを成立とみなす。
+// 縦置きのIで盤面が空になるなら、そのIは4行ぶんの最後のマスを埋めたということなので
+// 必ず4ライン同時消し＝QPCになる。
+function pcSolve(f, seq, i, hold, memo, cache, st, wantQuad, lastVertI) {
   if (performance.now() > st.deadline) { st.aborted = true; return false; }
   st.nodes++;
   const filled = pcCells(f);
-  if (filled === 0) return true;                 // 盤面が空 = パフェ成立
+  if (filled === 0) return !wantQuad || !!lastVertI;   // 盤面が空 = パフェ成立
 
   const remain = (seq.length - i) + (hold !== null ? 1 : 0);
   if (remain <= 0) return false;
@@ -1995,7 +2002,7 @@ function pcSolve(f, seq, i, hold, memo, cache, st) {
     const [type, ni, nhold] = tries[t];
     const list = pcPlacements(f, type, cache);
     for (let j = 0; j < list.length; j++) {
-      if (pcSolve(list[j].g, seq, ni, nhold, memo, cache, st)) {
+      if (pcSolve(list[j].g, seq, ni, nhold, memo, cache, st, wantQuad, list[j].vertI)) {
         // 成立した。戻りながら手順を積む（最後に逆順にする）
         st.path.push({ type, cells: list[j].cells });
         memo.set(key, true);
@@ -2038,21 +2045,36 @@ function searchPerfectClear() {
   for (let k = 1; k <= total; k++) if ((filled + 4 * k) % 10 === 0) maxLines = (filled + 4 * k) / 10;
   if (!maxLines) { show('マス数が合いません（4の倍数で10に届かない）', '#f87171'); return; }
 
-  const st = { nodes: 0, aborted: false, deadline: performance.now() + PC_TIME_MS, path: [] };
+  const start = pcCrop(rows, maxLines);
+  const cache = new Map();   // 置き方の列挙結果は2回の探索で使い回せる
   const t0 = performance.now();
-  const ok = pcSolve(pcCrop(rows, maxLines), seq, 0, holdType, new Map(), new Map(), st);
+
+  // まず「最後をIミノの縦置きで締めるパフェ（QPC）」を探す。
+  // 見つかればそちらの手順を出す。見つからなければ普通のパフェを探す。
+  const quadMs = Math.round(PC_TIME_MS * 0.4);
+  let st = { nodes: 0, aborted: false, deadline: performance.now() + quadMs, path: [] };
+  let ok = pcSolve(start, seq, 0, holdType, new Map(), cache, st, true, false);
+  let quad = ok;
+  if (!ok) {
+    // QPCが無い（または時間切れ）。残りの時間で普通のパフェを探す
+    st = { nodes: 0, aborted: false, deadline: t0 + PC_TIME_MS, path: [] };
+    ok = pcSolve(start, seq, 0, holdType, new Map(), cache, st, false, false);
+  }
   const ms = Math.round(performance.now() - t0);
+
   pcSteps = null;
   const btn = document.getElementById('pcStepBtn');
   if (btn) btn.style.display = 'none';
-  if (st.aborted)  show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
+  if (el) el.title = '';
+  if (!ok && st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
   else if (ok) {
     st.path.reverse();   // 戻りながら積んだので、置く順に直す
     pcSteps = pcBuildSteps(st.path, maxLines);
-    show(`パフェできます（${st.path.length}手・${ms}ms）`, '#4ade80');
+    show(`${quad ? 'QPC' : 'パフェ'}できます（${st.path.length}手・${ms}ms）`, '#4ade80');
+    if (el && quad) el.title = '最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です';
     if (btn) btn.style.display = '';
   }
-  else             show(`パフェできません（${ms}ms）`, '#f87171');
+  else show(`パフェできません（${ms}ms）`, '#f87171');
 }
 
 // ===== パフェ手順の表示 =====
@@ -4226,7 +4248,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.58.0';
+const APP_VERSION = '1.59.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
