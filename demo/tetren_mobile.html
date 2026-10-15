@@ -557,15 +557,15 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <button class="side-btn" style="flex:1;" onclick="openMiss()">ミノ欠け</button>
       <button class="side-btn again" id="missAgainBtn" onclick="repeatMiss()">↻</button>
     </div>
-    <div data-ui="pcSearch" style="margin-top:2px;">
+    <div data-ui="pcSearch" style="width:100%;margin-top:2px;">
       <button class="side-btn" style="width:100%;" onclick="searchPerfectClear()"
         title="いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます">パフェ探索</button>
       <div id="pcResult" style="display:none;font-size:8px;text-align:center;margin-top:2px;line-height:1.3;"></div>
       <button class="side-btn" id="pcStepBtn" style="display:none;width:100%;margin-top:2px;background:#1f3a5f;"
         onclick="openPcSteps()">手順を見る</button>
     </div>
-    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ<br>モード</button>
-    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN<br>モード</button>
+    <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ</button>
+    <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN</button>
     <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:2px;">せりあがり</button>
     <div id="dig-info"></div>
     <div id="digTypeRow" style="display:none;width:100%;">
@@ -789,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
@@ -4106,8 +4107,8 @@ const UI_ITEMS = [
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
   { id:'pcSearch',    label:'パフェ探索' },
-  { id:'deka',        label:'デカミノモード' },
-  { id:'ren',         label:'RENモード' },
+  { id:'deka',        label:'デカミノ' },
+  { id:'ren',         label:'REN' },
   { id:'dig',         label:'せりあがり' },
   { id:'shot',        label:'カンペ画像' },
   { id:'reset',       label:'リセット' },
@@ -4181,7 +4182,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.57.2';
+const APP_VERSION = '1.57.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
