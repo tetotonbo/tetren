@@ -789,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.60.0 / 1.55.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索に「探索中…」の表示を追加</li><li>スキンの「標準」を「立体」に改名し、「無地」を一覧の先頭へ移動</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.59.0 / 1.54.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、最後をIミノの縦置きで締めるパフェ（QPC）があれば、そちらの手順を出すようにした</li><li>QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.0 / 1.53.0</span><span class="vl-date">2026-10-15</span></div><ul><li>キーコンフィグにボタン操作を追加。マウスやタップに持ち替えずに使えるようにした</li><li>パフェ探索の表記を「この並びではできません」→「パフェできません」に変更</li><li>設定を開いている間もキーがゲーム操作として効いてしまっていたのを修正</li><li>キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正</li><li>地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
@@ -1146,10 +1147,12 @@ const PPT2_COLORS = {
 // style で塗り方を切り替える。色は skin ごとに彩度・明度を変えてある。
 // 注意: 盤面には「色の文字列」が保存されるので、色はスキンをまたいで重複させないこと。
 const SKINS = [
-  { id:'classic', name:'標準', style:'bevel',
-    colors:{ I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#4ade80', Z:'#f87171', J:'#60a5fa', L:'#fb923c' } },
+  // 既定は「無地」。いちばん見やすいので先頭に置いてある。
+  // id は保存値なので変えないこと（名前だけ変えれば、前から使っている人の設定はそのまま）
   { id:'plain',   name:'無地', style:'flat',
     colors:{ I:'#00b4d8', O:'#f2c200', T:'#9d38d6', S:'#3fbf5f', Z:'#e14b4b', J:'#3d6fd4', L:'#ee8b22' } },
+  { id:'classic', name:'立体', style:'bevel',
+    colors:{ I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#4ade80', Z:'#f87171', J:'#60a5fa', L:'#fb923c' } },
   { id:'gloss',   name:'グロス', style:'gloss',
     colors:{ I:'#00c8ef', O:'#ffd400', T:'#c026d3', S:'#16c05f', Z:'#ef3b3b', J:'#2563eb', L:'#f97316' } },
   { id:'pastel',  name:'パステル', style:'matte',
@@ -2045,6 +2048,29 @@ function searchPerfectClear() {
   for (let k = 1; k <= total; k++) if ((filled + 4 * k) % 10 === 0) maxLines = (filled + 4 * k) / 10;
   if (!maxLines) { show('マス数が合いません（4の倍数で10に届かない）', '#f87171'); return; }
 
+  // ここから先は重い。先に「探索中」を出し、画面に出てから走らせる
+  // （探索は同期処理なので、待たずに始めると表示が出ないまま固まる）
+  pcSteps = null;
+  closePcSteps();
+  const btn0 = document.getElementById('pcStepBtn');
+  if (btn0) btn0.style.display = 'none';
+  if (el) el.title = '';
+  show('探索中…', '#9ca3af');
+  // 2フレーム待つと「探索中」が確実に描かれてから始められる。
+  // ただしタブが隠れていると requestAnimationFrame は来ないので、保険の setTimeout も置く
+  let started = false;
+  const hold = holdType;
+  const run = () => {
+    if (started) return;
+    started = true;
+    pcRunSearch(rows, seq, hold, maxLines, show, el);
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  setTimeout(run, 120);
+}
+
+// 探索の本体。searchPerfectClear から1フレーム遅れて呼ばれる
+function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   const start = pcCrop(rows, maxLines);
   const cache = new Map();   // 置き方の列挙結果は2回の探索で使い回せる
   const t0 = performance.now();
@@ -2053,19 +2079,16 @@ function searchPerfectClear() {
   // 見つかればそちらの手順を出す。見つからなければ普通のパフェを探す。
   const quadMs = Math.round(PC_TIME_MS * 0.4);
   let st = { nodes: 0, aborted: false, deadline: performance.now() + quadMs, path: [] };
-  let ok = pcSolve(start, seq, 0, holdType, new Map(), cache, st, true, false);
+  let ok = pcSolve(start, seq, 0, hold, new Map(), cache, st, true, false);
   let quad = ok;
   if (!ok) {
     // QPCが無い（または時間切れ）。残りの時間で普通のパフェを探す
     st = { nodes: 0, aborted: false, deadline: t0 + PC_TIME_MS, path: [] };
-    ok = pcSolve(start, seq, 0, holdType, new Map(), cache, st, false, false);
+    ok = pcSolve(start, seq, 0, hold, new Map(), cache, st, false, false);
   }
   const ms = Math.round(performance.now() - t0);
 
-  pcSteps = null;
   const btn = document.getElementById('pcStepBtn');
-  if (btn) btn.style.display = 'none';
-  if (el) el.title = '';
   if (!ok && st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
   else if (ok) {
     st.path.reverse();   // 戻りながら積んだので、置く順に直す
@@ -4248,7 +4271,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.59.0';
+const APP_VERSION = '1.60.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
