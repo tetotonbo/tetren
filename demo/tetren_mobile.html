@@ -789,6 +789,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.55.0 / 1.50.0</span><span class="vl-date">2026-10-15</span></div><ul><li>「パフェ探索」ボタンを追加。いまの地形と、操作中・HOLD・NEXT のミノだけで</li><li>素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい</li><li>枝刈り3つ</li><li>探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。</li><li>同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す</li><li>最悪ケースで約0.8秒（1段に2マスだけ＝自由度最大の形）。ふつうは10ms未満。</li></ul></div>
@@ -1915,7 +1916,7 @@ function pcPlacements(f, type, cache) {
         const gk = pcKey(g);
         if (!outSeen.has(gk)) {
           outSeen.add(gk);
-          out.push({ g, cells: cells.map(([a, b]) => [r + a, c + b]) });
+          out.push({ g, holes: pcHoles(g), cells: cells.map(([a, b]) => [r + a, c + b]) });
         }
       }
     }
@@ -1930,32 +1931,25 @@ function pcPlacements(f, type, cache) {
       }
     }
   }
+  // 穴が少なくなる置き方から試す
+  out.sort((x, y) => x.holes - y.holes);
   cache.set(ck, out);
   return out;
 }
 
-// 空きマスがミノの届かないところに閉じ込められていないか。
-// 届かない空きは永久に埋まらず、その行も揃わないのでパフェは不可能。
-function pcSealed(f) {
-  const H = f.length, top = pcTop(f);
-  if (top >= H) return false;
-  const seen = new Uint8Array(H * COLS);
-  const stack = [];
-  // いちばん上の空き行から下りられる空きマスを塗っていく
-  for (let c = 0; c < COLS; c++) if (!(f[top] & (1 << c))) { seen[top * COLS + c] = 1; stack.push(top, c); }
-  while (stack.length) {
-    const c = stack.pop(), r = stack.pop();
-    const near = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
-    for (const [nr, nc] of near) {
-      if (nr < top || nr >= H || nc < 0 || nc >= COLS) continue;
-      if (seen[nr * COLS + nc] || (f[nr] & (1 << nc))) continue;
-      seen[nr * COLS + nc] = 1; stack.push(nr, nc);
+// 置いたあとの盤面の「穴の数」。穴＝上にブロックがある空きマス。
+// 少ない順に試すと、成立する並びに早くたどり着ける（枝刈りではなく順番の話）。
+function pcHoles(f) {
+  let n = 0;
+  for (let c = 0; c < COLS; c++) {
+    const bit = 1 << c;
+    let over = false;
+    for (let r = 0; r < f.length; r++) {
+      if (f[r] & bit) over = true;
+      else if (over) n++;
     }
   }
-  for (let r = top; r < H; r++)
-    for (let c = 0; c < COLS; c++)
-      if (!(f[r] & (1 << c)) && !seen[r * COLS + c]) return true;
-  return false;
+  return n;
 }
 
 // 本体。seq は置く順のミノ列、hold は今ホールドしているミノ（無ければ null）
@@ -1971,9 +1965,12 @@ function pcSolve(f, seq, i, hold, memo, cache, st) {
   let maxLines = -1;
   for (let k = 1; k <= remain; k++) if ((filled + 4 * k) % 10 === 0) maxLines = (filled + 4 * k) / 10;
   if (maxLines < 0) return false;
-  // 消せる行数より高く積んでいたら、その分は絶対に残る
-  if (f.length - pcTop(f) > maxLines) return false;
-  if (pcSealed(f)) return false;
+  // ブロックのある行は、空にするために必ず消さないといけない。
+  // 消せる行数より多ければ、その分は必ず残る。
+  // （一番上から下端までの段数で見ると、途中に完全な空行がある地形を取りこぼす）
+  let used = 0;
+  for (let r = 0; r < f.length; r++) if (f[r]) used++;
+  if (used > maxLines) return false;
 
   const key = pcKey(f) + i + (hold || '-');
   const m = memo.get(key);
@@ -2045,7 +2042,7 @@ function searchPerfectClear() {
   pcSteps = null;
   const btn = document.getElementById('pcStepBtn');
   if (btn) btn.style.display = 'none';
-  if (st.aborted)  show('判定できませんでした（時間切れ）', '#9ca3af');
+  if (st.aborted)  show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
   else if (ok) {
     st.path.reverse();   // 戻りながら積んだので、置く順に直す
     pcSteps = pcBuildSteps(st.path, maxLines);
@@ -4183,7 +4180,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.57.0';
+const APP_VERSION = '1.57.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
