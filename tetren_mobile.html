@@ -210,6 +210,16 @@ input:checked + .tgl::after { transform:translateX(10px); }
   font-size:11px; font-weight:bold; cursor:pointer;
   background:#374151; color:#d1d5db;
 }
+/* 探索中に盤面へ重ねる表示 */
+#pcBusy {
+  position:fixed; z-index:150; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(17,24,39,.6); border-radius:2px;
+  font-size:15px; font-weight:bold; color:#e5e7eb;
+  text-shadow:0 2px 10px rgba(0,0,0,.9); letter-spacing:1px;
+  pointer-events:none;   /* 下の盤面をふさがない */
+}
+
 /* パフェ手順のウィンドウ（カンペ画像と同じ .shot-win に乗せる） */
 .pc-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:6px; padding:6px; }
 .pc-cv-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
@@ -221,7 +231,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 }
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
 .pc-nav button.on { background:#4338ca; color:#fff; }
-#pcStepLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
+#pcStepLabel, #pcPickLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
 .pc-nav button { padding:9px 14px; }
 
 .shot-win {
@@ -795,6 +805,11 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.0 / 1.62.0</span><span class="vl-date">2026-10-18</span></div><ul><li>探索中は盤面にも「パフェ探索中…」を重ねて出すようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.1 / 1.61.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）</li><li>火力重視で、火力が同じならソフトドロップが少ないほうを先に出すようにした</li><li>説明文から「パーフェクトクリア」を外した。1.65.0 で火力の計算から除いたのに、</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.0 / 1.61.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「復元した時にHOLDを選択する」の下に HOLDの選び方を追加</li><li>予め選ぶミノも追加（7種＋ランダム、既定はランダム）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.65.0 / 1.60.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェ探索の火力の数え方を修正</li><li>パフェの手順ウィンドウに QPCボタンを追加（QPCができる状況のときだけ出る）</li><li>QPCの判定を「最後の1手がIミノの縦置き」から「最後の1手が4ライン同時消し」に変えた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.64.0 / 1.59.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウで、優先順位（火力／速度）を切り替えられるようにした</li><li>集めた候補を切り詰める前に全部 pcAll に持つようにした（以前は上位だけ残していた）</li><li>手順の絵は「探索した時点の盤面の色」を控えておいて、そこから作り直す。</li><li>候補の行の文字を詰めた（「候補 1/5（火力12・消去2回・SD1）」→「1/5　火力12・消去2・SD1」）。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.2 / 1.58.3</span><span class="vl-date">2026-10-18</span></div><ul><li>設定のタブの並びを キーコンフィグ／スキン／表示／パフェ探索／その他 に変更（「その他」を一番右へ）</li><li>PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした</li></ul></div>
@@ -1021,7 +1036,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
         </div>
 
         <div class="opt-row">
-          <span class="opt-label">NEXT・HOLDをシングルタップでミノを変更する
+          <span class="opt-label">NEXT・HOLD欄のシングルタップでミノを変更する
             <span class="opt-note">OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります</span></span>
           <label class="cfg-tgl">
             <input type="checkbox" id="optSwapSingle" onchange="setOption('swapSingle', this.checked)">
@@ -1036,6 +1051,17 @@ input:checked + .tgl::after { transform:translateX(10px); }
             <input type="checkbox" id="optLoadHoldOn" onchange="setOption('loadHoldOn', this.checked)">
             <span class="tgl"></span>
           </label>
+        </div>
+        <div class="opt-row" id="optLoadHoldModeRow">
+          <span class="opt-label">HOLDの選び方
+            <span class="opt-note">「都度選択」は復元のたびに選択画面を出します。「予め選択」は下で決めたミノをそのまま入れます（画面は出ません）</span></span>
+          <span class="opt-step" id="optLoadHoldModeBtns"></span>
+        </div>
+
+        <div class="opt-row" id="optLoadHoldPickRow">
+          <span class="opt-label">予め選ぶミノ
+            <span class="opt-note">「予め選択」のときに最初からHOLDへ入れるミノ。ランダムなら復元のたびに引き直します</span></span>
+          <span class="opt-step" id="optLoadHoldPickBtns"></span>
         </div>
 
 
@@ -1158,7 +1184,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 
         <div class="opt-row" id="optPcPriorityOuterRow">
           <span class="opt-label">優先するもの
-            <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
+            <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
           <span class="opt-step" id="optPcPriorityRow"></span>
         </div>
 </div>
@@ -2163,12 +2189,12 @@ function pcStats(path) {
   return { ev, soft, atk: pcAttack(path), len: path.length, quad: pcIsQuad(path) };
 }
 // 並べ替えの順番。
-//   火力重視: 送れる火力が多い順 → 消す回数が少ない順 → ソフトドロップが少ない順
+//   火力重視: 送れる火力が多い順 → ソフトドロップが少ない順 → 消す回数が少ない順
 //   速度重視: ソフトドロップが少ない順 → 消す回数が少ない順
 // どちらも最後は手数が少ない順でそろえる。
 // 「消す回数が少ない」は最後にまとめて消す手順ほど上に来るので、QPCは自然と上位になる
 function pcCompareSpeed(a, b) { return a.soft - b.soft || a.ev - b.ev || a.len - b.len; }
-function pcComparePower(a, b) { return b.atk - a.atk || a.ev - b.ev || a.soft - b.soft || a.len - b.len; }
+function pcComparePower(a, b) { return b.atk - a.atk || a.soft - b.soft || a.ev - b.ev || a.len - b.len; }
 function pcCompare(a, b) {
   return opts.pcPriority === 'speed' ? pcCompareSpeed(a, b) : pcComparePower(a, b);
 }
@@ -2177,6 +2203,24 @@ function pcCompare(a, b) {
 function pcIsQuad(path) {
   const last = path[path.length - 1];
   return !!(last && last.clears === 4);
+}
+
+// 探索中に盤面へ重ねる表示。盤面を囲む枠に頼らず、位置を測って重ねる
+function showPcBusy(on) {
+  let el = document.getElementById('pcBusy');
+  if (!on) { if (el) el.style.display = 'none'; return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pcBusy';
+    el.textContent = 'パフェ探索中…';
+    document.body.appendChild(el);
+  }
+  const r = boardCanvas.getBoundingClientRect();
+  el.style.left   = r.left + 'px';
+  el.style.top    = r.top + 'px';
+  el.style.width  = r.width + 'px';
+  el.style.height = r.height + 'px';
+  el.style.display = 'flex';
 }
 
 // 判定は押した瞬間の盤面に対するもの。盤面が変わったら古くなるので消す
@@ -2189,6 +2233,7 @@ function clearPcResult() {
   pcSolutions = null;
   pcAll = null;
   pcPick = 0;
+  showPcBusy(false);
   closePcSteps();
 }
 
@@ -2223,6 +2268,7 @@ function searchPerfectClear() {
   if (btn0) btn0.style.display = 'none';
   if (el) el.title = '';
   show('探索中…', '#9ca3af');
+  showPcBusy(true);
   // 2フレーム待つと「探索中」が確実に描かれてから始められる。
   // ただしタブが隠れていると requestAnimationFrame は来ないので、保険の setTimeout も置く
   let started = false;
@@ -2250,6 +2296,7 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   const t0 = performance.now();
   pcCollect(pcCrop(rows, maxLines), seq, 0, hold, new Map(), new Map(), st, []);
   const ms = Math.round(performance.now() - t0);
+  showPcBusy(false);
 
   // 置く順番だけ違うものは1つにまとめる
   let list = [];
@@ -2335,9 +2382,8 @@ function openPcSteps() {
       '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
     '</div>' +
     '<div class="pc-body">' +
-      '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
       '<div class="pc-nav" id="pcPrioNav">' +
-        '<button id="pcPrioPow" title="Tスピン・テトリス・REN・B2Bを数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）" ' +
+        '<button id="pcPrioPow" title="Tスピン・テトリス・REN・B2Bを数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順" ' +
                 'onclick="setPcPriority(\'power\');this.blur()">火力</button>' +
         '<button id="pcPrioSpd" title="ずらし入れや回し入れが少ない順。次にラインを消す回数が少ない順" ' +
                 'onclick="setPcPriority(\'speed\');this.blur()">速度</button>' +
@@ -2349,6 +2395,7 @@ function openPcSteps() {
         '<div id="pcPickLabel"></div>' +
         '<button title="次の候補" onclick="movePcPick(1);this.blur()">▶</button>' +
       '</div>' +
+      '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
       '<div class="pc-nav">' +
         '<button id="pcPrev" title="前の手" onclick="movePcStep(-1);this.blur()">◀</button>' +
         '<div id="pcStepLabel"></div>' +
@@ -2503,8 +2550,8 @@ function drawPcStep() {
     nav.style.display = many ? '' : 'none';
     if (many) {
       const c = pcSolutions[pcPick];
-      lab.textContent = `${pcPick + 1}/${pcSolutions.length}　火力${c.atk}・消去${c.ev}・SD${c.soft}`;
-      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B・パーフェクトクリアを含む）。'
+      lab.textContent = `${pcPick + 1}/${pcSolutions.length}　火力${c.atk}・SD${c.soft}・消去${c.ev}`;
+      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B。パフェを決める最後の1手は数えません）。'
                 + 'SD＝ずらし入れや回し入れが要る置き方の数';
     }
   }
@@ -2755,7 +2802,11 @@ function saveTerrain(){
 function loadTerrain(){
   if(!savedTerrain) return;
   // 設定がONなら、先にHOLDへ入れるミノを選んでもらう
-  if(opts.loadHoldOn){ openSwap({ kind:'loadHold' }); return; }
+  if(opts.loadHoldOn){
+    // 予め決めてあるならそのまま入れる。都度選択なら選択画面を出す
+    if((opts.loadHoldMode || 'ask') === 'fixed'){ doLoadTerrain(opts.loadHoldPick || HOLD_RANDOM); return; }
+    openSwap({ kind:'loadHold' }); return;
+  }
   doLoadTerrain(null);
 }
 // hold は null（入れない）／ミノ種別／HOLD_RANDOM
@@ -3485,7 +3536,7 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
-  loadHoldOn:false, pcPriority:'power', pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
+  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -3533,6 +3584,36 @@ function loadOptions(){
   migrateInputOpts();
   applyOptions();
 }
+// 「復元した時にHOLDを選択する」の選び方と、予め選ぶミノ
+function renderLoadHoldRows() {
+  const mk = (box, val, label, sel, tip, fn) => {
+    const b = document.createElement('button');
+    b.className = 'rand-num' + (sel ? ' sel' : '');
+    b.textContent = label;
+    b.title = tip;
+    b.addEventListener('click', fn);
+    box.appendChild(b);
+  };
+  const m = document.getElementById('optLoadHoldModeBtns');
+  if (m) {
+    m.innerHTML = '';
+    const mode = opts.loadHoldMode || 'ask';
+    mk(m, 'ask',   '都度選択', mode === 'ask',   '復元のたびにミノの選択画面を出します',
+       () => setOption('loadHoldMode', 'ask'));
+    mk(m, 'fixed', '予め選択', mode === 'fixed', 'ここで決めたミノをそのまま入れます',
+       () => setOption('loadHoldMode', 'fixed'));
+  }
+  const q = document.getElementById('optLoadHoldPickBtns');
+  if (q) {
+    q.innerHTML = '';
+    const cur = opts.loadHoldPick || HOLD_RANDOM;
+    ALL_TYPES.forEach(t => mk(q, t, t, cur === t, t + 'ミノを最初からHOLDに入れる',
+      () => setOption('loadHoldPick', t)));
+    mk(q, HOLD_RANDOM, 'ランダム', cur === HOLD_RANDOM, '復元のたびにランダムで決める',
+      () => setOption('loadHoldPick', HOLD_RANDOM));
+  }
+}
+
 // パフェ探索の「優先するもの」ボタン
 function renderPcPriorityRow() {
   const box = document.getElementById('optPcPriorityRow');
@@ -3546,7 +3627,7 @@ function renderPcPriorityRow() {
     b.addEventListener('click', () => setPcPriority(val));
     box.appendChild(b);
   };
-  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順に並べます');
+  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順に並べます（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順');
   mk('speed', '速度重視', 'ずらし入れや回し入れが少ない順に並べます。次にラインを消す回数が少ない順');
 }
 
@@ -3563,6 +3644,16 @@ function applyOptions(){
   check('optPcMulti',    opts.pcMulti);
   check('optPcRank',     opts.pcRank);
   check('optLoadHoldOn', opts.loadHoldOn);
+  renderLoadHoldRows();
+  { // スイッチがOFFなら選び方ごと、「都度選択」なら予め選ぶミノを触れなくする
+    const dim2 = (id, on) => {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.classList.toggle('opt-off', !on);
+      row.querySelectorAll('button, input').forEach(x => x.disabled = !on);
+    };
+    dim2('optLoadHoldModeRow', !!opts.loadHoldOn);
+    dim2('optLoadHoldPickRow', !!opts.loadHoldOn && (opts.loadHoldMode || 'ask') === 'fixed'); }
   renderPcPriorityRow();
   { const a = document.getElementById('optPcCountVal');   if (a) a.textContent = opts.pcCount;
     const b = document.getElementById('optPcTimeoutVal'); if (b) b.textContent = opts.pcTimeout;
@@ -4629,7 +4720,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.65.0';
+const APP_VERSION = '1.67.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
