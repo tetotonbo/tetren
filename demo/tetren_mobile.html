@@ -805,6 +805,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.69.0 / 1.64.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順の先頭に 「全体図」 を追加</li><li>途中でラインが消えると行がずれるので、「消さなかったことにした座標系」に置き直して</li><li>マスごとに「何手目で置いたか」を持たせ、描くときの濃さに使っている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
@@ -2376,7 +2377,39 @@ function pcBuildSteps(path) {
   }
   // 最後の1枚（置き終わったあと＝空のはず）も入れておく
   steps.push({ type: null, grid, cells: [] });
+  // 先頭に「全体図」を足す。候補を切り替えたとき、1手目だけでなく完成形が見えるように
+  steps.unshift(pcOverviewStep(path));
   return steps;
+}
+
+// 手順ぜんぶを1枚に重ねた絵を作る。
+// 途中でラインが消えると行がずれるので、「消さなかったことにした座標系」に置き直す。
+// 消える行数ぶんきっちり埋まるので、切り出した高さに必ず収まる。
+function pcOverviewStep(path) {
+  const H = pcBase.length;
+  const view  = pcBase.map(row => row.slice());               // 色
+  const owner = Array.from({ length: H }, () => new Array(COLS).fill(-1));  // 何手目で置いたか（-1=元の地形）
+  let cur = pcBase.map(row => row.slice());                   // 実際の盤面（消去あり）
+  let map = Array.from({ length: H }, (_, i) => i);           // 実際の行 → 全体図の行
+  // 消去でできた空き行に割り当てる、全体図の行。いま使っている一番上の1つ上から
+  let free = H;
+  for (let r = 0; r < H; r++) if (view[r].some(x => x)) { free = r; break; }
+
+  for (let s = 0; s < path.length; s++) {
+    const mv = path[s], col = pieceColor(mv.type);
+    for (const [r, c] of mv.cells) {
+      cur[r][c] = col;
+      const vr = map[r];
+      if (vr >= 0 && vr < H) { view[vr][c] = col; owner[vr][c] = s; }
+    }
+    // ライン消去。残った行は対応を引き継ぎ、上にできた空き行には新しい行を割り当てる
+    const keep = [], nmap = [];
+    for (let r = 0; r < H; r++) if (cur[r].some(x => !x)) { keep.push(cur[r]); nmap.push(map[r]); }
+    while (keep.length < H) { keep.unshift(new Array(COLS).fill(null)); nmap.unshift(-1); }
+    for (let i = 0; i < H; i++) if (nmap[i] === -1) nmap[i] = --free;
+    cur = keep; map = nmap;
+  }
+  return { type: path[0] ? path[0].type : null, grid: view, cells: [], owner, overview: true };
 }
 
 function openPcSteps() {
@@ -2529,11 +2562,20 @@ function drawPcStep() {
   g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
   g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
   for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
-  // 既にある地形
-  for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++)
-    if (s.grid[r][c]) withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, s.grid[r][c]));
+  // 既にある地形。全体図のときは、1手目以外のミノを薄くする
+  for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++) {
+    if (!s.grid[r][c]) continue;
+    const o = s.owner ? s.owner[r][c] : -1;
+    const a = (s.overview && o > 0) ? 0.35 : 1;
+    withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, s.grid[r][c], a));
+    // 全体図では1手目を白枠で囲って、どこから置くのか分かるようにする
+    if (s.overview && o === 0) {
+      g.strokeStyle = '#fff'; g.lineWidth = 2;
+      g.strokeRect(c * cell + 1, r * cell + 1, cell - 2, cell - 2);
+    }
+  }
   // これから置くミノ。白い枠で囲って分かるようにする
-  if (s.type) {
+  if (!s.overview && s.type) {
     const col = pieceColor(s.type);
     for (const [r, c] of s.cells) {
       withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, 0.9));
@@ -2541,9 +2583,12 @@ function drawPcStep() {
       g.strokeRect(c * cell + 1, r * cell + 1, cell - 2, cell - 2);
     }
   }
+  const total = pcSteps.length - 2;          // 全体図と完成の2枚を除いた手数
   const last = pcStep === pcSteps.length - 1;
   document.getElementById('pcStepLabel').textContent =
-    last ? `完成（${pcSteps.length - 1}手）` : `${pcStep + 1}手目 / ${pcSteps.length - 1}手　${s.type}ミノ`;
+    s.overview ? `全体　${total}手（1手目は${s.type}ミノ）`
+    : last     ? `完成（${total}手）`
+               : `${pcStep}手目 / ${total}手　${s.type}ミノ`;
   document.getElementById('pcPrev').disabled = pcStep === 0;
   document.getElementById('pcNext').disabled = last;
   // 優先順位の行。並べ替えが効いていて、候補が2つ以上あるときだけ出す
@@ -4742,7 +4787,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.68.0';
+const APP_VERSION = '1.69.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
