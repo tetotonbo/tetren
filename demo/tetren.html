@@ -1236,6 +1236,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.1 / 1.61.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）</li><li>火力重視で、火力が同じならソフトドロップが少ないほうを先に出すようにした</li><li>説明文から「パーフェクトクリア」を外した。1.65.0 で火力の計算から除いたのに、</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.0 / 1.61.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「復元した時にHOLDを選択する」の下に HOLDの選び方を追加</li><li>予め選ぶミノも追加（7種＋ランダム、既定はランダム）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.65.0 / 1.60.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェ探索の火力の数え方を修正</li><li>パフェの手順ウィンドウに QPCボタンを追加（QPCができる状況のときだけ出る）</li><li>QPCの判定を「最後の1手がIミノの縦置き」から「最後の1手が4ライン同時消し」に変えた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.64.0 / 1.59.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウで、優先順位（火力／速度）を切り替えられるようにした</li><li>集めた候補を切り詰める前に全部 pcAll に持つようにした（以前は上位だけ残していた）</li><li>手順の絵は「探索した時点の盤面の色」を控えておいて、そこから作り直す。</li><li>候補の行の文字を詰めた（「候補 1/5（火力12・消去2回・SD1）」→「1/5　火力12・消去2・SD1」）。</li></ul></div>
@@ -1623,7 +1624,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
       <div class="opt-row" id="optPcPriorityOuterRow">
         <span class="opt-label">優先するもの
-          <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
+          <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
         <div class="opt-step" id="optPcPriorityRow"></div>
       </div>
 
@@ -5573,12 +5574,12 @@ function pcStats(path) {
   return { ev, soft, atk: pcAttack(path), len: path.length, quad: pcIsQuad(path) };
 }
 // 並べ替えの順番。
-//   火力重視: 送れる火力が多い順 → 消す回数が少ない順 → ソフトドロップが少ない順
+//   火力重視: 送れる火力が多い順 → ソフトドロップが少ない順 → 消す回数が少ない順
 //   速度重視: ソフトドロップが少ない順 → 消す回数が少ない順
 // どちらも最後は手数が少ない順でそろえる。
 // 「消す回数が少ない」は最後にまとめて消す手順ほど上に来るので、QPCは自然と上位になる
 function pcCompareSpeed(a, b) { return a.soft - b.soft || a.ev - b.ev || a.len - b.len; }
-function pcComparePower(a, b) { return b.atk - a.atk || a.ev - b.ev || a.soft - b.soft || a.len - b.len; }
+function pcComparePower(a, b) { return b.atk - a.atk || a.soft - b.soft || a.ev - b.ev || a.len - b.len; }
 function pcCompare(a, b) {
   return opts.pcPriority === 'speed' ? pcCompareSpeed(a, b) : pcComparePower(a, b);
 }
@@ -5747,7 +5748,7 @@ function openPcSteps() {
     '<div class="pc-body">' +
       '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
       '<div class="pc-nav" id="pcPrioNav">' +
-        '<button id="pcPrioPow" title="Tスピン・テトリス・REN・B2Bを数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）" ' +
+        '<button id="pcPrioPow" title="Tスピン・テトリス・REN・B2Bを数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順" ' +
                 'onclick="setPcPriority(\'power\');this.blur()">火力</button>' +
         '<button id="pcPrioSpd" title="ずらし入れや回し入れが少ない順。次にラインを消す回数が少ない順" ' +
                 'onclick="setPcPriority(\'speed\');this.blur()">速度</button>' +
@@ -5913,8 +5914,8 @@ function drawPcStep() {
     nav.style.display = many ? '' : 'none';
     if (many) {
       const c = pcSolutions[pcPick];
-      lab.textContent = `${pcPick + 1}/${pcSolutions.length}　火力${c.atk}・消去${c.ev}・SD${c.soft}`;
-      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B・パーフェクトクリアを含む）。'
+      lab.textContent = `${pcPick + 1}/${pcSolutions.length}　火力${c.atk}・SD${c.soft}・消去${c.ev}`;
+      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B。パフェを決める最後の1手は数えません）。'
                 + 'SD＝ずらし入れや回し入れが要る置き方の数';
     }
   }
@@ -6261,7 +6262,7 @@ function renderPcPriorityRow() {
     b.addEventListener('click', () => setPcPriority(val));
     box.appendChild(b);
   };
-  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順に並べます');
+  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順に並べます（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順');
   mk('speed', '速度重視', 'ずらし入れや回し入れが少ない順に並べます。次にラインを消す回数が少ない順');
 }
 
@@ -6583,7 +6584,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.61.0';
+const APP_VERSION = '1.61.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
