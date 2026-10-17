@@ -231,7 +231,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 }
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
 .pc-nav button.on { background:#4338ca; color:#fff; }
-#pcStepLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
+#pcStepLabel, #pcPickLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
 .pc-nav button { padding:9px 14px; }
 
 .shot-win {
@@ -805,6 +805,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.0 / 1.62.0</span><span class="vl-date">2026-10-18</span></div><ul><li>探索中は盤面にも「パフェ探索中…」を重ねて出すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.1 / 1.61.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）</li><li>火力重視で、火力が同じならソフトドロップが少ないほうを先に出すようにした</li><li>説明文から「パーフェクトクリア」を外した。1.65.0 で火力の計算から除いたのに、</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.0 / 1.61.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「復元した時にHOLDを選択する」の下に HOLDの選び方を追加</li><li>予め選ぶミノも追加（7種＋ランダム、既定はランダム）</li></ul></div>
@@ -2380,7 +2381,6 @@ function openPcSteps() {
       '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
     '</div>' +
     '<div class="pc-body">' +
-      '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
       '<div class="pc-nav" id="pcPrioNav">' +
         '<button id="pcPrioPow" title="Tスピン・テトリス・REN・B2Bを数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順" ' +
                 'onclick="setPcPriority(\'power\');this.blur()">火力</button>' +
@@ -2394,6 +2394,7 @@ function openPcSteps() {
         '<div id="pcPickLabel"></div>' +
         '<button title="次の候補" onclick="movePcPick(1);this.blur()">▶</button>' +
       '</div>' +
+      '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
       '<div class="pc-nav">' +
         '<button id="pcPrev" title="前の手" onclick="movePcStep(-1);this.blur()">◀</button>' +
         '<div id="pcStepLabel"></div>' +
@@ -4718,7 +4719,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.67.0';
+const APP_VERSION = '1.67.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
