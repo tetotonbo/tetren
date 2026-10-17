@@ -559,7 +559,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 #keyconfigBox {
   background:#1f2937; border:1px solid #4b5563; border-radius:12px;
-  padding:24px 28px; width:480px; max-height:90vh; overflow-y:auto;
+  padding:24px 28px; width:min(540px, 94vw); max-height:90vh; overflow-y:auto;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
 .kc-header {
@@ -595,11 +595,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 .kc-del:hover { color:#ef4444; border-color:#ef4444; }
 /* 設定モーダルのタブ */
-.cfg-tabs { display:flex; gap:6px; margin-bottom:14px; border-bottom:1px solid #374151; }
+/* タブが5つあるので、折り返さず収まるよう詰めてある */
+.cfg-tabs { display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid #374151; }
 .cfg-tab {
   background:none; border:none; border-bottom:2px solid transparent;
-  color:#9ca3af; font-size:14px; font-weight:bold; cursor:pointer;
-  padding:8px 14px; transition:color .15s, border-color .15s;
+  color:#9ca3af; font-size:13px; font-weight:bold; cursor:pointer;
+  padding:8px 9px; white-space:nowrap; transition:color .15s, border-color .15s;
 }
 .cfg-tab:hover { color:#e5e7eb; }
 .cfg-tab.active { color:#fff; border-bottom-color:#6366f1; }
@@ -1229,6 +1230,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.62.0 / 1.57.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）</li><li>パフェ探索に「優先するもの」を追加。火力重視（既定）と速度重視から選ぶ</li><li>候補の行に火力も出すようにした（「候補 1/5（火力12・消去2回・SD1）」）</li><li>タブが5つになったので、見出しが折り返さないよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.61.0 / 1.56.0</span><span class="vl-date">2026-10-17</span></div><ul><li>パフェ探索が候補を複数出すようになった</li><li>設定の「その他」にパフェ探索の項目を追加</li><li>「復元したときのHOLD」を追加（設定の「その他」）</li><li>「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.60.0 / 1.55.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索に「探索中…」の表示を追加</li><li>スキンの「標準」を「立体」に改名し、「無地」を一覧の先頭へ移動</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.59.0 / 1.54.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、最後をIミノの縦置きで締めるパフェ（QPC）があれば、そちらの手順を出すようにした</li><li>QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている</li></ul></div>
@@ -1357,6 +1359,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab"        id="cfgTabUi" title="画面に出すメニューを選ぶ" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
+      <button class="cfg-tab" id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
@@ -1480,43 +1483,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <div class="opt-step" id="optLoadHoldRow"></div>
       </div>
 
-      <div class="opt-row">
-        <span class="opt-label">パフェ探索：候補を複数出す
-          <span class="opt-note">OFFにすると、見つかった1つだけを出します（そのぶん速く終わります）</span></span>
-        <label class="tgl-row" style="flex:0 0 auto;">
-          <input type="checkbox" id="optPcMulti" onchange="setOption('pcMulti', this.checked)">
-          <span class="tgl"></span>
-        </label>
-      </div>
-
-      <div class="opt-row" id="optPcRankRow">
-        <span class="opt-label">パフェ探索：優先順位をつける
-          <span class="opt-note">ラインを消す回数が少ない順に並べ、同じならソフトドロップが少ない順にします。OFFにすると見つけた順のまま出します</span></span>
-        <label class="tgl-row" style="flex:0 0 auto;">
-          <input type="checkbox" id="optPcRank" onchange="setOption('pcRank', this.checked)">
-          <span class="tgl"></span>
-        </label>
-      </div>
-
-      <div class="opt-row" id="optPcCountRow">
-        <span class="opt-label">パフェ探索：候補の数
-          <span class="opt-note">多くするほど探索に時間がかかります</span></span>
-        <div class="opt-step">
-          <button class="step-btn" onclick="stepOption('pcCount',-1)">‹</button>
-          <span class="opt-val" id="optPcCountVal">5</span>
-          <button class="step-btn" onclick="stepOption('pcCount',1)">›</button>
-        </div>
-      </div>
-
-      <div class="opt-row">
-        <span class="opt-label">パフェ探索：制限時間
-          <span class="opt-note">この時間で終わらなければ打ち切ります。地形がほとんど無い盤面ほど時間がかかります</span></span>
-        <div class="opt-step">
-          <button class="step-btn" onclick="stepOption('pcTimeout',-1)">‹</button>
-          <span class="opt-val" id="optPcTimeoutVal">5</span><span class="speed-unit"> 秒</span>
-          <button class="step-btn" onclick="stepOption('pcTimeout',1)">›</button>
-        </div>
-      </div>
 
       <div class="opt-row" id="optSoftRow">
         <span class="opt-label">ソフトドロップ速度
@@ -1587,6 +1553,51 @@ input:checked + .tgl::after { transform:translateX(16px); }
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    
+</div>
+    <div class="cfg-pane" id="cfgPanePc">
+      <div class="opt-row">
+        <span class="opt-label">優先するもの
+          <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
+        <div class="opt-step" id="optPcPriorityRow"></div>
+      </div>
+      <div class="opt-row">
+        <span class="opt-label">候補を複数出す
+          <span class="opt-note">OFFにすると、見つかった1つだけを出します（そのぶん速く終わります）</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPcMulti" onchange="setOption('pcMulti', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optPcRankRow">
+        <span class="opt-label">優先順位をつける
+          <span class="opt-note">ラインを消す回数が少ない順に並べ、同じならソフトドロップが少ない順にします。OFFにすると見つけた順のまま出します</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPcRank" onchange="setOption('pcRank', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optPcCountRow">
+        <span class="opt-label">候補の数
+          <span class="opt-note">多くするほど探索に時間がかかります</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('pcCount',-1)">‹</button>
+          <span class="opt-val" id="optPcCountVal">5</span>
+          <button class="step-btn" onclick="stepOption('pcCount',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">制限時間
+          <span class="opt-note">この時間で終わらなければ打ち切ります。地形がほとんど無い盤面ほど時間がかかります</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('pcTimeout',-1)">‹</button>
+          <span class="opt-val" id="optPcTimeoutVal">5</span><span class="speed-unit"> 秒</span>
+          <button class="step-btn" onclick="stepOption('pcTimeout',1)">›</button>
+        </div>
       </div>
     </div>
   </div>
@@ -5317,22 +5328,25 @@ function pcPlacements(f, type, cache) {
   // ミノの原点はマイナスになりうる（4マス枠の中で実セルがずれているため。
   // 例: Iを左端に立てるときの原点は col = -2）。index用に下駄をはかせる。
   const OFF = 4, RW = H + OFF * 2, CW = COLS + OFF * 2;
+  // 到着の仕方も覚える。1=移動で到着 / 2=回転で到着 / 4=5番目のキックで到着。
+  // Tスピンは「最後の動きが回転」かどうかで決まるので、ここを見分ける必要がある
   const seen = new Uint8Array(4 * RW * CW);
   const idx = (st, r, c) => (st * RW + (r + OFF)) * CW + (c + OFF);
   const out = [], outSeen = new Set();
   const stack = [];
-  const push = (st, r, c) => {
+  const push = (st, r, c, bit) => {
     if (r < -OFF || r >= H || c < -OFF || c >= COLS) return;
     const k = idx(st, r, c);
-    if (seen[k] || !pcFits(f, type, st, r, c)) return;
-    seen[k] = 1; stack.push(st, r, c);
+    if ((seen[k] & bit) || !pcFits(f, type, st, r, c)) return;
+    seen[k] |= bit; stack.push(st, r, c);
   };
-  push(0, 0, d.spawnCol);
+  push(0, 0, d.spawnCol, 1);
   if (!stack.length) { cache.set(ck, out); return out; }
 
   while (stack.length) {
     const c = stack.pop(), r = stack.pop(), st = stack.pop();
     if (!pcFits(f, type, st, r + 1, c)) {
+      const mask = seen[idx(st, r, c)];
       // 下に行けない = そこが設置位置。置いてライン消去まで済ませた盤面を作る。
       // ただし切り出した上にはみ出す置き方は、その時点で積みすぎなので数えない
       const cells = PIECE_DEF[type].cells[st];
@@ -5360,18 +5374,19 @@ function pcPlacements(f, type, cache) {
           const put = cells.map(([a, b]) => [r + a, c + b]);
           // 最後をIミノの縦置きで締めるパフェ（QPC）を優先して探すために覚えておく
           const vertI = (type === 'I') && put.every(x => x[1] === put[0][1]);
-          out.push({ g, holes: pcHoles(g), cells: put, vertI, clears, soft });
+          const tspin = pcTSpin(f, type, st, r, c, (mask & 6) !== 0, (mask & 4) !== 0);
+          out.push({ g, holes: pcHoles(g), cells: put, vertI, clears, soft, tspin });
         }
       }
     }
-    push(st, r, c - 1); push(st, r, c + 1); push(st, r + 1, c);
+    push(st, r, c - 1, 1); push(st, r, c + 1, 1); push(st, r + 1, c, 1);
     for (let dir = 0; dir < 2; dir++) {
       const to = (st + (dir ? 3 : 1)) % 4;
       const kicks = KICKS[d.kickType][STATE_NAMES[st] + STATE_NAMES[to]] || [[0, 0]];
       // 回転は最初に通ったキックが採用される。rotate() と同じ順番で見る
       for (let ki = 0; ki < kicks.length; ki++) {
         const kc = kicks[ki][0], kr = kicks[ki][1];
-        if (pcFits(f, type, to, r + kr, c + kc)) { push(to, r + kr, c + kc); break; }
+        if (pcFits(f, type, to, r + kr, c + kc)) { push(to, r + kr, c + kc, ki === 4 ? 6 : 2); break; }
       }
     }
   }
@@ -5379,6 +5394,44 @@ function pcPlacements(f, type, cache) {
   out.sort((x, y) => x.holes - y.holes);
   cache.set(ck, out);
   return out;
+}
+
+// Tスピン判定。detectTSpin() と同じ条件を、切り出した盤面に対して行う。
+// spin は「最後の動きが回転だったか」、kick4 は「5番目のキックで入ったか」
+function pcTSpin(f, type, st, r, c, spin, kick4) {
+  if (type !== 'T' || !spin) return null;
+  const blocked = (row, col) => {
+    if (col < 0 || col >= COLS || row >= f.length) return true;   // 壁・床
+    if (row < 0) return false;
+    return !!(f[row] & (1 << col));
+  };
+  const corners = [blocked(r, c), blocked(r, c + 2), blocked(r + 2, c), blocked(r + 2, c + 2)];
+  if (corners.filter(Boolean).length < 3) return null;
+  const frontIdx = [[0, 1], [1, 3], [2, 3], [0, 2]][st];
+  const frontFilled = frontIdx.filter(i => corners[i]).length;
+  return (frontFilled === 2 || kick4) ? 'full' : 'mini';
+}
+
+// 手順ぜんぶで相手に送れる火力。ゲーム中の attackPower() と同じ表を使い、
+// RENとB2Bは手順の中で積み上げて数える
+function pcAttack(path) {
+  let total = 0, ren = -1, b2b = false;
+  for (let i = 0; i < path.length; i++) {
+    const m = path[i];
+    if (!m.clears) { ren = -1; continue; }   // 消さない手でRENは途切れる
+    ren++;
+    const hard = (m.clears === 4 || m.tspin === 'full');   // B2Bが続く消し方
+    let a;
+    if (m.tspin === 'mini')      a = 0;
+    else if (m.tspin === 'full') a = ATK_TSPIN[m.clears] ?? 0;
+    else                         a = ATK_LINE[m.clears] ?? 0;
+    if (b2b && hard) a += 1;
+    a += ATK_REN[Math.min(ren, 11)];
+    if (i === path.length - 1) a += ATK_PERFECT;   // 最後の1手で盤面が空＝パーフェクトクリア
+    total += a;
+    b2b = hard;
+  }
+  return total;
 }
 
 // 置いたあとの盤面の「穴の数」。穴＝上にブロックがある空きマス。
@@ -5440,7 +5493,7 @@ function pcCollect(f, seq, i, hold, memo, cache, st, path) {
     const list = pcPlacements(f, type, cache);
     for (let j = 0; j < list.length; j++) {
       const pl = list[j];
-      path.push({ type, cells: pl.cells, clears: pl.clears, soft: pl.soft, vertI: pl.vertI });
+      path.push({ type, cells: pl.cells, clears: pl.clears, soft: pl.soft, vertI: pl.vertI, tspin: pl.tspin });
       pcCollect(pl.g, seq, ni, nhold, memo, cache, st, path);
       path.pop();
       if (st.aborted || st.found.length >= st.cap) return;
@@ -5457,12 +5510,23 @@ function pcSameKey(path) {
              .sort().join('|');
 }
 
-// 候補の優先順位。ラインを消す回数が少ない順 → ソフトドロップが少ない順 → 手数が少ない順。
-// 最後にまとめて消す手順ほど上に来るので、QPCは自然といちばん上になる
-function pcRankKey(path) {
+// 候補の中身を数える。ev=ラインを消した回数 / soft=ソフトドロップが要る置き方の数 /
+// atk=相手に送れる火力 / len=手数
+function pcStats(path) {
   let ev = 0, soft = 0;
   for (const m of path) { if (m.clears > 0) ev++; soft += m.soft; }
-  return [ev, soft, path.length];
+  return { ev, soft, atk: pcAttack(path), len: path.length };
+}
+// 並べ替えの順番。
+//   火力重視: 送れる火力が多い順 → 消す回数が少ない順 → ソフトドロップが少ない順
+//   速度重視: ソフトドロップが少ない順 → 消す回数が少ない順
+// どちらも最後は手数が少ない順でそろえる。
+// 「消す回数が少ない」は最後にまとめて消す手順ほど上に来るので、QPCは自然と上位になる
+function pcCompare(a, b) {
+  if (opts.pcPriority === 'speed') {
+    return a.soft - b.soft || a.ev - b.ev || a.len - b.len;
+  }
+  return b.atk - a.atk || a.ev - b.ev || a.soft - b.soft || a.len - b.len;
 }
 // 最後の1手がIミノの縦置きなら、4行ぶんの最後のマスを埋めたということなのでQPC
 function pcIsQuad(path) {
@@ -5548,8 +5612,8 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
       seen.add(k); list.push(path);
     } }
   if (opts.pcRank) {
-    list = list.map(p => ({ p, k: pcRankKey(p) }))
-               .sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.k[2] - b.k[2])
+    list = list.map(p => ({ p, k: pcStats(p) }))
+               .sort((a, b) => pcCompare(a.k, b.k))
                .map(x => x.p);
   }
   list = list.slice(0, want);
@@ -5561,8 +5625,9 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
     return;
   }
   pcSolutions = list.map(path => {
-    const k = pcRankKey(path);
-    return { path, steps: pcBuildSteps(path, maxLines), ev: k[0], soft: k[1], quad: pcIsQuad(path) };
+    const k = pcStats(path);
+    return { path, steps: pcBuildSteps(path, maxLines),
+             ev: k.ev, soft: k.soft, atk: k.atk, quad: pcIsQuad(path) };
   });
   pcPick = 0;
   pcSteps = pcSolutions[0].steps;
@@ -5721,8 +5786,9 @@ function drawPcStep() {
     nav.style.display = many ? '' : 'none';
     if (many) {
       const c = pcSolutions[pcPick];
-      lab.textContent = `候補 ${pcPick + 1}/${pcSolutions.length}（消去${c.ev}回・SD${c.soft}）`;
-      lab.title = 'ラインを消す回数とソフトドロップの回数。少ないほど上に並べています';
+      lab.textContent = `候補 ${pcPick + 1}/${pcSolutions.length}（火力${c.atk}・消去${c.ev}回・SD${c.soft}）`;
+      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B・パーフェクトクリアを含む）。'
+                + 'SD＝ずらし入れや回し入れが要る置き方の数';
     }
   }
 }
@@ -5946,6 +6012,7 @@ const OPT_DEFAULTS = {
   ghost: true,        // ゴースト表示
   axis: false,        // 軸表示
   grid: true,         // グリッド線（盤面のマス目）
+  pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
   pcMulti: true,      // パフェ探索で候補を複数出す
   pcRank: true,       // 候補に優先順位をつける（消す回数が少ない順 → ソフトドロップが少ない順）
   pcCount: 5,         // 出す候補の数
@@ -6022,6 +6089,23 @@ function loadOptions() {
   if (opts.arrFrames !== undefined) { opts.arrMs = Math.round(opts.arrFrames * FRAME_MS); delete opts.arrFrames; }
   applyOptions();
 }
+// パフェ探索の「優先するもの」ボタン
+function renderPcPriorityRow() {
+  const box = document.getElementById('optPcPriorityRow');
+  if (!box) return;
+  box.innerHTML = '';
+  const mk = (val, label, tip) => {
+    const b = document.createElement('button');
+    b.className = 'rand-num' + ((opts.pcPriority || 'power') === val ? ' sel' : '');
+    b.textContent = label;
+    b.title = tip;
+    b.addEventListener('click', () => setOption('pcPriority', val));
+    box.appendChild(b);
+  };
+  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順に並べます');
+  mk('speed', '速度重視', 'ずらし入れや回し入れが少ない順に並べます。次にラインを消す回数が少ない順');
+}
+
 // 「復元したときのHOLD」の選択ボタンを作る（設定の「その他」）
 function renderLoadHoldRow() {
   const box = document.getElementById('optLoadHoldRow');
@@ -6065,6 +6149,7 @@ function applyOptions() {
   check('optPcMulti',    opts.pcMulti);
   check('optPcRank',     opts.pcRank);
   renderLoadHoldRow();
+  renderPcPriorityRow();
   { const a = document.getElementById('optPcCountVal');   if (a) a.textContent = opts.pcCount;
     const b = document.getElementById('optPcTimeoutVal'); if (b) b.textContent = opts.pcTimeout;
     const row = document.getElementById('optPcCountRow');
@@ -6213,7 +6298,8 @@ function switchKcSub(name) {
 }
 function switchConfigTab(name) {
   const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'],
-                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
+                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'],
+                 pc:['cfgTabPc','cfgPanePc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     document.getElementById(tab).classList.toggle('active', k === name);
@@ -6221,7 +6307,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'ui')   renderUiList();
-  if (name === 'misc') applyOptions();
+  if (name === 'misc' || name === 'pc') applyOptions();
   if (name === 'key' && kcSub === 'pad') buildGpRows();
 }
 
@@ -6339,7 +6425,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.56.0';
+const APP_VERSION = '1.57.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
