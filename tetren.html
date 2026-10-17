@@ -559,7 +559,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 #keyconfigBox {
   background:#1f2937; border:1px solid #4b5563; border-radius:12px;
-  padding:24px 28px; width:480px; max-height:90vh; overflow-y:auto;
+  padding:24px 28px; width:min(540px, 94vw); max-height:90vh; overflow-y:auto;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
 .kc-header {
@@ -595,11 +595,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 .kc-del:hover { color:#ef4444; border-color:#ef4444; }
 /* 設定モーダルのタブ */
-.cfg-tabs { display:flex; gap:6px; margin-bottom:14px; border-bottom:1px solid #374151; }
+/* タブが5つあるので、折り返さず収まるよう詰めてある */
+.cfg-tabs { display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid #374151; }
 .cfg-tab {
   background:none; border:none; border-bottom:2px solid transparent;
-  color:#9ca3af; font-size:14px; font-weight:bold; cursor:pointer;
-  padding:8px 14px; transition:color .15s, border-color .15s;
+  color:#9ca3af; font-size:13px; font-weight:bold; cursor:pointer;
+  padding:8px 9px; white-space:nowrap; transition:color .15s, border-color .15s;
 }
 .cfg-tab:hover { color:#e5e7eb; }
 .cfg-tab.active { color:#fff; border-bottom-color:#6366f1; }
@@ -1084,9 +1085,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <span class="imp-title" id="swapTitle">ミノを変更</span>
       <button class="imp-x" title="閉じる" onclick="closeSwap()">×</button>
     </div>
-    <div class="imp-hint" style="margin:0 0 12px;">置き換えたいミノを選んでください。</div>
+    <div class="imp-hint" style="margin:0 0 12px;" id="swapHint">置き換えたいミノを選んでください。</div>
     <div id="swapGrid"></div>
     <div class="imp-actions">
+      <button class="imp-btn" id="swapRandBtn" style="display:none;" onclick="swapTo('?')">ランダム</button>
       <button class="imp-btn" id="swapEmptyBtn" onclick="swapTo(null)">空にする</button>
       <button class="imp-btn" onclick="closeSwap()">キャンセル</button>
     </div>
@@ -1229,6 +1231,11 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブに「閉じる」ボタンが無かったのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.1 / 1.58.1</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブの並びを 制限時間 → 候補を複数出す → 候補の数 → 優先順位をつける → 優先するもの に変更</li><li>「候補を複数出す」をOFFにすると、その下の3つをグレーにして触れなくするようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.0 / 1.58.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を直した</li><li>「復元したときのHOLD」を「復元した時にHOLDを選択する」のON/OFFスイッチに変更</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.62.0 / 1.57.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）</li><li>パフェ探索に「優先するもの」を追加。火力重視（既定）と速度重視から選ぶ</li><li>候補の行に火力も出すようにした（「候補 1/5（火力12・消去2回・SD1）」）</li><li>タブが5つになったので、見出しが折り返さないよう詰めた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.61.0 / 1.56.0</span><span class="vl-date">2026-10-17</span></div><ul><li>パフェ探索が候補を複数出すようになった</li><li>設定の「その他」にパフェ探索の項目を追加</li><li>「復元したときのHOLD」を追加（設定の「その他」）</li><li>「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.60.0 / 1.55.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索に「探索中…」の表示を追加</li><li>スキンの「標準」を「立体」に改名し、「無地」を一覧の先頭へ移動</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.59.0 / 1.54.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、最後をIミノの縦置きで締めるパフェ（QPC）があれば、そちらの手順を出すようにした</li><li>QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.0 / 1.53.0</span><span class="vl-date">2026-10-15</span></div><ul><li>キーコンフィグにボタン操作を追加。マウスやタップに持ち替えずに使えるようにした</li><li>パフェ探索の表記を「この並びではできません」→「パフェできません」に変更</li><li>設定を開いている間もキーがゲーム操作として効いてしまっていたのを修正</li><li>キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正</li><li>地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正</li></ul></div>
@@ -1356,6 +1363,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab"        id="cfgTabUi" title="画面に出すメニューを選ぶ" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
+      <button class="cfg-tab" id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
     </div>
 
     <div class="cfg-pane active" id="cfgPaneKey">
@@ -1464,6 +1472,25 @@ input:checked + .tgl::after { transform:translateX(16px); }
         </label>
       </div>
 
+      <div class="opt-row">
+        <span class="opt-label">NEXT・HOLDをシングルクリックでミノを変更する
+          <span class="opt-note">OFFのときはダブルクリックで変更します</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optSwapSingle" onchange="setOption('swapSingle', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">復元した時にHOLDを選択する
+          <span class="opt-note">ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optLoadHoldOn" onchange="setOption('loadHoldOn', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+
       <div class="opt-row" id="optSoftRow">
         <span class="opt-label">ソフトドロップ速度
           <span class="opt-note">↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）</span></span>
@@ -1531,6 +1558,56 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div class="kc-btns">
         <button onclick="resetOptions()" title="その他の設定を初期状態に戻す"
           style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    
+</div>
+    <div class="cfg-pane" id="cfgPanePc">
+      <div class="opt-row">
+        <span class="opt-label">制限時間
+          <span class="opt-note">この時間で終わらなければ打ち切ります。地形がほとんど無い盤面ほど時間がかかります</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('pcTimeout',-1)">‹</button>
+          <span class="opt-val" id="optPcTimeoutVal">5</span><span class="speed-unit"> 秒</span>
+          <button class="step-btn" onclick="stepOption('pcTimeout',1)">›</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <span class="opt-label">候補を複数出す
+          <span class="opt-note">OFFにすると、見つかった1つだけを出します（そのぶん速く終わります）</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPcMulti" onchange="setOption('pcMulti', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optPcCountRow">
+        <span class="opt-label">候補の数
+          <span class="opt-note">多くするほど探索に時間がかかります</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('pcCount',-1)">‹</button>
+          <span class="opt-val" id="optPcCountVal">5</span>
+          <button class="step-btn" onclick="stepOption('pcCount',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row" id="optPcRankRow">
+        <span class="opt-label">優先順位をつける
+          <span class="opt-note">ラインを消す回数が少ない順に並べ、同じならソフトドロップが少ない順にします。OFFにすると見つけた順のまま出します</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPcRank" onchange="setOption('pcRank', this.checked)">
+          <span class="tgl"></span>
+        </label>
+      </div>
+
+      <div class="opt-row" id="optPcPriorityOuterRow">
+        <span class="opt-label">優先するもの
+          <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
+        <div class="opt-step" id="optPcPriorityRow"></div>
+      </div>
+
+      <div class="kc-btns">
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
       </div>
@@ -2588,10 +2665,18 @@ let swapTarget = null;   // { kind:'hold' } または { kind:'next', index:i }
 function openSwap(target) {
   if (gameOver) return;
   swapTarget = target;
+  const load = target.kind === 'loadHold';   // 復元の前にHOLDを選ぶとき
   document.getElementById('swapTitle').textContent =
+    load            ? '復元：HOLDに入れるミノ' :
     target.kind === 'hold' ? 'HOLDのミノを変更' : ('NEXT ' + (target.index + 1) + '番目のミノを変更');
+  document.getElementById('swapHint').textContent =
+    load ? '選んだミノが最初からHOLDに入ります。1巡目からはそのぶん抜かれます。'
+         : '置き換えたいミノを選んでください。';
   // 空にできるのはHOLDだけ（NEXTは必ず何か入っている）
-  document.getElementById('swapEmptyBtn').style.display = target.kind === 'hold' ? '' : 'none';
+  const emp = document.getElementById('swapEmptyBtn');
+  emp.style.display = (load || target.kind === 'hold') ? '' : 'none';
+  emp.textContent = load ? 'HOLDなし' : '空にする';
+  document.getElementById('swapRandBtn').style.display = load ? '' : 'none';
   renderSwapGrid();
   document.getElementById('swapOverlay').classList.add('open');
 }
@@ -2601,6 +2686,11 @@ function closeSwap() {
 }
 function swapTo(type) {
   if (!swapTarget) return;
+  if (swapTarget.kind === 'loadHold') {
+    closeSwap();
+    doLoadTerrain(type);
+    return;
+  }
   if (swapTarget.kind === 'hold') {
     holdType = type;
     canHold = true;          // 入れ替えたぶんはホールド権を戻す
@@ -2636,15 +2726,31 @@ function renderSwapGrid() {
     grid.appendChild(row);
   });
 }
+// 既定はダブルクリック。設定をONにすると1クリックで開く
+function nextIndexAt(e) {
+  const r = nextCanvas.getBoundingClientRect();
+  const i = Math.floor((e.clientY - r.top) / (r.height / NEXT_SHOW));
+  return Math.max(0, Math.min(NEXT_SHOW - 1, i));
+}
 holdCanvas.addEventListener('dblclick', e => {
+  if (opts.swapSingle) return;   // 1クリック設定のときは click 側で開く
   e.preventDefault();
   openSwap({ kind:'hold' });
 });
 nextCanvas.addEventListener('dblclick', e => {
+  if (opts.swapSingle) return;
   e.preventDefault();
-  const r = nextCanvas.getBoundingClientRect();
-  const i = Math.floor((e.clientY - r.top) / (r.height / NEXT_SHOW));
-  openSwap({ kind:'next', index: Math.max(0, Math.min(NEXT_SHOW - 1, i)) });
+  openSwap({ kind:'next', index: nextIndexAt(e) });
+});
+holdCanvas.addEventListener('click', e => {
+  if (!opts.swapSingle) return;
+  e.preventDefault();
+  openSwap({ kind:'hold' });
+});
+nextCanvas.addEventListener('click', e => {
+  if (!opts.swapSingle) return;
+  e.preventDefault();
+  openSwap({ kind:'next', index: nextIndexAt(e) });
 });
 
 // ===== DPCセット／ミノ欠け（ミノを選んで練習を始める） =====
@@ -3102,10 +3208,21 @@ function saveTerrain() {
 }
 function loadTerrain() {
   if (!savedTerrain) return;
+  // 設定がONなら、先にHOLDへ入れるミノを選んでもらう
+  if (opts.loadHoldOn) { openSwap({ kind:'loadHold' }); return; }
+  doLoadTerrain(null);
+}
+// hold は null（入れない）／ミノ種別／HOLD_RANDOM
+function doLoadTerrain(hold) {
+  if (!savedTerrain) return;
   board = savedTerrain.map(r => [...r]);
+  if (hold === HOLD_RANDOM) hold = ALL_TYPES[Math.floor(Math.random() * ALL_TYPES.length)];
+  // ミノ欠けと同じ考え方で、1巡目からはそのぶん抜いておく
+  if (hold) firstBagTypes = ALL_TYPES.filter(t => t !== hold);
   // 同じ地形を別のツモで繰り返せるよう、ミノの順番も引き直す。
   // 埋まってしまうときに置ける高さへ逃がす処理も、この中でやっている。
   resetQueueOnly();
+  if (hold) { holdType = hold; canHold = true; updUI(); draw(); }
 }
 
 // ===== 地形の左右反転 =====
@@ -5197,7 +5314,6 @@ function closeDigPanel() { setDigPanelOpen(false); }
 // 回し入れやスピンでしか入らない置き方も見つけられる。
 const PC_FULL_ROW  = (1 << COLS) - 1;
 const PC_PAD       = 4;        // 切り出しの上に足す、ミノを動かすための余白
-const PC_TIME_MS   = 3000;     // これを超えたら打ち切って「判定できず」にする
 
 function pcPopcount(m) { let n = 0; while (m) { m &= m - 1; n++; } return n; }
 
@@ -5242,22 +5358,25 @@ function pcPlacements(f, type, cache) {
   // ミノの原点はマイナスになりうる（4マス枠の中で実セルがずれているため。
   // 例: Iを左端に立てるときの原点は col = -2）。index用に下駄をはかせる。
   const OFF = 4, RW = H + OFF * 2, CW = COLS + OFF * 2;
+  // 到着の仕方も覚える。1=移動で到着 / 2=回転で到着 / 4=5番目のキックで到着。
+  // Tスピンは「最後の動きが回転」かどうかで決まるので、ここを見分ける必要がある
   const seen = new Uint8Array(4 * RW * CW);
   const idx = (st, r, c) => (st * RW + (r + OFF)) * CW + (c + OFF);
   const out = [], outSeen = new Set();
   const stack = [];
-  const push = (st, r, c) => {
+  const push = (st, r, c, bit) => {
     if (r < -OFF || r >= H || c < -OFF || c >= COLS) return;
     const k = idx(st, r, c);
-    if (seen[k] || !pcFits(f, type, st, r, c)) return;
-    seen[k] = 1; stack.push(st, r, c);
+    if ((seen[k] & bit) || !pcFits(f, type, st, r, c)) return;
+    seen[k] |= bit; stack.push(st, r, c);
   };
-  push(0, 0, d.spawnCol);
+  push(0, 0, d.spawnCol, 1);
   if (!stack.length) { cache.set(ck, out); return out; }
 
   while (stack.length) {
     const c = stack.pop(), r = stack.pop(), st = stack.pop();
     if (!pcFits(f, type, st, r + 1, c)) {
+      const mask = seen[idx(st, r, c)];
       // 下に行けない = そこが設置位置。置いてライン消去まで済ませた盤面を作る。
       // ただし切り出した上にはみ出す置き方は、その時点で積みすぎなので数えない
       const cells = PIECE_DEF[type].cells[st];
@@ -5266,6 +5385,16 @@ function pcPlacements(f, type, cache) {
       if (!above) {
         const g = f.slice();
         for (let i = 0; i < 4; i++) g[r + cells[i][0]] |= (1 << (c + cells[i][1]));
+        let clears = 0;
+        for (let y = 0; y < H; y++) if (g[y] === PC_FULL_ROW) clears++;
+        // 同じ向き・同じ列のまま真上から落として、ここに止まるならハードドロップだけで置ける。
+        // 止まらないなら、ずらし入れや回し入れ（＝ソフトドロップ）が要る置き方
+        let soft = 1;
+        if (pcFits(f, type, st, 0, c)) {
+          let y = 0;
+          while (pcFits(f, type, st, y + 1, c)) y++;
+          if (y === r) soft = 0;
+        }
         let w = H - 1;
         for (let y = H - 1; y >= 0; y--) if (g[y] !== PC_FULL_ROW) g[w--] = g[y];
         while (w >= 0) g[w--] = 0;
@@ -5275,18 +5404,19 @@ function pcPlacements(f, type, cache) {
           const put = cells.map(([a, b]) => [r + a, c + b]);
           // 最後をIミノの縦置きで締めるパフェ（QPC）を優先して探すために覚えておく
           const vertI = (type === 'I') && put.every(x => x[1] === put[0][1]);
-          out.push({ g, holes: pcHoles(g), cells: put, vertI });
+          const tspin = pcTSpin(f, type, st, r, c, (mask & 6) !== 0, (mask & 4) !== 0);
+          out.push({ g, holes: pcHoles(g), cells: put, vertI, clears, soft, tspin });
         }
       }
     }
-    push(st, r, c - 1); push(st, r, c + 1); push(st, r + 1, c);
+    push(st, r, c - 1, 1); push(st, r, c + 1, 1); push(st, r + 1, c, 1);
     for (let dir = 0; dir < 2; dir++) {
       const to = (st + (dir ? 3 : 1)) % 4;
       const kicks = KICKS[d.kickType][STATE_NAMES[st] + STATE_NAMES[to]] || [[0, 0]];
       // 回転は最初に通ったキックが採用される。rotate() と同じ順番で見る
       for (let ki = 0; ki < kicks.length; ki++) {
         const kc = kicks[ki][0], kr = kicks[ki][1];
-        if (pcFits(f, type, to, r + kr, c + kc)) { push(to, r + kr, c + kc); break; }
+        if (pcFits(f, type, to, r + kr, c + kc)) { push(to, r + kr, c + kc, ki === 4 ? 6 : 2); break; }
       }
     }
   }
@@ -5294,6 +5424,44 @@ function pcPlacements(f, type, cache) {
   out.sort((x, y) => x.holes - y.holes);
   cache.set(ck, out);
   return out;
+}
+
+// Tスピン判定。detectTSpin() と同じ条件を、切り出した盤面に対して行う。
+// spin は「最後の動きが回転だったか」、kick4 は「5番目のキックで入ったか」
+function pcTSpin(f, type, st, r, c, spin, kick4) {
+  if (type !== 'T' || !spin) return null;
+  const blocked = (row, col) => {
+    if (col < 0 || col >= COLS || row >= f.length) return true;   // 壁・床
+    if (row < 0) return false;
+    return !!(f[row] & (1 << col));
+  };
+  const corners = [blocked(r, c), blocked(r, c + 2), blocked(r + 2, c), blocked(r + 2, c + 2)];
+  if (corners.filter(Boolean).length < 3) return null;
+  const frontIdx = [[0, 1], [1, 3], [2, 3], [0, 2]][st];
+  const frontFilled = frontIdx.filter(i => corners[i]).length;
+  return (frontFilled === 2 || kick4) ? 'full' : 'mini';
+}
+
+// 手順ぜんぶで相手に送れる火力。ゲーム中の attackPower() と同じ表を使い、
+// RENとB2Bは手順の中で積み上げて数える
+function pcAttack(path) {
+  let total = 0, ren = -1, b2b = false;
+  for (let i = 0; i < path.length; i++) {
+    const m = path[i];
+    if (!m.clears) { ren = -1; continue; }   // 消さない手でRENは途切れる
+    ren++;
+    const hard = (m.clears === 4 || m.tspin === 'full');   // B2Bが続く消し方
+    let a;
+    if (m.tspin === 'mini')      a = 0;
+    else if (m.tspin === 'full') a = ATK_TSPIN[m.clears] ?? 0;
+    else                         a = ATK_LINE[m.clears] ?? 0;
+    if (b2b && hard) a += 1;
+    a += ATK_REN[Math.min(ren, 11)];
+    if (i === path.length - 1) a += ATK_PERFECT;   // 最後の1手で盤面が空＝パーフェクトクリア
+    total += a;
+    b2b = hard;
+  }
+  return total;
 }
 
 // 置いたあとの盤面の「穴の数」。穴＝上にブロックがある空きマス。
@@ -5312,31 +5480,31 @@ function pcHoles(f) {
 }
 
 // 本体。seq は置く順のミノ列、hold は今ホールドしているミノ（無ければ null）
-// wantQuad=true のときは「最後の1手がIミノの縦置き」で終わる手順だけを成立とみなす。
-// 縦置きのIで盤面が空になるなら、そのIは4行ぶんの最後のマスを埋めたということなので
-// 必ず4ライン同時消し＝QPCになる。
-function pcSolve(f, seq, i, hold, memo, cache, st, wantQuad, lastVertI) {
-  if (performance.now() > st.deadline) { st.aborted = true; return false; }
+// 候補をまとめて集める。見つけても止まらず、必要数か制限時間まで探し続ける。
+// memo には「ここから先は何も無い」ことだけを覚える（見つかった枝は覚えない）。
+// 覚えてしまうと、同じ盤面にたどり着く別の手順を数えられなくなるため。
+function pcCollect(f, seq, i, hold, memo, cache, st, path) {
+  if (performance.now() > st.deadline) { st.aborted = true; return; }
+  if (st.found.length >= st.cap) return;
   st.nodes++;
   const filled = pcCells(f);
-  if (filled === 0) return !wantQuad || !!lastVertI;   // 盤面が空 = パフェ成立
+  if (filled === 0) { st.found.push(path.slice()); return; }   // 盤面が空 = 1つ見つかった
 
   const remain = (seq.length - i) + (hold !== null ? 1 : 0);
-  if (remain <= 0) return false;
+  if (remain <= 0) return;
   // 1ミノ=4マス。足して10の倍数にできなければ、この先どう置いても揃わない
   let maxLines = -1;
   for (let k = 1; k <= remain; k++) if ((filled + 4 * k) % 10 === 0) maxLines = (filled + 4 * k) / 10;
-  if (maxLines < 0) return false;
+  if (maxLines < 0) return;
   // ブロックのある行は、空にするために必ず消さないといけない。
-  // 消せる行数より多ければ、その分は必ず残る。
-  // （一番上から下端までの段数で見ると、途中に完全な空行がある地形を取りこぼす）
+  // 消せる行数より多ければ、その分は必ず残る
   let used = 0;
   for (let r = 0; r < f.length; r++) if (f[r]) used++;
-  if (used > maxLines) return false;
+  if (used > maxLines) return;
 
   const key = pcKey(f) + i + (hold || '-');
-  const m = memo.get(key);
-  if (m !== undefined) return m;
+  if (memo.has(key)) return;
+  const before = st.found.length;
 
   // 次に置けるのは「そのまま」か「ホールドと入れ替え」の2通り
   const tries = [];
@@ -5354,17 +5522,46 @@ function pcSolve(f, seq, i, hold, memo, cache, st, wantQuad, lastVertI) {
     const [type, ni, nhold] = tries[t];
     const list = pcPlacements(f, type, cache);
     for (let j = 0; j < list.length; j++) {
-      if (pcSolve(list[j].g, seq, ni, nhold, memo, cache, st, wantQuad, list[j].vertI)) {
-        // 成立した。戻りながら手順を積む（最後に逆順にする）
-        st.path.push({ type, cells: list[j].cells });
-        memo.set(key, true);
-        return true;
-      }
-      if (st.aborted) return false;
+      const pl = list[j];
+      path.push({ type, cells: pl.cells, clears: pl.clears, soft: pl.soft, vertI: pl.vertI, tspin: pl.tspin });
+      pcCollect(pl.g, seq, ni, nhold, memo, cache, st, path);
+      path.pop();
+      if (st.aborted || st.found.length >= st.cap) return;
     }
   }
-  memo.set(key, false);
-  return false;
+  // ここまで来て1つも見つからなかったときだけ「行き止まり」として覚える
+  if (st.found.length === before) memo.set(key, 1);
+}
+
+// 置く順番だけが違う候補をまとめるための見分け方。
+// 「どのミノをどこに置くか」の集合が同じなら、見た目は同じ手順として扱う
+function pcSameKey(path) {
+  return path.map(m => m.type + ':' + m.cells.map(c => c[0] + ',' + c[1]).sort().join(' '))
+             .sort().join('|');
+}
+
+// 候補の中身を数える。ev=ラインを消した回数 / soft=ソフトドロップが要る置き方の数 /
+// atk=相手に送れる火力 / len=手数
+function pcStats(path) {
+  let ev = 0, soft = 0;
+  for (const m of path) { if (m.clears > 0) ev++; soft += m.soft; }
+  return { ev, soft, atk: pcAttack(path), len: path.length };
+}
+// 並べ替えの順番。
+//   火力重視: 送れる火力が多い順 → 消す回数が少ない順 → ソフトドロップが少ない順
+//   速度重視: ソフトドロップが少ない順 → 消す回数が少ない順
+// どちらも最後は手数が少ない順でそろえる。
+// 「消す回数が少ない」は最後にまとめて消す手順ほど上に来るので、QPCは自然と上位になる
+function pcCompare(a, b) {
+  if (opts.pcPriority === 'speed') {
+    return a.soft - b.soft || a.ev - b.ev || a.len - b.len;
+  }
+  return b.atk - a.atk || a.ev - b.ev || a.soft - b.soft || a.len - b.len;
+}
+// 最後の1手がIミノの縦置きなら、4行ぶんの最後のマスを埋めたということなのでQPC
+function pcIsQuad(path) {
+  const last = path[path.length - 1];
+  return !!(last && last.vertI);
 }
 
 // 判定は押した瞬間の盤面に対するもの。盤面が変わったら古くなるので消す
@@ -5374,6 +5571,8 @@ function clearPcResult() {
   const b = document.getElementById('pcStepBtn');
   if (b && b.style.display !== 'none') b.style.display = 'none';
   pcSteps = null;
+  pcSolutions = null;
+  pcPick = 0;
   closePcSteps();
 }
 
@@ -5400,6 +5599,8 @@ function searchPerfectClear() {
   // ここから先は重い。先に「探索中」を出し、画面に出てから走らせる
   // （探索は同期処理なので、待たずに始めると表示が出ないまま固まる）
   pcSteps = null;
+  pcSolutions = null;
+  pcPick = 0;
   closePcSteps();
   const btn0 = document.getElementById('pcStepBtn');
   if (btn0) btn0.style.display = 'none';
@@ -5420,39 +5621,63 @@ function searchPerfectClear() {
 
 // 探索の本体。searchPerfectClear から1フレーム遅れて呼ばれる
 function pcRunSearch(rows, seq, hold, maxLines, show, el) {
-  const start = pcCrop(rows, maxLines);
-  const cache = new Map();   // 置き方の列挙結果は2回の探索で使い回せる
+  const want = opts.pcMulti ? Math.max(1, Math.min(20, opts.pcCount | 0 || 5)) : 1;
+  // 「候補を複数出す」がOFFなら並べ替えもしない（設定画面でもグレーアウトしている）。
+  // 並べ替えるときは多めに集めてから。つけないときは必要数で打ち切る（そのぶん速い）
+  const rank = opts.pcMulti && opts.pcRank;
+  const cap = rank ? Math.min(300, want * 10) : want;
+  const st = {
+    nodes: 0, aborted: false, found: [], cap,
+    deadline: performance.now() + Math.max(1, opts.pcTimeout | 0 || 5) * 1000,
+  };
   const t0 = performance.now();
-
-  // まず「最後をIミノの縦置きで締めるパフェ（QPC）」を探す。
-  // 見つかればそちらの手順を出す。見つからなければ普通のパフェを探す。
-  const quadMs = Math.round(PC_TIME_MS * 0.4);
-  let st = { nodes: 0, aborted: false, deadline: performance.now() + quadMs, path: [] };
-  let ok = pcSolve(start, seq, 0, hold, new Map(), cache, st, true, false);
-  let quad = ok;
-  if (!ok) {
-    // QPCが無い（または時間切れ）。残りの時間で普通のパフェを探す
-    st = { nodes: 0, aborted: false, deadline: t0 + PC_TIME_MS, path: [] };
-    ok = pcSolve(start, seq, 0, hold, new Map(), cache, st, false, false);
-  }
+  pcCollect(pcCrop(rows, maxLines), seq, 0, hold, new Map(), new Map(), st, []);
   const ms = Math.round(performance.now() - t0);
 
-  const btn = document.getElementById('pcStepBtn');
-  if (!ok && st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
-  else if (ok) {
-    st.path.reverse();   // 戻りながら積んだので、置く順に直す
-    pcSteps = pcBuildSteps(st.path, maxLines);
-    show(`${quad ? 'QPC' : 'パフェ'}できます（${st.path.length}手・${ms}ms）`, '#4ade80');
-    if (el && quad) el.title = '最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です';
-    if (btn) btn.style.display = '';
+  // 置く順番だけ違うものは1つにまとめる
+  let list = [];
+  { const seen = new Set();
+    for (const path of st.found) {
+      const k = pcSameKey(path);
+      if (seen.has(k)) continue;
+      seen.add(k); list.push(path);
+    } }
+  if (rank) {
+    list = list.map(p => ({ p, k: pcStats(p) }))
+               .sort((a, b) => pcCompare(a.k, b.k))
+               .map(x => x.p);
   }
-  else show(`パフェできません（${ms}ms）`, '#f87171');
+  list = list.slice(0, want);
+
+  const btn = document.getElementById('pcStepBtn');
+  if (!list.length) {
+    if (st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
+    else            show(`パフェできません（${ms}ms）`, '#f87171');
+    return;
+  }
+  pcSolutions = list.map(path => {
+    const k = pcStats(path);
+    return { path, steps: pcBuildSteps(path, maxLines),
+             ev: k.ev, soft: k.soft, atk: k.atk, quad: pcIsQuad(path) };
+  });
+  pcPick = 0;
+  pcSteps = pcSolutions[0].steps;
+  const top = pcSolutions[0];
+  const head = top.quad ? 'QPC' : 'パフェ';
+  const n = pcSolutions.length;
+  show(`${head}できます（${n > 1 ? n + '件' : top.path.length + '手'}・${ms}ms${st.aborted ? '・打切' : ''}）`, '#4ade80');
+  if (el) el.title = (top.quad ? '最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。' : '')
+                   + (st.aborted ? '制限時間で打ち切ったので、ほかにも手順があるかもしれません。' : '')
+                   + '「手順を見る」から候補を切り替えられます';
+  if (btn) btn.style.display = '';
 }
 
 // ===== パフェ手順の表示 =====
 // 探索で見つけた置き方を1手ずつ見せる。
 // 途中でラインが消えると盤面がずれるので、1枚の図にはまとめられない。
 // そこで、その手を置く直前の盤面＋これから置くミノ、を1枚ずつ作って送る形にする。
+let pcSolutions = null;   // 見つかった候補 [{path, steps, ev, soft, quad}]
+let pcPick  = 0;          // 選んでいる候補
 let pcSteps = null;   // [{type, grid, cells}]（grid は色の2次元配列）
 let pcStep  = 0;
 let pcCell  = 0;      // 1マスの大きさ。窓の大きさに合わせて決める
@@ -5494,6 +5719,11 @@ function openPcSteps() {
     '</div>' +
     '<div class="pc-body">' +
       '<div class="pc-cv-wrap"><canvas id="pcCanvas"></canvas></div>' +
+      '<div class="pc-nav" id="pcPickNav">' +
+        '<button title="前の候補" onclick="movePcPick(-1);this.blur()">◀</button>' +
+        '<div id="pcPickLabel"></div>' +
+        '<button title="次の候補" onclick="movePcPick(1);this.blur()">▶</button>' +
+      '</div>' +
       '<div class="pc-nav">' +
         '<button id="pcPrev" title="前の手" onclick="movePcStep(-1);this.blur()">◀</button>' +
         '<div id="pcStepLabel"></div>' +
@@ -5516,7 +5746,8 @@ function openPcSteps() {
   window.addEventListener('pointerup',   fitPcCanvas);
   // 中身に合わせた大きさで出す
   const cv = document.getElementById('pcCanvas');
-  const w = Math.max(cv.width + 16, 210), h = cv.height + SHOT_BAR_H + PC_NAV_H;
+  const navs = (pcSolutions && pcSolutions.length > 1) ? 2 : 1;
+  const w = Math.max(cv.width + 16, 230), h = cv.height + SHOT_BAR_H + PC_NAV_H * navs;
   win.style.width  = w + 'px';
   win.style.height = h + 'px';
   win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
@@ -5536,6 +5767,16 @@ function fitPcCanvas() {
   const rows = pcSteps[pcStep].grid.length;
   const cell = Math.max(6, Math.floor(Math.min(wrap.clientWidth / COLS, wrap.clientHeight / rows)));
   if (cell !== pcCell) { pcCell = cell; drawPcStep(); }
+}
+// 候補を切り替える
+function movePcPick(d) {
+  if (!pcSolutions || pcSolutions.length < 2) return;
+  pcPick = (pcPick + d + pcSolutions.length) % pcSolutions.length;
+  pcSteps = pcSolutions[pcPick].steps;
+  pcStep = 0;
+  pcCell = 0;           // 大きさを測り直させる
+  fitPcCanvas();
+  drawPcStep();
 }
 function movePcStep(d) {
   pcStep = Math.max(0, Math.min(pcSteps.length - 1, pcStep + d));
@@ -5568,6 +5809,19 @@ function drawPcStep() {
     last ? `完成（${pcSteps.length - 1}手）` : `${pcStep + 1}手目 / ${pcSteps.length - 1}手　${s.type}ミノ`;
   document.getElementById('pcPrev').disabled = pcStep === 0;
   document.getElementById('pcNext').disabled = last;
+  // 候補の行。1件しかないときは出さない
+  const nav = document.getElementById('pcPickNav');
+  const lab = document.getElementById('pcPickLabel');
+  if (nav && lab && pcSolutions) {
+    const many = pcSolutions.length > 1;
+    nav.style.display = many ? '' : 'none';
+    if (many) {
+      const c = pcSolutions[pcPick];
+      lab.textContent = `候補 ${pcPick + 1}/${pcSolutions.length}（火力${c.atk}・消去${c.ev}回・SD${c.soft}）`;
+      lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B・パーフェクトクリアを含む）。'
+                + 'SD＝ずらし入れや回し入れが要る置き方の数';
+    }
+  }
 }
 
 const PC_NAV_H = 48;   // バーの下に付く「前・次」の高さ
@@ -5789,6 +6043,13 @@ const OPT_DEFAULTS = {
   ghost: true,        // ゴースト表示
   axis: false,        // 軸表示
   grid: true,         // グリッド線（盤面のマス目）
+  pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
+  pcMulti: true,      // パフェ探索で候補を複数出す
+  pcRank: true,       // 候補に優先順位をつける（消す回数が少ない順 → ソフトドロップが少ない順）
+  pcCount: 5,         // 出す候補の数
+  pcTimeout: 5,       // パフェ探索の制限時間（秒）
+  loadHoldOn: false,  // 復元したときにHOLDへ入れるミノを選ぶ
+  swapSingle: false,  // NEXT・HOLDを1クリック（1タップ）で差し替える
   terrainEdit: true,  // 地形編集（PC版のみ。スマホ版はボタンなので使わない）
   holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
   softSpeed: 5,       // ソフトドロップ速度 1〜10（5が従来の速さ）
@@ -5808,7 +6069,8 @@ const OPT_DEFAULTS = {
   ctrlOpen: false,    // 「ボタン操作」パネルを開いた状態にしておくか（iPadなど、開きっぱなしで使う人向け）
 };
 // [最小, 最大, 刻み]
-const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1] };
+const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1],
+                    pcCount:[1,20,1], pcTimeout:[1,30,1] };
 // DAS/ARR の上下限（ミリ秒）
 const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
 const FRAME_MS = 1000 / 60;
@@ -5858,6 +6120,23 @@ function loadOptions() {
   if (opts.arrFrames !== undefined) { opts.arrMs = Math.round(opts.arrFrames * FRAME_MS); delete opts.arrFrames; }
   applyOptions();
 }
+// パフェ探索の「優先するもの」ボタン
+function renderPcPriorityRow() {
+  const box = document.getElementById('optPcPriorityRow');
+  if (!box) return;
+  box.innerHTML = '';
+  const mk = (val, label, tip) => {
+    const b = document.createElement('button');
+    b.className = 'rand-num' + ((opts.pcPriority || 'power') === val ? ' sel' : '');
+    b.textContent = label;
+    b.title = tip;
+    b.addEventListener('click', () => setOption('pcPriority', val));
+    box.appendChild(b);
+  };
+  mk('power', '火力重視', 'Tスピン・テトリス・REN・B2B・パーフェクトクリアを数えて、相手に送れる段数が多い順に並べます');
+  mk('speed', '速度重視', 'ずらし入れや回し入れが少ない順に並べます。次にラインを消す回数が少ない順');
+}
+
 // 画面表示を今の設定値に合わせる
 function applyOptions() {
   const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
@@ -5877,6 +6156,25 @@ function applyOptions() {
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
   check('gridCheck',  opts.grid);
+  // パフェ探索・復元HOLD・1クリック差し替え
+  check('optSwapSingle', opts.swapSingle);
+  check('optPcMulti',    opts.pcMulti);
+  check('optPcRank',     opts.pcRank);
+  check('optLoadHoldOn', opts.loadHoldOn);
+  renderPcPriorityRow();
+  { const a = document.getElementById('optPcCountVal');   if (a) a.textContent = opts.pcCount;
+    const b = document.getElementById('optPcTimeoutVal'); if (b) b.textContent = opts.pcTimeout;
+    // 「候補を複数出す」がOFFなら、並べ替えまわりはまとめて触れなくする。
+    // 「優先するもの」は、さらに「優先順位をつける」がONのときだけ
+    const dim = (id, on) => {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.classList.toggle('opt-off', !on);
+      row.querySelectorAll('button, input').forEach(x => x.disabled = !on);
+    };
+    dim('optPcCountRow',        opts.pcMulti);
+    dim('optPcRankRow',         opts.pcMulti);
+    dim('optPcPriorityOuterRow', opts.pcMulti && opts.pcRank); }
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   showGrid  = opts.grid;
@@ -6020,7 +6318,8 @@ function switchKcSub(name) {
 }
 function switchConfigTab(name) {
   const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'],
-                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'] };
+                 ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'],
+                 pc:['cfgTabPc','cfgPanePc'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     document.getElementById(tab).classList.toggle('active', k === name);
@@ -6028,7 +6327,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'ui')   renderUiList();
-  if (name === 'misc') applyOptions();
+  if (name === 'misc' || name === 'pc') applyOptions();
   if (name === 'key' && kcSub === 'pad') buildGpRows();
 }
 
@@ -6146,7 +6445,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.55.0';
+const APP_VERSION = '1.58.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
