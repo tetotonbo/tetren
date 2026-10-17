@@ -1085,9 +1085,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <span class="imp-title" id="swapTitle">ミノを変更</span>
       <button class="imp-x" title="閉じる" onclick="closeSwap()">×</button>
     </div>
-    <div class="imp-hint" style="margin:0 0 12px;">置き換えたいミノを選んでください。</div>
+    <div class="imp-hint" style="margin:0 0 12px;" id="swapHint">置き換えたいミノを選んでください。</div>
     <div id="swapGrid"></div>
     <div class="imp-actions">
+      <button class="imp-btn" id="swapRandBtn" style="display:none;" onclick="swapTo('?')">ランダム</button>
       <button class="imp-btn" id="swapEmptyBtn" onclick="swapTo(null)">空にする</button>
       <button class="imp-btn" onclick="closeSwap()">キャンセル</button>
     </div>
@@ -1230,6 +1231,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.0 / 1.58.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を直した</li><li>「復元したときのHOLD」を「復元した時にHOLDを選択する」のON/OFFスイッチに変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.62.0 / 1.57.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）</li><li>パフェ探索に「優先するもの」を追加。火力重視（既定）と速度重視から選ぶ</li><li>候補の行に火力も出すようにした（「候補 1/5（火力12・消去2回・SD1）」）</li><li>タブが5つになったので、見出しが折り返さないよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.61.0 / 1.56.0</span><span class="vl-date">2026-10-17</span></div><ul><li>パフェ探索が候補を複数出すようになった</li><li>設定の「その他」にパフェ探索の項目を追加</li><li>「復元したときのHOLD」を追加（設定の「その他」）</li><li>「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.60.0 / 1.55.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索に「探索中…」の表示を追加</li><li>スキンの「標準」を「立体」に改名し、「無地」を一覧の先頭へ移動</li></ul></div>
@@ -1469,8 +1471,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
 
       <div class="opt-row">
-        <span class="opt-label">NEXT・HOLDを1クリックで差し替え
-          <span class="opt-note">OFFのときはダブルクリックで開きます。ONにすると1クリックで開きます</span></span>
+        <span class="opt-label">NEXT・HOLDをシングルクリックでミノを変更する
+          <span class="opt-note">OFFのときはダブルクリックで変更します</span></span>
         <label class="tgl-row" style="flex:0 0 auto;">
           <input type="checkbox" id="optSwapSingle" onchange="setOption('swapSingle', this.checked)">
           <span class="tgl"></span>
@@ -1478,9 +1480,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </div>
 
       <div class="opt-row">
-        <span class="opt-label">復元したときのHOLD
-          <span class="opt-note">「復元」でツモを引き直すとき、ここで選んだミノを最初からHOLDに入れます。1巡目からはそのぶん抜かれます</span></span>
-        <div class="opt-step" id="optLoadHoldRow"></div>
+        <span class="opt-label">復元した時にHOLDを選択する
+          <span class="opt-note">ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optLoadHoldOn" onchange="setOption('loadHoldOn', this.checked)">
+          <span class="tgl"></span>
+        </label>
       </div>
 
 
@@ -2653,10 +2658,18 @@ let swapTarget = null;   // { kind:'hold' } または { kind:'next', index:i }
 function openSwap(target) {
   if (gameOver) return;
   swapTarget = target;
+  const load = target.kind === 'loadHold';   // 復元の前にHOLDを選ぶとき
   document.getElementById('swapTitle').textContent =
+    load            ? '復元：HOLDに入れるミノ' :
     target.kind === 'hold' ? 'HOLDのミノを変更' : ('NEXT ' + (target.index + 1) + '番目のミノを変更');
+  document.getElementById('swapHint').textContent =
+    load ? '選んだミノが最初からHOLDに入ります。1巡目からはそのぶん抜かれます。'
+         : '置き換えたいミノを選んでください。';
   // 空にできるのはHOLDだけ（NEXTは必ず何か入っている）
-  document.getElementById('swapEmptyBtn').style.display = target.kind === 'hold' ? '' : 'none';
+  const emp = document.getElementById('swapEmptyBtn');
+  emp.style.display = (load || target.kind === 'hold') ? '' : 'none';
+  emp.textContent = load ? 'HOLDなし' : '空にする';
+  document.getElementById('swapRandBtn').style.display = load ? '' : 'none';
   renderSwapGrid();
   document.getElementById('swapOverlay').classList.add('open');
 }
@@ -2666,6 +2679,11 @@ function closeSwap() {
 }
 function swapTo(type) {
   if (!swapTarget) return;
+  if (swapTarget.kind === 'loadHold') {
+    closeSwap();
+    doLoadTerrain(type);
+    return;
+  }
   if (swapTarget.kind === 'hold') {
     holdType = type;
     canHold = true;          // 入れ替えたぶんはホールド権を戻す
@@ -3183,11 +3201,16 @@ function saveTerrain() {
 }
 function loadTerrain() {
   if (!savedTerrain) return;
+  // 設定がONなら、先にHOLDへ入れるミノを選んでもらう
+  if (opts.loadHoldOn) { openSwap({ kind:'loadHold' }); return; }
+  doLoadTerrain(null);
+}
+// hold は null（入れない）／ミノ種別／HOLD_RANDOM
+function doLoadTerrain(hold) {
+  if (!savedTerrain) return;
   board = savedTerrain.map(r => [...r]);
-  // 復元したときに最初からHOLDへ入れるミノ（設定の「その他」）。
-  // ミノ欠けと同じ考え方で、1巡目からはそのぶん抜いておく
-  let hold = opts.loadHold || null;
   if (hold === HOLD_RANDOM) hold = ALL_TYPES[Math.floor(Math.random() * ALL_TYPES.length)];
+  // ミノ欠けと同じ考え方で、1巡目からはそのぶん抜いておく
   if (hold) firstBagTypes = ALL_TYPES.filter(t => t !== hold);
   // 同じ地形を別のツモで繰り返せるよう、ミノの順番も引き直す。
   // 埋まってしまうときに置ける高さへ逃がす処理も、この中でやっている。
@@ -6017,7 +6040,7 @@ const OPT_DEFAULTS = {
   pcRank: true,       // 候補に優先順位をつける（消す回数が少ない順 → ソフトドロップが少ない順）
   pcCount: 5,         // 出す候補の数
   pcTimeout: 5,       // パフェ探索の制限時間（秒）
-  loadHold: '',       // 復元したときにHOLDへ入れるミノ（''=なし／'I'〜'L'／'?'=ランダム）
+  loadHoldOn: false,  // 復元したときにHOLDへ入れるミノを選ぶ
   swapSingle: false,  // NEXT・HOLDを1クリック（1タップ）で差し替える
   terrainEdit: true,  // 地形編集（PC版のみ。スマホ版はボタンなので使わない）
   holeKeep: 40,       // せりあがりの穴継続率(%)。10%=完全ランダム相当（10列なので）
@@ -6106,25 +6129,6 @@ function renderPcPriorityRow() {
   mk('speed', '速度重視', 'ずらし入れや回し入れが少ない順に並べます。次にラインを消す回数が少ない順');
 }
 
-// 「復元したときのHOLD」の選択ボタンを作る（設定の「その他」）
-function renderLoadHoldRow() {
-  const box = document.getElementById('optLoadHoldRow');
-  if (!box) return;
-  box.innerHTML = '';
-  const mk = (type, label, extra) => {
-    const b = document.createElement('button');
-    b.className = 'rand-num' + ((opts.loadHold || '') === (type || '') ? ' sel' : '') + (extra ? ' ' + extra : '');
-    b.textContent = label;
-    b.title = type === HOLD_RANDOM ? '毎回ランダムに選ぶ'
-            : type ? (type + 'ミノを最初からHOLDに入れる') : 'HOLDには何も入れない';
-    b.addEventListener('click', () => { setOption('loadHold', type || ''); });
-    box.appendChild(b);
-  };
-  mk(null, 'なし');
-  ALL_TYPES.forEach(t => mk(t, t));
-  mk(HOLD_RANDOM, 'ランダム', 'rand-any');
-}
-
 // 画面表示を今の設定値に合わせる
 function applyOptions() {
   const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
@@ -6148,7 +6152,7 @@ function applyOptions() {
   check('optSwapSingle', opts.swapSingle);
   check('optPcMulti',    opts.pcMulti);
   check('optPcRank',     opts.pcRank);
-  renderLoadHoldRow();
+  check('optLoadHoldOn', opts.loadHoldOn);
   renderPcPriorityRow();
   { const a = document.getElementById('optPcCountVal');   if (a) a.textContent = opts.pcCount;
     const b = document.getElementById('optPcTimeoutVal'); if (b) b.textContent = opts.pcTimeout;
@@ -6425,7 +6429,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.57.0';
+const APP_VERSION = '1.58.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
