@@ -805,6 +805,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「最後の1手を火力に含める」 を追加（既定はOFF＝含めない）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.0 / 1.62.0</span><span class="vl-date">2026-10-18</span></div><ul><li>探索中は盤面にも「パフェ探索中…」を重ねて出すようにした</li></ul></div>
@@ -1186,6 +1187,15 @@ input:checked + .tgl::after { transform:translateX(10px); }
           <span class="opt-label">優先するもの
             <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
           <span class="opt-step" id="optPcPriorityRow"></span>
+        </div>
+
+        <div class="opt-row" id="optPcAtkLastRow">
+          <span class="opt-label">最後の1手を火力に含める
+            <span class="opt-note">パフェを決める最後の1手で消したぶんも火力として数えます。OFF（既定）だと数えません（そこで試合が終わるため）。パフェの10段ボーナスはどちらでも入りません</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optPcAtkLast" onchange="setPcAtkLast(this.checked)">
+            <span class="tgl"></span>
+          </label>
         </div>
 </div>
     </div>
@@ -2084,11 +2094,12 @@ function pcTSpin(f, type, st, r, c, spin, kick4) {
 
 // 手順ぜんぶで相手に送れる火力。ゲーム中の attackPower() と同じ表を使い、
 // RENとB2Bは手順の中で積み上げて数える。
-// ただしパフェを決める最後の1手は数えない（そこで試合が終わるため）。
-// パフェの10段ボーナスも同じ理由で入れない。
+// パフェを決める最後の1手を数えるかは設定で選べる（既定は数えない。そこで試合が終わるため）。
+// パフェの10段ボーナスはどちらでも入れない。
 function pcAttack(path) {
   let total = 0, ren = -1, b2b = false;
-  for (let i = 0; i < path.length - 1; i++) {
+  const end = path.length - (opts.pcAtkLast ? 0 : 1);
+  for (let i = 0; i < end; i++) {
     const m = path[i];
     if (!m.clears) { ren = -1; continue; }   // 消さない手でRENは途切れる
     ren++;
@@ -2461,6 +2472,15 @@ function pcApplyRank() {
   pcPick = 0;
   pcSteps = pcSolutions[0].steps;
 }
+// 「最後の1手を火力に含める」の切り替え。火力の値が変わるので数え直す
+function setPcAtkLast(on) {
+  setOption('pcAtkLast', on);
+  if (pcAll && pcAll.length) {
+    pcAll.forEach(x => { x.k = pcStats(x.path); });
+    pcRefresh();
+  }
+}
+
 // QPC（最後がテトリス）だけに絞る／やめる
 function setPcQuadOnly(on) {
   pcQuadOnly = !!on;
@@ -3536,7 +3556,7 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
-  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
+  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -3643,6 +3663,7 @@ function applyOptions(){
   check('optSwapSingle', opts.swapSingle);
   check('optPcMulti',    opts.pcMulti);
   check('optPcRank',     opts.pcRank);
+  check('optPcAtkLast',  opts.pcAtkLast);
   check('optLoadHoldOn', opts.loadHoldOn);
   renderLoadHoldRows();
   { // スイッチがOFFなら選び方ごと、「都度選択」なら予め選ぶミノを触れなくする
@@ -3667,7 +3688,8 @@ function applyOptions(){
     };
     dim('optPcCountRow',        opts.pcMulti);
     dim('optPcRankRow',         opts.pcMulti);
-    dim('optPcPriorityOuterRow', opts.pcMulti && opts.pcRank); }
+    dim('optPcPriorityOuterRow', opts.pcMulti && opts.pcRank);
+    dim('optPcAtkLastRow',        opts.pcMulti); }
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   showGrid  = opts.grid;
@@ -4720,7 +4742,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.67.2';
+const APP_VERSION = '1.68.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
