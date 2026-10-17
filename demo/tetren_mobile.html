@@ -805,7 +805,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「最後の1手を火力に含める」 を追加（既定はOFF＝含めない）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.0 / 1.62.0</span><span class="vl-date">2026-10-18</span></div><ul><li>探索中は盤面にも「パフェ探索中…」を重ねて出すようにした</li></ul></div>
@@ -1190,8 +1190,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
         </div>
 
         <div class="opt-row" id="optPcAtkLastRow">
-          <span class="opt-label">最後の1手を火力に含める
-            <span class="opt-note">パフェを決める最後の1手で消したぶんも火力として数えます。OFF（既定）だと数えません（そこで試合が終わるため）。パフェの10段ボーナスはどちらでも入りません</span></span>
+          <span class="opt-label">パフェ時のライン消去を火力にふくめる
+            <span class="opt-note">優先順位決定のための火力を設定します。オフの場合、パフェを取った時のライン消去は火力に含まれません（テトリスパフェは火力０）</span></span>
           <label class="cfg-tgl">
             <input type="checkbox" id="optPcAtkLast" onchange="setPcAtkLast(this.checked)">
             <span class="tgl"></span>
