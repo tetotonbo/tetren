@@ -854,6 +854,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0 / 1.74.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けを ミノを1つも選ばずに「開始」できる ようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.78.0 / 1.73.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定に 「操作」タブ を追加（キーコンフィグの右）</li><li>「落下設定」の見出しが一時停止ボタンのぶん折り返していたので、1行に収まるよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.77.0 / 1.72.0</span><span class="vl-date">2026-10-18</span></div><ul><li>キーコンフィグに 「自由落下の一時停止」 を追加（既定は未割り当て）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1 / 1.71.1</span><span class="vl-date">2026-10-18</span></div><ul><li>自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）</li></ul></div>
@@ -3546,8 +3547,9 @@ function stepViewScale(key, d){
   if (board) draw();
 }
 // 7個すべては抜けない（引けるミノが無くなる）
-// ランダムは抜く数を選んだ時点で「開始」できる
-function missValid(){ const n=missPick.sel.size; return missRandChosen() || (n>=1 && n<=6); }
+// ランダムは抜く数を選んだ時点で「開始」できる。
+// 0個でも始められる（何も抜かない＝7ミノのまま。HOLDの指定だけ使いたいときのため）
+function missValid(){ const n=missPick.sel.size; return missRandChosen() || n<=6; }
 // HOLDするミノを「おまかせ」にするときの印。始めるたびに残ったミノから引き直す
 const HOLD_RANDOM = '?';
 // 「特定のミノをHOLDする」がONのときだけ出す選択行。
@@ -3626,6 +3628,7 @@ function drawMissGrid(){
           : missRandN===0   ? '何も抜かずに始めます。「開始」で始まります。'
                             : `ランダムに${missRandN}個抜きます。「開始」で始まります。`)
       : missPick.sel.size>=7 ? '全部は抜けません。6個までにしてください。'
+      : missPick.sel.size===0 ? '何も選ばずに「開始」を押すと、ミノを抜かずに始めます。'
                              : '選んだミノを1巡目から抜きます。';
   }
 }
@@ -3687,7 +3690,7 @@ function toggleMissRandRow(){
 }
 function setMissingPiece(type, record){ applyMissTypes([type], {multi:false, type}, record); }
 function applyMissMulti(types, record){
-  if(!types.length || types.length>=7) return;
+  if(types.length>=7) return;   // 全部は抜けない。0個（抜かない）はOK
   applyMissTypes(types, {multi:true, types:types.slice()}, record);
 }
 // 「現在の地形を維持する」で覚えた盤面。null なら毎回まっさらから始める
@@ -4950,7 +4953,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.78.0';
+const APP_VERSION = '1.79.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
