@@ -1290,6 +1290,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.77.0 / 1.72.0</span><span class="vl-date">2026-10-18</span></div><ul><li>キーコンフィグに 「自由落下の一時停止」 を追加（既定は未割り当て）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1 / 1.71.1</span><span class="vl-date">2026-10-18</span></div><ul><li>自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0 / 1.71.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「落下設定」の見出しの右に 一時停止（⏸） を追加</li><li>「デザイン」の4項目の行間を詰めた（8px → 3px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.70.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「デザイン」の4項目（ゴースト・軸表示・グリッド・配置編集）を一回り小さくした</li></ul></div>
@@ -4957,6 +4958,7 @@ const KC_ACTIONS = [
   { id:'renMode',     label:'RENの入切',        d:[null,         null        ] },
   { id:'marathon',    label:'マラソンの入切',   d:[null,         null        ] },
   { id:'shot',        label:'カンペ画像を開く', d:[null,         null        ] },
+  { id:'gravPause',   label:'自由落下の一時停止', d:[null,       null        ] },
 ];
 
 
@@ -4976,6 +4978,7 @@ const KC_BUTTON = {
   renMode:      () => toggleRenMode(),
   marathon:     () => toggleMarathon(),
   shot:         () => openShot(),
+  gravPause:    () => toggleGravPause(),
 };
 function kcButtonKey(e) {
   for (const id in KC_BUTTON) {
@@ -6837,7 +6840,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.71.1';
+const APP_VERSION = '1.72.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
