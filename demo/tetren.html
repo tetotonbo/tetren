@@ -1254,6 +1254,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.71.0 / 1.66.0</span><span class="vl-date">2026-10-18</span></div><ul><li>バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.70.0 / 1.65.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「複数選択」スイッチを廃止し、常に複数選択にした</li></ul></div>
@@ -2958,7 +2959,9 @@ function renderPieceGrid(kind) {
    if (kind === 'miss' && types === DPC_ROWS[0]) {
      const rb = document.createElement('button');
      const open = document.getElementById('missRandRow').style.display !== 'none';
-     rb.className = 'dpc-btn dpc-rand' + (open ? ' on' : '');
+     // HOLDを「ランダム」にしているときは、ミノを指定したときと同じ印をつける
+     const randHold = !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
+     rb.className = 'dpc-btn dpc-rand' + (open ? ' on' : '') + (randHold ? ' hold' : '');
      rb.title = '抜くミノの数を選ぶと、その数だけランダムに抜いて始めます';
      const box = document.createElement('div');
      box.className = 'dpc-rand-box';
@@ -2968,6 +2971,12 @@ function renderPieceGrid(kind) {
      nm.className = 'dpc-name';
      nm.textContent = 'ランダム';
      rb.appendChild(box); rb.appendChild(nm);
+     if (randHold) {
+       const badge = document.createElement('span');
+       badge.className = 'dpc-hold-badge';
+       badge.textContent = 'HOLD';
+       rb.appendChild(badge);
+     }
      rb.addEventListener('click', () => toggleMissRandRow());
      row.appendChild(rb);
    }
@@ -6715,7 +6724,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.67.0';
+const APP_VERSION = '1.67.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
