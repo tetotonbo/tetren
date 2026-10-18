@@ -1254,6 +1254,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.73.1 / 1.68.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで、ミノを選んだあとに「ランダム」を押すと、それまでの選択をすべて解除するようにした</li><li>ミノ欠けの「ランダム」をもう一度押しても、個数を選ぶ行が閉じなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
@@ -3088,7 +3089,12 @@ function startMissRandom(n, record) {
 function toggleMissRandRow() {
   const row = document.getElementById('missRandRow');
   if (!row) return;
-  row.style.display = (row.style.display === 'none' || !row.style.display) ? '' : 'none';
+  // 開いているかどうかは、グリッドの「ランダム」の見た目と同じ基準で見る
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  // ランダムに切り替えたときは、それまで選んでいたミノの指定を外す
+  //（ランダムと手で選んだ指定は同時に使えないので、押したほうを残す）
+  if (open) pick.miss.sel.clear();
   renderPieceGrid('miss');   // グリッドの「ランダム」の見た目も合わせる
 }
 
@@ -6732,7 +6738,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.68.0';
+const APP_VERSION = '1.68.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
