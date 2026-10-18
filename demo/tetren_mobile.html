@@ -829,6 +829,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.71.0 / 1.66.0</span><span class="vl-date">2026-10-18</span></div><ul><li>バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした</li></ul></div>
@@ -3343,12 +3344,13 @@ function renderPieceGrid(gridId, onPick){
       btn.addEventListener('click',()=>onPick(type));
       row.appendChild(btn);
     });
-    // ミノ欠けのときは、1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
-    if (gridId === 'missGrid' && types === DPC_ROWS[0]) {
+    // ミノ欠け・DPCセットでは、1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
+    if ((gridId === 'missGrid' || gridId === 'dpcGrid') && types === DPC_ROWS[0]) {
       const rb=document.createElement('button');
-      const open=document.getElementById('missRandRow').style.display !== 'none';
+      const isDpc = gridId === 'dpcGrid';
+      const open = !isDpc && document.getElementById('missRandRow').style.display !== 'none';
       // HOLDを「ランダム」にしているときは、ミノを指定したときと同じ印をつける
-      const randHold = !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
+      const randHold = !isDpc && !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
       rb.type='button';
       rb.className='dpc-btn dpc-rand'+(open?' on':'')+(randHold?' hold':'');
       const box=document.createElement('div');
@@ -3364,7 +3366,7 @@ function renderPieceGrid(gridId, onPick){
         badge.textContent='HOLD';
         rb.appendChild(badge);
       }
-      rb.addEventListener('click',()=>toggleMissRandRow());
+      rb.addEventListener('click',()=>{ if(isDpc) setDpcHold(HOLD_RANDOM); else toggleMissRandRow(); });
       row.appendChild(rb);
     }
     grid.appendChild(row);
@@ -3441,12 +3443,12 @@ addDoubleTap(nextCanvas, e => {
   openSwap({ kind:'next', index: Math.max(0, Math.min(NEXT_SHOW - 1, i)) });
 });
 function setDpcHold(type){
-  lastDpcType=type; updateDpcAgainBtn();
+  lastDpcType=type; updateDpcAgainBtn();   // 「ランダム」は '?' のまま覚えて、↻ で毎回引き直す
   // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
   undoStack=[]; lastGarbageCol=null; ren=0;
   if(renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
-  holdType=type;
+  holdType = type === HOLD_RANDOM ? ALL_TYPES[Math.floor(Math.random()*ALL_TYPES.length)] : type;
   bag=[]; nextQ=[];
   spawn();          // 新しいバッグを引き直し、現在のミノも出し直す
   canHold=true;
@@ -4843,7 +4845,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.72.1';
+const APP_VERSION = '1.73.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

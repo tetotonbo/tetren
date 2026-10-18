@@ -1254,6 +1254,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.71.0 / 1.66.0</span><span class="vl-date">2026-10-18</span></div><ul><li>バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした</li></ul></div>
@@ -2955,14 +2956,17 @@ function renderPieceGrid(kind) {
     });
     row.appendChild(btn);
    });
-   // ミノ欠けのときは、1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
-   if (kind === 'miss' && types === DPC_ROWS[0]) {
+   // 1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
+   if (types === DPC_ROWS[0]) {
      const rb = document.createElement('button');
-     const open = document.getElementById('missRandRow').style.display !== 'none';
+     // ミノ欠けは「抜く個数を選ぶ行」の開閉、DPCセットはその場でランダムにHOLD
+     const open = kind === 'miss' && document.getElementById('missRandRow').style.display !== 'none';
      // HOLDを「ランダム」にしているときは、ミノを指定したときと同じ印をつける
-     const randHold = !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
+     const randHold = kind === 'miss' && !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
      rb.className = 'dpc-btn dpc-rand' + (open ? ' on' : '') + (randHold ? ' hold' : '');
-     rb.title = '抜くミノの数を選ぶと、その数だけランダムに抜いて始めます';
+     rb.title = kind === 'dpc'
+       ? 'ランダムに選んだミノをHOLDしてセットします（↻ でそのたびに引き直します）'
+       : '抜くミノの数を選ぶと、その数だけランダムに抜いて始めます';
      const box = document.createElement('div');
      box.className = 'dpc-rand-box';
      box.style.cssText += 'width:84px;height:56px;margin:0 auto;font-size:26px;';
@@ -2977,7 +2981,9 @@ function renderPieceGrid(kind) {
        badge.textContent = 'HOLD';
        rb.appendChild(badge);
      }
-     rb.addEventListener('click', () => toggleMissRandRow());
+     rb.addEventListener('click', () => {
+       if (kind === 'dpc') setDpcHold(HOLD_RANDOM); else toggleMissRandRow();
+     });
      row.appendChild(rb);
    }
    grid.appendChild(row);
@@ -3010,10 +3016,10 @@ function resetBoardForPick() {
 
 // --- DPCセット（単体）: 選んだミノをHOLDに入れ、地形を消してバッグを組み直す ---
 function setDpcHold(type) {
-  lastDpc = { multi:false, type };
+  lastDpc = { multi:false, type };   // 「ランダム」は '?' のまま覚えて、↻ で毎回引き直す
   updateDpcAgainBtn();
   resetBoardForPick();
-  holdType = type;
+  holdType = type === HOLD_RANDOM ? ALL_TYPES[Math.floor(Math.random() * ALL_TYPES.length)] : type;
   bag = []; nextQ = [];
   spawn();          // fillQ() で新しいバッグを引き直し、現在のミノを出し直す
   canHold = true;
@@ -3053,7 +3059,9 @@ function updateDpcAgainBtn() {
   btn.title = !lastDpc ? 'まだミノを選んでいません（押すと選択画面が開きます）'
     : lastDpc.multi
       ? `前回選んだ ${lastDpc.types.join('・')} だけで、もう一度始めます`
-      : `前回選んだ ${lastDpc.type} ミノで、もう一度DPCセットします`;
+      : lastDpc.type === HOLD_RANDOM
+        ? 'ランダムに選んだミノで、もう一度DPCセットします（ミノは毎回引き直します）'
+        : `前回選んだ ${lastDpc.type} ミノで、もう一度DPCセットします`;
 }
 updateDpcAgainBtn();
 
@@ -6724,7 +6732,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.67.1';
+const APP_VERSION = '1.68.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
