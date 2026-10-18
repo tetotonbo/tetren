@@ -1154,7 +1154,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="imp-hint" style="margin:0 0 12px;" id="swapHint">置き換えたいミノを選んでください。</div>
     <div id="swapGrid"></div>
     <div class="imp-actions">
-      <button class="imp-btn" id="swapRandBtn" style="display:none;" onclick="swapTo('?')">ランダム</button>
       <button class="imp-btn" id="swapEmptyBtn" onclick="swapTo(null)">空にする</button>
       <button class="imp-btn" onclick="closeSwap()">キャンセル</button>
     </div>
@@ -1290,6 +1289,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.80.0 / 1.75.0</span><span class="vl-date">2026-10-18</span></div><ul><li>復元時のHOLD選択画面で、下にあった「ランダム」をミノ選択欄へ移し 2×4 にそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0 / 1.74.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けを ミノを1つも選ばずに「開始」できる ようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.78.0 / 1.73.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定に 「操作」タブ を追加（キーコンフィグの右）</li><li>「落下設定」の見出しが一時停止ボタンのぶん折り返していたので、1行に収まるよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.77.0 / 1.72.0</span><span class="vl-date">2026-10-18</span></div><ul><li>キーコンフィグに 「自由落下の一時停止」 を追加（既定は未割り当て）</li></ul></div>
@@ -2795,7 +2795,6 @@ function openSwap(target) {
   const emp = document.getElementById('swapEmptyBtn');
   emp.style.display = (load || target.kind === 'hold') ? '' : 'none';
   emp.textContent = load ? 'HOLDなし' : '空にする';
-  document.getElementById('swapRandBtn').style.display = load ? '' : 'none';
   renderSwapGrid();
   document.getElementById('swapOverlay').classList.add('open');
 }
@@ -2842,6 +2841,22 @@ function renderSwapGrid() {
       btn.addEventListener('click', () => swapTo(type));
       row.appendChild(btn);
     });
+    // 復元のときだけ、1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
+    if (swapTarget && swapTarget.kind === 'loadHold' && types === DPC_ROWS[0]) {
+      const rb = document.createElement('button');
+      rb.className = 'dpc-btn dpc-rand';
+      rb.title = '復元のたびに、残ったミノからランダムで決めます';
+      const box = document.createElement('div');
+      box.className = 'dpc-rand-box';
+      box.style.cssText += 'width:84px;height:56px;margin:0 auto;font-size:26px;';
+      box.textContent = '？';
+      const nm = document.createElement('span');
+      nm.className = 'dpc-name';
+      nm.textContent = 'ランダム';
+      rb.appendChild(box); rb.appendChild(nm);
+      rb.addEventListener('click', () => swapTo(HOLD_RANDOM));
+      row.appendChild(rb);
+    }
     grid.appendChild(row);
   });
 }
@@ -6857,7 +6872,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.74.0';
+const APP_VERSION = '1.75.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
