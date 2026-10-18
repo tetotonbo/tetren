@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="tMrUwC3UaGhpqygJn7lA171Vnx86dLqMG7etN5bSOAQ" />
-<title>テト練 | テトリス練習ツール</title>
-<meta name="description" content="テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
+<title>テト練 | テトリスの練習サイト・練習ツール</title>
+<meta name="description" content="テト練はブラウザで動く無料のテトリス練習サイトです。地形を自由に編集して同じ場面を何度でも練習できる練習ツールで、パフェ探索、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
 <link rel="canonical" href="https://tetotonbo.github.io/tetren/tetren.html">
 <link rel="alternate" media="only screen and (max-width: 640px)" href="https://tetotonbo.github.io/tetren/tetren_mobile.html">
 <link rel="icon" href="/tetren/favicon.png" type="image/png">
 <meta name="theme-color" content="#111827">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="テト練">
-<meta property="og:title" content="テト練 | テトリス練習ツール">
-<meta property="og:description" content="テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
+<meta property="og:title" content="テト練 | テトリスの練習サイト・練習ツール">
+<meta property="og:description" content="テト練はブラウザで動く無料のテトリス練習サイトです。地形を自由に編集して同じ場面を何度でも練習できる練習ツールで、パフェ探索、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。">
 <meta property="og:url" content="https://tetotonbo.github.io/tetren/tetren.html">
 <meta property="og:image" content="https://tetotonbo.github.io/tetren/favicon.png">
 <meta name="twitter:card" content="summary">
@@ -26,7 +26,7 @@
   "@type": "WebApplication",
   "name": "テト練",
   "url": "https://tetotonbo.github.io/tetren/",
-  "description": "テト練はブラウザで動く無料のテトリス練習ツールです。地形を自由に編集して同じ場面を何度でも練習でき、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。",
+  "description": "テト練はブラウザで動く無料のテトリス練習サイトです。地形を自由に編集して同じ場面を何度でも練習できる練習ツールで、パフェ探索、せりあがり、1手戻す、落下速度0〜20G、RENモード、デカミノモード、ぷよテト風の見た目に対応。インストール不要でPC・スマホから使えます。",
   "applicationCategory": "GameApplication",
   "operatingSystem": "Web ブラウザ",
   "inLanguage": "ja",
@@ -361,6 +361,15 @@ button, label, .ctrl-lbl, [data-pos] {
   max-height:58vh; overflow-y:auto;
   background:#111827; border:1px solid #374151; border-radius:6px; padding:8px 10px;
 }
+/* バージョン履歴。パッチ版（v A.B.C の C）は普段は隠しておく */
+.ver-log .vl-patch { display:none; }
+.ver-log.all .vl-patch { display:block; }
+.vl-more {
+  display:block; margin:10px auto 0; background:none; border:none;
+  color:#4b5563; font-size:10px; cursor:pointer; padding:4px 8px;
+  text-decoration:underline dotted;
+}
+.vl-more:hover { color:#9ca3af; }
 .vl-item + .vl-item { margin-top:8px; border-top:1px solid #273244; padding-top:8px; }
 .vl-head { display:flex; align-items:baseline; gap:8px; }
 .vl-no { font-size:12px; font-weight:bold; color:#c7d2fe; }
@@ -435,6 +444,12 @@ button, label, .ctrl-lbl, [data-pos] {
 .rand-num:disabled { opacity:0.3; cursor:default; }
 .rand-num:disabled:hover { background:#0d1117; border-color:#374151; }
 /* 欠けに選べないミノ（HOLDに指定しているもの） */
+/* ミノ欠けの「ランダム」。ミノのボタンと同じ見た目・大きさにそろえて 2×4 にする */
+.dpc-rand-box {
+  display:flex; align-items:center; justify-content:center;
+  color:#9ca3af; font-weight:bold; line-height:1;
+}
+.dpc-btn.dpc-rand.on { border-color:#6366f1; background:#1e243a; }
 .dpc-btn:disabled { opacity:0.3; cursor:default; }
 .dpc-name {
   display:block; line-height:1; margin-top:6px;
@@ -573,6 +588,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
   padding:24px 28px; width:min(540px, 94vw); max-height:90vh; overflow-y:auto;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
+/* タイトル行。下へスクロールしても × が残るよう、上端に貼り付けておく */
+.cfg-head {
+  /* top は枠の内側の余白ぶん（padding 24px）だけ上にずらす。
+     こうすると貼り付いたときに余白を背景で覆えて、中身が上から覗かない */
+  position:sticky; top:-24px; z-index:3; background:#1f2937;
+  margin:-24px -28px 0; padding:24px 28px 0; border-radius:12px 12px 0 0;
+}
+.cfg-x {
+  position:absolute; top:20px; right:22px;
+  background:none; border:none; color:#9ca3af; font-size:22px; line-height:1;
+  cursor:pointer; padding:0 4px;
+}
+.cfg-x:hover { color:#fff; }
 .kc-header {
   display:flex; align-items:center; margin-bottom:10px;
   padding:0 4px 8px 4px; border-bottom:1px solid #374151;
@@ -1136,11 +1164,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
       選んだミノを抜いた残りで1巡目を回し、ゲームを最初から始めます。<br>
       2巡目からは7ミノすべて出ます。
     </div>
-    <label class="tgl-row pick-sw" title="ONにすると複数のミノを選べます。選んだミノをまとめて1巡目から抜きます">
-      <span>複数選択</span>
-      <input type="checkbox" id="missMultiSw" onchange="setPickMulti('miss', this.checked)">
-      <span class="tgl"></span>
-    </label>
     <label class="tgl-row pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
       <span>現在の地形を維持する</span>
       <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
@@ -1151,27 +1174,25 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <input type="checkbox" id="missHoldSw" onchange="setMissHoldOn(this.checked)">
       <span class="tgl"></span>
     </label>
-    <div id="missGrid"></div>
-    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missHoldRow" style="display:none;" title="最初からHOLDに入れておくミノ">
       <span>HOLD</span>
       <div id="missHoldBtns" style="display:flex;gap:6px;flex:1;"></div>
     </div>
+    <div id="missGrid"></div>
+    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missRandRow" style="display:none;">
       <span>抜く数</span>
-      <button class="rand-num" onclick="startMissRandom(0)" title="何も抜かずに始めます">0</button>
-      <button class="rand-num" onclick="startMissRandom(1)">1</button>
-      <button class="rand-num" onclick="startMissRandom(2)">2</button>
-      <button class="rand-num" onclick="startMissRandom(3)">3</button>
-      <button class="rand-num" onclick="startMissRandom(4)">4</button>
-      <button class="rand-num" onclick="startMissRandom(5)">5</button>
-      <button class="rand-num" onclick="startMissRandom(6)">6</button>
-      <button class="rand-num rand-any" onclick="startMissRandom(null)"
+      <button class="rand-num" data-n="0" onclick="pickMissRandom(0)" title="何も抜きません">0</button>
+      <button class="rand-num" data-n="1" onclick="pickMissRandom(1)">1</button>
+      <button class="rand-num" data-n="2" onclick="pickMissRandom(2)">2</button>
+      <button class="rand-num" data-n="3" onclick="pickMissRandom(3)">3</button>
+      <button class="rand-num" data-n="4" onclick="pickMissRandom(4)">4</button>
+      <button class="rand-num" data-n="5" onclick="pickMissRandom(5)">5</button>
+      <button class="rand-num" data-n="6" onclick="pickMissRandom(6)">6</button>
+      <button class="rand-num rand-any" data-n="" onclick="pickMissRandom(null)"
         title="抜く数もおまかせ。↻ を押すたびに数から引き直します">ランダム</button>
     </div>
     <div class="imp-actions">
-      <button class="imp-btn" onclick="toggleMissRandRow()"
-        title="抜くミノの数を選ぶと、その数だけランダムに抜いて始めます">ランダム</button>
       <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
       <button class="imp-btn imp-primary" id="missStartBtn" style="display:none;"
         onclick="startMissMulti()">開始</button>
@@ -1246,57 +1267,66 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.75.0 / 1.70.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、抜く数を押した時点では始まらないようにした</li><li>抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.74.0 / 1.69.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面の右上に 閉じる（×） を追加（下の「閉じる」ボタンはそのまま）</li><li>ミノ欠けの HOLDのミノ選択を「特定のミノをHOLDする」のすぐ下へ移動（ミノ選択欄の上）</li><li>ミノ欠けで「ランダム」を押したあとにミノを選ぶと、ランダムの選択を解除するようにした（逆向きも同じ）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.73.1 / 1.68.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで、ミノを選んだあとに「ランダム」を押すと、それまでの選択をすべて解除するようにした</li><li>ミノ欠けの「ランダム」をもう一度押しても、個数を選ぶ行が閉じなかったのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.71.0 / 1.66.0</span><span class="vl-date">2026-10-18</span></div><ul><li>バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.70.0 / 1.65.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「複数選択」スイッチを廃止し、常に複数選択にした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.69.1 / 1.64.1</span><span class="vl-date">2026-10-18</span></div><ul><li>検索対策。「練習サイト」という語がサイト全体に1つも無かったので、</li><li>スマホ版に構造化データ（JSON-LD）を追加</li><li>site: 検索でインデックスは2ページのみ。ルートURLは「テト練（スマホ版）」のタイトルで登録されている</li><li>「テトリス 練習ツール」ではAIによる概要の1番目に出る（説明文がそのまま引用されている）</li><li>「テトリス 練習サイト」ではAI概要にもWeb検索20位以内にも出ない</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.69.0 / 1.64.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順の先頭に 「全体図」 を追加</li><li>途中でラインが消えると行がずれるので、「消さなかったことにした座標系」に置き直して</li><li>マスごとに「何手目で置いたか」を持たせ、描くときの濃さに使っている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.67.2 / 1.62.2</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.67.1 / 1.62.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更</li><li>候補の行の文字が2行に折り返すことがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.67.0 / 1.62.0</span><span class="vl-date">2026-10-18</span></div><ul><li>探索中は盤面にも「パフェ探索中…」を重ねて出すようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.1 / 1.61.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）</li><li>火力重視で、火力が同じならソフトドロップが少ないほうを先に出すようにした</li><li>説明文から「パーフェクトクリア」を外した。1.65.0 で火力の計算から除いたのに、</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.66.1 / 1.61.1</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）</li><li>火力重視で、火力が同じならソフトドロップが少ないほうを先に出すようにした</li><li>説明文から「パーフェクトクリア」を外した。1.65.0 で火力の計算から除いたのに、</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.66.0 / 1.61.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「復元した時にHOLDを選択する」の下に HOLDの選び方を追加</li><li>予め選ぶミノも追加（7種＋ランダム、既定はランダム）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.65.0 / 1.60.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェ探索の火力の数え方を修正</li><li>パフェの手順ウィンドウに QPCボタンを追加（QPCができる状況のときだけ出る）</li><li>QPCの判定を「最後の1手がIミノの縦置き」から「最後の1手が4ライン同時消し」に変えた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.64.0 / 1.59.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順ウィンドウで、優先順位（火力／速度）を切り替えられるようにした</li><li>集めた候補を切り詰める前に全部 pcAll に持つようにした（以前は上位だけ残していた）</li><li>手順の絵は「探索した時点の盤面の色」を控えておいて、そこから作り直す。</li><li>候補の行の文字を詰めた（「候補 1/5（火力12・消去2回・SD1）」→「1/5　火力12・消去2・SD1」）。</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.2 / 1.58.3</span><span class="vl-date">2026-10-18</span></div><ul><li>設定のタブの並びを キーコンフィグ／スキン／表示／パフェ探索／その他 に変更（「その他」を一番右へ）</li><li>PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブに「閉じる」ボタンが無かったのを修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.1 / 1.58.1</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブの並びを 制限時間 → 候補を複数出す → 候補の数 → 優先順位をつける → 優先するもの に変更</li><li>「候補を複数出す」をOFFにすると、その下の3つをグレーにして触れなくするようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.63.2 / 1.58.3</span><span class="vl-date">2026-10-18</span></div><ul><li>設定のタブの並びを キーコンフィグ／スキン／表示／パフェ探索／その他 に変更（「その他」を一番右へ）</li><li>PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.58.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブに「閉じる」ボタンが無かったのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.63.1 / 1.58.1</span><span class="vl-date">2026-10-18</span></div><ul><li>「パフェ探索」タブの並びを 制限時間 → 候補を複数出す → 候補の数 → 優先順位をつける → 優先するもの に変更</li><li>「候補を複数出す」をOFFにすると、その下の3つをグレーにして触れなくするようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.63.0 / 1.58.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の文言を直した</li><li>「復元したときのHOLD」を「復元した時にHOLDを選択する」のON/OFFスイッチに変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.62.0 / 1.57.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）</li><li>パフェ探索に「優先するもの」を追加。火力重視（既定）と速度重視から選ぶ</li><li>候補の行に火力も出すようにした（「候補 1/5（火力12・消去2回・SD1）」）</li><li>タブが5つになったので、見出しが折り返さないよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.61.0 / 1.56.0</span><span class="vl-date">2026-10-17</span></div><ul><li>パフェ探索が候補を複数出すようになった</li><li>設定の「その他」にパフェ探索の項目を追加</li><li>「復元したときのHOLD」を追加（設定の「その他」）</li><li>「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.60.0 / 1.55.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索に「探索中…」の表示を追加</li><li>スキンの「標準」を「立体」に改名し、「無地」を一覧の先頭へ移動</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.59.0 / 1.54.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、最後をIミノの縦置きで締めるパフェ（QPC）があれば、そちらの手順を出すようにした</li><li>QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.58.0 / 1.53.0</span><span class="vl-date">2026-10-15</span></div><ul><li>キーコンフィグにボタン操作を追加。マウスやタップに持ち替えずに使えるようにした</li><li>パフェ探索の表記を「この並びではできません」→「パフェできません」に変更</li><li>設定を開いている間もキーがゲーム操作として効いてしまっていたのを修正</li><li>キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正</li><li>地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.57.3</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索の横幅をほかのボタンにそろえた</li><li>「デカミノモード」「RENモード」の「モード」を外した（デカミノ／REN）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.57.2</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）</li><li>設定の「表示」の並びも、画面の並びに合わせた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.57.1 / 1.52.1</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で、できるのに「できません」と出ることがあったのを修正</li><li>あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、</li><li>枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた</li><li>地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.57.0 / 1.52.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェの手順をカンペ画像と同じ浮かぶウィンドウにした</li><li>.shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用</li><li>追従は ResizeObserver ではなくポインタで拾う。</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.56.0 / 1.51.0</span><span class="vl-date">2026-10-15</span></div><ul><li>パフェ探索で見つけた手順を1手ずつ見られるようにした（結果の下の「手順を見る」から）</li><li>判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.55.0 / 1.50.0</span><span class="vl-date">2026-10-15</span></div><ul><li>「パフェ探索」ボタンを追加。いまの地形と、操作中・HOLD・NEXT のミノだけで</li><li>素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい</li><li>枝刈り3つ</li><li>探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。</li><li>同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す</li><li>最悪ケースで約0.8秒（1段に2マスだけ＝自由度最大の形）。ふつうは10ms未満。</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.2</span><span class="vl-date">2026-10-15</span></div><ul><li>マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.1</span><span class="vl-date">2026-10-14</span></div><ul><li>マラソンでゲームオーバーしたあと、上げた落下速度と詰めた設置時間がそのまま残っていたのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.49.2</span><span class="vl-date">2026-10-15</span></div><ul><li>マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.49.1</span><span class="vl-date">2026-10-14</span></div><ul><li>マラソンでゲームオーバーしたあと、上げた落下速度と詰めた設置時間がそのまま残っていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.54.0 / 1.49.0</span><span class="vl-date">2026-10-11</span></div><ul><li>デザインに「グリッド」のON/OFFスイッチを追加。盤面のマス目の線を消せるようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.2 / 1.48.2</span><span class="vl-date">2026-10-11</span></div><ul><li>スキンが「完全透明」「ほぼ透明」のとき、地形編集でミノの色を選んでも置いたマスが見えなかったのを修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.1 / 1.48.1</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像が重なっているとき、触った1枚がいちばん手前に出るようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.53.2 / 1.48.2</span><span class="vl-date">2026-10-11</span></div><ul><li>スキンが「完全透明」「ほぼ透明」のとき、地形編集でミノの色を選んでも置いたマスが見えなかったのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.53.1 / 1.48.1</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像が重なっているとき、触った1枚がいちばん手前に出るようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.53.0 / 1.48.0</span><span class="vl-date">2026-10-11</span></div><ul><li>カンペ画像のウィンドウから 「最前面」「追加」「変更」を外し、閉じるを × にした</li><li>画面のどこでも、画像を貼り付ければカンペ画像として出るようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.52.0 / 1.47.0</span><span class="vl-date">2026-10-10</span></div><ul><li>NEXTとHOLDをダブルクリック（スマホ版はダブルタップ）すると、ミノを選んで差し替えられるようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.51.1 / 1.46.1</span><span class="vl-date">2026-10-09</span></div><ul><li>「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.51.0 / 1.46.0</span><span class="vl-date">2026-10-09</span></div><ul><li>設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.50.0 / 1.45.0</span><span class="vl-date">2026-10-08</span></div><ul><li>HOLDの選択行に 「ランダム」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.49.0 / 1.44.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「復元」でミノの順番も引き直すようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.48.1 / 1.43.1</span><span class="vl-date">2026-10-08</span></div><ul><li>地形編集の入り切りが保存されないのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.48.0 / 1.43.0</span><span class="vl-date">2026-10-08</span></div><ul><li>「このサイトについて」を 「概要」「バージョン履歴」のタブ に分けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.47.0 / 1.42.0</span><span class="vl-date">2026-10-07</span></div><ul><li>上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた</li><li>ライン数の表示を左の枠から盤面の上へ移した（スマホ版と同じ形）</li><li>左のメニューどうしの隙間を少し詰めた</li><li>「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.46.0 / 1.41.0</span><span class="vl-date">2026-10-07</span></div><ul><li>反転の下に 「記録」「復元」 を追加。同じ場面を何度も練習するための控え</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.45.0 / 1.40.0</span><span class="vl-date">2026-10-07</span></div><ul><li>「⇄ 反転」 を追加。いまの地形を左右反転する</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.44.1 / 1.39.1</span><span class="vl-date">2026-10-06</span></div><ul><li>HOLDに指定したミノを、上のミノ選択でもひと目で分かるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.44.1 / 1.39.1</span><span class="vl-date">2026-10-06</span></div><ul><li>HOLDに指定したミノを、上のミノ選択でもひと目で分かるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.44.0 / 1.39.0</span><span class="vl-date">2026-10-06</span></div><ul><li>HOLDの選択行に 「なし」 を戻した（スイッチをONのまま、HOLDだけ外せる）</li><li>抜くミノの選択を優先するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.43.0 / 1.38.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けのHOLD指定を 「特定のミノをHOLDする」スイッチ で出し入れするようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.42.0 / 1.37.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けの選択画面に 「HOLD」行 を追加。最初からHOLDに入れておくミノを固定できる</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.41.1 / 1.36.2</span><span class="vl-date">2026-10-06</span></div><ul><li>タッチ操作のとき、左右ボタンを長押ししてもDAS/ARRが効かない不具合を修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.36.1</span><span class="vl-date">2026-10-06</span></div><ul><li>配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.41.1 / 1.36.2</span><span class="vl-date">2026-10-06</span></div><ul><li>タッチ操作のとき、左右ボタンを長押ししてもDAS/ARRが効かない不具合を修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.36.1</span><span class="vl-date">2026-10-06</span></div><ul><li>配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.41.0 / 1.36.0</span><span class="vl-date">2026-10-06</span></div><ul><li>リセット3つの色をほかのボタンと同じに戻した（赤系はやめ）</li><li>配置編集のスイッチを左上の「デザイン」の枠へ移動した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.40.0 / 1.35.0</span><span class="vl-date">2026-10-06</span></div><ul><li>「表示」で リセット・地形のみ・ミノ順のみを別々にON/OFF できるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.39.0 / 1.34.0</span><span class="vl-date">2026-10-06</span></div><ul><li>リセットボタンの色を両版でそろえた。PC版は暗すぎ、スマホ版は赤が強すぎたので中間の落ち着いた赤にした</li><li>リセットとは別に 「地形のみ」「ミノ順のみ」 のボタンを追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.38.0 / 1.33.0</span><span class="vl-date">2026-10-06</span></div><ul><li>ミノ欠けの選択画面に 「現在の地形を維持する」 スイッチを追加</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.37.1 / 1.32.1</span><span class="vl-date">2026-10-06</span></div><ul><li>設定画面でタブを切り替えると、枠が上下に動いてしまうのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.37.1 / 1.32.1</span><span class="vl-date">2026-10-06</span></div><ul><li>設定画面でタブを切り替えると、枠が上下に動いてしまうのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.37.0</span><span class="vl-date">2026-10-06</span></div><ul><li>せりあがりに 「時間経過」タイプ を追加。PC版と同じ挙動にそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.36.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「スキン」タブ を追加。PC版と同じ10種類から選べる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.35.0</span><span class="vl-date">2026-10-06</span></div><ul><li>設定に 「キーコンフィグ」タブ を追加（キーボード／コントローラ）</li></ul></div>
@@ -1306,62 +1336,63 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.31.0</span><span class="vl-date">2026-10-06</span></div><ul><li>カウントダウンを盤面の上に大きく表示するようにした（数字＋READY、半透明の暗幕つき）</li><li>40ライン達成でその場で止まるようにした</li><li>リセットやリスタートで抜けたときは、重ねた表示を消して計測値も初期化する</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.30.0</span><span class="vl-date">2026-10-06</span></div><ul><li>モードに 「40LINE」 を追加（マラソンの下）。40ライン消すまでの時間を計る</li><li>キーコンフィグに 「40LINE再スタート」（既定 T）を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.29.0</span><span class="vl-date">2026-10-06</span></div><ul><li>「ボタン操作」パネルの開閉状態を保存するようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.28.1</span><span class="vl-date">2026-10-05</span></div><ul><li>保存した表示倍率が再読み込み後に効かない不具合を修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.28.1</span><span class="vl-date">2026-10-05</span></div><ul><li>保存した表示倍率が再読み込み後に効かない不具合を修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.28.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面サイズ・NEXT/HOLD・メニューの3つを 「配置編集」ONのときだけ表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.27.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面だけでなく NEXT/HOLD と 左メニュー の大きさも 50〜200％ で調整できるようにした</li><li>NEXTやメニューを広げて盤面が細くなったとき、操作ボタンの3列が盤面幅をはみ出して NEXTの枠の下に潜り込む問題を修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.26.1 / 1.25.1</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadでボタンを長押しすると文字として選択され、範囲選択になる問題を修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.26.1 / 1.25.1</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadでボタンを長押しすると文字として選択され、範囲選択になる問題を修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.26.0</span><span class="vl-date">2026-10-05</span></div><ul><li>左の列に 「画面サイズ」 を追加。盤面の大きさを 50〜200％ で調整できる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.25.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ソフトドロップを SDF（Soft Drop Factor）で指定できるようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.4</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadなどのタッチ端末で、ボタンをドラッグするとページも一緒にスクロールしてしまうのを修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.3</span><span class="vl-date">2026-10-05</span></div><ul><li>せりあがりをモード枠の中へ移した</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.2</span><span class="vl-date">2026-10-05</span></div><ul><li>予告を盤面の外（すぐ下）に移した。地形に重ならない</li><li>せりあがりが動いている間は常に表示するようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.24.1</span><span class="vl-date">2026-10-05</span></div><ul><li>相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる</li><li>溜まりが 30段以上になったら、相殺を待たずに一気に積んでゲームオーバーにする</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.24.4</span><span class="vl-date">2026-10-05</span></div><ul><li>iPadなどのタッチ端末で、ボタンをドラッグするとページも一緒にスクロールしてしまうのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.24.3</span><span class="vl-date">2026-10-05</span></div><ul><li>せりあがりをモード枠の中へ移した</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.24.2</span><span class="vl-date">2026-10-05</span></div><ul><li>予告を盤面の外（すぐ下）に移した。地形に重ならない</li><li>せりあがりが動いている間は常に表示するようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.24.1</span><span class="vl-date">2026-10-05</span></div><ul><li>相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる</li><li>溜まりが 30段以上になったら、相殺を待たずに一気に積んでゲームオーバーにする</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.23.0</span><span class="vl-date">2026-10-05</span></div><ul><li>RENモードをOFFに戻すと21段目におじゃまが残っていたのを修正</li><li>せりあがりの設定を、「せりあがり」ボタンの再押下でも、他のモード（DPCセット・ミノ欠け・REN・デカミノ・マラソン）を触ったときも畳むようにした</li><li>盤面の下端に予告を表示するようにした</li><li>設定の「その他」に 「ミノ設置直後にせりあがり」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.22.0</span><span class="vl-date">2026-10-05</span></div><ul><li>せりあがりの設定（タイプ・秒数／ミノ数・穴継続率）とスタートボタンを既定で畳んだ</li><li>複数段 ボタンを追加。1回のせりあがりで何段上がるかを決められる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.21.0</span><span class="vl-date">2026-10-05</span></div><ul><li>マラソン をデカミノの下に追加。進むほど速くなるモード</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.20.1</span><span class="vl-date">2026-10-05</span></div><ul><li>個数を選ぶ行の 6 の右に「ランダム」 を追加</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.20.1</span><span class="vl-date">2026-10-05</span></div><ul><li>個数を選ぶ行の 6 の右に「ランダム」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.20.0</span><span class="vl-date">2026-10-05</span></div><ul><li>抜く数を選んでからランダムに決める方式に変更</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.19.1</span><span class="vl-date">2026-10-05</span></div><ul><li>版の切り替えボタンを本番でも常に表示するようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.19.1</span><span class="vl-date">2026-10-05</span></div><ul><li>版の切り替えボタンを本番でも常に表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.19.0</span><span class="vl-date">2026-10-05</span></div><ul><li>対象に ミノを捨てる・戻す・リセット を追加。合計10個になった</li><li>大きさも変えられるようにした</li><li>配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.18.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集 を追加。「ボタン操作」で開く操作ボタンの配置を自分で決められる</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.18.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集 を追加。「ボタン操作」で開く操作ボタンの配置を自分で決められる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.17.0</span><span class="vl-date">2026-10-05</span></div><ul><li>iPad が PC版に飛んでいた問題を修正</li><li>版の切り替えボタンを、デモ版以外でも出すようにした（迷ったときに自力で移れるように）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.3</span><span class="vl-date">2026-10-05</span></div><ul><li>右の枠のボタン（DPCセット・ミノ欠け・REN・デカミノ・せりあがり）の高さを詰めた</li><li>1.16.2 で右の枠のボタンの色を落としたが、意図と違ったため元に戻した（背景 #374151・文字 #fff）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.1</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT の巡内番号を小さくした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.16.3</span><span class="vl-date">2026-10-05</span></div><ul><li>右の枠のボタン（DPCセット・ミノ欠け・REN・デカミノ・せりあがり）の高さを詰めた</li><li>1.16.2 で右の枠のボタンの色を落としたが、意図と違ったため元に戻した（背景 #374151・文字 #fff）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.16.1</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT の巡内番号を小さくした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.16.0</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT の右側に、その巡の何番目か（1〜7） を薄く表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.15.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ミノ選択画面に 「ランダム」ボタン を追加</li><li>PC版とスマホ版でバージョンがずれていたので、この版で 1.15.0 に揃えた</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.14.1</span><span class="vl-date">2026-10-05</span></div><ul><li>コントローラの設定を、独立したタブから キーコンフィグの中 へ移した</li><li>kcHeader のIDがキーボード側とコントローラ側で重複していたのを、クラス指定に直した</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.14.1</span><span class="vl-date">2026-10-05</span></div><ul><li>コントローラの設定を、独立したタブから キーコンフィグの中 へ移した</li><li>kcHeader のIDがキーボード側とコントローラ側で重複していたのを、クラス指定に直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.14.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ゲームパッドに対応。設定に「コントローラ」タブを追加</li><li>左右移動はキーボードと同じ経路に流しているので、DAS/ARR の設定がそのまま効く</li><li>リスタートとミノ欠け再セットは、キーボードと同じくゲームオーバー中でも反応する</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.2</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔を広げた</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.13.2</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔を広げた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.13.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.13.0</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集で ボタンの大きさも変えられる ようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.4</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔に余裕を持たせた</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.3</span><span class="vl-date">2026-10-05</span></div><ul><li>横幅を中身に合わせるようにした。これまでは高さだけ中身に合わせ、幅はサイドカラムや盤面に追従していたため横長になっていた</li><li>左右に余白を残すようにした（片側あたり画面幅の13%）</li><li>スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集で動かす単位をグループからボタン1個ずつに変更</li><li>HOLD・NEXT の枠をミノの大きさに合わせた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.12.4</span><span class="vl-date">2026-10-05</span></div><ul><li>NEXT のミノ同士の間隔に余裕を持たせた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.12.3</span><span class="vl-date">2026-10-05</span></div><ul><li>横幅を中身に合わせるようにした。これまでは高さだけ中身に合わせ、幅はサイドカラムや盤面に追従していたため横長になっていた</li><li>左右に余白を残すようにした（片側あたり画面幅の13%）</li><li>スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.12.1</span><span class="vl-date">2026-10-05</span></div><ul><li>配置編集で動かす単位をグループからボタン1個ずつに変更</li><li>HOLD・NEXT の枠をミノの大きさに合わせた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.12.0</span><span class="vl-date">2026-10-05</span></div><ul><li>「配置編集」スイッチ を追加。ONにすると操作ボタンをドラッグで好きな位置に動かせる</li><li>タブレット幅でレイアウトが広がるようにした（短辺600px以上を判定）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.11.1</span><span class="vl-date">2026-10-05</span></div><ul><li>スタート画面の「β版」表記を削除（スマホ版・PC版）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.11.1</span><span class="vl-date">2026-10-05</span></div><ul><li>スタート画面の「β版」表記を削除（スマホ版・PC版）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.11.0</span><span class="vl-date">2026-10-05</span></div><ul><li>キーコンフィグに 「ミノ欠け再セット」 を追加（PC版、既定は M キー）</li><li>ミノ欠けの 「複数選択」スイッチの状態を保存 するようにした（PC版・スマホ版）</li><li>スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.10.1</span><span class="vl-date">2026-10-05</span></div><ul><li>リセットを右の枠から操作パッドへ移し、「ミノを捨てる・戻す」と同じ幅（2ボタン分）で「ボタン操作」の上に配置</li><li>「このサイトについて」のリンクが2行に折り返していたのを1行に収めた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.10.1</span><span class="vl-date">2026-10-05</span></div><ul><li>リセットを右の枠から操作パッドへ移し、「ミノを捨てる・戻す」と同じ幅（2ボタン分）で「ボタン操作」の上に配置</li><li>「このサイトについて」のリンクが2行に折り返していたのを1行に収めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.10.0</span><span class="vl-date">2026-10-05</span></div><ul><li>盤面の空きマスとおじゃまブロックに使っていた埋め込み画像2枚を削除し、同じ見た目をコードで描くようにした</li><li>「このサイトについて」 を追加（PC版・スマホ版・入口ページ）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.9.1</span><span class="vl-date">2026-10-05</span></div><ul><li>「1欠け」を 「ミノ欠け」 に改称（ボタン・ダイアログ見出し・ツールチップ）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.9.1</span><span class="vl-date">2026-10-05</span></div><ul><li>「1欠け」を 「ミノ欠け」 に改称（ボタン・ダイアログ見出し・ツールチップ）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.9.0</span><span class="vl-date">2026-10-05</span></div><ul><li>ミノ選択画面に 複数選択スイッチ を追加（PC版・スマホ版）</li><li>↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す</li><li>1巡目の差し替えを firstBagTypes に一本化し、単体・複数を同じ仕組みで扱うようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.8.0</span><span class="vl-date">2026-10-04</span></div><ul><li>1欠け ボタンを DPCセットの下に追加（PC版・スマホ版）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.7.1</span><span class="vl-date">2026-10-04</span></div><ul><li>DAS/ARR を ミリ秒で指定できるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.7.1</span><span class="vl-date">2026-10-04</span></div><ul><li>DAS/ARR を ミリ秒で指定できるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.7.0</span><span class="vl-date">2026-10-04</span></div><ul><li>左右の DAS（効き始めまでの待ち時間）と ARR（連打間隔）を設定できるようにした</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.3</span><span class="vl-date">2026-10-04</span></div><ul><li>左右キーを長押ししても自動連打が効かなくなることがある問題を修正</li><li>ハードドロップなどで次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐようにした（spawn() で resumeDAS()）</li><li>左右移動がブラウザのキーリピートと DAS/ARR の二重入力になっていたのをやめ、DAS/ARR に一本化した</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.2</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面が暗い場面でゴーストを検出できず、操作中のミノが地形として残っていたのを修正</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.1</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノが地形として残る経路を塞いだ。これまでは位置を特定できたときは「その形のマス」だけを除外していたため、位置の推定を誤ると見えている部分が残っていた。位置が分かっている場合も、宙に浮いた同じ色のかたまりを合わせて除外するようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.6.3</span><span class="vl-date">2026-10-04</span></div><ul><li>左右キーを長押ししても自動連打が効かなくなることがある問題を修正</li><li>ハードドロップなどで次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐようにした（spawn() で resumeDAS()）</li><li>左右移動がブラウザのキーリピートと DAS/ARR の二重入力になっていたのをやめ、DAS/ARR に一本化した</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.6.2</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面が暗い場面でゴーストを検出できず、操作中のミノが地形として残っていたのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.6.1</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノが地形として残る経路を塞いだ。これまでは位置を特定できたときは「その形のマス」だけを除外していたため、位置の推定を誤ると見えている部分が残っていた。位置が分かっている場合も、宙に浮いた同じ色のかたまりを合わせて除外するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.6.0</span><span class="vl-date">2026-10-04</span></div><ul><li>Enter で「この地形を取り込む」を実行できるようにした。Escape でダイアログを閉じる</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.2</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノの位置が特定できなかったとき、盤面に見えている部分が設置済みブロックとして残ってしまうのを修正。ゴーストと同じ色で宙に浮いているかたまりを探して地形から取り除くようにした（地形のオーバーハングと区別するため、かたまり全体がどこにも乗っていないことを条件にしている）</li><li>位置が特定できないときにゴーストの位置へ置いていたのをやめ、通常の出現位置から始めるようにした。ゴーストの位置に置くと取り込んだ直後に着地済みの状態になってしまうため</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.1</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面の背景が青い場面で、空きマスがミノとして誤検出されていたのを修正。空きマスを弾く条件に彩度を使っていたが、青い盤面では空きマスの彩度が60を超えることがあったため、明るさだけで判定するようにした（ぷよテトのミノは一番暗いJでも明るさ235あるので、明るさ105未満は確実に空き）</li><li>操作中のミノが盤面の上に見切れて1マスしか見えていない場合も位置を特定できるようにした</li><li>位置を特定できなかった場合は、ゴーストの位置ではなく通常の出現位置から始めるようにした（ゴースト位置に置くと着地済みの状態になってしまうため）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.5.2</span><span class="vl-date">2026-10-04</span></div><ul><li>操作中のミノの位置が特定できなかったとき、盤面に見えている部分が設置済みブロックとして残ってしまうのを修正。ゴーストと同じ色で宙に浮いているかたまりを探して地形から取り除くようにした（地形のオーバーハングと区別するため、かたまり全体がどこにも乗っていないことを条件にしている）</li><li>位置が特定できないときにゴーストの位置へ置いていたのをやめ、通常の出現位置から始めるようにした。ゴーストの位置に置くと取り込んだ直後に着地済みの状態になってしまうため</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.5.1</span><span class="vl-date">2026-10-04</span></div><ul><li>盤面の背景が青い場面で、空きマスがミノとして誤検出されていたのを修正。空きマスを弾く条件に彩度を使っていたが、青い盤面では空きマスの彩度が60を超えることがあったため、明るさだけで判定するようにした（ぷよテトのミノは一番暗いJでも明るさ235あるので、明るさ105未満は確実に空き）</li><li>操作中のミノが盤面の上に見切れて1マスしか見えていない場合も位置を特定できるようにした</li><li>位置を特定できなかった場合は、ゴーストの位置ではなく通常の出現位置から始めるようにした（ゴースト位置に置くと着地済みの状態になってしまうため）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.5.0</span><span class="vl-date">2026-10-01</span></div><ul><li>1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた</li><li>ゴーストと操作中のミノを検出できるようにした。ぷよテトのゴーストは「暗い半透明＋ドット模様」で描かれており、セル中央の代表色では暗いマスに見えてしまうため、明るい側の画素の色でも判定するようにした</li><li>操作中のミノが盤面の上に見切れていても検出できるようにした（見えている2マス以上が一致すれば確定）</li><li>読み取り枠を下端基準にした。21段目が3分の1ほど覗いているぶん、上端基準では毎回ずれていた</li><li>ミノの参照色を実機スクショの実測値に更新した（水色と青の判別が紙一重で、取り違えることがあった）</li><li>おじゃまの明るさ条件を 120超 → 105超 に緩めた（グレーのおじゃまも拾える）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.4.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.4.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.4.0</span><span class="vl-date">2026-09-30</span></div><ul><li>取り込んだ地形が高くてもゲームオーバーにしないようにした。出現位置がふさがっている場合はミノを置ける高さまで上に逃がす。ゲームオーバー中に取り込んだ場合も、その地形から再開できる</li><li>ぷよぷよテトリス以外のゲーム画面からも取り込めるようにした。おじゃまの判定を「明るさの絶対値」から「その画像の空きマスよりはっきり明るい無彩色」に変更したため、白でもグレーでもおじゃまとして拾える</li><li>操作ボタン3つ（この地形を取り込む／自動検出しなおす／別の画像）を読み取り結果の下（右カラム）へ移動。縦に長い画像でもボタンを探さずに済むようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.3.0</span><span class="vl-date">2026-09-30</span></div><ul><li>画面上のON/OFFスイッチをすべて保存するようにした。ゴースト・軸表示・地形編集（PC版）を tetren_options に追加（連続HOLDは従来から保存済み）</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.2.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.2.1</span><span class="vl-date">2026-09-30</span></div><ul><li>せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.2.0</span><span class="vl-date">2026-09-30</span></div><ul><li>カンペ画像を何枚でも並べられるようにした。ウィンドウのバーに「追加」ボタン（「変更」の左）を新設し、押すともう1枚出せる。あわせて「画像を変更」を「変更」に短縮</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.1.0</span><span class="vl-date">2026-09-29</span></div><ul><li>せりあがりの間隔設定（種別・ミノ数・秒数）を保存して、リセットやページを閉じても保持するようにした（tetren_dig）。PC版・スマホ版とも</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.0.0</span><span class="vl-date">2026-09-29</span></div><ul><li>カンペ画像 — 画像を画面に重ねて表示する。ドラッグ＆ドロップ／ファイル選択／貼り付けの3通りで読み込み、位置とサイズを自由に変更できる（左右の辺・下辺・下の両隅でリサイズ）。最前面固定のON/OFF切り替えに対応</li><li>主要なボタンにツールチップ（マウスオーバーで出る説明）を追加</li><li>落下速度をリセット後もページを閉じても保持するようにした（tetren_grav に保存）</li><li>落下設定を「デザイン」枠から独立させ、HOLDの直下へ移動</li><li>落下速度の ‹ › を長押しで連続変更できるようにした（PC版・スマホ版とも）</li><li>スキン一覧から説明文を削除し、名称を整理（クラシック→標準、ぷよテト風→ぷテ、透明→ほぼ透明）</li><li>ほか32件</li></ul></div>
     </div>
+    <button class="vl-more" onclick="toggleVerLog(this)" title="パッチ（細かい修正）も含めて全部表示します">詳細バージョン履歴</button>
     </div>
     <div class="imp-actions">
       <button class="imp-btn" onclick="closeAbout()">閉じる</button>
@@ -1382,7 +1413,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <!-- キーコンフィグモーダル -->
 <div id="keyconfigModal">
   <div id="keyconfigBox">
-    <h2>⚙ 設定</h2>
+    <div class="cfg-head">
+      <h2>⚙ 設定</h2>
+      <button class="cfg-x" type="button" title="閉じる" onclick="closeConfig()">×</button>
+    </div>
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
@@ -2809,7 +2843,9 @@ let lastMiss = null;
 // 選択画面の状態（複数選択のON/OFFと、選ばれているミノ）
 const pick = {
   dpc:  { multi:false, sel:new Set() },
-  miss: { multi:false, sel:new Set() },
+  // ミノ欠けは常に複数選択。1個だけ選んで「開始」でも同じことができるので、
+  // 切り替えスイッチは置いていない
+  miss: { multi:true,  sel:new Set() },
 };
 
 function openDpc() {
@@ -2824,11 +2860,11 @@ function closeDpc() {
 function openMiss() {
   stopSprint();
   closeDigPanel();
-  pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
   renderMissHoldRow();
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
+  missRandN = undefined;
   document.getElementById('missOverlay').classList.add('open');
   renderPieceGrid('miss');
 }
@@ -2837,19 +2873,14 @@ function closeMiss() {
 }
 
 // 複数選択スイッチの切り替え
-function setPickMulti(kind, on) {
-  pick[kind].multi = on;
-  pick[kind].sel.clear();
-  // ミノ欠けのスイッチは次に開いたときも同じ状態になるよう覚えておく
-  if (kind === 'miss') { opts.missMulti = on; saveOptions(); }
-  renderPieceGrid(kind);
-}
 // 選択できる上限・下限は用途で違う
 //   DPCセット … 選んだミノ「だけ」で1巡目を組むので、1個以上あればよい
 //   ミノ欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
 function pickValid(kind) {
   const n = pick[kind].sel.size;
-  return kind === 'dpc' ? n >= 1 : (n >= 1 && n <= 6);
+  if (kind === 'dpc') return n >= 1;
+  // ランダムは抜く数を選んだ時点で「開始」できる
+  return missRandChosen() || (n >= 1 && n <= 6);
 }
 
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
@@ -2938,6 +2969,7 @@ function renderPieceGrid(kind) {
     }
     btn.addEventListener('click', () => {
       if (st.multi) {
+        if (kind === 'miss') closeMissRandRow();   // ミノを選んだら「ランダム」は外す
         if (st.sel.has(type)) st.sel.delete(type);
         else { st.sel.add(type); if (kind === 'miss') clearMissHoldIf([type]); }
         renderPieceGrid(kind);
@@ -2947,23 +2979,57 @@ function renderPieceGrid(kind) {
     });
     row.appendChild(btn);
    });
+   // 1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
+   if (types === DPC_ROWS[0]) {
+     const rb = document.createElement('button');
+     // ミノ欠けは「抜く個数を選ぶ行」の開閉、DPCセットはその場でランダムにHOLD
+     const open = kind === 'miss' && document.getElementById('missRandRow').style.display !== 'none';
+     // HOLDを「ランダム」にしているときは、ミノを指定したときと同じ印をつける
+     const randHold = kind === 'miss' && !!opts.missHoldOn && opts.missHold === HOLD_RANDOM;
+     rb.className = 'dpc-btn dpc-rand' + (open ? ' on' : '') + (randHold ? ' hold' : '');
+     rb.title = kind === 'dpc'
+       ? 'ランダムに選んだミノをHOLDしてセットします（↻ でそのたびに引き直します）'
+       : '抜くミノの数を選ぶと、その数だけランダムに抜いて始めます';
+     const box = document.createElement('div');
+     box.className = 'dpc-rand-box';
+     box.style.cssText += 'width:84px;height:56px;margin:0 auto;font-size:26px;';
+     box.textContent = '？';
+     const nm = document.createElement('span');
+     nm.className = 'dpc-name';
+     nm.textContent = 'ランダム';
+     rb.appendChild(box); rb.appendChild(nm);
+     if (randHold) {
+       const badge = document.createElement('span');
+       badge.className = 'dpc-hold-badge';
+       badge.textContent = 'HOLD';
+       rb.appendChild(badge);
+     }
+     rb.addEventListener('click', () => {
+       if (kind === 'dpc') setDpcHold(HOLD_RANDOM); else toggleMissRandRow();
+     });
+     row.appendChild(rb);
+   }
    grid.appendChild(row);
   });
   // 複数選択のときだけ「開始」を出す
-  const sw = document.getElementById(kind === 'dpc' ? 'dpcMultiSw' : 'missMultiSw');
-  if (sw) sw.checked = st.multi;
   const start = document.getElementById(kind === 'dpc' ? 'dpcStartBtn' : 'missStartBtn');
   if (start) {
     start.style.display = st.multi ? '' : 'none';
     start.disabled = !pickValid(kind);
     start.style.opacity = pickValid(kind) ? '1' : '0.45';
   }
-  if (kind === 'miss') renderMissHoldRow();
+  if (kind === 'miss') { renderMissHoldRow(); renderMissRandRow(); }
   const note = document.getElementById(kind === 'dpc' ? 'dpcMultiNote' : 'missMultiNote');
   if (note) {
     note.style.display = st.multi ? '' : 'none';
     note.textContent = kind === 'dpc'
       ? '選んだミノだけで1巡目を組みます（HOLDには何も入れません）。'
+      : missRandChosen()
+        ? (missRandN === null
+            ? '抜く数も種類もおまかせで決めます。「開始」で始まります。'
+            : (missRandN === 0
+                ? '何も抜かずに始めます。「開始」で始まります。'
+                : `ランダムに${missRandN}個抜きます。「開始」で始まります。`))
       : (pick.miss.sel.size >= 7
           ? '全部は抜けません。6個までにしてください。'
           : '選んだミノを1巡目から抜きます。');
@@ -2979,10 +3045,10 @@ function resetBoardForPick() {
 
 // --- DPCセット（単体）: 選んだミノをHOLDに入れ、地形を消してバッグを組み直す ---
 function setDpcHold(type) {
-  lastDpc = { multi:false, type };
+  lastDpc = { multi:false, type };   // 「ランダム」は '?' のまま覚えて、↻ で毎回引き直す
   updateDpcAgainBtn();
   resetBoardForPick();
-  holdType = type;
+  holdType = type === HOLD_RANDOM ? ALL_TYPES[Math.floor(Math.random() * ALL_TYPES.length)] : type;
   bag = []; nextQ = [];
   spawn();          // fillQ() で新しいバッグを引き直し、現在のミノを出し直す
   canHold = true;
@@ -3022,7 +3088,9 @@ function updateDpcAgainBtn() {
   btn.title = !lastDpc ? 'まだミノを選んでいません（押すと選択画面が開きます）'
     : lastDpc.multi
       ? `前回選んだ ${lastDpc.types.join('・')} だけで、もう一度始めます`
-      : `前回選んだ ${lastDpc.type} ミノで、もう一度DPCセットします`;
+      : lastDpc.type === HOLD_RANDOM
+        ? 'ランダムに選んだミノで、もう一度DPCセットします（ミノは毎回引き直します）'
+        : `前回選んだ ${lastDpc.type} ミノで、もう一度DPCセットします`;
 }
 updateDpcAgainBtn();
 
@@ -3045,11 +3113,39 @@ function startMissRandom(n, record) {
   const types = randomMissTypes(count);
   applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
+// 抜く数の選択。undefined は未選択、null は「数もおまかせ」、0〜6 はその数
+let missRandN;
+function missRandChosen() { return missRandN !== undefined; }
+// 数を押しただけでは始めず、「開始」を押したときに引く
+function pickMissRandom(n) {
+  missRandN = n;
+  pick.miss.sel.clear();   // 手で選んだミノとは同時に使えない
+  renderPieceGrid('miss');
+}
+function renderMissRandRow() {
+  document.querySelectorAll('#missRandRow .rand-num').forEach(b => {
+    const n = b.dataset.n === '' ? null : Number(b.dataset.n);
+    b.classList.toggle('sel', missRandChosen() && n === missRandN);
+  });
+}
+// ミノを手で選んだときは「ランダム」の選択を外す（この2つは同時に使えない）
+function closeMissRandRow() {
+  const row = document.getElementById('missRandRow');
+  if (row) row.style.display = 'none';
+  missRandN = undefined;
+}
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
   const row = document.getElementById('missRandRow');
   if (!row) return;
-  row.style.display = (row.style.display === 'none' || !row.style.display) ? '' : 'none';
+  // 開いているかどうかは、グリッドの「ランダム」の見た目と同じ基準で見る
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  // ランダムに切り替えたときは、それまで選んでいたミノの指定を外す
+  //（ランダムと手で選んだ指定は同時に使えないので、押したほうを残す）
+  if (open) pick.miss.sel.clear();
+  missRandN = undefined;     // 開き直すたびに数の選択はまっさらに戻す
+  renderPieceGrid('miss');   // グリッドの「ランダム」の見た目も合わせる
 }
 
 // --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
@@ -3103,6 +3199,7 @@ function applyMissTypes(types, last, record = true) {
 }
 function startMissMulti() {
   if (!pickValid('miss')) return;
+  if (missRandChosen()) { startMissRandom(missRandN); return; }
   applyMissMulti([...pick.miss.sel]);
 }
 function repeatMiss() {
@@ -5349,6 +5446,14 @@ function toggleDigPanel() { stopSprint(); setDigPanelOpen(!digPanelOpen()); }
 // 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
 function closeDigPanel() { setDigPanelOpen(false); }
 
+// バージョン履歴の表示を、大きな変更だけ／全部 で切り替える
+function toggleVerLog(btn) {
+  const log = document.querySelector('.ver-log');
+  if (!log) return;
+  const all = log.classList.toggle('all');
+  btn.textContent = all ? '大きな変更だけ表示' : '詳細バージョン履歴';
+}
+
 // ===== パフェ探索 =====
 // 「今の地形」と「今見えているミノ（操作中・HOLD・NEXT）」だけで
 // パーフェクトクリアができるかを調べる。
@@ -6255,7 +6360,6 @@ const OPT_DEFAULTS = {
   dasMs: 167,         // 左右を押してから自動連打が始まるまで（約10F）
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
-  missMulti: false,   // ミノ欠けの「複数選択」スイッチ
   missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
   missHoldOn: false,  // ミノ欠けで「特定のミノをHOLDする」スイッチ
   missHold: null,     // そのときHOLDに入れるミノ
@@ -6685,7 +6789,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.64.0';
+const APP_VERSION = '1.70.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
