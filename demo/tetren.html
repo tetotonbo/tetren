@@ -185,6 +185,19 @@ body.ppt2-theme #nextCanvas {
 .speed-row {
   display:flex; align-items:center; gap:6px; margin-top:6px;
 }
+/* 「落下設定」の見出しと、自由落下を止める小さなボタン */
+.grav-head { display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:6px; }
+.grav-pause {
+  background:none; border:1px solid #4b5563; color:#9ca3af;
+  width:18px; height:18px; border-radius:4px; padding:0;
+  font-size:9px; line-height:1; cursor:pointer; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  transition:color .15s, border-color .15s;
+}
+.grav-pause:hover { color:#e5e7eb; border-color:#9ca3af; }
+/* 止めている間は、再生マークと落下速度の表示で分かるようにする */
+.grav-pause.paused { color:#f59e0b; border-color:#f59e0b; }
+.speed-val.paused { color:#6b7280; text-decoration:line-through; }
 .speed-val {
   flex:1; text-align:center; font-size:14px; color:#e2e8f0; line-height:1;
 }
@@ -725,7 +738,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
 
     <!-- 落下設定 -->
     <div class="panel" style="width:108px;" data-ui="grav">
-      <div class="panel-label" style="font-size:14px;letter-spacing:1px;">落下設定</div>
+      <div class="grav-head">
+        <span class="panel-label" style="font-size:14px;letter-spacing:1px;margin:0;">落下設定</span>
+        <!-- 設定した値はそのままに、自由落下だけ止める -->
+        <button id="gravPauseBtn" class="grav-pause" onclick="toggleGravPause()"
+          title="自由落下を止める（落下設定の値はそのまま）">⏸</button>
+      </div>
       <div class="speed-row">
         <button class="step-btn" title="落下速度を下げる（0Gは自由落下なし・長押しで連続）"
           onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
@@ -745,7 +763,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <!-- デザイン -->
     <div class="panel" style="width:108px;" data-ui="design">
       <div class="panel-label">デザイン</div>
-      <label class="tgl-row" style="margin-bottom:8px;"
+      <label class="tgl-row" style="margin-bottom:3px;"
         title="ミノがどこに落ちるかを薄く表示する">
         <span>ゴースト</span>
         <input type="checkbox" id="ghostCheck" checked
@@ -759,7 +777,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
           onchange="setOption('axis', this.checked)">
         <span class="tgl"></span>
       </label>
-      <label class="tgl-row" style="margin-top:8px;"
+      <label class="tgl-row" style="margin-top:3px;"
         title="盤面のマス目の線を表示する">
         <span>グリッド</span>
         <input type="checkbox" id="gridCheck" checked
@@ -768,7 +786,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       </label>
       <!-- 操作ボタンや枠の配置を自分で決められるようにする -->
       <div data-ui="layout">
-        <label class="tgl-row" style="margin-top:8px;"
+        <label class="tgl-row" style="margin-top:3px;"
           title="ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます">
           <span>配置編集</span>
           <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
@@ -1273,6 +1291,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0 / 1.71.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「落下設定」の見出しの右に 一時停止（⏸） を追加</li><li>「デザイン」の4項目の行間を詰めた（8px → 3px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.70.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「デザイン」の4項目（ゴースト・軸表示・グリッド・配置編集）を一回り小さくした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1 / 1.70.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、HOLDに指定したミノが抜かれてしまい「特定のミノをHOLDする」が効かなくなることがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.75.0 / 1.70.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、抜く数を押した時点では始まらないようにした</li><li>抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する</li></ul></div>
@@ -2156,6 +2175,8 @@ let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
 let gravSpeed = 0;       // 落下速度 0〜20G（0=落下しない。実際の行数は gravRowsPerFrame() 参照。起動時に loadGravSpeed() で復元）
+// 一時停止。値はそのままに自由落下だけ止める（ページを開き直すと解除）
+let gravPaused = false;
 let gravAccum = 0;       // 落下の端数（小数行/フレームを貯めて整数行ぶん落とす）
 let undoStack = [];     // undoスタック（複数手対応）
 const UNDO_MAX = 50;   // 最大保持数
@@ -4007,6 +4028,21 @@ function gravRowsPerFrame(g) {
 
 function updateGravDisplay() {
   document.getElementById('gravSpeedVal').textContent = gravSpeed === 0 ? '0' : gravSpeed;
+  const btn = document.getElementById('gravPauseBtn');
+  if (btn) {
+    btn.textContent = gravPaused ? '▶' : '⏸';
+    btn.classList.toggle('paused', gravPaused);
+    btn.title = gravPaused ? '自由落下を再開する' : '自由落下を止める（落下設定の値はそのまま）';
+  }
+  const val = document.querySelector('.speed-val');
+  if (val) val.classList.toggle('paused', gravPaused);
+}
+// 落下設定がいくつでも、ONの間は自由落下しない（ソフトドロップとハードドロップは効く）
+function toggleGravPause() {
+  gravPaused = !gravPaused;
+  gravAccum = 0;   // 止めている間にたまった端数は捨てる
+  lastDrop = 0;
+  updateGravDisplay();
 }
 // 落下速度はリセットやページを閉じても保持する（練習のたびに設定し直さずに済むように）
 function saveGravSpeed() {
@@ -4046,7 +4082,7 @@ function loop(ts) {
 
   // 0G は自動で落とさない（ハードドロップするまでミノは止まったまま）
   // 1G〜20G: フレームベース（小数行/フレームを貯めて、たまった整数行ぶん落とす）
-  if (gravSpeed > 0) {
+  if (gravSpeed > 0 && !gravPaused) {
     gravAccum += gravRowsPerFrame(gravSpeed);
     let steps = Math.floor(gravAccum);
     gravAccum -= steps;
@@ -6803,7 +6839,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.70.2';
+const APP_VERSION = '1.71.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
