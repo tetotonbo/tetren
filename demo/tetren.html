@@ -1182,14 +1182,14 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missRandRow" style="display:none;">
       <span>抜く数</span>
-      <button class="rand-num" onclick="startMissRandom(0)" title="何も抜かずに始めます">0</button>
-      <button class="rand-num" onclick="startMissRandom(1)">1</button>
-      <button class="rand-num" onclick="startMissRandom(2)">2</button>
-      <button class="rand-num" onclick="startMissRandom(3)">3</button>
-      <button class="rand-num" onclick="startMissRandom(4)">4</button>
-      <button class="rand-num" onclick="startMissRandom(5)">5</button>
-      <button class="rand-num" onclick="startMissRandom(6)">6</button>
-      <button class="rand-num rand-any" onclick="startMissRandom(null)"
+      <button class="rand-num" data-n="0" onclick="pickMissRandom(0)" title="何も抜きません">0</button>
+      <button class="rand-num" data-n="1" onclick="pickMissRandom(1)">1</button>
+      <button class="rand-num" data-n="2" onclick="pickMissRandom(2)">2</button>
+      <button class="rand-num" data-n="3" onclick="pickMissRandom(3)">3</button>
+      <button class="rand-num" data-n="4" onclick="pickMissRandom(4)">4</button>
+      <button class="rand-num" data-n="5" onclick="pickMissRandom(5)">5</button>
+      <button class="rand-num" data-n="6" onclick="pickMissRandom(6)">6</button>
+      <button class="rand-num rand-any" data-n="" onclick="pickMissRandom(null)"
         title="抜く数もおまかせ。↻ を押すたびに数から引き直します">ランダム</button>
     </div>
     <div class="imp-actions">
@@ -1267,6 +1267,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.75.0 / 1.70.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、抜く数を押した時点では始まらないようにした</li><li>抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.74.0 / 1.69.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面の右上に 閉じる（×） を追加（下の「閉じる」ボタンはそのまま）</li><li>ミノ欠けの HOLDのミノ選択を「特定のミノをHOLDする」のすぐ下へ移動（ミノ選択欄の上）</li><li>ミノ欠けで「ランダム」を押したあとにミノを選ぶと、ランダムの選択を解除するようにした（逆向きも同じ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.73.1 / 1.68.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで、ミノを選んだあとに「ランダム」を押すと、それまでの選択をすべて解除するようにした</li><li>ミノ欠けの「ランダム」をもう一度押しても、個数を選ぶ行が閉じなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
@@ -2863,6 +2864,7 @@ function openMiss() {
   renderMissHoldRow();
   pick.miss.sel.clear();
   const rr = document.getElementById('missRandRow'); if (rr) rr.style.display = 'none';
+  missRandN = undefined;
   document.getElementById('missOverlay').classList.add('open');
   renderPieceGrid('miss');
 }
@@ -2876,7 +2878,9 @@ function closeMiss() {
 //   ミノ欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
 function pickValid(kind) {
   const n = pick[kind].sel.size;
-  return kind === 'dpc' ? n >= 1 : (n >= 1 && n <= 6);
+  if (kind === 'dpc') return n >= 1;
+  // ランダムは抜く数を選んだ時点で「開始」できる
+  return missRandChosen() || (n >= 1 && n <= 6);
 }
 
 // ミノ選択ボタンを並べる（テーマ変更が反映されるよう開くたびに描き直す）
@@ -3014,12 +3018,18 @@ function renderPieceGrid(kind) {
     start.disabled = !pickValid(kind);
     start.style.opacity = pickValid(kind) ? '1' : '0.45';
   }
-  if (kind === 'miss') renderMissHoldRow();
+  if (kind === 'miss') { renderMissHoldRow(); renderMissRandRow(); }
   const note = document.getElementById(kind === 'dpc' ? 'dpcMultiNote' : 'missMultiNote');
   if (note) {
     note.style.display = st.multi ? '' : 'none';
     note.textContent = kind === 'dpc'
       ? '選んだミノだけで1巡目を組みます（HOLDには何も入れません）。'
+      : missRandChosen()
+        ? (missRandN === null
+            ? '抜く数も種類もおまかせで決めます。「開始」で始まります。'
+            : (missRandN === 0
+                ? '何も抜かずに始めます。「開始」で始まります。'
+                : `ランダムに${missRandN}個抜きます。「開始」で始まります。`))
       : (pick.miss.sel.size >= 7
           ? '全部は抜けません。6個までにしてください。'
           : '選んだミノを1巡目から抜きます。');
@@ -3103,10 +3113,26 @@ function startMissRandom(n, record) {
   const types = randomMissTypes(count);
   applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
+// 抜く数の選択。undefined は未選択、null は「数もおまかせ」、0〜6 はその数
+let missRandN;
+function missRandChosen() { return missRandN !== undefined; }
+// 数を押しただけでは始めず、「開始」を押したときに引く
+function pickMissRandom(n) {
+  missRandN = n;
+  pick.miss.sel.clear();   // 手で選んだミノとは同時に使えない
+  renderPieceGrid('miss');
+}
+function renderMissRandRow() {
+  document.querySelectorAll('#missRandRow .rand-num').forEach(b => {
+    const n = b.dataset.n === '' ? null : Number(b.dataset.n);
+    b.classList.toggle('sel', missRandChosen() && n === missRandN);
+  });
+}
 // ミノを手で選んだときは「ランダム」の選択を外す（この2つは同時に使えない）
 function closeMissRandRow() {
   const row = document.getElementById('missRandRow');
   if (row) row.style.display = 'none';
+  missRandN = undefined;
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
@@ -3118,6 +3144,7 @@ function toggleMissRandRow() {
   // ランダムに切り替えたときは、それまで選んでいたミノの指定を外す
   //（ランダムと手で選んだ指定は同時に使えないので、押したほうを残す）
   if (open) pick.miss.sel.clear();
+  missRandN = undefined;     // 開き直すたびに数の選択はまっさらに戻す
   renderPieceGrid('miss');   // グリッドの「ランダム」の見た目も合わせる
 }
 
@@ -3172,6 +3199,7 @@ function applyMissTypes(types, last, record = true) {
 }
 function startMissMulti() {
   if (!pickValid('miss')) return;
+  if (missRandChosen()) { startMissRandom(missRandN); return; }
   applyMissMulti([...pick.miss.sel]);
 }
 function repeatMiss() {
@@ -6761,7 +6789,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.69.0';
+const APP_VERSION = '1.70.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
