@@ -444,6 +444,12 @@ button, label, .ctrl-lbl, [data-pos] {
 .rand-num:disabled { opacity:0.3; cursor:default; }
 .rand-num:disabled:hover { background:#0d1117; border-color:#374151; }
 /* 欠けに選べないミノ（HOLDに指定しているもの） */
+/* ミノ欠けの「ランダム」。ミノのボタンと同じ見た目・大きさにそろえて 2×4 にする */
+.dpc-rand-box {
+  display:flex; align-items:center; justify-content:center;
+  color:#9ca3af; font-weight:bold; line-height:1;
+}
+.dpc-btn.dpc-rand.on { border-color:#6366f1; background:#1e243a; }
 .dpc-btn:disabled { opacity:0.3; cursor:default; }
 .dpc-name {
   display:block; line-height:1; margin-top:6px;
@@ -1174,8 +1180,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
         title="抜く数もおまかせ。↻ を押すたびに数から引き直します">ランダム</button>
     </div>
     <div class="imp-actions">
-      <button class="imp-btn" onclick="toggleMissRandRow()"
-        title="抜くミノの数を選ぶと、その数だけランダムに抜いて始めます">ランダム</button>
       <button class="imp-btn" onclick="closeMiss()">キャンセル</button>
       <button class="imp-btn imp-primary" id="missStartBtn" style="display:none;"
         onclick="startMissMulti()">開始</button>
@@ -1250,6 +1254,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.72.0 / 1.67.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「ランダム」をミノの選択欄へ移動し、2×4 の並びにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.71.0 / 1.66.0</span><span class="vl-date">2026-10-18</span></div><ul><li>バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.70.0 / 1.65.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「複数選択」スイッチを廃止し、常に複数選択にした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.69.1 / 1.64.1</span><span class="vl-date">2026-10-18</span></div><ul><li>検索対策。「練習サイト」という語がサイト全体に1つも無かったので、</li><li>スマホ版に構造化データ（JSON-LD）を追加</li><li>site: 検索でインデックスは2ページのみ。ルートURLは「テト練（スマホ版）」のタイトルで登録されている</li><li>「テトリス 練習ツール」ではAIによる概要の1番目に出る（説明文がそのまま引用されている）</li><li>「テトリス 練習サイト」ではAI概要にもWeb検索20位以内にも出ない</li></ul></div>
@@ -2949,6 +2954,23 @@ function renderPieceGrid(kind) {
     });
     row.appendChild(btn);
    });
+   // ミノ欠けのときは、1段目の空いている4つ目に「ランダム」を置いて 2×4 にそろえる
+   if (kind === 'miss' && types === DPC_ROWS[0]) {
+     const rb = document.createElement('button');
+     const open = document.getElementById('missRandRow').style.display !== 'none';
+     rb.className = 'dpc-btn dpc-rand' + (open ? ' on' : '');
+     rb.title = '抜くミノの数を選ぶと、その数だけランダムに抜いて始めます';
+     const box = document.createElement('div');
+     box.className = 'dpc-rand-box';
+     box.style.cssText += 'width:84px;height:56px;margin:0 auto;font-size:26px;';
+     box.textContent = '？';
+     const nm = document.createElement('span');
+     nm.className = 'dpc-name';
+     nm.textContent = 'ランダム';
+     rb.appendChild(box); rb.appendChild(nm);
+     rb.addEventListener('click', () => toggleMissRandRow());
+     row.appendChild(rb);
+   }
    grid.appendChild(row);
   });
   // 複数選択のときだけ「開始」を出す
@@ -3050,6 +3072,7 @@ function toggleMissRandRow() {
   const row = document.getElementById('missRandRow');
   if (!row) return;
   row.style.display = (row.style.display === 'none' || !row.style.display) ? '' : 'none';
+  renderPieceGrid('miss');   // グリッドの「ランダム」の見た目も合わせる
 }
 
 // --- ミノ欠け（単体）: 選んだミノを1巡目から抜いて、最初から始める ---
@@ -6692,7 +6715,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.66.0';
+const APP_VERSION = '1.67.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
