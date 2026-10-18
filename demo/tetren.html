@@ -1288,6 +1288,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.1 / 1.75.2</span><span class="vl-date">2026-10-18</span></div><ul><li>NEXTの右の番号が 8 や 10 など 1〜7 の範囲外になったり、飛んだりすることがあったのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1</span><span class="vl-date">2026-10-18</span></div><ul><li>地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.80.0 / 1.75.0</span><span class="vl-date">2026-10-18</span></div><ul><li>復元時のHOLD選択画面で、下にあった「ランダム」をミノ選択欄へ移し 2×4 にそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0 / 1.74.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けを ミノを1つも選ばずに「開始」できる ようにした</li></ul></div>
@@ -2236,12 +2237,14 @@ function newBag() {
 }
 // その巡の何番目かを 1〜7 で持つ。巡の終わりが必ず7になるよう、
 // ミノ欠けなどで巡が短いときは途中の番号から始める（4ミノなら 4,5,6,7）。
-let bagIndex = 1;
+// 番号はカウンタを持たず、残り枚数から毎回出す。
+// こうしておくと、1手戻すなどで巡の途中へ戻ってもずれない
 function fillQ() {
   while (nextQ.length < NEXT_SHOW+1) {
     const isNew = (bag.length === 0); // バッグ補充タイミング = 新しい巡の先頭
-    if (isNew) { bag = newBag(); bagIndex = 8 - bag.length; }
-    nextQ.push({ type: bag.shift(), newBag: isNew, idx: bagIndex++ });
+    if (isNew) bag = newBag();
+    const type = bag.shift();
+    nextQ.push({ type, newBag: isNew, idx: 7 - bag.length });
   }
 }
 
@@ -3309,7 +3312,7 @@ function resetTerrainOnly() {
 }
 // ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
 function resetQueueOnly() {
-  bag = []; nextQ = []; bagIndex = 1;
+  bag = []; nextQ = [];
   holdType = null; canHold = true;
   undoStack = [];              // ツモが変わるので履歴は捨てる
   resetLock();
@@ -6872,7 +6875,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.75.1';
+const APP_VERSION = '1.75.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
