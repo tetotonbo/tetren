@@ -1267,6 +1267,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1 / 1.70.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、HOLDに指定したミノが抜かれてしまい「特定のミノをHOLDする」が効かなくなることがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.75.0 / 1.70.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、抜く数を押した時点では始まらないようにした</li><li>抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.74.0 / 1.69.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面の右上に 閉じる（×） を追加（下の「閉じる」ボタンはそのまま）</li><li>ミノ欠けの HOLDのミノ選択を「特定のミノをHOLDする」のすぐ下へ移動（ミノ選択欄の上）</li><li>ミノ欠けで「ランダム」を押したあとにミノを選ぶと、ランダムの選択を解除するようにした（逆向きも同じ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.73.1 / 1.68.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで、ミノを選んだあとに「ランダム」を押すと、それまでの選択をすべて解除するようにした</li><li>ミノ欠けの「ランダム」をもう一度押しても、個数を選ぶ行が閉じなかったのを修正</li></ul></div>
@@ -3097,20 +3098,26 @@ updateDpcAgainBtn();
 // --- ミノ欠け（ランダム）: 抜くミノの数（0〜6個）も種類も毎回くじ引きで決める ---
 // 0個のときは何も抜かないので、通常どおり7ミノで始まる。
 // 指定された個数だけ、ランダムに選んで返す
-function randomMissTypes(n) {
-  const a = ALL_TYPES.slice();
+// keep に渡したミノは抜かない（HOLDに指定しているミノを抜いてしまうと指定が無効になるため）
+function randomMissTypes(n, keep) {
+  const a = ALL_TYPES.filter(t => t !== keep);
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a.slice(0, Math.max(0, Math.min(6, n)));
 }
+// ランダムで抜くときに残しておくミノ（「特定のミノをHOLDする」で選んでいるもの）
+function missHoldKeep() {
+  const h = opts.missHoldOn ? opts.missHold : null;
+  return h && h !== HOLD_RANDOM ? h : null;
+}
 // 個数は覚えておき、↻ では種類だけを引き直す。
 // n に null を渡すと「個数もおまかせ」になり、↻ のたびに個数から引き直す。
 function startMissRandom(n, record) {
   const any = (n === null || n === undefined);
   const count = any ? Math.floor(Math.random() * 7) : n;
-  const types = randomMissTypes(count);
+  const types = randomMissTypes(count, missHoldKeep());
   applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
 }
 // 抜く数の選択。undefined は未選択、null は「数もおまかせ」、0〜6 はその数
@@ -6789,7 +6796,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.70.0';
+const APP_VERSION = '1.70.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
