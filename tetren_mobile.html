@@ -174,6 +174,17 @@ canvas { display:block; }
   display:flex; align-items:center; justify-content:center;
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
+/* 「落下設定」の見出しと、自由落下を止める小さなボタン */
+.grav-head { display:flex; align-items:center; justify-content:center; gap:4px; margin:4px 0 0; }
+.grav-pause {
+  background:none; border:1px solid #4b5563; color:#9ca3af;
+  width:16px; height:16px; border-radius:3px; padding:0;
+  font-size:8px; line-height:1; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+/* 止めている間は、再生マークの色で分かるようにする（値の表示はそのまま） */
+.grav-pause.paused { color:#f59e0b; border-color:#f59e0b; }
 /* ===== トグルスイッチ（PC版と見た目を揃える） ===== */
 /* 左カラムが狭いので、文字とスイッチを小さめにして1行に収める */
 .tgl-row {
@@ -578,7 +589,12 @@ input:checked + .tgl::after { transform:translateX(10px); }
       </div>
     </div>
     <div data-ui="grav" style="width:100%;">
-      <div class="m-lbl" style="margin:4px 0 0;">落下設定</div>
+      <div class="grav-head">
+        <span class="m-lbl" style="margin:0;">落下設定</span>
+        <!-- 設定した値はそのままに、自由落下だけ止める -->
+        <button id="gravPauseBtn" class="grav-pause" type="button" onclick="toggleGravPause()"
+          title="自由落下を止める（落下設定の値はそのまま）">⏸</button>
+      </div>
       <div class="di-row" style="margin-top:0;">
         <button class="di-btn"
           onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
@@ -836,6 +852,9 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1 / 1.71.1</span><span class="vl-date">2026-10-18</span></div><ul><li>自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0 / 1.71.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「落下設定」の見出しの右に 一時停止（⏸） を追加</li><li>「デザイン」の4項目の行間を詰めた（8px → 3px）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.70.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「デザイン」の4項目（ゴースト・軸表示・グリッド・配置編集）を一回り小さくした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1 / 1.70.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、HOLDに指定したミノが抜かれてしまい「特定のミノをHOLDする」が効かなくなることがあったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.75.0 / 1.70.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、抜く数を押した時点では始まらないようにした</li><li>抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.74.0 / 1.69.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面の右上に 閉じる（×） を追加（下の「閉じる」ボタンはそのまま）</li><li>ミノ欠けの HOLDのミノ選択を「特定のミノをHOLDする」のすぐ下へ移動（ミノ選択欄の上）</li><li>ミノ欠けで「ランダム」を押したあとにミノを選ぶと、ランダムの選択を解除するようにした（逆向きも同じ）</li></ul></div>
@@ -1605,6 +1624,8 @@ let board, cur, holdType, canHold, bag, nextQ;
 let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
 let gravSpeed = 0, gravAccum = 0;   // 落下速度 0〜20G（0=自由落下なし。起動時に loadGravSpeed() で復元）
+// 一時停止。値はそのままに自由落下だけ止める（ページを開き直すと解除）
+let gravPaused = false;
 let undoStack = [];
 const UNDO_MAX = 50;
 let showGhost = true;
@@ -3958,6 +3979,18 @@ function gravRowsPerFrame(g){
 function updateGravDisplay(){
   const el = document.getElementById('gravSpeedVal');
   if(el) el.textContent = gravSpeed;
+  const btn = document.getElementById('gravPauseBtn');
+  if(btn){
+    btn.textContent = gravPaused ? '▶' : '⏸';
+    btn.classList.toggle('paused', gravPaused);
+    btn.title = gravPaused ? '自由落下を再開する' : '自由落下を止める（落下設定の値はそのまま）';
+  }
+}
+// 落下設定がいくつでも、ONの間は自由落下しない（ソフトドロップとハードドロップは効く）
+function toggleGravPause(){
+  gravPaused = !gravPaused;
+  gravAccum = 0;   // 止めている間にたまった端数は捨てる
+  updateGravDisplay();
 }
 // 落下速度はリセットしてもページを閉じても保持する
 function saveGravSpeed(){
@@ -3993,7 +4026,7 @@ function loop(ts){
     while(n-- > 0){ if(!softDrop()){ softAccum = 0; break; } }   // 着地したら端数は捨てる
   } else { lastSoftDrop = 0; softAccum = 0; }
   // 0G は自由落下しない。1G以上は1フレームあたりの行数ぶん落とす
-  if(gravSpeed > 0){
+  if(gravSpeed > 0 && !gravPaused){
     gravAccum += gravRowsPerFrame(gravSpeed);
     let moved = 0;
     while(gravAccum >= 1 && valid(cur,1,0,cur.state)){ cur.row++; gravAccum--; moved++; }
@@ -4905,7 +4938,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.75.1';
+const APP_VERSION = '1.76.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
