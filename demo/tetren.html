@@ -840,6 +840,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <button class="garb-btn" id="pcStepBtn" style="display:none;background:#1f3a5f;width:100%;margin-top:4px;padding:5px 0;font-size:11px;"
           onclick="openPcSteps()">手順を見る</button>
       </div>
+      <div data-ui="tsSearch" style="margin-top:6px;">
+        <button class="garb-btn" style="background:#374151;width:100%;"
+          onclick="searchTSpin()"
+          title="いまの地形と、操作中・HOLD・NEXTのミノで、ライン消去をともなうTスピンが作れるかを調べます">Tスピン探索</button>
+        <div id="tsResult" style="display:none;font-size:9px;text-align:center;margin-top:4px;line-height:1.4;"></div>
+        <div id="tsNav" style="display:none;gap:4px;margin-top:4px;align-items:center;">
+          <button class="garb-btn" style="background:#374151;flex:0 0 24px;padding:4px 0;font-size:11px;"
+            onclick="tsStep(-1)" title="前の候補">‹</button>
+          <span id="tsCount" style="flex:1;text-align:center;font-size:10px;color:#d1d5db;white-space:nowrap;"></span>
+          <button class="garb-btn" style="background:#374151;flex:0 0 24px;padding:4px 0;font-size:11px;"
+            onclick="tsStep(1)" title="次の候補">›</button>
+        </div>
+      </div>
     </div>
 
     <!-- カンペ画像（地形編集ではないので枠の外に置く） -->
@@ -1288,6 +1301,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.81.0 / 1.76.0</span><span class="vl-date">2026-10-18</span></div><ul><li>Tスピン探索 を追加（パフェ探索の下）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.1 / 1.75.2</span><span class="vl-date">2026-10-18</span></div><ul><li>NEXTの右の番号が 8 や 10 など 1〜7 の範囲外になったり、飛んだりすることがあったのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1</span><span class="vl-date">2026-10-18</span></div><ul><li>地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.80.0 / 1.75.0</span><span class="vl-date">2026-10-18</span></div><ul><li>復元時のHOLD選択画面で、下にあった「ランダム」をミノ選択欄へ移し 2×4 にそろえた</li></ul></div>
@@ -2361,6 +2375,7 @@ function rotate(dir) { // dir: 1=CW, -1=CCW
 
 // ===== ホールド =====
 function doHold() {
+  clearTsResult();
   // 連続ホールドOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if (!opts.multiHold && !canHold) return;
   if (holdType === null) {
@@ -2508,6 +2523,7 @@ function applyAutoAt(row, col) {
 
 function applyTerrainAt(e) {
   clearPcResult();
+  clearTsResult();
   const cell = getTerrainCell(e);
   if (!cell) return;
   const { row, col } = cell;
@@ -3484,6 +3500,7 @@ function saveSnapshot() {
 // ===== Undo =====
 function undo() {
   if (!undoStack.length) return;
+  clearTsResult();
   const s = undoStack.pop();
   resetLock();
   board        = s.board;
@@ -3584,6 +3601,7 @@ function isLockOut(placed) {
 }
 
 function lock() {
+  clearTsResult();   // 盤面が変わるので、Tスピン探索の候補は消す
   if (lockTimer) { clearTimeout(lockTimer); lockTimer=null; }
   isLocking = false;
   saveSnapshot();
@@ -3926,6 +3944,8 @@ function drawBoard() {
       }
     }
   }
+  // Tスピン探索の候補
+  tsDrawGhost();
   // 軸表示（カレントピースのみ）
   if (showAxis && !gameOver) {
     const [ax, ay] = pieceAxisPos(cur.row, cur.col, cur.type);
@@ -4993,6 +5013,9 @@ const KC_ACTIONS = [
   { id:'marathon',    label:'マラソンの入切',   d:[null,         null        ] },
   { id:'shot',        label:'カンペ画像を開く', d:[null,         null        ] },
   { id:'gravPause',   label:'自由落下の一時停止', d:[null,       null        ] },
+  { id:'tsSearch',    label:'Tスピン探索',      d:[null,         null        ] },
+  { id:'tsPrev',      label:'Tスピン候補を戻す', d:[null,        null        ] },
+  { id:'tsNext',      label:'Tスピン候補を進める', d:[null,      null        ] },
 ];
 
 
@@ -5013,6 +5036,9 @@ const KC_BUTTON = {
   marathon:     () => toggleMarathon(),
   shot:         () => openShot(),
   gravPause:    () => toggleGravPause(),
+  tsSearch:     () => searchTSpin(),
+  tsPrev:       () => tsStep(-1),
+  tsNext:       () => tsStep(1),
 };
 function kcButtonKey(e) {
   for (const id in KC_BUTTON) {
@@ -5537,6 +5563,231 @@ function toggleVerLog(btn) {
   if (!log) return;
   const all = log.classList.toggle('all');
   btn.textContent = all ? '大きな変更だけ表示' : '詳細バージョン履歴';
+}
+
+// ===== Tスピン探索 =====
+// 「いまの地形」と「操作中・HOLD・NEXT」だけで、
+// ライン消去をともなうTスピン（ミニ含む）に持ち込めるかを調べる。
+// 途中のミノは自由に積んでよいので、パフェ探索と違って
+// 「Tを置くまでの積み方」も含めて探すことになる。
+// そのぶん枝が広いので、浅いほうから順に（反復深化）、制限時間まで集める。
+const TS_TIME_MS  = 2500;  // 制限時間
+const TS_CAP      = 300;   // 集める上限
+const TS_SHOW     = 50;    // 表示する候補数の上限
+const TS_RISE     = 4;     // 途中のミノで、今の山より何段まで高く積んでよいか
+const TS_EXTRA_HOLE = 2;   // 途中のミノで、増やしてよい穴の数（Tの入る隙間ぶん）
+let tsAll  = null;         // [{path, atk, kind, clears, len, soft}]
+let tsPick = 0;
+
+// 火力。B2Bは「すでについている」前提で数える（指示どおり）。
+// そのため、途中で3ライン以下の素の消去を挟むとB2Bが切れる。
+function tsAttack(path) {
+  let total = 0, ren = -1, b2b = true;
+  for (const m of path) {
+    if (!m.clears) { ren = -1; continue; }
+    ren++;
+    const hard = (m.clears === 4 || m.tspin === 'full');
+    let a;
+    if (m.tspin === 'mini')      a = 0;
+    else if (m.tspin === 'full') a = ATK_TSPIN[m.clears] ?? 0;
+    else                         a = ATK_LINE[m.clears] ?? 0;
+    if (b2b && hard) a += 1;
+    a += ATK_REN[Math.min(ren, 11)];
+    total += a;
+    b2b = hard;
+  }
+  return total;
+}
+function tsKindName(m) {
+  const n = ['', 'シングル', 'ダブル', 'トリプル'][m.clears] || (m.clears + 'ライン');
+  return (m.tspin === 'mini' ? 'TSミニ' : 'TS') + n;
+}
+
+// budget = あと何個まで「Tスピン以外」を積んでよいか
+function tsCollect(f, seq, i, hold, budget, memo, cache, st, path) {
+  if (performance.now() > st.deadline) { st.aborted = true; return; }
+  if (st.found.length >= st.cap) return;
+  const key = pcKey(f) + '|' + i + '|' + (hold || '-') + '|' + budget;
+  if (memo.has(key)) return;
+  const before = st.found.length;
+  st.nodes++;
+  const tries = [];
+  if (i < seq.length) tries.push([seq[i], i + 1, hold]);
+  if (hold !== null) {
+    if (i < seq.length) tries.push([hold, i + 1, seq[i]]);
+    else                tries.push([hold, i, null]);
+  } else if (i + 1 < seq.length) {
+    tries.push([seq[i + 1], i + 2, seq[i]]);
+  }
+  for (const [type, ni, nh] of tries) {
+    for (const mv of pcPlacements(f, type, cache)) {
+      // cells は切り出した盤面の座標なので、盤面の行に直して持つ
+      const step = { type, clears: mv.clears, soft: mv.soft, tspin: mv.tspin,
+                     cells: mv.cells.map(([r, c]) => [r + st.base, c]) };
+      // Tスピンでライン消去 = これで1件。ここから先は伸ばさない
+      if (type === 'T' && mv.tspin && mv.clears > 0) {
+        path.push(step);
+        const k = pcSameKey(path);
+        if (!st.seen.has(k)) { st.seen.add(k); st.found.push(path.slice()); }
+        path.pop();
+        if (st.found.length >= st.cap) return;
+        continue;
+      }
+      if (budget <= 0) continue;
+      // 積み上げ過ぎ・穴の作り過ぎは、Tスピンの組み立てとして筋が悪いので見ない。
+      // ここを見ないことで探索がぐっと軽くなる（Tが入る隙間ぶんの穴は許す）
+      if (pcTop(mv.g) < st.topLimit) continue;
+      if (pcHoles(mv.g) > st.holeLimit) continue;
+      path.push(step);
+      tsCollect(mv.g, seq, ni, nh, budget - 1, memo, cache, st, path);
+      path.pop();
+      if (st.aborted || st.found.length >= st.cap) return;
+    }
+  }
+  if (st.found.length === before) memo.set(key, 1);
+}
+
+function searchTSpin() {
+  const el = document.getElementById('tsResult');
+  const show = (text, color) => {
+    if (!el) return;
+    el.style.display = ''; el.textContent = text; el.style.color = color;
+  };
+  if (dekaMode) { clearTsResult(); show('デカミノ中は判定できません', '#9ca3af'); return; }
+  fillQ();
+  const seq = [cur.type, ...nextQ.slice(0, NEXT_SHOW).map(q => q.type)];
+  const hold = holdType;
+  clearTsResult();
+  if (!seq.includes('T') && hold !== 'T') { show('Tミノが見えていません', '#9ca3af'); return; }
+  show('探索中…', '#9ca3af');
+  showPcBusy(true);
+  let started = false;
+  const run = () => { if (started) return; started = true; tsRunSearch(seq, hold, show, el); };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  setTimeout(run, 120);
+}
+
+function tsRunSearch(seq, hold, show, el) {
+  const rows = pcRowsFromBoard();
+  // 積みあがっている高さ＋置くミノのぶんだけ切り出す。
+  // そこより上は空なので、見なくても結果は変わらない（そのぶん速くなる）
+  const need = TROW - pcTop(rows) + 2 * (seq.length + 1);
+  const f0 = pcCrop(rows, Math.min(TROW, need));
+  const st = {
+    nodes: 0, aborted: false, found: [], seen: new Set(), cap: TS_CAP,
+    base: TROW - f0.length,
+    topLimit: Math.max(0, pcTop(f0) - TS_RISE),
+    holeLimit: pcHoles(f0) + TS_EXTRA_HOLE,
+    deadline: performance.now() + TS_TIME_MS,
+  };
+  const maxExtra = seq.length + (hold !== null ? 1 : 0) - 1;
+  const t0 = performance.now();
+  const cache = new Map();
+  // 浅いほうから順に深くする。時間が来ても、そこまでの深さぶんは出せる
+  let depth = 0;
+  for (let d = 0; d <= maxExtra; d++) {
+    tsCollect(f0, seq, 0, hold, d, new Map(), cache, st, []);
+    if (st.aborted) break;
+    depth = d;
+    if (st.found.length >= TS_SHOW) break;
+  }
+  const ms = Math.round(performance.now() - t0);
+  showPcBusy(false);
+  const reach = `${depth + 1}手目まで`;   // 何手目でTスピンするところまで見たか
+  if (!st.found.length) {
+    if (st.aborted) show(`見つかりません（${reach}・${ms}ms）`, '#9ca3af');
+    else            show(`Tスピンにできません（${ms}ms）`, '#f87171');
+    return;
+  }
+  // 火力の高い順。同じなら手数が少ない順、次にソフトドロップが少ない順
+  const list = st.found.map(path => {
+    const last = path[path.length - 1];
+    let soft = 0; for (const m of path) soft += m.soft;
+    return { path, atk: tsAttack(path), kind: tsKindName(last), len: path.length, soft };
+  });
+  list.sort((a, b) => b.atk - a.atk || a.len - b.len || a.soft - b.soft);
+  tsAll = list.slice(0, TS_SHOW);
+  tsPick = 0;
+  show(`${tsAll.length}件（${reach}・${ms}ms）`, '#4ade80');
+  if (el) el.title = '盤面に候補を重ねて表示します。‹ › で切り替えられます。'
+                  + (st.aborted ? '制限時間で打ち切ったので、もっと先に組むやり方は入っていません。' : '');
+  tsShow();
+}
+
+// 選んでいる候補を盤面に出す
+function tsShow() {
+  const nav = document.getElementById('tsNav');
+  const cnt = document.getElementById('tsCount');
+  if (!tsAll || !tsAll.length) { if (nav) nav.style.display = 'none'; draw(); return; }
+  const s = tsAll[tsPick];
+  if (nav) nav.style.display = 'flex';
+  if (cnt) cnt.textContent = `${tsPick + 1}/${tsAll.length}　${s.kind}・火力${s.atk}`;
+  draw();
+}
+function tsStep(d) {
+  if (!tsAll || !tsAll.length) return;
+  tsPick = (tsPick + d + tsAll.length) % tsAll.length;
+  tsShow();
+}
+function clearTsResult() {
+  const el = document.getElementById('tsResult');
+  if (el && el.style.display !== 'none') { el.style.display = 'none'; el.title = ''; }
+  const nav = document.getElementById('tsNav');
+  if (nav && nav.style.display !== 'none') nav.style.display = 'none';
+  const had = !!tsAll;
+  tsAll = null; tsPick = 0;
+  if (had && typeof draw === 'function' && cur) draw();
+}
+
+// 盤面に重ねる絵を作る。途中でラインが消えると行がずれるので、
+// パフェの全体図と同じやり方で「消さなかったことにした盤面」へ置き直す
+function tsOverlay(path) {
+  const H = TROW;
+  const out = [];                                   // {r, c, step, type}
+  let curF = [];
+  for (let r = 0; r < H; r++) curF.push(board[r].map(x => (x ? 1 : 0)));
+  let map = Array.from({ length: H }, (_, i) => i);
+  let free = H;
+  for (let r = 0; r < H; r++) if (curF[r].some(x => x)) { free = r; break; }
+  for (let s = 0; s < path.length; s++) {
+    const mv = path[s];
+    for (const [r, c] of mv.cells) {
+      curF[r][c] = 1;
+      const vr = map[r];
+      if (vr >= 0 && vr < H) out.push({ r: vr, c, step: s, type: mv.type });
+    }
+    const keep = [], nmap = [];
+    for (let r = 0; r < H; r++) if (curF[r].some(x => !x)) { keep.push(curF[r]); nmap.push(map[r]); }
+    while (keep.length < H) { keep.unshift(new Array(COLS).fill(0)); nmap.unshift(-1); }
+    for (let i = 0; i < H; i++) if (nmap[i] === -1) nmap[i] = --free;
+    curF = keep; map = nmap;
+  }
+  return out;
+}
+
+// 候補を盤面へ描く。通常のゴーストと間違えないよう、
+// 仕上げのTは明るい枠つき、途中のミノは薄く点線で出す
+function tsDrawGhost() {
+  if (!tsAll || !tsAll.length || dekaMode) return;
+  const s = tsAll[tsPick];
+  const last = s.path.length - 1;
+  const cells = tsOverlay(s.path);
+  boardCtx.save();
+  for (const g of cells) {
+    const vr = g.r - BUF, vc = g.c;
+    if (vr < -1) continue;
+    const x = vc * BS, y = vr * BS;
+    const isLast = g.step === last;
+    withSkin(visibleSkinId(), () => {
+      drawBlock(boardCtx, vc, vr, pieceColor(g.type), isLast ? 0.55 : 0.18);
+    });
+    boardCtx.setLineDash(isLast ? [] : [3, 2]);
+    boardCtx.lineWidth = isLast ? 2 : 1;
+    boardCtx.strokeStyle = isLast ? '#fbbf24' : 'rgba(251,191,36,0.45)';
+    boardCtx.strokeRect(x + 1, y + 1, BS - 2, BS - 2);
+  }
+  boardCtx.setLineDash([]);
+  boardCtx.restore();
 }
 
 // ===== パフェ探索 =====
@@ -6662,6 +6913,7 @@ const UI_ITEMS = [
   { id:'mirror',      label:'反転（地形の左右反転）' },
   { id:'terrainSave', label:'記録・復元（地形の控え）' },
   { id:'pcSearch',    label:'パフェ探索' },
+  { id:'tsSearch',    label:'Tスピン探索' },
   { id:'shot',        label:'カンペ画像' },
   { id:'lines',       label:'LINES' },
   { id:'verSwitch',   label:'スマホ版へ' },
@@ -6875,7 +7127,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.75.2';
+const APP_VERSION = '1.76.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -7130,6 +7382,7 @@ function showOverlay(title, btn) {
 // （ゲームオーバー後の「もう一度」で設定が消えてしまわないようにするため）
 function resetGameState(fullReset = true) {
   clearPcResult();
+  clearTsResult();
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
