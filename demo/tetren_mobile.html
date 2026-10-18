@@ -175,11 +175,13 @@ canvas { display:block; }
 }
 .di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
 /* 「落下設定」の見出しと、自由落下を止める小さなボタン */
-.grav-head { display:flex; align-items:center; justify-content:center; gap:4px; margin:4px 0 0; }
+.grav-head { display:flex; align-items:center; justify-content:center; gap:2px; margin:4px 0 0; }
+/* 左の列は狭いので、見出しを折り返さずボタンと1行に収める */
+.grav-head .m-lbl { letter-spacing:0; white-space:nowrap; }
 .grav-pause {
   background:none; border:1px solid #4b5563; color:#9ca3af;
-  width:16px; height:16px; border-radius:3px; padding:0;
-  font-size:8px; line-height:1; flex:0 0 auto;
+  width:14px; height:14px; border-radius:3px; padding:0;
+  font-size:7px; line-height:1; flex:0 0 auto;
   display:flex; align-items:center; justify-content:center;
   -webkit-tap-highlight-color:transparent;
 }
@@ -852,6 +854,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.78.0 / 1.73.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定に 「操作」タブ を追加（キーコンフィグの右）</li><li>「落下設定」の見出しが一時停止ボタンのぶん折り返していたので、1行に収まるよう詰めた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.77.0 / 1.72.0</span><span class="vl-date">2026-10-18</span></div><ul><li>キーコンフィグに 「自由落下の一時停止」 を追加（既定は未割り当て）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1 / 1.71.1</span><span class="vl-date">2026-10-18</span></div><ul><li>自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0 / 1.71.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「落下設定」の見出しの右に 一時停止（⏸） を追加</li><li>「デザイン」の4項目の行間を詰めた（8px → 3px）</li></ul></div>
@@ -997,6 +1000,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" onclick="switchConfigTab('key')">キーコンフィグ</button>
+      <button class="cfg-tab" id="cfgTabCtrl" title="ソフトドロップ・設置時間・DAS/ARRなど操作まわり" onclick="switchConfigTab('ctrl')">操作</button>
       <button class="cfg-tab" id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab" id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
@@ -1056,43 +1060,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
         </div>
       </div>
 
-      <div class="cfg-pane" id="cfgPaneMisc">
-        <div class="opt-row">
-          <span class="opt-label">連続ホールド
-            <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optMultiHold2" onchange="setOption('multiHold', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-
-        <div class="opt-row">
-          <span class="opt-label">ミノ設置直後にせりあがり
-            <span class="opt-note">せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optDigOnLock" onchange="setOption('digOnLock', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-
-        <div class="opt-row" id="optDigOffsetRow">
-          <span class="opt-label">相殺
-            <span class="opt-note">ミノを置いたときの攻撃ぶんだけ、溜まっているせりあがりを打ち消します。OFFにすると打ち消さず、溜まったぶんがそのまま上がります</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optDigOffset" onchange="setOption('digOffset', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-
-        <div class="opt-row" id="optDigHoldRow">
-          <span class="opt-label">ライン消去中はせりあがりしない
-            <span class="opt-note">ラインを消したミノを置いたときは、せりあがりを次に置くまで保留します</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optDigHoldOnClear" onchange="setOption('digHoldOnClear', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-
+      <div class="cfg-pane" id="cfgPaneCtrl">
         <div class="opt-row">
           <span class="opt-label">ソフトドロップをSDFで指定
             <span class="opt-note">他のテトリスと同じ「重力の何倍で落ちるか」での指定に切り替えます</span></span>
@@ -1101,36 +1069,6 @@ input:checked + .tgl::after { transform:translateX(10px); }
             <span class="tgl"></span>
           </label>
         </div>
-
-        <div class="opt-row">
-          <span class="opt-label">NEXT・HOLD欄のシングルタップでミノを変更する
-            <span class="opt-note">OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optSwapSingle" onchange="setOption('swapSingle', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-
-        <div class="opt-row">
-          <span class="opt-label">復元した時にHOLDを選択する
-            <span class="opt-note">ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）</span></span>
-          <label class="cfg-tgl">
-            <input type="checkbox" id="optLoadHoldOn" onchange="setOption('loadHoldOn', this.checked)">
-            <span class="tgl"></span>
-          </label>
-        </div>
-        <div class="opt-row" id="optLoadHoldModeRow">
-          <span class="opt-label">HOLDの選び方
-            <span class="opt-note">「都度選択」は復元のたびに選択画面を出します。「予め選択」は下で決めたミノをそのまま入れます（画面は出ません）</span></span>
-          <span class="opt-step" id="optLoadHoldModeBtns"></span>
-        </div>
-
-        <div class="opt-row" id="optLoadHoldPickRow">
-          <span class="opt-label">予め選ぶミノ
-            <span class="opt-note">「予め選択」のときに最初からHOLDへ入れるミノ。ランダムなら復元のたびに引き直します</span></span>
-          <span class="opt-step" id="optLoadHoldPickBtns"></span>
-        </div>
-
 
         <div class="opt-row" id="optSoftRow">
           <span class="opt-label">ソフトドロップ速度
@@ -1195,6 +1133,76 @@ input:checked + .tgl::after { transform:translateX(10px); }
               ontouchstart="event.preventDefault();startInputRepeat('arrMs',1)" ontouchend="stopRepeat()">›</button>
           </span>
         </div>
+
+      </div>
+
+      <div class="cfg-pane" id="cfgPaneMisc">
+        <div class="opt-row">
+          <span class="opt-label">連続ホールド
+            <span class="opt-note">OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optMultiHold2" onchange="setOption('multiHold', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">ミノ設置直後にせりあがり
+            <span class="opt-note">せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigOnLock" onchange="setOption('digOnLock', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row" id="optDigOffsetRow">
+          <span class="opt-label">相殺
+            <span class="opt-note">ミノを置いたときの攻撃ぶんだけ、溜まっているせりあがりを打ち消します。OFFにすると打ち消さず、溜まったぶんがそのまま上がります</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigOffset" onchange="setOption('digOffset', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row" id="optDigHoldRow">
+          <span class="opt-label">ライン消去中はせりあがりしない
+            <span class="opt-note">ラインを消したミノを置いたときは、せりあがりを次に置くまで保留します</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optDigHoldOnClear" onchange="setOption('digHoldOnClear', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+
+        <div class="opt-row">
+          <span class="opt-label">NEXT・HOLD欄のシングルタップでミノを変更する
+            <span class="opt-note">OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optSwapSingle" onchange="setOption('swapSingle', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">復元した時にHOLDを選択する
+            <span class="opt-note">ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optLoadHoldOn" onchange="setOption('loadHoldOn', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+        <div class="opt-row" id="optLoadHoldModeRow">
+          <span class="opt-label">HOLDの選び方
+            <span class="opt-note">「都度選択」は復元のたびに選択画面を出します。「予め選択」は下で決めたミノをそのまま入れます（画面は出ません）</span></span>
+          <span class="opt-step" id="optLoadHoldModeBtns"></span>
+        </div>
+
+        <div class="opt-row" id="optLoadHoldPickRow">
+          <span class="opt-label">予め選ぶミノ
+            <span class="opt-note">「予め選択」のときに最初からHOLDへ入れるミノ。ランダムなら復元のたびに引き直します</span></span>
+          <span class="opt-step" id="optLoadHoldPickBtns"></span>
+        </div>
+
 
         <div class="opt-row">
           <span class="opt-label">せりあがりの穴継続率
@@ -4810,7 +4818,8 @@ function switchKcSub(name) {
   if (name === 'pad') buildGpRows();
 }
 function switchConfigTab(name) {
-  const TABS = { key:['cfgTabKey','cfgPaneKey'], skin:['cfgTabSkin','cfgPaneSkin'],
+  const TABS = { key:['cfgTabKey','cfgPaneKey'], ctrl:['cfgTabCtrl','cfgPaneCtrl'],
+                 skin:['cfgTabSkin','cfgPaneSkin'],
                  ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'],
                  pc:['cfgTabPc','cfgPanePc'] };
   for (const k in TABS) {
@@ -4821,7 +4830,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'ui')   renderUiList();
-  if (name === 'misc' || name === 'pc') applyOptions();
+  if (name === 'misc' || name === 'pc' || name === 'ctrl') applyOptions();
   if (name === 'key')  { buildKcRows(); if (kcSub === 'pad') buildGpRows(); }
 }
 
@@ -4941,7 +4950,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.77.0';
+const APP_VERSION = '1.78.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
