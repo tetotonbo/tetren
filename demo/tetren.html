@@ -603,18 +603,15 @@ input:checked + .tgl::after { transform:translateX(16px); }
 }
 #keyconfigBox {
   background:#1f2937; border:1px solid #4b5563; border-radius:12px;
-  padding:24px 28px; width:min(540px, 94vw); max-height:90vh; overflow-y:auto;
+  padding:24px 28px; width:min(540px, 94vw); max-height:90vh;
+  /* 見出しとタブは動かさず、タブから下だけをスクロールさせる */
+  display:flex; flex-direction:column; overflow:hidden;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
-/* タイトル行。下へスクロールしても × が残るよう、上端に貼り付けておく */
-.cfg-head {
-  /* top は枠の内側の余白ぶん（padding 24px）だけ上にずらす。
-     こうすると貼り付いたときに余白を背景で覆えて、中身が上から覗かない */
-  position:sticky; top:-24px; z-index:3; background:#1f2937;
-  margin:-24px -28px 0; padding:24px 28px 0; border-radius:12px 12px 0 0;
-}
+/* タイトル行。枠の上端に固定（スクロールしない） */
+.cfg-head { position:relative; flex:0 0 auto; }
 .cfg-x {
-  position:absolute; top:20px; right:22px;
+  position:absolute; top:-4px; right:-6px;
   background:none; border:none; color:#9ca3af; font-size:22px; line-height:1;
   cursor:pointer; padding:0 4px;
 }
@@ -655,7 +652,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
 /* タブが5つあるので、折り返さず収まるよう詰めてある。
    ウィンドウが狭くて入りきらないときは横スクロールで見せる */
 .cfg-tabs { display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid #374151;
-  overflow-x:auto; scrollbar-width:none; }
+  overflow-x:auto; scrollbar-width:none; flex:0 0 auto; }
+/* タブから下だけがスクロールする */
+.cfg-body { overflow-y:auto; flex:1 1 auto; min-height:0; }
 .cfg-tabs::-webkit-scrollbar { display:none; }
 .cfg-tab {
   background:none; border:none; border-bottom:2px solid transparent;
@@ -1288,6 +1287,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.3</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面で、タイトルとタブを枠の上端に固定し、タブから下だけがスクロールするようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.1 / 1.75.2</span><span class="vl-date">2026-10-18</span></div><ul><li>NEXTの右の番号が 8 や 10 など 1〜7 の範囲外になったり、飛んだりすることがあったのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1</span><span class="vl-date">2026-10-18</span></div><ul><li>地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.80.0 / 1.75.0</span><span class="vl-date">2026-10-18</span></div><ul><li>復元時のHOLD選択画面で、下にあった「ランダム」をミノ選択欄へ移し 2×4 にそろえた</li></ul></div>
@@ -1457,6 +1457,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
+    <div class="cfg-body">
     <div class="cfg-pane active" id="cfgPaneKey">
       <!-- キーボードとコントローラを、キーコンフィグの中で切り替える -->
       <div class="kc-subtabs">
@@ -1729,6 +1730,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
         <button onclick="closeConfig()"
           style="background:#16a34a;color:#fff;">閉じる</button>
       </div>
+    </div>
     </div>
   </div>
 </div>
@@ -6875,7 +6877,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.75.2';
+const APP_VERSION = '1.75.3';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
