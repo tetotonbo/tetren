@@ -195,9 +195,8 @@ body.ppt2-theme #nextCanvas {
   transition:color .15s, border-color .15s;
 }
 .grav-pause:hover { color:#e5e7eb; border-color:#9ca3af; }
-/* 止めている間は、再生マークと落下速度の表示で分かるようにする */
+/* 止めている間は、再生マークの色で分かるようにする（値の表示はそのまま） */
 .grav-pause.paused { color:#f59e0b; border-color:#f59e0b; }
-.speed-val.paused { color:#6b7280; text-decoration:line-through; }
 .speed-val {
   flex:1; text-align:center; font-size:14px; color:#e2e8f0; line-height:1;
 }
@@ -1291,6 +1290,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1 / 1.71.1</span><span class="vl-date">2026-10-18</span></div><ul><li>自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0 / 1.71.0</span><span class="vl-date">2026-10-18</span></div><ul><li>「落下設定」の見出しの右に 一時停止（⏸） を追加</li><li>「デザイン」の4項目の行間を詰めた（8px → 3px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.70.2</span><span class="vl-date">2026-10-18</span></div><ul><li>「デザイン」の4項目（ゴースト・軸表示・グリッド・配置編集）を一回り小さくした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1 / 1.70.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けのランダムで、HOLDに指定したミノが抜かれてしまい「特定のミノをHOLDする」が効かなくなることがあったのを修正</li></ul></div>
@@ -4034,8 +4034,6 @@ function updateGravDisplay() {
     btn.classList.toggle('paused', gravPaused);
     btn.title = gravPaused ? '自由落下を再開する' : '自由落下を止める（落下設定の値はそのまま）';
   }
-  const val = document.querySelector('.speed-val');
-  if (val) val.classList.toggle('paused', gravPaused);
 }
 // 落下設定がいくつでも、ONの間は自由落下しない（ソフトドロップとハードドロップは効く）
 function toggleGravPause() {
@@ -6839,7 +6837,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.71.0';
+const APP_VERSION = '1.71.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
