@@ -1136,11 +1136,6 @@ input:checked + .tgl::after { transform:translateX(16px); }
       選んだミノを抜いた残りで1巡目を回し、ゲームを最初から始めます。<br>
       2巡目からは7ミノすべて出ます。
     </div>
-    <label class="tgl-row pick-sw" title="ONにすると複数のミノを選べます。選んだミノをまとめて1巡目から抜きます">
-      <span>複数選択</span>
-      <input type="checkbox" id="missMultiSw" onchange="setPickMulti('miss', this.checked)">
-      <span class="tgl"></span>
-    </label>
     <label class="tgl-row pick-sw" title="ONにすると盤面を消さずに始めます。そのときの地形を覚えるので、↻ で何度でも同じ地形から練習できます">
       <span>現在の地形を維持する</span>
       <input type="checkbox" id="missKeepSw" onchange="setMissKeep(this.checked)">
@@ -1246,6 +1241,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.70.0 / 1.65.0</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けの「複数選択」スイッチを廃止し、常に複数選択にした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.69.1 / 1.64.1</span><span class="vl-date">2026-10-18</span></div><ul><li>検索対策。「練習サイト」という語がサイト全体に1つも無かったので、</li><li>スマホ版に構造化データ（JSON-LD）を追加</li><li>site: 検索でインデックスは2ページのみ。ルートURLは「テト練（スマホ版）」のタイトルで登録されている</li><li>「テトリス 練習ツール」ではAIによる概要の1番目に出る（説明文がそのまま引用されている）</li><li>「テトリス 練習サイト」ではAI概要にもWeb検索20位以内にも出ない</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.69.0 / 1.64.0</span><span class="vl-date">2026-10-18</span></div><ul><li>パフェの手順の先頭に 「全体図」 を追加</li><li>途中でラインが消えると行がずれるので、「消さなかったことにした座標系」に置き直して</li><li>マスごとに「何手目で置いたか」を持たせ、描くときの濃さに使っている</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.68.0 / 1.63.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）</li></ul></div>
@@ -2810,7 +2806,9 @@ let lastMiss = null;
 // 選択画面の状態（複数選択のON/OFFと、選ばれているミノ）
 const pick = {
   dpc:  { multi:false, sel:new Set() },
-  miss: { multi:false, sel:new Set() },
+  // ミノ欠けは常に複数選択。1個だけ選んで「開始」でも同じことができるので、
+  // 切り替えスイッチは置いていない
+  miss: { multi:true,  sel:new Set() },
 };
 
 function openDpc() {
@@ -2825,7 +2823,6 @@ function closeDpc() {
 function openMiss() {
   stopSprint();
   closeDigPanel();
-  pick.miss.multi = !!opts.missMulti;   // 前回の「複数選択」の状態を復元する
   const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
   renderMissHoldRow();
   pick.miss.sel.clear();
@@ -2838,13 +2835,6 @@ function closeMiss() {
 }
 
 // 複数選択スイッチの切り替え
-function setPickMulti(kind, on) {
-  pick[kind].multi = on;
-  pick[kind].sel.clear();
-  // ミノ欠けのスイッチは次に開いたときも同じ状態になるよう覚えておく
-  if (kind === 'miss') { opts.missMulti = on; saveOptions(); }
-  renderPieceGrid(kind);
-}
 // 選択できる上限・下限は用途で違う
 //   DPCセット … 選んだミノ「だけ」で1巡目を組むので、1個以上あればよい
 //   ミノ欠け    … 選んだミノを抜くので、7個全部選ぶと引けるミノが無くなる
@@ -2951,8 +2941,6 @@ function renderPieceGrid(kind) {
    grid.appendChild(row);
   });
   // 複数選択のときだけ「開始」を出す
-  const sw = document.getElementById(kind === 'dpc' ? 'dpcMultiSw' : 'missMultiSw');
-  if (sw) sw.checked = st.multi;
   const start = document.getElementById(kind === 'dpc' ? 'dpcStartBtn' : 'missStartBtn');
   if (start) {
     start.style.display = st.multi ? '' : 'none';
@@ -6256,7 +6244,6 @@ const OPT_DEFAULTS = {
   dasMs: 167,         // 左右を押してから自動連打が始まるまで（約10F）
   arrMs: 33,          // 自動連打の間隔（約2F）。0にすると一気に端まで
   inputUnit: 'ms',    // DAS/ARRの表示単位 'ms' または 'F'
-  missMulti: false,   // ミノ欠けの「複数選択」スイッチ
   missKeep: false,    // ミノ欠けで盤面を消さずに始める（地形を覚えて↻で戻す）
   missHoldOn: false,  // ミノ欠けで「特定のミノをHOLDする」スイッチ
   missHold: null,     // そのときHOLDに入れるミノ
@@ -6686,7 +6673,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.64.1';
+const APP_VERSION = '1.65.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
