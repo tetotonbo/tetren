@@ -588,6 +588,19 @@ input:checked + .tgl::after { transform:translateX(16px); }
   padding:24px 28px; width:min(540px, 94vw); max-height:90vh; overflow-y:auto;
 }
 #keyconfigBox h2 { font-size:18px; margin-bottom:6px; color:#f9fafb; text-align:center; }
+/* タイトル行。下へスクロールしても × が残るよう、上端に貼り付けておく */
+.cfg-head {
+  /* top は枠の内側の余白ぶん（padding 24px）だけ上にずらす。
+     こうすると貼り付いたときに余白を背景で覆えて、中身が上から覗かない */
+  position:sticky; top:-24px; z-index:3; background:#1f2937;
+  margin:-24px -28px 0; padding:24px 28px 0; border-radius:12px 12px 0 0;
+}
+.cfg-x {
+  position:absolute; top:20px; right:22px;
+  background:none; border:none; color:#9ca3af; font-size:22px; line-height:1;
+  cursor:pointer; padding:0 4px;
+}
+.cfg-x:hover { color:#fff; }
 .kc-header {
   display:flex; align-items:center; margin-bottom:10px;
   padding:0 4px 8px 4px; border-bottom:1px solid #374151;
@@ -1161,12 +1174,12 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <input type="checkbox" id="missHoldSw" onchange="setMissHoldOn(this.checked)">
       <span class="tgl"></span>
     </label>
-    <div id="missGrid"></div>
-    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missHoldRow" style="display:none;" title="最初からHOLDに入れておくミノ">
       <span>HOLD</span>
       <div id="missHoldBtns" style="display:flex;gap:6px;flex:1;"></div>
     </div>
+    <div id="missGrid"></div>
+    <div class="pick-note" id="missMultiNote" style="display:none;"></div>
     <div class="rand-row" id="missRandRow" style="display:none;">
       <span>抜く数</span>
       <button class="rand-num" onclick="startMissRandom(0)" title="何も抜かずに始めます">0</button>
@@ -1254,6 +1267,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.74.0 / 1.69.0</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面の右上に 閉じる（×） を追加（下の「閉じる」ボタンはそのまま）</li><li>ミノ欠けの HOLDのミノ選択を「特定のミノをHOLDする」のすぐ下へ移動（ミノ選択欄の上）</li><li>ミノ欠けで「ランダム」を押したあとにミノを選ぶと、ランダムの選択を解除するようにした（逆向きも同じ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.73.1 / 1.68.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで、ミノを選んだあとに「ランダム」を押すと、それまでの選択をすべて解除するようにした</li><li>ミノ欠けの「ランダム」をもう一度押しても、個数を選ぶ行が閉じなかったのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.73.0 / 1.68.0</span><span class="vl-date">2026-10-18</span></div><ul><li>DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.72.1 / 1.67.1</span><span class="vl-date">2026-10-18</span></div><ul><li>ミノ欠けで HOLDを「ランダム」にしたとき、ミノ選択欄の「ランダム」にもHOLDの印をつけるようにした</li></ul></div>
@@ -1398,7 +1412,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <!-- キーコンフィグモーダル -->
 <div id="keyconfigModal">
   <div id="keyconfigBox">
-    <h2>⚙ 設定</h2>
+    <div class="cfg-head">
+      <h2>⚙ 設定</h2>
+      <button class="cfg-x" type="button" title="閉じる" onclick="closeConfig()">×</button>
+    </div>
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
@@ -2948,6 +2965,7 @@ function renderPieceGrid(kind) {
     }
     btn.addEventListener('click', () => {
       if (st.multi) {
+        if (kind === 'miss') closeMissRandRow();   // ミノを選んだら「ランダム」は外す
         if (st.sel.has(type)) st.sel.delete(type);
         else { st.sel.add(type); if (kind === 'miss') clearMissHoldIf([type]); }
         renderPieceGrid(kind);
@@ -3084,6 +3102,11 @@ function startMissRandom(n, record) {
   const count = any ? Math.floor(Math.random() * 7) : n;
   const types = randomMissTypes(count);
   applyMissTypes(types, { random:true, n: any ? null : n, types }, record);
+}
+// ミノを手で選んだときは「ランダム」の選択を外す（この2つは同時に使えない）
+function closeMissRandRow() {
+  const row = document.getElementById('missRandRow');
+  if (row) row.style.display = 'none';
 }
 // ランダムを押したら、消す個数を選ぶ行を出す
 function toggleMissRandRow() {
@@ -6738,7 +6761,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.68.1';
+const APP_VERSION = '1.69.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
