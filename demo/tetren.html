@@ -1234,7 +1234,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="imp-hint" style="margin:0 0 12px;">
       Tスピントリプル → Tスピンダブル → REN という、いま一番強いとされる攻めを再現します。<br>
       掘って受けるか、相殺して返すかの練習に。秒数は0.1刻みで変えられます。<br>
-      この間は、設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONになります。
+      この間は、設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONになります。<br>
+      穴は、一度に複数段あがるときは70％で同じ列に続き、次のせりあがりでは10％（ランダム）です。
     </div>
     <div class="opt-row">
       <span class="opt-label">1回目のせりあがりまで</span>
@@ -1380,6 +1381,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の穴の出方を調整。一度に複数段あがるときは70％で同じ列に続き、次のせりあがりの1段目は10％（ランダム）にした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0</span><span class="vl-date">2026-10-20</span></div><ul><li>せりあがりに 「TD中空け対策」 を追加。相手の Tスピントリプル → Tスピンダブル → REN を再現して、受け方を練習できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.3 / 1.75.5</span><span class="vl-date">2026-10-19</span></div><ul><li>せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）</li><li>「カンペ画像」を1行表示にした（2行で折り返していた）</li><li>「せりあがり▼」も1行に収まるよう文字を少し詰めた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.2 / 1.75.4</span><span class="vl-date">2026-10-19</span></div><ul><li>「せりあがり」ボタンの表記を 「せりあがり▼」 にした（開いている間は▲）</li></ul></div>
@@ -3449,15 +3451,17 @@ function offsetPendingDig(atk) {
   pendingDigRows = Math.max(0, pendingDigRows - atk);
   updateDigCounter(); drawDigPreview();
 }
-// keepHole=true のときは、ゲームオーバー判定は残したまま穴の列だけ前と同じにする
-//（1回の攻撃で上がる複数段は、穴が1か所にそろうため）
-function addGarbage(sameHole, multi, keepHole) {
+// holePct を渡すと、その回だけ穴の継続率（％）を差し替えられる。
+// ゲームオーバー判定は sameHole のときだけ省く（↑ボタン用）ので、そこは変わらない
+function addGarbage(sameHole, multi, holePct) {
   // 穴の列を決定。sameHole=true（↑ボタン）は必ず同じ列、
   // それ以外（自動せりあがり）は「穴継続率」の確率で同じ列を使う
   let holeCol;
   if (lastGarbageCol === null) {
     holeCol = Math.floor(Math.random() * COLS);
-  } else if (sameHole === true || keepHole || Math.random() * 100 < (multi ? digMulti.hole : opts.holeKeep)) {
+  } else if (sameHole === true ||
+             Math.random() * 100 < (Number.isFinite(holePct) ? holePct
+                                    : (multi ? digMulti.hole : opts.holeKeep))) {
     holeCol = lastGarbageCol;
   } else {
     // 外れたときは「直前以外」から選ぶ。こうすると設定値がそのまま
@@ -5618,11 +5622,15 @@ function tdOffset(atk) {
   pendingDigRows = tdTotal();
   updateDigCounter(); drawDigPreview();
 }
-// 溜まっているぶんを上げる。1回の攻撃ぶんは穴を1か所にそろえる
+// 溜まっているぶんを上げる。
+// 一度に複数段あがるときは70％で穴が続き、次のせりあがりの1段目は10％（＝ランダム）
+const TD_HOLE_SAME = 70;   // かたまりの中（2段目以降）
+const TD_HOLE_NEXT = 10;   // 次のかたまりの1段目
 function tdFlush() {
   const q = tdQueue;
   tdQueue = []; pendingDigRows = 0;
-  for (const n of q) for (let i = 0; i < n; i++) addGarbage(false, n > 1, i > 0);
+  for (const n of q)
+    for (let i = 0; i < n; i++) addGarbage(false, n > 1, i === 0 ? TD_HOLE_NEXT : TD_HOLE_SAME);
   updateDigCounter(); drawDigPreview();
 }
 function tdTick(ts) {
@@ -7142,7 +7150,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.76.0';
+const APP_VERSION = '1.76.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
