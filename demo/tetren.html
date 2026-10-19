@@ -1234,7 +1234,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="imp-hint" style="margin:0 0 12px;">
       Tスピントリプル → Tスピンダブル → REN という、いま一番強いとされる攻めを再現します。<br>
       掘って受けるか、相殺して返すかの練習に。秒数は0.1刻みで変えられます。<br>
-      スタートを押すと、地形とミノ順をリセットして3秒のカウントダウンのあと始まります。<br>
+      スタートを押すと、地形とミノ順をリセットしてすぐ始まります。<br>
       この間は、設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONになります。<br>
       穴は、一度に複数段あがるときは70％で同じ列に続き、次のせりあがりでは10％（ランダム）です。
     </div>
@@ -1382,8 +1382,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.3</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策のREN中の表示を「3REN（2LINE）」の形にした（せりあがらない回は「0LINE」）</li></ul></div>
-<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.2</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の「スタート」で、地形とミノ順をリセットしてから3秒のカウントダウンを挟んで始めるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.4</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の「スタート」で、地形とミノ順をリセットしてすぐ始まるようにした（カウントダウンは入れない）</li><li>TD中空け対策の最中にゲームオーバーになったとき、「TD対策を再開」 ボタンを出すようにした（同じ設定でやり直す）</li><li>REN中の表示を「3REN（2LINE）」の形にした（せりあがらない回は「0LINE」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の穴の出方を調整。一度に複数段あがるときは70％で同じ列に続き、次のせりあがりの1段目は10％（ランダム）にした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0</span><span class="vl-date">2026-10-20</span></div><ul><li>せりあがりに 「TD中空け対策」 を追加。相手の Tスピントリプル → Tスピンダブル → REN を再現して、受け方を練習できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.3 / 1.75.5</span><span class="vl-date">2026-10-19</span></div><ul><li>せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）</li><li>「カンペ画像」を1行表示にした（2行で折り返していた）</li><li>「せりあがり▼」も1行に収まるよう文字を少し詰めた</li></ul></div>
@@ -1535,6 +1534,10 @@ input:checked + .tgl::after { transform:translateX(16px); }
 <div id="overlay">
   <h1>テト練</h1>
   <button id="startBtn" style="margin-top:16px;">スタート</button>
+  <!-- TD中空け対策で力尽きたときだけ出す。押すと同じ設定でやり直す -->
+  <button id="tdAgainBtn" onclick="tdStart()"
+    style="margin-top:10px;display:none;background:#0891b2;color:#fff;border:none;
+           padding:8px 22px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;">TD対策を再開</button>
   <button onclick="openConfig()"
     style="margin-top:10px;background:none;border:1px solid #4b5563;color:#9ca3af;
            padding:6px 20px;border-radius:6px;cursor:pointer;font-size:12px;">
@@ -5542,6 +5545,8 @@ let tdRun = null;
 // 溜まっている攻撃。1要素＝1回の攻撃ぶんの段数（穴は攻撃ごとに1か所）。
 // TD対策の間は「ミノ設置直後にせりあがり」と「相殺」を、設定にかかわらずONとして扱う
 let tdQueue = [];
+// この試合でTD対策を始めたか。ゲームオーバーの画面に「再開」を出すかの判断に使う
+let tdActive = false;
 
 function saveTd() { try { localStorage.setItem('tetren_td', JSON.stringify(td)); } catch(e) {} }
 function loadTd() {
@@ -5593,29 +5598,20 @@ function tdRows(r) {
   if (r.phase === 'g2') return td.l2;
   return tdRenRows(r.ren);
 }
-const TD_COUNTDOWN = 3;   // スタートしてから始まるまでの秒数
 function tdStart() {
   closeTd();
   // 毎回おなじ条件から始められるよう、地形もミノ順もまっさらにする
   // （resetGameState の中で tdRun を消すので、組み立てるのはそのあと）
   resetGameState(false);
+  document.getElementById('overlay').style.display = 'none';
   tdQueue = []; pendingDigRows = 0;
-  tdRun = { phase:'count', at: performance.now() + TD_COUNTDOWN * 1000, ren:0 };
-  updateTdStatus(TD_COUNTDOWN * 1000);
+  tdActive = true;
+  tdRun = { phase:'g1', at: performance.now() + td.d1 * 1000, ren:0 };
+  updateTdStatus(td.d1 * 1000);
   drawDigPreview();
 }
-// 開始前のカウントダウンを盤面の中央に出す
-function tdShowCount(text, color) {
-  const el = document.getElementById('clearMsg');
-  if (!el) return;
-  el.innerHTML = `<div style="font-size:40px;font-weight:bold;color:${color};` +
-                 `text-shadow:0 2px 10px rgba(0,0,0,0.95);line-height:1.1;">${text}</div>`;
-  el.style.opacity = '1';
-  if (clearMsgTimer) clearTimeout(clearMsgTimer);
-  clearMsgTimer = setTimeout(() => { el.style.opacity = '0'; }, 1000);
-}
 function tdStop() {
-  tdRun = null;
+  tdRun = null; tdActive = false;
   tdQueue = []; pendingDigRows = 0;
   closeTd();
   updateDigCounter();
@@ -5652,20 +5648,6 @@ function tdFlush() {
 function tdTick(ts) {
   const r = tdRun;
   const remain = r.at - ts;
-  // 開始前のカウントダウン（3→2→1→スタート）
-  if (r.phase === 'count') {
-    const n = Math.ceil(remain / 1000);
-    if (remain > 0) {
-      if (r.shown !== n) { r.shown = n; tdShowCount(String(n), '#fbbf24'); }
-      updateTdStatus(remain);
-      return;
-    }
-    tdShowCount('スタート！', '#4ade80');
-    r.phase = 'g1';
-    r.at = ts + td.d1 * 1000;
-    updateTdStatus(td.d1 * 1000);
-    return;
-  }
   if (remain > 0) { updateTdStatus(remain); return; }
   tdAdd(tdRows(r));
   if (r.phase === 'g1')      { r.phase = 'g2';  r.at = ts + td.d2 * 1000; }
@@ -5697,13 +5679,6 @@ function updateTdStatus(remainMs) {
   if (!el || !tdRun) return;
   const r = tdRun;
   const sec = Math.max(0, Math.ceil(remainMs / 100) / 10).toFixed(1);
-  if (r.phase === 'count') {
-    el.innerHTML =
-      `<span style="font-size:10px;">TD対策</span><br>` +
-      `<span style="font-size:19px;font-weight:bold;color:#fbbf24;line-height:1.1;">${sec}</span><br>` +
-      `<span style="font-size:10px;">秒後にスタート</span>`;
-    return;
-  }
   const rows = tdRows(r);
   // REN中は「3REN（2LINE）」のように、上がる段数をLINEで出す（0のときは0LINE）
   const what = r.phase === 'ren' ? `${r.ren}REN（${rows}LINE）` : `${rows}ライン`;
@@ -7186,7 +7161,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.76.3';
+const APP_VERSION = '1.76.4';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -7431,6 +7406,9 @@ function toggleCtrlButtons() {
 // ===== オーバーレイ =====
 function showOverlay(title, btn) {
   resetMarathonRun();   // マラソン中に力尽きたときは、1G・30F から挑み直せるように戻す
+  // TD中空け対策の最中に力尽きたときだけ、同じ設定でやり直せるボタンを足す
+  const again = document.getElementById('tdAgainBtn');
+  if (again) again.style.display = tdActive ? '' : 'none';
   document.querySelector('#overlay h1').textContent = title;
   document.getElementById('startBtn').textContent = btn;
   document.getElementById('overlay').style.display = 'flex';
@@ -7441,7 +7419,8 @@ function showOverlay(title, btn) {
 // （ゲームオーバー後の「もう一度」で設定が消えてしまわないようにするため）
 function resetGameState(fullReset = true) {
   clearPcResult();
-  tdRun = null; tdQueue = [];   // TD中空け対策も止める
+  tdRun = null; tdQueue = []; tdActive = false;   // TD中空け対策も止める
+  { const again = document.getElementById('tdAgainBtn'); if (again) again.style.display = 'none'; }
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   bag=[]; nextQ=[]; holdType=null; canHold=true;
   score=0; level=1; lines=0; b2b=false; gameOver=false;
