@@ -1382,6 +1382,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.3</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策のREN中の表示を「3REN（2LINE）」の形にした（せりあがらない回は「0LINE」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.2</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の「スタート」で、地形とミノ順をリセットしてから3秒のカウントダウンを挟んで始めるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の穴の出方を調整。一度に複数段あがるときは70％で同じ列に続き、次のせりあがりの1段目は10％（ランダム）にした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0</span><span class="vl-date">2026-10-20</span></div><ul><li>せりあがりに 「TD中空け対策」 を追加。相手の Tスピントリプル → Tスピンダブル → REN を再現して、受け方を練習できる</li></ul></div>
@@ -5704,9 +5705,8 @@ function updateTdStatus(remainMs) {
     return;
   }
   const rows = tdRows(r);
-  const what = r.phase === 'ren'
-    ? `${r.ren}REN（${rows ? rows + '段' : 'せりあがり無し'}）`
-    : `${rows}ライン`;
+  // REN中は「3REN（2LINE）」のように、上がる段数をLINEで出す（0のときは0LINE）
+  const what = r.phase === 'ren' ? `${r.ren}REN（${rows}LINE）` : `${rows}ライン`;
   el.innerHTML =
     `<span style="font-size:10px;">TD対策 ${r.phase === 'ren' ? 'REN中' : (r.phase === 'g1' ? '1回目' : '2回目')}</span><br>` +
     `<span style="font-size:19px;font-weight:bold;color:#f472b6;line-height:1.1;">${sec}</span><br>` +
@@ -7186,7 +7186,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.76.2';
+const APP_VERSION = '1.76.3';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
