@@ -144,6 +144,9 @@ canvas { display:block; }
   transition:background .1s;
 }
 .side-btn:active { background:#374151; }
+/* せりあがりは「▼」のぶんだけ長いので、1行に収まるよう少し詰める
+   （JS側で style.cssText を書き換えるため、ここはCSSで指定する） */
+#digBtn { margin-top:2px; white-space:nowrap; font-size:8px; letter-spacing:-0.2px; }
 /* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
 #colorPaletteWrap {
   display:none; flex-wrap:wrap; gap:4px;
@@ -636,7 +639,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ</button>
     <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN</button>
-    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()" style="margin-top:2px;">せりあがり</button>
+    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()">せりあがり▼</button>
     <div id="dig-info"></div>
     <div id="digTypeRow" style="display:none;width:100%;">
       <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
@@ -664,7 +667,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
     </div>
-    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:2px;">カンペ<br>画像</button>
+    <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:2px;white-space:nowrap;">カンペ画像</button>
     <button class="side-btn" data-ui="reset" onclick="startGame()"
       style="margin-top:2px;">リセット</button>
     <!-- 片方だけ戻したいとき用 -->
@@ -853,6 +856,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.3 / 1.75.5</span><span class="vl-date">2026-10-19</span></div><ul><li>せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）</li><li>「カンペ画像」を1行表示にした（2行で折り返していた）</li><li>「せりあがり▼」も1行に収まるよう文字を少し詰めた</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.2 / 1.75.4</span><span class="vl-date">2026-10-19</span></div><ul><li>「せりあがり」ボタンの表記を 「せりあがり▼」 にした（開いている間は▲）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.3</span><span class="vl-date">2026-10-18</span></div><ul><li>設定画面で、タイトルとタブを枠の上端に固定し、タブから下だけがスクロールするようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.80.1 / 1.75.2</span><span class="vl-date">2026-10-18</span></div><ul><li>NEXTの右の番号が 8 や 10 など 1〜7 の範囲外になったり、飛んだりすることがあったのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.75.1</span><span class="vl-date">2026-10-18</span></div><ul><li>地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）</li></ul></div>
@@ -2781,7 +2786,7 @@ function toggleDigMode(){
   const btn=document.getElementById('digBtn');
   const diRow=document.getElementById('diRow');
   if(digMode){
-    btn.textContent='せりあがり';
+    btn.textContent='せりあがり▲';   // 設定の行が出ている間は▲
     btn.style.cssText='background:#0891b2;border-color:#06b6d4;color:#fff;';
     diRow.style.display='flex';
     document.getElementById('digTypeRow').style.display='block';
@@ -2801,7 +2806,7 @@ function toggleDigMode(){
       spawn(); draw();
     }
   } else {
-    btn.textContent='せりあがり';
+    btn.textContent='せりあがり▼';
     btn.style.cssText='';
     diRow.style.display='none';
     document.getElementById('digTypeRow').style.display='none';
@@ -3171,7 +3176,7 @@ function toggleDekaMode(){
     if(renMode){renMode=false;document.getElementById('renModeBtn').style.background='';}
     if(digMode){
       digMode=false;digCount=0;
-      document.getElementById('digBtn').textContent='せりあがり';
+      document.getElementById('digBtn').textContent='せりあがり▼';
       document.getElementById('digBtn').style.cssText='';
       updateDigCounter();
     }
@@ -3188,7 +3193,7 @@ function toggleRenMode(){
     if(digMode){
       digMode=false; digCount=0;
       const db=document.getElementById('digBtn');
-      db.textContent='せりあがり'; db.style.cssText='';
+      db.textContent='せりあがり▼'; db.style.cssText='';
       document.getElementById('diRow').style.display='none';
       document.getElementById('holeRow').style.display='none';
       updateDigCounter();
@@ -4964,7 +4969,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.80.1';
+const APP_VERSION = '1.80.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
