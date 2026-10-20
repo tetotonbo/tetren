@@ -963,6 +963,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.82.0 / 1.80.0</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策で、ゲームオーバー画面に 何RENまで耐えたか を出すようにした（受けきったときは「◯REN 受けきりました！」）</li><li>RENを出し切っただけではクリアにせず、そのあとミノを1つ置いて生き残っていればクリア に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0</span><span class="vl-date">2026-10-20</span></div><ul><li>設定に 「タブレット」タブ を追加し、「スライドやタップでミノを操作する」（既定OFF）を用意</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.81.1 / 1.77.0</span><span class="vl-date">2026-10-20</span></div><ul><li>タブレットでの ダブルタップによる拡大／縮小を止めた（NEXT・HOLDの2回タップをミノの選択に使えるようにするため）</li><li>NEXT・HOLDの タップ2回でもミノの選択画面が開く ようにした（設定の「シングルクリックで変更」がONなら1回タップ）</li><li>TD中空け対策でゲームオーバー／クリアしたときの「もう一度」を 「通常ゲーム開始」 に変更（「TD対策を再開」と区別できるように）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.81.0</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策 をスマホ版にも追加（せりあがり▼の下の「TD対策」ボタン）</li></ul></div>
@@ -1405,6 +1406,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
 <div id="overlay">
   <h1>テト練<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
   <div class="sub">タッチ操作でプレイ</div>
+  <!-- TD中空け対策の結果（何RENまで耐えたか） -->
+  <div id="tdResult" style="display:none;margin:6px 0 2px;font-size:13px;font-weight:bold;color:#fbbf24;"></div>
   <button id="startBtn">スタート</button>
   <!-- TD中空け対策で力尽きたときだけ出す。押すと同じ設定でやり直す -->
   <button id="tdAgainBtn" onclick="tdStart()"
@@ -2936,7 +2939,11 @@ function toggleDigMode(){
 function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(tdRun){ updateTdStatus(Math.max(0, tdRun.at - performance.now())); return; }
-  if(tdQueue.length){ el.innerHTML = 'TD対策<br>溜まり '+pendingDigRows+'段'; return; }
+  if(tdQueue.length || tdFinishing){
+    el.innerHTML = tdFinishing ? 'TD対策<br><strong style="color:#fbbf24;">あと1手</strong>'
+                               : 'TD対策<br>溜まり '+pendingDigRows+'段';
+    return;
+  }
   if(!digMode){el.textContent='';return;}
   const isTime = digTriggerType === 'time';
   const next = isTime
@@ -2949,13 +2956,14 @@ function updateDigCounter(remainSecOverride){
 function drawDigPreview(){
   const box=document.getElementById('digPreview');
   if(!box) return;
-  const tdOn = tdRun || tdQueue.length;
+  const tdOn = tdRun || tdQueue.length || tdFinishing;
   if(!tdOn && (!digMode || digTriggerType !== 'time')){ box.style.display='none'; return; }
   box.style.display='flex';
   document.getElementById('digPreviewNext').textContent = tdOn ? 'TD対策' : '次 1段';
   const pend=document.getElementById('digPreviewPending');
   // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
-  if(tdOn)                 pend.textContent='溜まり '+pendingDigRows+'段';
+  if(tdFinishing)          pend.textContent='あと1手';
+  else if(tdOn)            pend.textContent='溜まり '+pendingDigRows+'段';
   else if(opts.digOnLock)  pend.textContent='溜まり '+pendingDigRows+'段';
   else if(pendingDigRows)  pend.textContent='まもなく '+pendingDigRows+'段';
   else                     pend.textContent='';
@@ -3010,6 +3018,9 @@ let tdRun = null;
 let tdQueue = [];
 // この試合でTD対策を始めたか。ゲームオーバーの画面に「再開」を出すかの判断に使う
 let tdActive = false;
+let tdPeakRen = 0;      // どこまでRENを受けたか（ゲームオーバー画面に出す）
+let tdFinishing = false;// RENを出し切って、最後の1手を待っている状態
+let tdCleared = false;  // 受けきったかどうか
 
 function saveTd() { try { localStorage.setItem('tetren_td', JSON.stringify(td)); } catch(e) {} }
 function loadTd() {
@@ -3068,7 +3079,7 @@ function tdStart() {
   // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
   startGame();
   tdQueue = []; pendingDigRows = 0;
-  tdActive = true;
+  tdActive = true; tdPeakRen = 0; tdFinishing = false; tdCleared = false;
   // READY → GO の間は操作を止める（40LINEのカウントダウンと同じやり方）
   gameOver = true;
   tdMsgShow('READY', 'TD中空け対策');
@@ -3091,7 +3102,7 @@ function tdStart() {
 }
 function tdStop() {
   if (tdReadyTimer) { clearTimeout(tdReadyTimer); tdReadyTimer = null; tdMsgHide(); }
-  tdRun = null; tdActive = false;
+  tdRun = null; tdActive = false; tdFinishing = false;
   tdQueue = []; pendingDigRows = 0;
   closeTd();
   updateDigCounter();
@@ -3133,13 +3144,14 @@ function tdTick(ts) {
   if (r.phase === 'g1')      { r.phase = 'g2';  r.at = ts + td.d2 * 1000; }
   else if (r.phase === 'g2') { r.phase = 'ren'; r.at = ts + td.dRen * 1000; r.ren = 1; }
   else {
+    tdPeakRen = r.ren;         // いまのRENまでは受けた
     r.ren++;
-    if (r.ren > td.renMax) {   // 最後まで受けきった
+    if (r.ren > td.renMax) {
+      // RENは出し切った。ここからミノを1つ置いて、生き残っていればクリア
       tdRun = null;
-      tdQueue = []; pendingDigRows = 0;
+      tdFinishing = true;
       updateDigCounter();
       drawDigPreview();
-      tdClear();
       return;
     }
     r.at = ts + td.renStep * 1000;
@@ -3148,6 +3160,7 @@ function tdTick(ts) {
 }
 // 受けきったとき。ゲームオーバーと同じように止めて、「やったー！」を出す
 function tdClear() {
+  tdCleared = true;
   gameOver = true;          // ここで試合終了。操作も落下も止める
   resetLock();
   draw();
@@ -3358,10 +3371,12 @@ function lock(){
     if(digCount%digInterval===0) addGarbage(false);
   }
   // TD中空け対策は、設定にかかわらず「相殺あり・ミノ設置直後にせりあがり」で動かす
-  if(tdRun || tdQueue.length){
+  if(tdRun || tdQueue.length || tdFinishing){
     tdOffset(attackPower(cleared,tSpin,wasB2B,isPerfect));
     // 「ライン消去中はせりあがりしない」だけは設定どおりに効かせる
     if(!(opts.digHoldOnClear && cleared > 0)) tdFlush();
+    // RENを出し切ったあと、この1手で生き残っていればクリア
+    if(tdFinishing && !tdQueue.length && !gameOver){ tdFinishing = false; tdClear(); }
   }
   // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
   if(digMode && digTriggerType==='time'){
@@ -4494,6 +4509,14 @@ document.addEventListener('keyup',e=>{
 function showOverlay(title,btn){
   // TD中空け対策の最中に力尽きたときだけ、同じ設定でやり直せるボタンを足す
   { const again=document.getElementById('tdAgainBtn'); if(again) again.style.display = tdActive ? '' : 'none'; }
+  { const res=document.getElementById('tdResult');
+    if(res){
+      res.style.display = tdActive ? '' : 'none';
+      res.textContent = !tdActive ? ''
+        : tdCleared ? `TD対策：${td.renMax}REN 受けきりました！`
+        : tdPeakRen ? `TD対策：${tdPeakRen}RENまで耐えました`
+        : 'TD対策：REN開始前にゲームオーバー';
+    } }
   document.querySelector('#overlay h1').textContent=title;
   // TD対策のときは「再開」と区別できるよう、こちらを通常プレイの入口だと分かる名前にする
   document.getElementById('startBtn').textContent = tdActive ? '通常ゲーム開始' : btn;
@@ -4503,7 +4526,7 @@ function showOverlay(title,btn){
 // ===== ゲームスタート =====
 function startGame(){
   clearPcResult();
-  tdRun = null; tdQueue = []; tdActive = false;
+  tdRun = null; tdQueue = []; tdActive = false; tdFinishing = false;
   if(tdReadyTimer){ clearTimeout(tdReadyTimer); tdReadyTimer = null; tdMsgHide(); }
   { const again=document.getElementById('tdAgainBtn'); if(again) again.style.display='none'; }
   document.getElementById('overlay').style.display='none';
@@ -5298,7 +5321,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.81.1';
+const APP_VERSION = '1.82.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
