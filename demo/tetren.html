@@ -580,6 +580,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
 #sprintOverlay.clear #sprintOverlayMain {
   font-size:34px; line-height:1.2; color:#4ade80; letter-spacing:2px;
 }
+/* READY / GO! のように文字数があるときは、盤面の幅に収まる大きさにする */
+#sprintOverlay.word #sprintOverlayMain { font-size:52px; letter-spacing:3px; }
 #sprintOverlaySub {
   margin-top:12px; font-size:20px; font-weight:bold;
   color:#e5e7eb; text-shadow:0 2px 10px rgba(0,0,0,.9);
@@ -1234,7 +1236,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     <div class="imp-hint" style="margin:0 0 12px;">
       Tスピントリプル → Tスピンダブル → REN という、いま一番強いとされる攻めを再現します。<br>
       掘って受けるか、相殺して返すかの練習に。秒数は0.1刻みで変えられます。<br>
-      スタートを押すと、地形とミノ順をリセットしてすぐ始まります。<br>
+      スタートを押すと、地形とミノ順をリセットし、READY → GO のあと始まります。<br>
       この間は、設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONになります。<br>
       穴は、一度に複数段あがるときは70％で同じ列に続き、次のせりあがりでは10％（ランダム）です。
     </div>
@@ -1382,6 +1384,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.5</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策でゲームオーバーから再開したあと、ソフトドロップや落下が効かなくなっていたのを修正</li><li>TD中空け対策は READY → GO! を盤面に出してから始まるようにした（その間は操作できない）</li><li>最後まで受けきったときは 「やったー！」 を出して、ゲームオーバーと同じように終了する（「もう一度」「TD対策を再開」から再開できる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.4</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の「スタート」で、地形とミノ順をリセットしてすぐ始まるようにした（カウントダウンは入れない）</li><li>TD中空け対策の最中にゲームオーバーになったとき、「TD対策を再開」 ボタンを出すようにした（同じ設定でやり直す）</li><li>REN中の表示を「3REN（2LINE）」の形にした（せりあがらない回は「0LINE」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.76.1</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策の穴の出方を調整。一度に複数段あがるときは70％で同じ列に続き、次のせりあがりの1段目は10％（ランダム）にした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.76.0</span><span class="vl-date">2026-10-20</span></div><ul><li>せりあがりに 「TD中空け対策」 を追加。相手の Tスピントリプル → Tスピンダブル → REN を再現して、受け方を練習できる</li></ul></div>
@@ -5598,19 +5601,36 @@ function tdRows(r) {
   if (r.phase === 'g2') return td.l2;
   return tdRenRows(r.ren);
 }
+let tdReadyTimer = null;
 function tdStart() {
   closeTd();
-  // 毎回おなじ条件から始められるよう、地形もミノ順もまっさらにする
-  // （resetGameState の中で tdRun を消すので、組み立てるのはそのあと）
-  resetGameState(false);
-  document.getElementById('overlay').style.display = 'none';
+  // 毎回おなじ条件から始められるよう、地形もミノ順もまっさらにして回し直す。
+  // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
+  startGame();
   tdQueue = []; pendingDigRows = 0;
   tdActive = true;
-  tdRun = { phase:'g1', at: performance.now() + td.d1 * 1000, ren:0 };
-  updateTdStatus(td.d1 * 1000);
-  drawDigPreview();
+  // READY → GO の間は操作を止める（40LINEのカウントダウンと同じやり方）
+  gameOver = true;
+  showSprintOverlay('READY', '', 'TD中空け対策');
+  clearTimeout(tdReadyTimer);
+  tdReadyTimer = setTimeout(() => {
+    showSprintOverlay('GO!', '', 'TD中空け対策');
+    tdReadyTimer = setTimeout(() => {
+      hideSprintOverlay();
+      tdReadyTimer = null;
+      // 止めていたぶんの時間を持ち越さないよう、溜めた値を捨ててから走らせる
+      gameOver = false;
+      lastSoftDrop = 0; gravAccum = 0; softAccum = 0; lastDrop = 0;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+      tdRun = { phase:'g1', at: performance.now() + td.d1 * 1000, ren:0 };
+      updateTdStatus(td.d1 * 1000);
+      drawDigPreview();
+    }, 700);
+  }, 900);
 }
 function tdStop() {
+  if (tdReadyTimer) { clearTimeout(tdReadyTimer); tdReadyTimer = null; hideSprintOverlay(); }
   tdRun = null; tdActive = false;
   tdQueue = []; pendingDigRows = 0;
   closeTd();
@@ -5656,23 +5676,24 @@ function tdTick(ts) {
     r.ren++;
     if (r.ren > td.renMax) {   // 最後まで受けきった
       tdRun = null;
+      tdQueue = []; pendingDigRows = 0;
       updateDigCounter();
       drawDigPreview();
-      // 受けきったことが分かるよう、ライン消去と同じ場所に出す
-      { const el = document.getElementById('clearMsg');
-        if (el) {
-          el.innerHTML = '<div style="font-size:20px;font-weight:bold;color:#4ade80;' +
-                         'text-shadow:0 2px 10px rgba(0,0,0,0.95);line-height:1.2;">TD対策<br>クリア！</div>';
-          el.style.opacity = '1';
-          if (clearMsgTimer) clearTimeout(clearMsgTimer);
-          clearMsgTimer = setTimeout(() => { el.style.opacity = '0'; }, 4000);
-        } }
+      tdClear();
       return;
     }
     r.at = ts + td.renStep * 1000;
   }
   updateTdStatus(r.at - ts);
 }
+// 受けきったとき。ゲームオーバーと同じように止めて、「やったー！」を出す
+function tdClear() {
+  gameOver = true;          // ここで試合終了。操作も落下も止める
+  resetLock();
+  draw();
+  setTimeout(() => showOverlay('やったー！', 'もう一度'), 100);
+}
+
 // せりあがりのカウンター欄に、いまの段階と残り秒数を出す
 function updateTdStatus(remainMs) {
   const el = document.getElementById('digCounter');
@@ -6618,6 +6639,8 @@ function showSprintOverlay(main, sub, note, isClear) {
   const el = document.getElementById('sprintOverlay');
   if (!el) return;
   el.classList.toggle('clear', !!isClear);
+  // 数字1文字（40LINEのカウントダウン）より長い文字は、はみ出さないよう小さめに
+  el.classList.toggle('word', String(main).length > 1 && !isClear);
   document.getElementById('sprintOverlayMain').textContent = main;
   document.getElementById('sprintOverlaySub').textContent  = sub  || '';
   document.getElementById('sprintOverlayNote').textContent = note || '';
@@ -7161,7 +7184,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.76.4';
+const APP_VERSION = '1.76.5';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -7420,6 +7443,7 @@ function showOverlay(title, btn) {
 function resetGameState(fullReset = true) {
   clearPcResult();
   tdRun = null; tdQueue = []; tdActive = false;   // TD中空け対策も止める
+  if (tdReadyTimer) { clearTimeout(tdReadyTimer); tdReadyTimer = null; }
   { const again = document.getElementById('tdAgainBtn'); if (again) again.style.display = 'none'; }
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   bag=[]; nextQ=[]; holdType=null; canHold=true;
