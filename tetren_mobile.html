@@ -965,6 +965,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.83.1 / 1.81.1</span><span class="vl-date">2026-10-21</span></div><ul><li>「手順をミノの操作に追従する」を既定ONにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.83.0 / 1.81.0</span><span class="vl-date">2026-10-21</span></div><ul><li>設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.82.1 / 1.80.1</span><span class="vl-date">2026-10-20</span></div><ul><li>ゲームオーバー画面の「通常ゲーム開始」と「TD対策を再開」を同じ大きさにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.82.0 / 1.80.0</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策で、ゲームオーバー画面に 何RENまで耐えたか を出すようにした（受けきったときは「◯REN 受けきりました！」）</li><li>RENを出し切っただけではクリアにせず、そのあとミノを1つ置いて生き残っていればクリア に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0</span><span class="vl-date">2026-10-20</span></div><ul><li>設定に 「タブレット」タブ を追加し、「スライドやタップでミノを操作する」（既定OFF）を用意</li></ul></div>
@@ -1388,6 +1390,15 @@ input:checked + .tgl::after { transform:translateX(10px); }
           <span class="opt-label">優先するもの
             <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
           <span class="opt-step" id="optPcPriorityRow"></span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">手順をミノの操作に追従する
+            <span class="opt-note">ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optPcFollow" checked onchange="setOption('pcFollow', this.checked)">
+            <span class="tgl"></span>
+          </label>
         </div>
 
         <div class="opt-row" id="optPcAtkLastRow">
@@ -2764,6 +2775,24 @@ function movePcPick(d) {
   fitPcCanvas();
   drawPcStep();
 }
+// ===== パフェ手順の追従 =====
+// 設定がONのときは、手順どおりに置いたときだけ次の手順へ自動で進める。
+// 違う置き方をしたときは何もしない（自分で ‹ › を押せば動かせる）。
+function pcFollowLock(cells, type) {
+  if (!opts.pcFollow || dekaMode) return;
+  if (!pcSteps || !pcSteps.length) return;
+  if (!document.getElementById('pcWin')) return;   // 手順ウィンドウを出している間だけ
+  // 全体図（0枚目）のときは「1手目」と見比べて、合っていれば2手目へ送る
+  const idx = (pcSteps[pcStep] && pcSteps[pcStep].overview) ? 1 : pcStep;
+  const s = pcSteps[idx];
+  if (!s || s.overview || !s.cells || s.type !== type) return;
+  const base = TROW - s.grid.length;              // 手順の絵は盤面の下側だけを切り出している
+  const want = s.cells.map(([r, c]) => (r + base) + ',' + c).sort().join(' ');
+  const got  = cells.map(([r, c]) => r + ',' + c).sort().join(' ');
+  if (want !== got) return;
+  pcStep = Math.min(pcSteps.length - 1, idx + 1);
+  drawPcStep();
+}
 function movePcStep(d) {
   pcStep = Math.max(0, Math.min(pcSteps.length - 1, pcStep + d));
   drawPcStep();
@@ -3347,6 +3376,10 @@ function undo(){
 function lock(){
   if(lockTimer){clearTimeout(lockTimer);lockTimer=null;} isLocking=false;
   saveSnapshot();
+  // パフェ手順の追従に使う、いま置いたミノの位置（ライン消去より前の座標）
+  const pcPlaced = dekaMode ? null
+    : PIECE_DEF[cur.type].cells[cur.state].map(([r,c]) => [cur.row+r, cur.col+c]);
+  const pcPlacedType = cur.type;
   const tSpin=detectTSpin();
   lastWasRotation=false;
   const col_=pieceColor(cur.type);
@@ -3386,6 +3419,7 @@ function lock(){
     const holdByClear = opts.digHoldOnClear && cleared > 0;
     if(opts.digOnLock && !holdByClear) flushPendingDig();
   }
+  if(pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
   spawn(); draw();
 }
 
@@ -4103,7 +4137,7 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
-  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
+  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:true, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -4210,6 +4244,7 @@ function applyOptions(){
   check('optPcMulti',    opts.pcMulti);
   check('optPcRank',     opts.pcRank);
   check('optPcAtkLast',  opts.pcAtkLast);
+  check('optPcFollow',   opts.pcFollow);
   check('optLoadHoldOn', opts.loadHoldOn);
   renderLoadHoldRows();
   { // スイッチがOFFなら選び方ごと、「都度選択」なら予め選ぶミノを触れなくする
@@ -5322,7 +5357,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.82.1';
+const APP_VERSION = '1.83.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
