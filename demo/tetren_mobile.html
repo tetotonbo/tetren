@@ -965,7 +965,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.83.0 / 1.81.0</span><span class="vl-date">2026-10-21</span></div><ul><li>設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定OFF）を追加</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.83.1 / 1.81.1</span><span class="vl-date">2026-10-21</span></div><ul><li>「手順をミノの操作に追従する」を既定ONにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.83.0 / 1.81.0</span><span class="vl-date">2026-10-21</span></div><ul><li>設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.82.1 / 1.80.1</span><span class="vl-date">2026-10-20</span></div><ul><li>ゲームオーバー画面の「通常ゲーム開始」と「TD対策を再開」を同じ大きさにそろえた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.82.0 / 1.80.0</span><span class="vl-date">2026-10-20</span></div><ul><li>TD中空け対策で、ゲームオーバー画面に 何RENまで耐えたか を出すようにした（受けきったときは「◯REN 受けきりました！」）</li><li>RENを出し切っただけではクリアにせず、そのあとミノを1つ置いて生き残っていればクリア に変更</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.79.0</span><span class="vl-date">2026-10-20</span></div><ul><li>設定に 「タブレット」タブ を追加し、「スライドやタップでミノを操作する」（既定OFF）を用意</li></ul></div>
@@ -1395,7 +1396,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
           <span class="opt-label">手順をミノの操作に追従する
             <span class="opt-note">ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです</span></span>
           <label class="cfg-tgl">
-            <input type="checkbox" id="optPcFollow" onchange="setOption('pcFollow', this.checked)">
+            <input type="checkbox" id="optPcFollow" checked onchange="setOption('pcFollow', this.checked)">
             <span class="tgl"></span>
           </label>
         </div>
@@ -4136,7 +4137,7 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
-  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:false, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
+  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:true, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -5356,7 +5357,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.83.0';
+const APP_VERSION = '1.83.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
