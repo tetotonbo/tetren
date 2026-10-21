@@ -318,7 +318,14 @@ button, label, .ctrl-lbl, [data-pos] {
 /* パフェ手順のウィンドウ（カンペ画像と同じ .shot-win に乗せる） */
 .pc-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:6px; padding:6px; }
 .pc-cv-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-#pcCanvas { max-width:100%; max-height:100%; border:1px solid #374151; border-radius:2px; }
+#pcCanvas, #tplCanvas { max-width:100%; max-height:100%; border:1px solid #374151; border-radius:2px; }
+/* 開幕テンプレートのボタン（カンペ画像の中） */
+.tpl-row { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
+.tpl-row button {
+  background:#374151; color:#e5e7eb; border:none; border-radius:6px;
+  padding:7px 12px; font-size:12px; cursor:pointer;
+}
+.tpl-row button:hover { background:#4b5563; }
 .pc-nav { display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto; }
 .pc-nav button {
   background:#374151; color:#e5e7eb; border:none; border-radius:5px;
@@ -1143,6 +1150,9 @@ input:checked + .tgl::after { transform:translateX(16px); }
       <div class="imp-drop-sub">クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）</div>
     </div>
     <input type="file" id="shotFile" accept="image/*" style="display:none">
+    <!-- 開幕テンプレート。押すと1巡目の置き方を浮かぶ窓で出す -->
+    <div class="imp-hint" style="margin:12px 0 6px;">開幕テンプレート（1巡目の置き方）</div>
+    <div class="tpl-row" id="tplRow"></div>
     <!-- 表示中だけ出る操作列。裏に回してバーが隠れてもここから戻せる -->
     <div class="imp-actions" id="shotCtrls" style="display:none;justify-content:flex-start;">
       <button class="imp-btn" onclick="closeAllShots(); closeShot();" title="表示中のカンペ画像をすべて消す">すべて消す</button>
@@ -1390,6 +1400,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.84.0 / 1.82.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像に 開幕テンプレート のボタンを追加。押すと1巡目の置き方を浮かぶ窓で表示する</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.83.1 / 1.81.1</span><span class="vl-date">2026-10-21</span></div><ul><li>「手順をミノの操作に追従する」を既定ONにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.83.0 / 1.81.0</span><span class="vl-date">2026-10-21</span></div><ul><li>設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.82.1 / 1.80.1</span><span class="vl-date">2026-10-20</span></div><ul><li>ゲームオーバー画面の「通常ゲーム開始」と「TD対策を再開」を同じ大きさにそろえた</li></ul></div>
@@ -6608,6 +6619,115 @@ function movePcPick(d) {
   fitPcCanvas();
   drawPcStep();
 }
+// ===== 開幕テンプレート =====
+// 1巡目の置き方を、盤面と同じ絵で見られるようにする。
+// rows は「下の行から順」に、1文字＝1マス（ミノの種類／. は空き）で書いてある。
+const TEMPLATES = [
+  { id:'dt', name:'DT砲', rows: [
+    'OO.LLLIJJJ',
+    'OO.SSLIJZZ',
+    '....SSIZZ.',
+    '...TTTI...',
+    '....T.....',
+  ] },
+];
+const TPL_MIRROR = { L:'J', J:'L', S:'Z', Z:'S' };   // 反転すると入れ替わるミノ
+const TPL_CELL = 26;
+let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
+
+// カンペ画像のダイアログにボタンを並べる
+function renderTemplateRow() {
+  const box = document.getElementById('tplRow');
+  if (!box) return;
+  box.innerHTML = '';
+  for (const t of TEMPLATES) {
+    const b = document.createElement('button');
+    b.textContent = t.name;
+    b.title = t.name + 'の1巡目を表示します';
+    b.addEventListener('click', () => openTemplate(t.id));
+    box.appendChild(b);
+  }
+}
+function openTemplate(id) {
+  const t = TEMPLATES.find(x => x.id === id);
+  if (!t) return;
+  tplCur = t; tplFlip = false; tplCell = TPL_CELL;
+  closeShot();
+  closeTemplate();
+  const win = document.createElement('div');
+  win.className = 'shot-win';
+  win.id = 'tplWin';
+  win.innerHTML =
+    '<div class="shot-bar">' +
+      '<span class="sw-title">' + t.name + '</span>' +
+      '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
+    '</div>' +
+    '<div class="pc-body">' +
+      '<div class="pc-cv-wrap"><canvas id="tplCanvas"></canvas></div>' +
+      '<div class="pc-nav">' +
+        '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
+        '<div id="tplLabel"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
+    '<div class="sw-rs sw-rs-r"  data-dir="r"></div>' +
+    '<div class="sw-rs sw-rs-b"  data-dir="b"></div>' +
+    '<div class="sw-rs sw-rs-bl" data-dir="bl"></div>' +
+    '<div class="sw-rs sw-rs-br" data-dir="br"></div>';
+  document.body.appendChild(win);
+  raiseShot(win);
+  drawTemplate();
+  window.addEventListener('pointermove', fitTplCanvas);
+  window.addEventListener('pointerup',   fitTplCanvas);
+  const cv = document.getElementById('tplCanvas');
+  const w = Math.max(cv.width + 16, 220), h = cv.height + SHOT_BAR_H + PC_NAV_H;
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
+  win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
+  win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
+}
+function closeTemplate() {
+  const w = document.getElementById('tplWin');
+  if (w) w.remove();
+  window.removeEventListener('pointermove', fitTplCanvas);
+  window.removeEventListener('pointerup',   fitTplCanvas);
+}
+function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
+// 反転すると左右が入れ替わり、鏡の関係にある L↔J・S↔Z も入れ替わる
+function tplRows() {
+  const rows = tplCur.rows;
+  if (!tplFlip) return rows;
+  return rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join(''));
+}
+function fitTplCanvas() {
+  const wrap = document.querySelector('#tplWin .pc-cv-wrap');
+  if (!wrap || !tplCur) return;
+  const rows = tplCur.rows.length;
+  const cell = Math.max(6, Math.floor(Math.min(wrap.clientWidth / COLS, wrap.clientHeight / rows)));
+  if (cell !== tplCell) { tplCell = cell; drawTemplate(); }
+}
+function drawTemplate() {
+  const cv = document.getElementById('tplCanvas');
+  if (!cv || !tplCur) return;
+  const rows = tplRows(), n = rows.length, cell = tplCell;
+  cv.width = COLS * cell; cv.height = n * cell;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
+  g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
+  for (let r = 0; r < n; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
+  // rows は下から順なので、描くときは上下をひっくり返す
+  for (let r = 0; r < n; r++) {
+    const line = rows[n - 1 - r];
+    for (let c = 0; c < COLS; c++) {
+      const ch = line[c];
+      if (!ch || ch === '.') continue;
+      withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, pieceColor(ch), 1));
+    }
+  }
+  const el = document.getElementById('tplLabel');
+  if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '');
+}
+
 // ===== パフェ手順の追従 =====
 // 設定がONのときは、手順どおりに置いたときだけ次の手順へ自動で進める。
 // 違う置き方をしたときは何もしない（自分で ‹ › を押せば動かせる）。
@@ -7375,7 +7495,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.81.1';
+const APP_VERSION = '1.82.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -7412,6 +7532,7 @@ function raiseShot(win) { win.style.zIndex = ++shotTopZ; }
 function shotWins() { return [...document.querySelectorAll('.shot-win')]; }
 
 function openShot() {
+  renderTemplateRow();
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
   document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
