@@ -1422,6 +1422,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.91.0 / 1.89.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の2パターン目を組み終えると、専用の2巡目（2パターン）を自動で表示するようにした</li><li>形ごとに違う2巡目へ進めるようにした（テンプレートの nexts）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.90.0 / 1.88.0</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした</li><li>はちみつ砲に1巡目の2パターン目（Jを左側に立てる形）を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.89.0 / 1.87.0</span><span class="vl-date">2026-10-23</span></div><ul><li>DT砲の2巡目（3パターン）を追加。1巡目をテンプレどおりに置き終えると、自動で2巡目の表示に切り替わる</li><li>複数パターンの並べ方を 横／縦 で切り替えられるようにした（窓の「並び」ボタン）</li><li>「組めません」が出たときに絵がずれていたのを修正（表示の場所をあらかじめ取るようにした）</li><li>同じミノが2つ以上あるテンプレート（2巡目など）で判定が必ずNGになっていたのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.88.1 / 1.86.1</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li><li>テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）</li><li>判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる</li></ul></div>
@@ -6709,7 +6710,7 @@ const TEMPLATES = [
     '...J......',
     '...J......',
   ] },
-  { id:'honey', name:'はちみつ砲', pats: [
+  { id:'honey', name:'はちみつ砲', nexts: [null, 'honey2'], pats: [
     [
       'IIII.ZZTOO',
       'LLL.ZZTTOO',
@@ -6724,6 +6725,26 @@ const TEMPLATES = [
       'JSS.......',
       'J.........',
       'JJ........',
+    ],
+  ] },
+  { id:'honey2', name:'はちみつ砲 2巡目', auto:true, pats: [
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTOO',
+      'JSS.ZZJLOO',
+      'JSS...JLLL',
+      'JJSS..JJ..',
+      'IIII......',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTOO',
+      'JSS.ZZLLOO',
+      'JSS...LJJJ',
+      'JJSS..LJ..',
+      'IIII......',
     ],
   ] },
   { id:'meiso2', name:'迷走砲', rows: [
@@ -7012,11 +7033,22 @@ function toggleTplVertical() {
   tplSizeWin();
 }
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
+// 置き終えた形に応じて、次に出す巡の id を返す（形ごとに違う続きを持てる）
+function tplNextId() {
+  const pats = tplPats();
+  for (let i = 0; i < pats.length; i++) {
+    if (!tplAllPlaced(pats[i])) continue;
+    const id = (tplCur.nexts && tplCur.nexts[i]) || tplCur.next;
+    if (id) return id;
+  }
+  return null;
+}
 function tplRefresh() {
   if (!document.getElementById('tplWin') || !tplCur) return;
   // 1巡目を置き終えたら、自動で2巡目に進む
-  if (tplCur.next && tplPats().some(rows => tplAllPlaced(rows))) {
-    const nx = tplAll().find(t => t.id === tplCur.next);
+  const nid = tplNextId();
+  if (nid) {
+    const nx = tplAll().find(t => t.id === nid);
     if (nx) {
       tplCur = nx;
       tplCell = tplFitCell(nx);
@@ -7863,7 +7895,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.88.0';
+const APP_VERSION = '1.89.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
