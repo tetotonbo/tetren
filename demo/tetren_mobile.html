@@ -279,13 +279,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #tplWin .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
 .tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
-/* 「組めません」が出ても絵がずれないよう、場所は常に取っておく */
-.tpl-cv { position:relative; line-height:0; }
-.tpl-ng {
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-size:11px; line-height:1.2; color:#fca5a5; font-weight:bold; pointer-events:none;
-  text-shadow:0 0 4px #000, 0 1px 3px #000, 0 0 10px #000;
-}
+.tpl-cv { line-height:0; }
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-add { display:flex; gap:5px; align-items:center; margin:4px 0 0; }
 .tpl-add input {
@@ -1007,6 +1001,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.96.1 / 1.94.1</span><span class="vl-date">2026-10-23</span></div><ul><li>「組めません」の文字をやめて、薄い表示（グレーアウト）だけで知らせるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.96.0 / 1.94.0</span><span class="vl-date">2026-10-23</span></div><ul><li>巡を移っても窓の大きさは変えず、盤が増えるぶんマスを小さくして収めるようにした</li><li>「組めません」を盤の下ではなく、盤の上に重ねて表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.95.0 / 1.93.0</span><span class="vl-date">2026-10-23</span></div><ul><li>その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）</li><li>テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした</li><li>2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.94.0 / 1.92.0</span><span class="vl-date">2026-10-23</span></div><ul><li>2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした</li></ul></div>
@@ -3382,7 +3377,6 @@ function drawTemplate() {
   const base = tplBase ? (tplFlip ? tplMirror(tplBase) : tplBase) : null;
   wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
   wrap.innerHTML = '';
-  const done = pats.some(rows => tplAllPlaced(rows));   // この巡を正しく置き終えた
   pats.forEach((rows, i) => {
     const box = document.createElement('div');
     box.className = 'tpl-pat';
@@ -3415,12 +3409,6 @@ function drawTemplate() {
     const cvbox = document.createElement('div');
     cvbox.className = 'tpl-cv';
     cvbox.appendChild(cv);
-    if (!ok && !done) {
-      const ng = document.createElement('div');
-      ng.className = 'tpl-ng';
-      ng.textContent = '組めません';
-      cvbox.appendChild(ng);
-    }
     box.appendChild(cvbox);
     wrap.appendChild(box);
   });
@@ -6019,7 +6007,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.96.0';
+const APP_VERSION = '1.96.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
