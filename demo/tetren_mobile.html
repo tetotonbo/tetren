@@ -992,7 +992,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.86.0 / 1.84.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 瞑想砲 を追加（DT砲と合わせて4つ）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.85.1 / 1.83.1</span><span class="vl-date">2026-10-22</span></div><ul><li>設定の画面を、カンペ画像・パフェ手順・テンプレートの窓より前に出すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.85.0 / 1.83.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像の開幕テンプレートに 「いまの地形を登録」 を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.84.0 / 1.82.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像に 開幕テンプレート のボタンを追加。押すと1巡目の置き方を浮かぶ窓で表示する</li></ul></div>
@@ -2821,19 +2821,22 @@ const TEMPLATES = [
     'OOTSS.LLLI',
     'OOTTSS.ZLI',
     '..T....ZZI',
-    '........ZI',
+    '..JJ....ZI',
+    '...J......',
+    '...J......',
   ] },
   { id:'honey', name:'はちみつ砲', rows: [
-    'OOTSS.IIII',
-    'OOTTSS.JJJ',
-    '..T....JZZ',
-    '.......ZZ.',
+    'IIII.ZZTOO',
+    'LLL.ZZTTOO',
+    'SSL....TJJ',
+    '.SS......J',
+    '.........J',
   ] },
-  { id:'meiso', name:'瞑想砲', rows: [
+  { id:'meiso2', name:'迷走砲', rows: [
     'ILLST.JJOO',
     'ILSSTT.JOO',
-    'ILS.T..J..',
-    'I.........',
+    'ILS.T..JZZ',
+    'I......ZZ.',
   ] },
 ];
 const TPL_MIRROR = { L:'J', J:'L', S:'Z', Z:'S' };   // 反転すると入れ替わるミノ
@@ -5566,7 +5569,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.86.0';
+const APP_VERSION = '1.86.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
