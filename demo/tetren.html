@@ -349,6 +349,8 @@ button, label, .ctrl-lbl, [data-pos] {
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
 .pc-nav button.on { background:#4338ca; color:#fff; }
 #pcStepLabel, #pcPickLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
+#tplLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto;
+            min-width:0; overflow:hidden; text-overflow:ellipsis; }
 
 /* 浮かせるウィンドウ本体（何枚でも出せる）。常にいちばん手前に出す */
 .shot-win {
@@ -1422,6 +1424,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.95.0 / 1.93.0</span><span class="vl-date">2026-10-23</span></div><ul><li>その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）</li><li>テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした</li><li>2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.94.0 / 1.92.0</span><span class="vl-date">2026-10-23</span></div><ul><li>2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.93.0 / 1.91.0</span><span class="vl-date">2026-10-23</span></div><ul><li>山岳積み2号を組み終えると、2巡目（3パターン）を自動で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.92.0 / 1.90.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の1パターン目を組み終えると、専用の2巡目（3パターン）を自動で表示するようにした</li></ul></div>
@@ -6863,9 +6866,13 @@ function deleteTemplate(id) {
   closeTemplate();
   renderTemplateRow();
 }
-const TPL_CELL = 20;   // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
+const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
+const TPL_MIN_W = 340;  // 下のボタンが収まる最小の幅
 let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
 let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
+let tplHist = [];     // 巡を行き来するための履歴 [{ t, base }]
+let tplFwdIdx = 0;    // 「次の巡」を押した回数（2巡目が複数あるとき順に見る）
+let tplManual = false;   // 自分で巡を動かした後は、自動で進めない
 
 // カンペ画像のダイアログにボタンを並べる
 function renderTemplateRow() {
@@ -6888,6 +6895,7 @@ function openTemplate(id) {
   const t = tplAll().find(x => x.id === id);
   if (!t) return;
   tplCur = t; tplFlip = false; tplBase = null;
+  tplHist = []; tplFwdIdx = 0; tplManual = false;
   tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
   // 開幕から試せるよう、地形もミノ順もリセットしてから出す
@@ -6909,6 +6917,8 @@ function openTemplate(id) {
       '<div class="pc-nav">' +
         '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
         '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
+        '<button id="tplPrevBtn" onclick="tplGoPrev();this.blur()" title="ひとつ前の巡に戻ります">◀ 前の巡</button>' +
+        '<button id="tplNextBtn" onclick="tplGoNext();this.blur()" title="次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）">次の巡 ▶</button>' +
         (t.mine ? '<button onclick="deleteTemplate(\'' + t.id + '\');this.blur()" title="このテンプレートを削除します">削除</button>' : '') +
         '<div id="tplLabel"></div>' +
       '</div>' +
@@ -6948,8 +6958,8 @@ function tplSizeWin() {
   const pats = tplPats();
   const rows = Math.max(...pats.map(x => x.length));
   const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
-  const w = vert ? Math.max(COLS * tplCell + 16, 220)
-                 : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, 220);
+  const w = vert ? Math.max(COLS * tplCell + 16, TPL_MIN_W)
+                 : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, TPL_MIN_W);
   const h = (vert ? (rows * tplCell + capH + 14) * n + 10 * (n - 1)
                   : rows * tplCell + capH + 14) + SHOT_BAR_H + PC_NAV_H;
   win.style.width  = w + 'px';
@@ -7097,6 +7107,51 @@ function toggleTplVertical() {
 }
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
 // 置き終えた形に応じて、次に出す巡の id を返す（形ごとに違う続きを持てる）
+// このテンプレートから進める先の id（重複を除く）
+function tplNextIds() {
+  const ids = [];
+  for (const id of (tplCur.nexts || []).concat(tplCur.next ? [tplCur.next] : []))
+    if (id && !ids.includes(id)) ids.push(id);
+  return ids;
+}
+// 巡を切り替える。base は「前の巡で組んだ形」（灰色で描くため）
+function tplEnter(id, base) {
+  const nx = tplAll().find(t => t.id === id);
+  if (!nx) return;
+  tplHist.push({ t: tplCur, base: tplBase, fwd: tplFwdIdx });
+  tplCur = nx; tplBase = base; tplFwdIdx = 0;
+  tplAfterChange();
+}
+function tplGoNext() {
+  const hit = tplNextHit();
+  let id, base = null;
+  if (hit) {
+    id = hit.id; base = tplRawPats(tplCur)[hit.i];
+  } else {
+    const ids = tplNextIds();
+    if (!ids.length) return;
+    id = ids[tplFwdIdx % ids.length];
+    tplFwdIdx++;
+    const i = (tplCur.nexts || []).indexOf(id);
+    base = tplRawPats(tplCur)[i >= 0 ? i : 0];
+  }
+  tplManual = true;
+  tplEnter(id, base);
+}
+function tplGoPrev() {
+  if (!tplHist.length) return;
+  const h = tplHist.pop();
+  tplCur = h.t; tplBase = h.base; tplFwdIdx = h.fwd || 0;
+  tplManual = true;
+  tplAfterChange();
+}
+function tplAfterChange() {
+  tplCell = tplFitCell(tplCur);
+  const ti = document.getElementById('tplTitle');
+  if (ti) ti.textContent = tplCur.name;
+  tplSizeWin();
+  drawTemplate();
+}
 function tplNextHit() {
   const pats = tplPats();
   for (let i = 0; i < pats.length; i++) {
@@ -7109,18 +7164,10 @@ function tplNextHit() {
 function tplRefresh() {
   if (!document.getElementById('tplWin') || !tplCur) return;
   // 1巡目を置き終えたら、自動で2巡目に進む
-  const hit = tplNextHit();
-  if (hit) {
-    const nx = tplAll().find(t => t.id === hit.id);
-    if (nx) {
-      tplBase = tplRawPats(tplCur)[hit.i];   // 1巡目で組んだぶんは灰色にする
-      tplCur = nx;
-      tplCell = tplFitCell(nx);
-      const ti = document.getElementById('tplTitle');
-      if (ti) ti.textContent = nx.name;
-      tplSizeWin();
-    }
-  }
+  // 地形が空になったら「自分で動かした」状態は解除して、また自動で進むようにする
+  if (board.every(row => row.every(col => !col))) { tplManual = false; tplHist = []; }
+  const hit = tplManual ? null : tplNextHit();
+  if (hit) tplEnter(hit.id, tplRawPats(tplCur)[hit.i]);
   drawTemplate();
 }
 function tplRawPats(t) { return t.pats ? t.pats : [t.rows]; }
@@ -7151,6 +7198,7 @@ function drawTemplate() {
   const base = tplBase ? (tplFlip ? tplMirror(tplBase) : tplBase) : null;
   wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
   wrap.innerHTML = '';
+  const done = pats.some(rows => tplAllPlaced(rows));   // この巡を正しく置き終えた
   pats.forEach((rows, i) => {
     const box = document.createElement('div');
     box.className = 'tpl-pat';
@@ -7183,12 +7231,16 @@ function drawTemplate() {
     box.appendChild(cv);
     const ng = document.createElement('div');
     ng.className = 'tpl-ng';
-    ng.textContent = ok ? '' : '組めません';   // 空でも場所は取る（絵がずれないように）
+    ng.textContent = (ok || done) ? '' : '組めません';   // 空でも場所は取る（絵がずれないように）
     box.appendChild(ng);
     wrap.appendChild(box);
   });
   const jb = document.getElementById('tplJudgeBtn');
   if (jb) jb.classList.toggle('on', !!opts.tplJudge);
+  const pb = document.getElementById('tplPrevBtn');
+  if (pb) pb.disabled = !tplHist.length;
+  const nb = document.getElementById('tplNextBtn');
+  if (nb) nb.disabled = !tplNextIds().length;
   const el = document.getElementById('tplLabel');
   if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
                          + (pats.length > 1 ? `　${pats.length}パターン` : '');
@@ -7963,7 +8015,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.92.0';
+const APP_VERSION = '1.93.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
