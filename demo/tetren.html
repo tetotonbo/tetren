@@ -329,9 +329,11 @@ button, label, .ctrl-lbl, [data-pos] {
 .tpl-row button.tpl-mine { background:#1f3a5f; }
 /* テンプレートの窓。複数パターンは横に並べる */
 #tplWin .pc-cv-wrap { align-items:flex-end; gap:12px; }
+#tplWin .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
 .tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
-.tpl-ng { font-size:10px; color:#f87171; font-weight:bold; }
+/* 「組めません」が出ても絵がずれないよう、場所は常に取っておく */
+.tpl-ng { font-size:10px; color:#f87171; font-weight:bold; min-height:14px; line-height:14px; }
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-row button.tpl-mine:hover { background:#2a4d7a; }
 .tpl-add { display:flex; gap:6px; align-items:center; margin:0 0 12px; }
@@ -1420,6 +1422,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.89.0 / 1.87.0</span><span class="vl-date">2026-10-23</span></div><ul><li>DT砲の2巡目（3パターン）を追加。1巡目をテンプレどおりに置き終えると、自動で2巡目の表示に切り替わる</li><li>複数パターンの並べ方を 横／縦 で切り替えられるようにした（窓の「並び」ボタン）</li><li>「組めません」が出たときに絵がずれていたのを修正（表示の場所をあらかじめ取るようにした）</li><li>同じミノが2つ以上あるテンプレート（2巡目など）で判定が必ずNGになっていたのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.88.1 / 1.86.1</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li><li>テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）</li><li>判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
@@ -6651,7 +6654,7 @@ function movePcPick(d) {
 // 1巡目の置き方を、盤面と同じ絵で見られるようにする。
 // rows は「下の行から順」に、1文字＝1マス（ミノの種類／. は空き）で書いてある。
 const TEMPLATES = [
-  { id:'dt', name:'DT砲', pats: [
+  { id:'dt', name:'DT砲', next:'dt2', pats: [
     [
       'OO.LLLIJJJ',
       'OO.SSLIJZZ',
@@ -6665,6 +6668,36 @@ const TEMPLATES = [
       '....ZJILS.',
       '...TTTI...',
       '....T.....',
+    ],
+  ] },
+  { id:'dt2', name:'DT砲 2巡目', auto:true, pats: [
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIZZI',
+      'JJ.LTSZZ.I',
+      '...LSSOO.I',
+      '..LLS.OO..',
+    ],
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIOOI',
+      'JJ.LTZZOOI',
+      '...LZZS..I',
+      '..LL.SS...',
+      '.....S....',
+    ],
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIOOI',
+      'JJ.LTZZOOI',
+      '...LZZ.SSI',
+      '..LL....SS',
     ],
   ] },
   { id:'mt2', name:'山岳積み2号', rows: [
@@ -6745,6 +6778,7 @@ function renderTemplateRow() {
   if (!box) return;
   box.innerHTML = '';
   for (const t of tplAll()) {
+    if (t.auto) continue;   // 2巡目など、自動で出るものはボタンにしない
     const b = document.createElement('button');
     b.textContent = t.name;
     if (t.mine) b.className = 'tpl-mine';
@@ -6769,7 +6803,7 @@ function openTemplate(id) {
   win.id = 'tplWin';
   win.innerHTML =
     '<div class="shot-bar">' +
-      '<span class="sw-title">' + t.name + '</span>' +
+      '<span class="sw-title" id="tplTitle">' + t.name + '</span>' +
       '<button class="sw-btn' + (opts.tplJudge ? ' on' : '') + '" id="tplJudgeBtn" ' +
         'onclick="toggleTplJudge();this.blur()" ' +
         'title="いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します">判定</button>' +
@@ -6779,6 +6813,7 @@ function openTemplate(id) {
       '<div class="pc-cv-wrap"></div>' +
       '<div class="pc-nav">' +
         '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
+        '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
         (t.mine ? '<button onclick="deleteTemplate(\'' + t.id + '\');this.blur()" title="このテンプレートを削除します">削除</button>' : '') +
         '<div id="tplLabel"></div>' +
       '</div>' +
@@ -6793,25 +6828,38 @@ function openTemplate(id) {
   drawTemplate();
   window.addEventListener('pointermove', fitTplCanvas);
   window.addEventListener('pointerup',   fitTplCanvas);
-  const pats = tplPats();
-  const rows = Math.max(...pats.map(x => x.length));
-  const w = Math.max(COLS * tplCell * pats.length + 12 * (pats.length - 1) + 16, 220);
-  const h = rows * tplCell + (pats.length > 1 ? 16 : 0) + SHOT_BAR_H + PC_NAV_H;
-  win.style.width  = w + 'px';
-  win.style.height = h + 'px';
+  tplSizeWin();
+  const w = parseInt(win.style.width, 10) || 220;
   win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
   win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
 }
-// 画面に収まるマスの大きさを決める（複数パターンぶんの横幅も見る）
+// 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
 function tplFitCell(t) {
   const pats = t.pats ? t.pats : [t.rows];
   const rows = Math.max(...pats.map(x => x.length));
+  const n = pats.length, vert = !!opts.tplVertical;
+  const capH = n > 1 ? 16 : 0;
   const maxW = Math.min(window.innerWidth - 24, 820);
-  const maxH = Math.min(window.innerHeight - 24, 620) - SHOT_BAR_H - PC_NAV_H - (pats.length > 1 ? 16 : 0);
+  const maxH = Math.min(window.innerHeight - 24, 680) - SHOT_BAR_H - PC_NAV_H;
   let cell = TPL_CELL;
-  while (cell > 8 &&
-         (COLS * cell * pats.length + 12 * (pats.length - 1) + 16 > maxW || rows * cell > maxH)) cell--;
+  const needW = c => vert ? (COLS * c + 16) : (COLS * c * n + 12 * (n - 1) + 16);
+  const needH = c => vert ? ((rows * c + capH + 14) * n + 10 * (n - 1)) : (rows * c + capH + 14);
+  while (cell > 8 && (needW(cell) > maxW || needH(cell) > maxH)) cell--;
   return cell;
+}
+// 中身に合わせて窓の大きさを決める
+function tplSizeWin() {
+  const win = document.getElementById('tplWin');
+  if (!win || !tplCur) return;
+  const pats = tplPats();
+  const rows = Math.max(...pats.map(x => x.length));
+  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
+  const w = vert ? Math.max(COLS * tplCell + 16, 220)
+                 : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, 220);
+  const h = (vert ? (rows * tplCell + capH + 14) * n + 10 * (n - 1)
+                  : rows * tplCell + capH + 14) + SHOT_BAR_H + PC_NAV_H;
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
 }
 function closeTemplate() {
   const w = document.getElementById('tplWin');
@@ -6839,26 +6887,53 @@ function tplSeq() {
   if (!crossed) for (const t of bag) seq.push(t);
   return seq;
 }
-// テンプレの各ミノが入るマス（盤面の行・列で持つ）
-function tplTargets(rows) {
-  const map = {};
+// テンプレの絵を「ミノ1個ぶん（4マス）」に分ける。
+// 2巡目のように同じミノが2つ出てくる形でも、1個ずつに切り分けられるようにする。
+function tplPieces(rows) {
+  const byCh = {};
   for (let r = 0; r < rows.length; r++)
     for (let c = 0; c < COLS; c++) {
       const ch = rows[r][c];
       if (!ch || ch === '.' || ch === 'X') continue;
-      (map[ch] = map[ch] || []).push([TROW - 1 - r, c]);
+      (byCh[ch] = byCh[ch] || []).push([TROW - 1 - r, c]);
     }
-  return map;
+  const out = [];
+  for (const ch in byCh) {
+    const set = new Set(byCh[ch].map(([r, c]) => r + ',' + c));
+    // 一番上・一番左のマスから、そのミノの形で切り取っていく
+    const take = () => {
+      if (!set.size) return true;
+      let head = null;
+      for (const k of set) {
+        const [r, c] = k.split(',').map(Number);
+        if (!head || r < head[0] || (r === head[0] && c < head[1])) head = [r, c];
+      }
+      const def = PIECE_DEF[ch];
+      if (!def) { set.clear(); return true; }
+      for (let st = 0; st < def.cells.length; st++) {
+        for (const [ar, ac] of def.cells[st]) {
+          const or = head[0] - ar, oc = head[1] - ac;
+          const cells = def.cells[st].map(([dr, dc]) => [or + dr, oc + dc]);
+          if (!cells.every(([r, c]) => set.has(r + ',' + c))) continue;
+          for (const [r, c] of cells) set.delete(r + ',' + c);
+          out.push({ ch, cells });
+          if (take()) return true;
+          for (const [r, c] of cells) set.add(r + ',' + c);
+          out.pop();
+        }
+      }
+      return false;
+    };
+    take();
+  }
+  return out;
 }
 function tplKey(cells) { return cells.map(([r, c]) => r + ',' + c).sort().join(' '); }
 // そのミノが、テンプレどおりの位置にもう置いてあるか
-function tplPlacedAlready(rows, ch) {
-  for (let r = 0; r < rows.length; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (rows[r][c] !== ch) continue;
-      const col = board[TROW - 1 - r] && board[TROW - 1 - r][c];
-      if (!col || COLOR_TO_TYPE[col] !== ch) return false;
-    }
+function tplPlacedAt(piece) {
+  for (const [r, c] of piece.cells) {
+    const col = board[r] && board[r][c];
+    if (!col || COLOR_TO_TYPE[col] !== piece.ch) return false;
   }
   return true;
 }
@@ -6874,14 +6949,15 @@ function tplBoardOk(rows) {
   }
   return true;
 }
+// その形をぜんぶ置き終えたか
+function tplAllPlaced(rows) {
+  return tplPieces(rows).every(tplPlacedAt);
+}
 function tplCanBuild(rows) {
   if (dekaMode) return true;
   if (!tplBoardOk(rows)) return false;           // すでにテンプレから外れている
-  const targets = tplTargets(rows);
-  const left = {};
-  for (const ch in targets) if (!tplPlacedAlready(rows, ch)) left[ch] = targets[ch];
-  const remain = new Set(Object.keys(left));
-  if (!remain.size) return true;                 // もう組み終わっている
+  const left = tplPieces(rows).filter(p => !tplPlacedAt(p));
+  if (!left.length) return true;                 // もう組み終わっている
   const seq = tplSeq();
   const cache = new Map();
   const seen = new Set();
@@ -6889,7 +6965,7 @@ function tplCanBuild(rows) {
   const walk = (f, i, hold, rest) => {
     if (!rest.size) return true;
     if (i >= seq.length && !hold) return false;
-    const key = i + '|' + (hold || '-') + '|' + [...rest].sort().join('');
+    const key = i + '|' + (hold || '-') + '|' + [...rest].sort().join(',');
     if (seen.has(key)) return false;
     seen.add(key);
     const tries = [];
@@ -6901,22 +6977,46 @@ function tplCanBuild(rows) {
       tries.push([seq[i + 1], i + 2, seq[i]]);
     }
     for (const [type, ni, nh] of tries) {
-      if (!rest.has(type)) continue;             // テンプレで使わない／置き済み
-      const want = tplKey(left[type]);
-      const ok = pcPlacements(f, type, cache).some(mv => tplKey(mv.cells) === want);
-      if (!ok) continue;                         // そこへは入れられない
-      const g = f.slice();
-      for (const [r, c] of left[type]) g[r] |= (1 << c);
-      const r2 = new Set(rest); r2.delete(type);
-      if (walk(g, ni, nh, r2)) return true;
+      for (const idx of rest) {
+        const piece = left[idx];
+        if (piece.ch !== type) continue;
+        const want = tplKey(piece.cells);
+        const ok = pcPlacements(f, type, cache).some(mv => tplKey(mv.cells) === want);
+        if (!ok) continue;                       // そこへは入れられない
+        const g = f.slice();
+        for (const [r, c] of piece.cells) g[r] |= (1 << c);
+        const r2 = new Set(rest); r2.delete(idx);
+        if (walk(g, ni, nh, r2)) return true;
+      }
     }
     return false;
   };
-  return walk(pcRowsFromBoard(), 0, holdType, remain);
+  return walk(pcRowsFromBoard(), 0, holdType, new Set(left.map((_, i) => i)));
 }
 function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
+// 複数パターンの並べ方（横／縦）
+function toggleTplVertical() {
+  setOption('tplVertical', !opts.tplVertical);
+  tplCell = tplFitCell(tplCur);
+  drawTemplate();
+  tplSizeWin();
+}
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
-function tplRefresh() { if (document.getElementById('tplWin')) drawTemplate(); }
+function tplRefresh() {
+  if (!document.getElementById('tplWin') || !tplCur) return;
+  // 1巡目を置き終えたら、自動で2巡目に進む
+  if (tplCur.next && tplPats().some(rows => tplAllPlaced(rows))) {
+    const nx = tplAll().find(t => t.id === tplCur.next);
+    if (nx) {
+      tplCur = nx;
+      tplCell = tplFitCell(nx);
+      const ti = document.getElementById('tplTitle');
+      if (ti) ti.textContent = nx.name;
+      tplSizeWin();
+    }
+  }
+  drawTemplate();
+}
 function tplPats() {
   // 複数パターンがあるテンプレートは pats に入っている
   const list = tplCur.pats ? tplCur.pats : [tplCur.rows];
@@ -6929,16 +7029,19 @@ function fitTplCanvas() {
   if (!wrap || !tplCur) return;
   const pats = tplPats();
   const rows = Math.max(...pats.map(p => p.length));
-  const capH = pats.length > 1 ? 16 : 0;
-  const cell = Math.max(5, Math.floor(Math.min(
-    (wrap.clientWidth - 12 * (pats.length - 1)) / (COLS * pats.length),
-    (wrap.clientHeight - capH) / rows)));
+  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 30 : 14;
+  const cell = vert
+    ? Math.max(5, Math.floor(Math.min(wrap.clientWidth / COLS,
+        (wrap.clientHeight - capH * n - 10 * (n - 1)) / (rows * n))))
+    : Math.max(5, Math.floor(Math.min((wrap.clientWidth - 12 * (n - 1)) / (COLS * n),
+        (wrap.clientHeight - capH) / rows)));
   if (cell !== tplCell) { tplCell = cell; drawTemplate(); }
 }
 function drawTemplate() {
   const wrap = document.querySelector('#tplWin .pc-cv-wrap');
   if (!wrap || !tplCur) return;
   const pats = tplPats(), cell = tplCell;
+  wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
   wrap.innerHTML = '';
   pats.forEach((rows, i) => {
     const box = document.createElement('div');
@@ -6968,12 +7071,10 @@ function drawTemplate() {
       }
     }
     box.appendChild(cv);
-    if (!ok) {
-      const ng = document.createElement('div');
-      ng.className = 'tpl-ng';
-      ng.textContent = '組めません';
-      box.appendChild(ng);
-    }
+    const ng = document.createElement('div');
+    ng.className = 'tpl-ng';
+    ng.textContent = ok ? '' : '組めません';   // 空でも場所は取る（絵がずれないように）
+    box.appendChild(ng);
     wrap.appendChild(box);
   });
   const jb = document.getElementById('tplJudgeBtn');
@@ -7298,6 +7399,7 @@ const OPT_DEFAULTS = {
   grid: true,         // グリッド線（盤面のマス目）
   tabletTouch: false, // 盤面をスライド／タップでミノを操作する（タブレット向け・既定OFF）
   tplJudge: true,     // テンプレートが今のミノで組めるかを判定する
+  tplVertical: false, // 複数パターンを縦に並べる（既定は横）
   pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
   pcAtkLast: false,   // パフェを決める最後の1手を火力に数えるか
   pcFollow: true,     // パフェ手順を、置いたミノに合わせて自動で進める
@@ -7751,7 +7853,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.86.1';
+const APP_VERSION = '1.87.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
