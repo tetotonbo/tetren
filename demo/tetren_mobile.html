@@ -1000,6 +1000,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.90.0 / 1.88.0</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした</li><li>はちみつ砲に1巡目の2パターン目（Jを左側に立てる形）を追加</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.89.0 / 1.87.0</span><span class="vl-date">2026-10-23</span></div><ul><li>DT砲の2巡目（3パターン）を追加。1巡目をテンプレどおりに置き終えると、自動で2巡目の表示に切り替わる</li><li>複数パターンの並べ方を 横／縦 で切り替えられるようにした（窓の「並び」ボタン）</li><li>「組めません」が出たときに絵がずれていたのを修正（表示の場所をあらかじめ取るようにした）</li><li>同じミノが2つ以上あるテンプレート（2巡目など）で判定が必ずNGになっていたのを修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.88.1 / 1.86.1</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li><li>テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）</li><li>判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
@@ -2876,12 +2877,22 @@ const TEMPLATES = [
     '...J......',
     '...J......',
   ] },
-  { id:'honey', name:'はちみつ砲', rows: [
-    'IIII.ZZTOO',
-    'LLL.ZZTTOO',
-    'SSL....TJJ',
-    '.SS......J',
-    '.........J',
+  { id:'honey', name:'はちみつ砲', pats: [
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL....TJJ',
+      '.SS......J',
+      '.........J',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL....T..',
+      'JSS.......',
+      'J.........',
+      'JJ........',
+    ],
   ] },
   { id:'meiso2', name:'迷走砲', rows: [
     'ILLST.JJOO',
@@ -2937,7 +2948,7 @@ function deleteTemplate(id) {
   closeTemplate();
   renderTemplateRow();
 }
-const TPL_CELL = 26;
+const TPL_CELL = 20;   // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
 let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
 
 // カンペ画像のダイアログにボタンを並べる
@@ -2997,8 +3008,7 @@ function openTemplate(id) {
   window.addEventListener('pointermove', fitTplCanvas);
   window.addEventListener('pointerup',   fitTplCanvas);
   tplSizeWin();
-  const w = parseInt(win.style.width, 10) || 220;
-  win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
+  win.style.left = '16px';   // 盤面と重なりにくい左側に出す
   win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
 }
 // 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
@@ -5836,7 +5846,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.89.0';
+const APP_VERSION = '1.90.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
