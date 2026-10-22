@@ -274,6 +274,11 @@ input:checked + .tgl::after { transform:translateX(10px); }
   padding:7px 10px; font-size:11px; font-weight:bold;
 }
 .tpl-row button.tpl-mine { background:#1f3a5f; }
+/* テンプレートの窓。複数パターンは横に並べる */
+#tplWin .pc-cv-wrap { align-items:flex-end; gap:12px; }
+.tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.tpl-cap { font-size:10px; color:#9ca3af; }
+.tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-add { display:flex; gap:5px; align-items:center; margin:4px 0 0; }
 .tpl-add input {
   flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
@@ -992,6 +997,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.85.1 / 1.83.1</span><span class="vl-date">2026-10-22</span></div><ul><li>設定の画面を、カンペ画像・パフェ手順・テンプレートの窓より前に出すようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.85.0 / 1.83.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像の開幕テンプレートに 「いまの地形を登録」 を追加</li></ul></div>
@@ -2810,12 +2816,21 @@ function movePcPick(d) {
 // 1巡目の置き方を、盤面と同じ絵で見られるようにする。
 // rows は「下の行から順」に、1文字＝1マス（ミノの種類／. は空き）で書いてある。
 const TEMPLATES = [
-  { id:'dt', name:'DT砲', rows: [
-    'OO.LLLIJJJ',
-    'OO.SSLIJZZ',
-    '....SSIZZ.',
-    '...TTTI...',
-    '....T.....',
+  { id:'dt', name:'DT砲', pats: [
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      '....SSIZZ.',
+      '...TTTI...',
+      '....T.....',
+    ],
+    [
+      'OO.ZJJILLS',
+      'OO.ZZJILSS',
+      '....ZJILS.',
+      '...TTTI...',
+      '....T.....',
+    ],
   ] },
   { id:'mt2', name:'山岳積み2号', rows: [
     'OOTSS.LLLI',
@@ -2908,7 +2923,8 @@ function renderTemplateRow() {
 function openTemplate(id) {
   const t = tplAll().find(x => x.id === id);
   if (!t) return;
-  tplCur = t; tplFlip = false; tplCell = TPL_CELL;
+  tplCur = t; tplFlip = false;
+  tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
   closeTemplate();
   const win = document.createElement('div');
@@ -2920,7 +2936,7 @@ function openTemplate(id) {
       '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
     '</div>' +
     '<div class="pc-body">' +
-      '<div class="pc-cv-wrap"><canvas id="tplCanvas"></canvas></div>' +
+      '<div class="pc-cv-wrap"></div>' +
       '<div class="pc-nav">' +
         '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
         (t.mine ? '<button onclick="deleteTemplate(\'' + t.id + '\');this.blur()" title="このテンプレートを削除します">削除</button>' : '') +
@@ -2937,12 +2953,25 @@ function openTemplate(id) {
   drawTemplate();
   window.addEventListener('pointermove', fitTplCanvas);
   window.addEventListener('pointerup',   fitTplCanvas);
-  const cv = document.getElementById('tplCanvas');
-  const w = Math.max(cv.width + 16, 220), h = cv.height + SHOT_BAR_H + PC_NAV_H;
+  const pats = tplPats();
+  const rows = Math.max(...pats.map(x => x.length));
+  const w = Math.max(COLS * tplCell * pats.length + 12 * (pats.length - 1) + 16, 220);
+  const h = rows * tplCell + (pats.length > 1 ? 16 : 0) + SHOT_BAR_H + PC_NAV_H;
   win.style.width  = w + 'px';
   win.style.height = h + 'px';
   win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
   win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
+}
+// 画面に収まるマスの大きさを決める（複数パターンぶんの横幅も見る）
+function tplFitCell(t) {
+  const pats = t.pats ? t.pats : [t.rows];
+  const rows = Math.max(...pats.map(x => x.length));
+  const maxW = Math.min(window.innerWidth - 24, 820);
+  const maxH = Math.min(window.innerHeight - 24, 620) - SHOT_BAR_H - PC_NAV_H - (pats.length > 1 ? 16 : 0);
+  let cell = TPL_CELL;
+  while (cell > 8 &&
+         (COLS * cell * pats.length + 12 * (pats.length - 1) + 16 > maxW || rows * cell > maxH)) cell--;
+  return cell;
 }
 function closeTemplate() {
   const w = document.getElementById('tplWin');
@@ -2951,40 +2980,61 @@ function closeTemplate() {
   window.removeEventListener('pointerup',   fitTplCanvas);
 }
 function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
-// 反転すると左右が入れ替わり、鏡の関係にある L↔J・S↔Z も入れ替わる
-function tplRows() {
-  const rows = tplCur.rows;
-  if (!tplFlip) return rows;
-  return rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join(''));
+function tplPats() {
+  // 複数パターンがあるテンプレートは pats に入っている
+  const list = tplCur.pats ? tplCur.pats : [tplCur.rows];
+  if (!tplFlip) return list;
+  return list.map(rows => rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join('')));
 }
+function tplRows() { return tplPats()[0]; }   // 1枚目（判定や確認に使う）
 function fitTplCanvas() {
   const wrap = document.querySelector('#tplWin .pc-cv-wrap');
   if (!wrap || !tplCur) return;
-  const rows = tplCur.rows.length;
-  const cell = Math.max(6, Math.floor(Math.min(wrap.clientWidth / COLS, wrap.clientHeight / rows)));
+  const pats = tplPats();
+  const rows = Math.max(...pats.map(p => p.length));
+  const capH = pats.length > 1 ? 16 : 0;
+  const cell = Math.max(5, Math.floor(Math.min(
+    (wrap.clientWidth - 12 * (pats.length - 1)) / (COLS * pats.length),
+    (wrap.clientHeight - capH) / rows)));
   if (cell !== tplCell) { tplCell = cell; drawTemplate(); }
 }
 function drawTemplate() {
-  const cv = document.getElementById('tplCanvas');
-  if (!cv || !tplCur) return;
-  const rows = tplRows(), n = rows.length, cell = tplCell;
-  cv.width = COLS * cell; cv.height = n * cell;
-  const g = cv.getContext('2d');
-  g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
-  g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
-  for (let r = 0; r < n; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
-  // rows は下から順なので、描くときは上下をひっくり返す
-  for (let r = 0; r < n; r++) {
-    const line = rows[n - 1 - r];
-    for (let c = 0; c < COLS; c++) {
-      const ch = line[c];
-      if (!ch || ch === '.') continue;
-      const col = (ch === 'X') ? GARBAGE_COLOR : pieceColor(ch);
-      withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, 1));
+  const wrap = document.querySelector('#tplWin .pc-cv-wrap');
+  if (!wrap || !tplCur) return;
+  const pats = tplPats(), cell = tplCell;
+  wrap.innerHTML = '';
+  pats.forEach((rows, i) => {
+    const box = document.createElement('div');
+    box.className = 'tpl-pat';
+    if (pats.length > 1) {
+      const cap = document.createElement('div');
+      cap.className = 'tpl-cap';
+      cap.textContent = (i + 1) + 'つ目';
+      box.appendChild(cap);
     }
-  }
+    const cv = document.createElement('canvas');
+    const n = rows.length;
+    cv.width = COLS * cell; cv.height = n * cell;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
+    g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
+    for (let r = 0; r < n; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
+    // rows は下から順なので、描くときは上下をひっくり返す
+    for (let r = 0; r < n; r++) {
+      const line = rows[n - 1 - r];
+      for (let c = 0; c < COLS; c++) {
+        const ch = line[c];
+        if (!ch || ch === '.') continue;
+        const col = (ch === 'X') ? GARBAGE_COLOR : pieceColor(ch);
+        withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, 1));
+      }
+    }
+    box.appendChild(cv);
+    wrap.appendChild(box);
+  });
   const el = document.getElementById('tplLabel');
-  if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '');
+  if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
+                         + (pats.length > 1 ? `　${pats.length}パターン` : '');
 }
 
 // ===== パフェ手順の追従 =====
@@ -5569,7 +5619,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.86.1';
+const APP_VERSION = '1.87.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
