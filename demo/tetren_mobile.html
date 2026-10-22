@@ -998,7 +998,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.88.0 / 1.86.0</span><span class="vl-date">2026-10-22</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.88.1 / 1.86.1</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li><li>テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）</li><li>判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.85.1 / 1.83.1</span><span class="vl-date">2026-10-22</span></div><ul><li>設定の画面を、カンペ画像・パフェ手順・テンプレートの窓より前に出すようにした</li></ul></div>
@@ -2929,6 +2929,8 @@ function openTemplate(id) {
   tplCur = t; tplFlip = false;
   tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
+  // 開幕から試せるよう、地形もミノ順もリセットしてから出す
+  startGame();
   closeTemplate();
   const win = document.createElement('div');
   win.className = 'shot-win';
@@ -2938,7 +2940,7 @@ function openTemplate(id) {
       '<span class="sw-title">' + t.name + '</span>' +
       '<button class="sw-btn' + (opts.tplJudge ? ' on' : '') + '" id="tplJudgeBtn" ' +
         'onclick="toggleTplJudge();this.blur()" ' +
-        'title="いまのミノ（操作中・HOLD・NEXT・この巡の残り）でこの形が組めるかを見ます。組めないときは薄く表示します">判定</button>' +
+        'title="いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します">判定</button>' +
       '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
     '</div>' +
     '<div class="pc-body">' +
@@ -2987,29 +2989,98 @@ function closeTemplate() {
 }
 function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
 // ===== テンプレートが組めるかの判定 =====
-// いま持っているミノ（操作中・HOLD・NEXT・この巡の残り）で、その形を作れるかを見る。
-// 並べ方までは見ず、必要なミノが足りているかだけを数える。
-function tplAvail() {
-  const list = [];
-  if (cur) list.push(cur.type);
-  if (holdType) list.push(holdType);
-  for (const q of nextQ) list.push(q.type);
-  for (const t of bag) list.push(t);   // まだ出ていない、この巡のぶん
-  return list;
-}
-function tplCanBuild(rows) {
-  const need = {};
-  for (const line of rows) for (const ch of line) {
-    if (!ch || ch === '.' || ch === 'X') continue;   // X はおじゃま（ミノでは作らない）
-    need[ch] = (need[ch] || 0) + 1;
+// 「いまのツモ順（操作中＋NEXT＋この巡の残り）で、カンペどおりに置けるか」を見る。
+// 置き方の列挙はパフェ探索と同じ仕組みを使うので、回し入れが要る置き方も拾える。
+// すでにテンプレどおりに置いたぶんは済みとして数えない。
+// テンプレと違う置き方をした時点でNG。1手戻せば盤面が戻るので判定も戻る。
+
+// 到着する順にミノを並べる。NEXTは「この巡のぶん」まで
+function tplSeq() {
+  const seq = [];
+  if (cur) seq.push(cur.type);
+  let crossed = false;
+  for (const q of nextQ) {
+    if (q.newBag) { crossed = true; break; }
+    seq.push(q.type);
   }
-  const have = {};
-  for (const t of tplAvail()) have[t] = (have[t] || 0) + 1;
-  for (const k in need) {
-    const n = Math.ceil(need[k] / 4);               // 4マスで1ミノ
-    if ((have[k] || 0) < n) return false;
+  // まだ引いていない、この巡の残り（7手目はこれで分かる）
+  if (!crossed) for (const t of bag) seq.push(t);
+  return seq;
+}
+// テンプレの各ミノが入るマス（盤面の行・列で持つ）
+function tplTargets(rows) {
+  const map = {};
+  for (let r = 0; r < rows.length; r++)
+    for (let c = 0; c < COLS; c++) {
+      const ch = rows[r][c];
+      if (!ch || ch === '.' || ch === 'X') continue;
+      (map[ch] = map[ch] || []).push([TROW - 1 - r, c]);
+    }
+  return map;
+}
+function tplKey(cells) { return cells.map(([r, c]) => r + ',' + c).sort().join(' '); }
+// そのミノが、テンプレどおりの位置にもう置いてあるか
+function tplPlacedAlready(rows, ch) {
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (rows[r][c] !== ch) continue;
+      const col = board[TROW - 1 - r] && board[TROW - 1 - r][c];
+      if (!col || COLOR_TO_TYPE[col] !== ch) return false;
+    }
   }
   return true;
+}
+// 盤面にテンプレと違うブロックが無いか（1手でも違えばNG。戻せば戻る）
+function tplBoardOk(rows) {
+  for (let r = 0; r < TROW; r++) for (let c = 0; c < COLS; c++) {
+    const col = board[r][c];
+    if (!col) continue;
+    const tr = TROW - 1 - r;
+    const ch = (tr < rows.length) ? rows[tr][c] : '.';
+    if (ch === '.' || ch === 'X') return false;
+    if (COLOR_TO_TYPE[col] !== ch) return false;
+  }
+  return true;
+}
+function tplCanBuild(rows) {
+  if (dekaMode) return true;
+  if (!tplBoardOk(rows)) return false;           // すでにテンプレから外れている
+  const targets = tplTargets(rows);
+  const left = {};
+  for (const ch in targets) if (!tplPlacedAlready(rows, ch)) left[ch] = targets[ch];
+  const remain = new Set(Object.keys(left));
+  if (!remain.size) return true;                 // もう組み終わっている
+  const seq = tplSeq();
+  const cache = new Map();
+  const seen = new Set();
+  // ツモ順どおりに、HOLDを使いながら置けるかを調べる
+  const walk = (f, i, hold, rest) => {
+    if (!rest.size) return true;
+    if (i >= seq.length && !hold) return false;
+    const key = i + '|' + (hold || '-') + '|' + [...rest].sort().join('');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    const tries = [];
+    if (i < seq.length) tries.push([seq[i], i + 1, hold]);
+    if (hold) {
+      if (i < seq.length) tries.push([hold, i + 1, seq[i]]);
+      else                tries.push([hold, i, null]);
+    } else if (i + 1 < seq.length) {
+      tries.push([seq[i + 1], i + 2, seq[i]]);
+    }
+    for (const [type, ni, nh] of tries) {
+      if (!rest.has(type)) continue;             // テンプレで使わない／置き済み
+      const want = tplKey(left[type]);
+      const ok = pcPlacements(f, type, cache).some(mv => tplKey(mv.cells) === want);
+      if (!ok) continue;                         // そこへは入れられない
+      const g = f.slice();
+      for (const [r, c] of left[type]) g[r] |= (1 << c);
+      const r2 = new Set(rest); r2.delete(type);
+      if (walk(g, ni, nh, r2)) return true;
+    }
+    return false;
+  };
+  return walk(pcRowsFromBoard(), 0, holdType, remain);
 }
 function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
@@ -3670,6 +3741,7 @@ function saveSnapshot(){
 // ===== Undo =====
 function undo(){
   if(!undoStack.length) return;
+  setTimeout(tplRefresh, 0);   // 戻したらテンプレの判定もやり直す
   const s=undoStack.pop(); resetLock();
   board=s.board; cur=mkPiece(s.cur.type); holdType=s.holdType; canHold=s.canHold;
   bag=s.bag; nextQ=s.nextQ; score=s.score; level=s.level; lines=s.lines;
@@ -5663,7 +5735,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.88.0';
+const APP_VERSION = '1.88.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
