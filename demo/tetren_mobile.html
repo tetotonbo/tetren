@@ -1000,6 +1000,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.93.0 / 1.91.0</span><span class="vl-date">2026-10-23</span></div><ul><li>山岳積み2号を組み終えると、2巡目（3パターン）を自動で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.92.0 / 1.90.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の1パターン目を組み終えると、専用の2巡目（3パターン）を自動で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.91.0 / 1.89.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の2パターン目を組み終えると、専用の2巡目（2パターン）を自動で表示するようにした</li><li>形ごとに違う2巡目へ進めるようにした（テンプレートの nexts）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.90.0 / 1.88.0</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした</li><li>はちみつ砲に1巡目の2パターン目（Jを左側に立てる形）を追加</li></ul></div>
@@ -2871,13 +2872,43 @@ const TEMPLATES = [
       '..LL....SS',
     ],
   ] },
-  { id:'mt2', name:'山岳積み2号', rows: [
+  { id:'mt2', name:'山岳積み2号', next:'mt22', rows: [
     'OOTSS.LLLI',
     'OOTTSS.ZLI',
     '..T....ZZI',
     '..JJ....ZI',
     '...J......',
     '...J......',
+  ] },
+  { id:'mt22', name:'山岳積み2号 2巡目', auto:true, pats: [
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.ZZI',
+      'IJJJ...ZZL',
+      'I..J..OOZL',
+      '......OOLL',
+    ],
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.LZI',
+      'IJJJ...LOO',
+      'IZZJ..LLOO',
+      'ZZ........',
+    ],
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.LZI',
+      'IJJJ...LOO',
+      'I..J..LLOO',
+      '........ZZ',
+      '.......ZZ.',
+    ],
   ] },
   { id:'honey', name:'はちみつ砲', nexts: ['honey2a', 'honey2b'], pats: [
     [
@@ -5908,7 +5939,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.92.0';
+const APP_VERSION = '1.93.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
