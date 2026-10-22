@@ -1422,6 +1422,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.94.0 / 1.92.0</span><span class="vl-date">2026-10-23</span></div><ul><li>2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.93.0 / 1.91.0</span><span class="vl-date">2026-10-23</span></div><ul><li>山岳積み2号を組み終えると、2巡目（3パターン）を自動で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.92.0 / 1.90.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の1パターン目を組み終えると、専用の2巡目（3パターン）を自動で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.91.0 / 1.89.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の2パターン目を組み終えると、専用の2巡目（2パターン）を自動で表示するようにした</li><li>形ごとに違う2巡目へ進めるようにした（テンプレートの nexts）</li></ul></div>
@@ -6864,6 +6865,7 @@ function deleteTemplate(id) {
 }
 const TPL_CELL = 20;   // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
 let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
+let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
 
 // カンペ画像のダイアログにボタンを並べる
 function renderTemplateRow() {
@@ -6885,7 +6887,7 @@ function renderTemplateRow() {
 function openTemplate(id) {
   const t = tplAll().find(x => x.id === id);
   if (!t) return;
-  tplCur = t; tplFlip = false;
+  tplCur = t; tplFlip = false; tplBase = null;
   tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
   // 開幕から試せるよう、地形もミノ順もリセットしてから出す
@@ -7095,22 +7097,23 @@ function toggleTplVertical() {
 }
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
 // 置き終えた形に応じて、次に出す巡の id を返す（形ごとに違う続きを持てる）
-function tplNextId() {
+function tplNextHit() {
   const pats = tplPats();
   for (let i = 0; i < pats.length; i++) {
     if (!tplAllPlaced(pats[i])) continue;
     const id = (tplCur.nexts && tplCur.nexts[i]) || tplCur.next;
-    if (id) return id;
+    if (id) return { id: id, i: i };
   }
   return null;
 }
 function tplRefresh() {
   if (!document.getElementById('tplWin') || !tplCur) return;
   // 1巡目を置き終えたら、自動で2巡目に進む
-  const nid = tplNextId();
-  if (nid) {
-    const nx = tplAll().find(t => t.id === nid);
+  const hit = tplNextHit();
+  if (hit) {
+    const nx = tplAll().find(t => t.id === hit.id);
     if (nx) {
+      tplBase = tplRawPats(tplCur)[hit.i];   // 1巡目で組んだぶんは灰色にする
       tplCur = nx;
       tplCell = tplFitCell(nx);
       const ti = document.getElementById('tplTitle');
@@ -7120,11 +7123,12 @@ function tplRefresh() {
   }
   drawTemplate();
 }
+function tplRawPats(t) { return t.pats ? t.pats : [t.rows]; }
+function tplMirror(rows) { return rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join('')); }
 function tplPats() {
   // 複数パターンがあるテンプレートは pats に入っている
-  const list = tplCur.pats ? tplCur.pats : [tplCur.rows];
-  if (!tplFlip) return list;
-  return list.map(rows => rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join('')));
+  const list = tplRawPats(tplCur);
+  return tplFlip ? list.map(tplMirror) : list;
 }
 function tplRows() { return tplPats()[0]; }   // 1枚目（判定や確認に使う）
 function fitTplCanvas() {
@@ -7144,6 +7148,7 @@ function drawTemplate() {
   const wrap = document.querySelector('#tplWin .pc-cv-wrap');
   if (!wrap || !tplCur) return;
   const pats = tplPats(), cell = tplCell;
+  const base = tplBase ? (tplFlip ? tplMirror(tplBase) : tplBase) : null;
   wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
   wrap.innerHTML = '';
   pats.forEach((rows, i) => {
@@ -7166,10 +7171,12 @@ function drawTemplate() {
     // rows は下から順なので、描くときは上下をひっくり返す
     for (let r = 0; r < n; r++) {
       const line = rows[n - 1 - r];
+      const bline = base && base[n - 1 - r];
       for (let c = 0; c < COLS; c++) {
         const ch = line[c];
         if (!ch || ch === '.') continue;
-        const col = (ch === 'X') ? GARBAGE_COLOR : pieceColor(ch);
+        const old = bline && bline[c] && bline[c] !== '.';   // 1巡目で置いたマス
+        const col = (ch === 'X' || old) ? GARBAGE_COLOR : pieceColor(ch);
         withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, ok ? 1 : 0.25));
       }
     }
@@ -7956,7 +7963,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.91.0';
+const APP_VERSION = '1.92.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
