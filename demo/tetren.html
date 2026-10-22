@@ -333,7 +333,12 @@ button, label, .ctrl-lbl, [data-pos] {
 .tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
 /* 「組めません」が出ても絵がずれないよう、場所は常に取っておく */
-.tpl-ng { font-size:10px; color:#f87171; font-weight:bold; min-height:14px; line-height:14px; }
+.tpl-cv { position:relative; line-height:0; }
+.tpl-ng {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:11px; line-height:1.2; color:#fca5a5; font-weight:bold; pointer-events:none;
+  text-shadow:0 0 4px #000, 0 1px 3px #000, 0 0 10px #000;
+}
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-row button.tpl-mine:hover { background:#2a4d7a; }
 .tpl-add { display:flex; gap:6px; align-items:center; margin:0 0 12px; }
@@ -1424,6 +1429,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.96.0 / 1.94.0</span><span class="vl-date">2026-10-23</span></div><ul><li>巡を移っても窓の大きさは変えず、盤が増えるぶんマスを小さくして収めるようにした</li><li>「組めません」を盤の下ではなく、盤の上に重ねて表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.95.0 / 1.93.0</span><span class="vl-date">2026-10-23</span></div><ul><li>その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）</li><li>テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした</li><li>2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.94.0 / 1.92.0</span><span class="vl-date">2026-10-23</span></div><ul><li>2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.93.0 / 1.91.0</span><span class="vl-date">2026-10-23</span></div><ul><li>山岳積み2号を組み終えると、2巡目（3パターン）を自動で表示するようにした</li></ul></div>
@@ -6947,11 +6953,22 @@ function tplFitCell(t) {
   const maxH = Math.min(window.innerHeight - 24, 680) - SHOT_BAR_H - PC_NAV_H;
   let cell = TPL_CELL;
   const needW = c => vert ? (COLS * c + 16) : (COLS * c * n + 12 * (n - 1) + 16);
-  const needH = c => vert ? ((rows * c + capH + 14) * n + 10 * (n - 1)) : (rows * c + capH + 14);
+  const needH = c => vert ? ((rows * c + capH) * n + 10 * (n - 1)) : (rows * c + capH);
   while (cell > 8 && (needW(cell) > maxW || needH(cell) > maxH)) cell--;
   return cell;
 }
 // 中身に合わせて窓の大きさを決める
+// バー・ボタン列・余白のぶんの高さ。実際に測って、絵がちょうど収まるようにする
+function tplChromeH(win) {
+  const bar = win.querySelector('.shot-bar'),
+        nav = win.querySelector('.pc-nav'),
+        body = win.querySelector('.pc-body');
+  if (!bar || !nav || !body) return SHOT_BAR_H + PC_NAV_H;
+  const cs = getComputedStyle(body);
+  return Math.ceil(bar.getBoundingClientRect().height + nav.getBoundingClientRect().height
+       + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+       + (parseFloat(cs.rowGap) || 0)) + 2;
+}
 function tplSizeWin() {
   const win = document.getElementById('tplWin');
   if (!win || !tplCur) return;
@@ -6960,8 +6977,8 @@ function tplSizeWin() {
   const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
   const w = vert ? Math.max(COLS * tplCell + 16, TPL_MIN_W)
                  : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, TPL_MIN_W);
-  const h = (vert ? (rows * tplCell + capH + 14) * n + 10 * (n - 1)
-                  : rows * tplCell + capH + 14) + SHOT_BAR_H + PC_NAV_H;
+  const h = (vert ? (rows * tplCell + capH) * n + 10 * (n - 1)
+                  : rows * tplCell + capH) + tplChromeH(win);
   win.style.width  = w + 'px';
   win.style.height = h + 'px';
 }
@@ -7146,11 +7163,10 @@ function tplGoPrev() {
   tplAfterChange();
 }
 function tplAfterChange() {
-  tplCell = tplFitCell(tplCur);
   const ti = document.getElementById('tplTitle');
   if (ti) ti.textContent = tplCur.name;
-  tplSizeWin();
   drawTemplate();
+  fitTplCanvas();   // 窓の外枠はそのままで、中の絵だけ大きさを合わせる
 }
 function tplNextHit() {
   const pats = tplPats();
@@ -7183,7 +7199,7 @@ function fitTplCanvas() {
   if (!wrap || !tplCur) return;
   const pats = tplPats();
   const rows = Math.max(...pats.map(p => p.length));
-  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 30 : 14;
+  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
   const cell = vert
     ? Math.max(5, Math.floor(Math.min(wrap.clientWidth / COLS,
         (wrap.clientHeight - capH * n - 10 * (n - 1)) / (rows * n))))
@@ -7228,11 +7244,16 @@ function drawTemplate() {
         withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, ok ? 1 : 0.25));
       }
     }
-    box.appendChild(cv);
-    const ng = document.createElement('div');
-    ng.className = 'tpl-ng';
-    ng.textContent = (ok || done) ? '' : '組めません';   // 空でも場所は取る（絵がずれないように）
-    box.appendChild(ng);
+    const cvbox = document.createElement('div');
+    cvbox.className = 'tpl-cv';
+    cvbox.appendChild(cv);
+    if (!ok && !done) {
+      const ng = document.createElement('div');
+      ng.className = 'tpl-ng';
+      ng.textContent = '組めません';
+      cvbox.appendChild(ng);
+    }
+    box.appendChild(cvbox);
     wrap.appendChild(box);
   });
   const jb = document.getElementById('tplJudgeBtn');
@@ -8015,7 +8036,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.93.0';
+const APP_VERSION = '1.94.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
