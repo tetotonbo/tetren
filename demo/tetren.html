@@ -331,6 +331,7 @@ button, label, .ctrl-lbl, [data-pos] {
 #tplWin .pc-cv-wrap { align-items:flex-end; gap:12px; }
 .tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
+.tpl-ng { font-size:10px; color:#f87171; font-weight:bold; }
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-row button.tpl-mine:hover { background:#2a4d7a; }
 .tpl-add { display:flex; gap:6px; align-items:center; margin:0 0 12px; }
@@ -1419,6 +1420,7 @@ input:checked + .tgl::after { transform:translateX(16px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.88.0 / 1.86.0</span><span class="vl-date">2026-10-22</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.85.1 / 1.83.1</span><span class="vl-date">2026-10-22</span></div><ul><li>設定の画面を、カンペ画像・パフェ手順・テンプレートの窓より前に出すようにした</li></ul></div>
@@ -2550,6 +2552,7 @@ function rotate(dir) { // dir: 1=CW, -1=CCW
 
 // ===== ホールド =====
 function doHold() {
+  setTimeout(tplRefresh, 0);
   // 連続ホールドOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if (!opts.multiHold && !canHold) return;
   if (holdType === null) {
@@ -3968,6 +3971,7 @@ function lock() {
   if (pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
   spawn();
   draw();
+  tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
 }
 
 // ===== ライン消去 =====
@@ -6763,6 +6767,9 @@ function openTemplate(id) {
   win.innerHTML =
     '<div class="shot-bar">' +
       '<span class="sw-title">' + t.name + '</span>' +
+      '<button class="sw-btn' + (opts.tplJudge ? ' on' : '') + '" id="tplJudgeBtn" ' +
+        'onclick="toggleTplJudge();this.blur()" ' +
+        'title="いまのミノ（操作中・HOLD・NEXT・この巡の残り）でこの形が組めるかを見ます。組めないときは薄く表示します">判定</button>' +
       '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
     '</div>' +
     '<div class="pc-body">' +
@@ -6810,6 +6817,34 @@ function closeTemplate() {
   window.removeEventListener('pointerup',   fitTplCanvas);
 }
 function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
+// ===== テンプレートが組めるかの判定 =====
+// いま持っているミノ（操作中・HOLD・NEXT・この巡の残り）で、その形を作れるかを見る。
+// 並べ方までは見ず、必要なミノが足りているかだけを数える。
+function tplAvail() {
+  const list = [];
+  if (cur) list.push(cur.type);
+  if (holdType) list.push(holdType);
+  for (const q of nextQ) list.push(q.type);
+  for (const t of bag) list.push(t);   // まだ出ていない、この巡のぶん
+  return list;
+}
+function tplCanBuild(rows) {
+  const need = {};
+  for (const line of rows) for (const ch of line) {
+    if (!ch || ch === '.' || ch === 'X') continue;   // X はおじゃま（ミノでは作らない）
+    need[ch] = (need[ch] || 0) + 1;
+  }
+  const have = {};
+  for (const t of tplAvail()) have[t] = (have[t] || 0) + 1;
+  for (const k in need) {
+    const n = Math.ceil(need[k] / 4);               // 4マスで1ミノ
+    if ((have[k] || 0) < n) return false;
+  }
+  return true;
+}
+function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
+// ミノを置いたりHOLDしたら、出ている窓の判定を見直す
+function tplRefresh() { if (document.getElementById('tplWin')) drawTemplate(); }
 function tplPats() {
   // 複数パターンがあるテンプレートは pats に入っている
   const list = tplCur.pats ? tplCur.pats : [tplCur.rows];
@@ -6842,6 +6877,7 @@ function drawTemplate() {
       cap.textContent = (i + 1) + 'つ目';
       box.appendChild(cap);
     }
+    const ok = !opts.tplJudge || tplCanBuild(rows);
     const cv = document.createElement('canvas');
     const n = rows.length;
     cv.width = COLS * cell; cv.height = n * cell;
@@ -6856,12 +6892,20 @@ function drawTemplate() {
         const ch = line[c];
         if (!ch || ch === '.') continue;
         const col = (ch === 'X') ? GARBAGE_COLOR : pieceColor(ch);
-        withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, 1));
+        withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, ok ? 1 : 0.25));
       }
     }
     box.appendChild(cv);
+    if (!ok) {
+      const ng = document.createElement('div');
+      ng.className = 'tpl-ng';
+      ng.textContent = '組めません';
+      box.appendChild(ng);
+    }
     wrap.appendChild(box);
   });
+  const jb = document.getElementById('tplJudgeBtn');
+  if (jb) jb.classList.toggle('on', !!opts.tplJudge);
   const el = document.getElementById('tplLabel');
   if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
                          + (pats.length > 1 ? `　${pats.length}パターン` : '');
@@ -7181,6 +7225,7 @@ const OPT_DEFAULTS = {
   axis: false,        // 軸表示
   grid: true,         // グリッド線（盤面のマス目）
   tabletTouch: false, // 盤面をスライド／タップでミノを操作する（タブレット向け・既定OFF）
+  tplJudge: true,     // テンプレートが今のミノで組めるかを判定する
   pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
   pcAtkLast: false,   // パフェを決める最後の1手を火力に数えるか
   pcFollow: true,     // パフェ手順を、置いたミノに合わせて自動で進める
@@ -7634,7 +7679,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.85.0';
+const APP_VERSION = '1.86.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
