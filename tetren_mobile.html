@@ -266,6 +266,30 @@ input:checked + .tgl::after { transform:translateX(10px); }
 /* パフェ手順のウィンドウ（カンペ画像と同じ .shot-win に乗せる） */
 .pc-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:6px; padding:6px; }
 .pc-cv-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+#tplCanvas { max-width:100%; max-height:100%; border:1px solid #374151; border-radius:2px; }
+/* 開幕テンプレートのボタン（カンペ画像の中） */
+.tpl-row { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin:6px 0 2px; }
+.tpl-row button {
+  background:#374151; color:#e5e7eb; border:none; border-radius:6px;
+  padding:7px 10px; font-size:11px; font-weight:bold;
+}
+.tpl-row button.tpl-mine { background:#1f3a5f; }
+/* テンプレートの窓。複数パターンは横に並べる */
+#tplWin .pc-cv-wrap { align-items:flex-end; gap:12px; }
+#tplWin .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
+.tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.tpl-cap { font-size:10px; color:#9ca3af; }
+.tpl-cv { line-height:0; }
+.tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
+.tpl-add { display:flex; gap:5px; align-items:center; margin:4px 0 0; }
+.tpl-add input {
+  flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
+  border:1px solid #374151; border-radius:6px; padding:6px 8px; font-size:11px;
+}
+.tpl-add button {
+  background:#374151; color:#e5e7eb; border:none; border-radius:6px;
+  padding:7px 10px; font-size:11px; font-weight:bold; flex:0 0 auto;
+}
 #pcCanvas { max-width:100%; max-height:100%; border:1px solid #374151; border-radius:2px; }
 .pc-nav { display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto; }
 .pc-nav button {
@@ -275,6 +299,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
 .pc-nav button.on { background:#4338ca; color:#fff; }
 #pcStepLabel, #pcPickLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
+#tplLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto;
+            min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .pc-nav button { padding:9px 14px; }
 
 .shot-win {
@@ -313,6 +339,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
 #dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open, #tdOverlay.open, #swapOverlay.open { display:flex; }
+/* 設定だけは、カンペ画像・パフェ手順・テンプレートの窓（300〜）より前に出す */
+#cfgOverlay { z-index:2000; }
 #dpcPanel, #missPanel, #aboutPanel, #cfgPanel, #tdPanel, #swapPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
@@ -419,6 +447,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
   padding:4px 8px; font-size:10px; font-weight:bold; letter-spacing:0.5px;
 }
 #digPreviewNext    { color:#93c5fd; }
+#digPreviewTimer   { color:#f472b6; }
 #digPreviewPending { color:#fca5a5; }
 .cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
 .cfg-btns button {
@@ -758,6 +787,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
     <div id="digPreview" style="display:none;">
       <span id="digPreviewNext"></span>
+      <span id="digPreviewTimer"></span>
       <span id="digPreviewPending"></span>
     </div>
 
@@ -791,6 +821,14 @@ input:checked + .tgl::after { transform:translateX(10px); }
       <span style="font-size:10px;color:#9ca3af;">ドラッグ＆ドロップ／貼り付けも可</span>
     </div>
     <input type="file" id="shotFile" accept="image/*" style="display:none">
+    <!-- 開幕テンプレート。押すと1巡目の置き方を浮かぶ窓で出す -->
+    <div class="sub2" style="margin:8px 0 0;">開幕テンプレート（1巡目の置き方）</div>
+    <div class="tpl-row" id="tplRow"></div>
+    <div class="tpl-add">
+      <input id="tplName" maxlength="12" placeholder="名前（省略可）">
+      <button onclick="addTemplateFromBoard()">いまの地形を登録</button>
+    </div>
+    <div id="tplMsg" style="display:none;font-size:10px;margin:4px 0 0;"></div>
     <div class="shot-act" id="shotCtrls" style="display:none;">
       <button onclick="closeAllShots(); closeShot();">すべて消す</button>
     </div>
@@ -965,6 +1003,27 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.98.0 / 1.96.0</span><span class="vl-date">2026-10-24</span></div><ul><li>盤面下の予告に、せりあがりまでの残り秒数を「次」と「溜まり」の間に出すようにした（TD中空け対策・時間経過タイプの両方）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.4 / 1.95.4</span><span class="vl-date">2026-10-24</span></div><ul><li>TD中空け対策の最中に、通常のせりあがりも一緒に動いてしまい、溜まりの数が1秒ごとに1ずつ増える／ミノを置いても上がらずに溜まりだけ0に戻る、という不具合を修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.3 / 1.95.3</span><span class="vl-date">2026-10-24</span></div><ul><li>パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正</li><li>履歴が無くなっても、ひとつ前の巡のテンプレートを辿って戻れるようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.2 / 1.95.2</span><span class="vl-date">2026-10-24</span></div><ul><li>リセット・地形のみ・ミノ順のみを押したあと、テンプレートの判定（薄い表示）が古いままだったのを修正</li><li>地形の手直しやNEXT・HOLDの入れ替えなど、どこから変わっても判定が追いつくようにした</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.1 / 1.95.1</span><span class="vl-date">2026-10-24</span></div><ul><li>山岳積み2号2巡目のパターンに「理想形／準理想形／妥協系」の名前を付けた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.97.0 / 1.95.0</span><span class="vl-date">2026-10-24</span></div><ul><li>迷走砲を組み終えると、2巡目（3パターン）を自動で表示するようにした</li><li>パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.96.1 / 1.94.1</span><span class="vl-date">2026-10-23</span></div><ul><li>「組めません」の文字をやめて、薄い表示（グレーアウト）だけで知らせるようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.96.0 / 1.94.0</span><span class="vl-date">2026-10-23</span></div><ul><li>巡を移っても窓の大きさは変えず、盤が増えるぶんマスを小さくして収めるようにした</li><li>「組めません」を盤の下ではなく、盤の上に重ねて表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.95.0 / 1.93.0</span><span class="vl-date">2026-10-23</span></div><ul><li>その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）</li><li>テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした</li><li>2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.94.0 / 1.92.0</span><span class="vl-date">2026-10-23</span></div><ul><li>2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.93.0 / 1.91.0</span><span class="vl-date">2026-10-23</span></div><ul><li>山岳積み2号を組み終えると、2巡目（3パターン）を自動で表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.92.0 / 1.90.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の1パターン目を組み終えると、専用の2巡目（3パターン）を自動で表示するようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.91.0 / 1.89.0</span><span class="vl-date">2026-10-23</span></div><ul><li>はちみつ砲の2パターン目を組み終えると、専用の2巡目（2パターン）を自動で表示するようにした</li><li>形ごとに違う2巡目へ進めるようにした（テンプレートの nexts）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.90.0 / 1.88.0</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした</li><li>はちみつ砲に1巡目の2パターン目（Jを左側に立てる形）を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.89.0 / 1.87.0</span><span class="vl-date">2026-10-23</span></div><ul><li>DT砲の2巡目（3パターン）を追加。1巡目をテンプレどおりに置き終えると、自動で2巡目の表示に切り替わる</li><li>複数パターンの並べ方を 横／縦 で切り替えられるようにした（窓の「並び」ボタン）</li><li>「組めません」が出たときに絵がずれていたのを修正（表示の場所をあらかじめ取るようにした）</li><li>同じミノが2つ以上あるテンプレート（2巡目など）で判定が必ずNGになっていたのを修正</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.88.1 / 1.86.1</span><span class="vl-date">2026-10-23</span></div><ul><li>テンプレートの窓の右上に 判定 スイッチを追加（既定ON）</li><li>テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）</li><li>判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.87.0 / 1.85.0</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）</li><li>DT砲に2パターン目 を追加</li><li>窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.86.1 / 1.84.1</span><span class="vl-date">2026-10-22</span></div><ul><li>開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.85.1 / 1.83.1</span><span class="vl-date">2026-10-22</span></div><ul><li>設定の画面を、カンペ画像・パフェ手順・テンプレートの窓より前に出すようにした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.85.0 / 1.83.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像の開幕テンプレートに 「いまの地形を登録」 を追加</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.84.0 / 1.82.0</span><span class="vl-date">2026-10-22</span></div><ul><li>カンペ画像に 開幕テンプレート のボタンを追加。押すと1巡目の置き方を浮かぶ窓で表示する</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.83.1 / 1.81.1</span><span class="vl-date">2026-10-21</span></div><ul><li>「手順をミノの操作に追従する」を既定ONにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.83.0 / 1.81.0</span><span class="vl-date">2026-10-21</span></div><ul><li>設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.82.1 / 1.80.1</span><span class="vl-date">2026-10-20</span></div><ul><li>ゲームオーバー画面の「通常ゲーム開始」と「TD対策を再開」を同じ大きさにそろえた</li></ul></div>
@@ -1890,6 +1949,7 @@ function rotate(dir){
 
 // ===== ホールド =====
 function doHold(){
+  setTimeout(tplRefresh, 0);
   // 連続HOLDがOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if(!opts.multiHold && !canHold) return;
   if(holdType===null){holdType=cur.type;spawn();}
@@ -2775,6 +2835,658 @@ function movePcPick(d) {
   fitPcCanvas();
   drawPcStep();
 }
+// ===== 開幕テンプレート =====
+// 1巡目の置き方を、盤面と同じ絵で見られるようにする。
+// rows は「下の行から順」に、1文字＝1マス（ミノの種類／. は空き）で書いてある。
+const TEMPLATES = [
+  { id:'dt', name:'DT砲', next:'dt2', pats: [
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      '....SSIZZ.',
+      '...TTTI...',
+      '....T.....',
+    ],
+    [
+      'OO.ZJJILLS',
+      'OO.ZZJILSS',
+      '....ZJILS.',
+      '...TTTI...',
+      '....T.....',
+    ],
+  ] },
+  { id:'dt2', name:'DT砲 2巡目', auto:true, pats: [
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIZZI',
+      'JJ.LTSZZ.I',
+      '...LSSOO.I',
+      '..LLS.OO..',
+    ],
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIOOI',
+      'JJ.LTZZOOI',
+      '...LZZS..I',
+      '..LL.SS...',
+      '.....S....',
+    ],
+    [
+      'OO.LLLIJJJ',
+      'OO.SSLIJZZ',
+      'J...SSIZZI',
+      'J..TTTIOOI',
+      'JJ.LTZZOOI',
+      '...LZZ.SSI',
+      '..LL....SS',
+    ],
+  ] },
+  { id:'mt2', name:'山岳積み2号', next:'mt22', rows: [
+    'OOTSS.LLLI',
+    'OOTTSS.ZLI',
+    '..T....ZZI',
+    '..JJ....ZI',
+    '...J......',
+    '...J......',
+  ] },
+  { id:'mt22', name:'山岳積み2号 2巡目', auto:true, caps: ['理想形', '準理想形', '妥協系'], pats: [
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.ZZI',
+      'IJJJ...ZZL',
+      'I..J..OOZL',
+      '......OOLL',
+    ],
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.LZI',
+      'IJJJ...LOO',
+      'IZZJ..LLOO',
+      'ZZ........',
+    ],
+    [
+      'OOTSS.LLLI',
+      'OOTTSS.ZLI',
+      'IJTSS..ZZI',
+      'IJJJSS.LZI',
+      'IJJJ...LOO',
+      'I..J..LLOO',
+      '........ZZ',
+      '.......ZZ.',
+    ],
+  ] },
+  { id:'honey', name:'はちみつ砲', nexts: ['honey2a', 'honey2b'], pats: [
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL....TJJ',
+      '.SS......J',
+      '.........J',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL....T..',
+      'JSS.......',
+      'J.........',
+      'JJ........',
+    ],
+  ] },
+  { id:'honey2a', name:'はちみつ砲 2巡目', auto:true, pats: [
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTJJ',
+      'ISS.ZZJOOJ',
+      'ISS...JOOJ',
+      'ILSS..JJ..',
+      'ILLL......',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTJJ',
+      'ISS.ZZLLSJ',
+      'IOO...LSSJ',
+      'IOOJ..LS..',
+      'IJJJ......',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTJJ',
+      'JSS.ZZLLLJ',
+      'JSS...OOLJ',
+      'JJSS..OO..',
+      'IIII......',
+    ],
+  ] },
+  { id:'honey2b', name:'はちみつ砲 2巡目', auto:true, pats: [
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTOO',
+      'JSS.ZZJLOO',
+      'JSS...JLLL',
+      'JJSS..JJ..',
+      'IIII......',
+    ],
+    [
+      'IIII.ZZTOO',
+      'LLL.ZZTTOO',
+      'SSL..ZZTOO',
+      'JSS.ZZLLOO',
+      'JSS...LJJJ',
+      'JJSS..LJ..',
+      'IIII......',
+    ],
+  ] },
+  { id:'meiso22', name:'迷走砲 2巡目', auto:true, caps: ['理想形', '妥協系①', '妥協系②'], pats: [
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'ISZLLL.ZZI',
+      'SSZZ...JJI',
+      'S..Z..OOJI',
+      '......OOJI',
+    ],
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'IOOLLL.ZZI',
+      '.OOS...ZZI',
+      '.JSS..ZZ.I',
+      '.JS......I',
+      '.JJ.......',
+    ],
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'ISSLLL.ZZI',
+      'JJSS...ZZI',
+      '.JOO..ZZ.I',
+      '.JOO.....I',
+    ],
+  ] },
+  { id:'meiso2', name:'迷走砲', next:'meiso22', rows: [
+    'ILLST.JJOO',
+    'ILSSTT.JOO',
+    'ILS.T..JZZ',
+    'I......ZZ.',
+  ] },
+];
+const TPL_MIRROR = { L:'J', J:'L', S:'Z', Z:'S' };   // 反転すると入れ替わるミノ
+// 自分で登録したテンプレート。盤面をそのまま覚えるので、おじゃまや地形編集で作った形も入る
+let tplUser = [];
+function loadTplUser() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_tpl'); } catch(e) {}
+  if (!raw) return;
+  try { const v = JSON.parse(raw); if (Array.isArray(v)) tplUser = v; } catch(e) {}
+}
+function saveTplUser() {
+  try { localStorage.setItem('tetren_tpl', JSON.stringify(tplUser)); } catch(e) {}
+}
+function tplAll() { return TEMPLATES.concat(tplUser); }
+// いまの盤面を「下から順の文字列」にする。ブロックのある一番上の行まで切り出す
+function tplFromBoard() {
+  let top = TROW;
+  for (let r = 0; r < TROW; r++) if (board[r].some(c => c)) { top = r; break; }
+  if (top === TROW) return null;
+  const rows = [];
+  for (let r = TROW - 1; r >= top; r--)
+    rows.push(board[r].map(c => c ? (COLOR_TO_TYPE[c] || 'X') : '.').join(''));
+  return rows;
+}
+function tplSay(text, color) {
+  const el = document.getElementById('tplMsg');
+  if (!el) return;
+  el.style.display = ''; el.textContent = text; el.style.color = color;
+}
+function addTemplateFromBoard() {
+  const rows = tplFromBoard();
+  if (!rows) { tplSay('盤面が空です。地形を作ってから押してください', '#f87171'); return; }
+  const box = document.getElementById('tplName');
+  const name = (box && box.value.trim()) || ('テンプレ' + (tplUser.length + 1));
+  tplUser.push({ id: 'u' + Date.now(), name, rows, mine: true });
+  saveTplUser();
+  if (box) box.value = '';
+  renderTemplateRow();
+  tplSay(`「${name}」を登録しました`, '#4ade80');
+}
+function deleteTemplate(id) {
+  const i = tplUser.findIndex(t => t.id === id);
+  if (i < 0) return;
+  tplUser.splice(i, 1);
+  saveTplUser();
+  closeTemplate();
+  renderTemplateRow();
+}
+const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
+const TPL_MIN_W = 330;  // 下のボタンが収まる最小の幅
+let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
+let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
+let tplHist = [];     // 巡を行き来するための履歴 [{ t, base }]
+let tplFwdIdx = 0;    // 「次の巡」を押した回数（2巡目が複数あるとき順に見る）
+let tplManual = false;   // 自分で巡を動かした後は、自動で進めない
+
+// カンペ画像のダイアログにボタンを並べる
+function renderTemplateRow() {
+  const box = document.getElementById('tplRow');
+  if (!box) return;
+  box.innerHTML = '';
+  for (const t of tplAll()) {
+    if (t.auto) continue;   // 2巡目など、自動で出るものはボタンにしない
+    const b = document.createElement('button');
+    b.textContent = t.name;
+    if (t.mine) b.className = 'tpl-mine';
+    b.title = t.mine ? '自分で登録した地形を表示します' : (t.name + 'の1巡目を表示します');
+    b.addEventListener('click', () => openTemplate(t.id));
+    box.appendChild(b);
+  }
+  const msg = document.getElementById('tplMsg');
+  if (msg) msg.style.display = 'none';
+}
+function openTemplate(id) {
+  const t = tplAll().find(x => x.id === id);
+  if (!t) return;
+  tplCur = t; tplFlip = false; tplBase = null;
+  tplHist = []; tplFwdIdx = 0; tplManual = false;
+  tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
+  closeShot();
+  closeTemplate();
+  // 開幕から試せるよう、地形もミノ順もリセットしてから出す
+  startGame();
+  const win = document.createElement('div');
+  win.className = 'shot-win';
+  win.id = 'tplWin';
+  win.innerHTML =
+    '<div class="shot-bar">' +
+      '<span class="sw-title" id="tplTitle">' + t.name + '</span>' +
+      '<button class="sw-btn' + (opts.tplJudge ? ' on' : '') + '" id="tplJudgeBtn" ' +
+        'onclick="toggleTplJudge();this.blur()" ' +
+        'title="いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します">判定</button>' +
+      '<button class="sw-btn sw-x" data-act="close" title="閉じる">×</button>' +
+    '</div>' +
+    '<div class="pc-body">' +
+      '<div class="pc-cv-wrap"></div>' +
+      '<div class="pc-nav">' +
+        '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
+        '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
+        '<button id="tplPrevBtn" onclick="tplGoPrev();this.blur()" title="ひとつ前の巡に戻ります">◀ 前</button>' +
+        '<button id="tplNextBtn" onclick="tplGoNext();this.blur()" title="次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）">次 ▶</button>' +
+        (t.mine ? '<button onclick="deleteTemplate(\'' + t.id + '\');this.blur()" title="このテンプレートを削除します">削除</button>' : '') +
+        '<div id="tplLabel"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="sw-rs sw-rs-l"  data-dir="l"></div>' +
+    '<div class="sw-rs sw-rs-r"  data-dir="r"></div>' +
+    '<div class="sw-rs sw-rs-b"  data-dir="b"></div>' +
+    '<div class="sw-rs sw-rs-bl" data-dir="bl"></div>' +
+    '<div class="sw-rs sw-rs-br" data-dir="br"></div>';
+  document.body.appendChild(win);
+  raiseShot(win);
+  drawTemplate();
+  window.addEventListener('pointermove', fitTplCanvas);
+  window.addEventListener('pointerup',   fitTplCanvas);
+  tplSizeWin();
+  win.style.left = '16px';   // 盤面と重なりにくい左側に出す
+  win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
+}
+// 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
+function tplFitCell(t) {
+  const pats = t.pats ? t.pats : [t.rows];
+  const rows = Math.max(...pats.map(x => x.length));
+  const n = pats.length, vert = !!opts.tplVertical;
+  const capH = n > 1 ? 16 : 0;
+  const maxW = Math.min(window.innerWidth - 24, 820);
+  const maxH = Math.min(window.innerHeight - 24, 680) - SHOT_BAR_H - PC_NAV_H;
+  let cell = TPL_CELL;
+  const needW = c => vert ? (COLS * c + 16) : (COLS * c * n + 12 * (n - 1) + 16);
+  const needH = c => vert ? ((rows * c + capH) * n + 10 * (n - 1)) : (rows * c + capH);
+  while (cell > 8 && (needW(cell) > maxW || needH(cell) > maxH)) cell--;
+  return cell;
+}
+// 中身に合わせて窓の大きさを決める
+// バー・ボタン列・余白のぶんの高さ。実際に測って、絵がちょうど収まるようにする
+function tplChromeH(win) {
+  const bar = win.querySelector('.shot-bar'),
+        nav = win.querySelector('.pc-nav'),
+        body = win.querySelector('.pc-body');
+  if (!bar || !nav || !body) return SHOT_BAR_H + PC_NAV_H;
+  const cs = getComputedStyle(body);
+  return Math.ceil(bar.getBoundingClientRect().height + nav.getBoundingClientRect().height
+       + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+       + (parseFloat(cs.rowGap) || 0)) + 2;
+}
+function tplSizeWin() {
+  const win = document.getElementById('tplWin');
+  if (!win || !tplCur) return;
+  const pats = tplPats();
+  const rows = Math.max(...pats.map(x => x.length));
+  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
+  const w = vert ? Math.max(COLS * tplCell + 16, TPL_MIN_W)
+                 : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, TPL_MIN_W);
+  const h = (vert ? (rows * tplCell + capH) * n + 10 * (n - 1)
+                  : rows * tplCell + capH) + tplChromeH(win);
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
+}
+function closeTemplate() {
+  const w = document.getElementById('tplWin');
+  if (w) w.remove();
+  window.removeEventListener('pointermove', fitTplCanvas);
+  window.removeEventListener('pointerup',   fitTplCanvas);
+}
+function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
+// ===== テンプレートが組めるかの判定 =====
+// 「いまのツモ順（操作中＋NEXT＋この巡の残り）で、カンペどおりに置けるか」を見る。
+// 置き方の列挙はパフェ探索と同じ仕組みを使うので、回し入れが要る置き方も拾える。
+// すでにテンプレどおりに置いたぶんは済みとして数えない。
+// テンプレと違う置き方をした時点でNG。1手戻せば盤面が戻るので判定も戻る。
+
+// 到着する順にミノを並べる。NEXTは「この巡のぶん」まで
+function tplSeq() {
+  const seq = [];
+  if (cur) seq.push(cur.type);
+  let crossed = false;
+  for (const q of nextQ) {
+    if (q.newBag) { crossed = true; break; }
+    seq.push(q.type);
+  }
+  // まだ引いていない、この巡の残り（7手目はこれで分かる）
+  if (!crossed) for (const t of bag) seq.push(t);
+  return seq;
+}
+// テンプレの絵を「ミノ1個ぶん（4マス）」に分ける。
+// 2巡目のように同じミノが2つ出てくる形でも、1個ずつに切り分けられるようにする。
+function tplPieces(rows) {
+  const byCh = {};
+  for (let r = 0; r < rows.length; r++)
+    for (let c = 0; c < COLS; c++) {
+      const ch = rows[r][c];
+      if (!ch || ch === '.' || ch === 'X') continue;
+      (byCh[ch] = byCh[ch] || []).push([TROW - 1 - r, c]);
+    }
+  const out = [];
+  for (const ch in byCh) {
+    const set = new Set(byCh[ch].map(([r, c]) => r + ',' + c));
+    // 一番上・一番左のマスから、そのミノの形で切り取っていく
+    const take = () => {
+      if (!set.size) return true;
+      let head = null;
+      for (const k of set) {
+        const [r, c] = k.split(',').map(Number);
+        if (!head || r < head[0] || (r === head[0] && c < head[1])) head = [r, c];
+      }
+      const def = PIECE_DEF[ch];
+      if (!def) { set.clear(); return true; }
+      for (let st = 0; st < def.cells.length; st++) {
+        for (const [ar, ac] of def.cells[st]) {
+          const or = head[0] - ar, oc = head[1] - ac;
+          const cells = def.cells[st].map(([dr, dc]) => [or + dr, oc + dc]);
+          if (!cells.every(([r, c]) => set.has(r + ',' + c))) continue;
+          for (const [r, c] of cells) set.delete(r + ',' + c);
+          out.push({ ch, cells });
+          if (take()) return true;
+          for (const [r, c] of cells) set.add(r + ',' + c);
+          out.pop();
+        }
+      }
+      return false;
+    };
+    take();
+  }
+  return out;
+}
+function tplKey(cells) { return cells.map(([r, c]) => r + ',' + c).sort().join(' '); }
+// そのミノが、テンプレどおりの位置にもう置いてあるか
+function tplPlacedAt(piece) {
+  for (const [r, c] of piece.cells) {
+    const col = board[r] && board[r][c];
+    if (!col || COLOR_TO_TYPE[col] !== piece.ch) return false;
+  }
+  return true;
+}
+// 盤面にテンプレと違うブロックが無いか（1手でも違えばNG。戻せば戻る）
+function tplBoardOk(rows) {
+  for (let r = 0; r < TROW; r++) for (let c = 0; c < COLS; c++) {
+    const col = board[r][c];
+    if (!col) continue;
+    const tr = TROW - 1 - r;
+    const ch = (tr < rows.length) ? rows[tr][c] : '.';
+    if (ch === '.' || ch === 'X') return false;
+    if (COLOR_TO_TYPE[col] !== ch) return false;
+  }
+  return true;
+}
+// その形をぜんぶ置き終えたか
+function tplAllPlaced(rows) {
+  return tplPieces(rows).every(tplPlacedAt);
+}
+function tplCanBuild(rows) {
+  if (dekaMode) return true;
+  if (!tplBoardOk(rows)) return false;           // すでにテンプレから外れている
+  const left = tplPieces(rows).filter(p => !tplPlacedAt(p));
+  if (!left.length) return true;                 // もう組み終わっている
+  const seq = tplSeq();
+  const cache = new Map();
+  const seen = new Set();
+  // ツモ順どおりに、HOLDを使いながら置けるかを調べる
+  const walk = (f, i, hold, rest) => {
+    if (!rest.size) return true;
+    if (i >= seq.length && !hold) return false;
+    const key = i + '|' + (hold || '-') + '|' + [...rest].sort().join(',');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    const tries = [];
+    if (i < seq.length) tries.push([seq[i], i + 1, hold]);
+    if (hold) {
+      if (i < seq.length) tries.push([hold, i + 1, seq[i]]);
+      else                tries.push([hold, i, null]);
+    } else if (i + 1 < seq.length) {
+      tries.push([seq[i + 1], i + 2, seq[i]]);
+    }
+    for (const [type, ni, nh] of tries) {
+      for (const idx of rest) {
+        const piece = left[idx];
+        if (piece.ch !== type) continue;
+        const want = tplKey(piece.cells);
+        const ok = pcPlacements(f, type, cache).some(mv => tplKey(mv.cells) === want);
+        if (!ok) continue;                       // そこへは入れられない
+        const g = f.slice();
+        for (const [r, c] of piece.cells) g[r] |= (1 << c);
+        const r2 = new Set(rest); r2.delete(idx);
+        if (walk(g, ni, nh, r2)) return true;
+      }
+    }
+    return false;
+  };
+  return walk(pcRowsFromBoard(), 0, holdType, new Set(left.map((_, i) => i)));
+}
+function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
+// 複数パターンの並べ方（横／縦）
+function toggleTplVertical() {
+  setOption('tplVertical', !opts.tplVertical);
+  tplCell = tplFitCell(tplCur);
+  drawTemplate();
+  tplSizeWin();
+}
+// ミノを置いたりHOLDしたら、出ている窓の判定を見直す
+// 置き終えた形に応じて、次に出す巡の id を返す（形ごとに違う続きを持てる）
+// このテンプレートから進める先の id（重複を除く）
+function tplNextIds() {
+  const ids = [];
+  for (const id of (tplCur.nexts || []).concat(tplCur.next ? [tplCur.next] : []))
+    if (id && !ids.includes(id)) ids.push(id);
+  return ids;
+}
+// 巡を切り替える。base は「前の巡で組んだ形」（灰色で描くため）
+function tplEnter(id, base) {
+  const nx = tplAll().find(t => t.id === id);
+  if (!nx) return;
+  tplHist.push({ t: tplCur, base: tplBase, fwd: tplFwdIdx });
+  tplCur = nx; tplBase = base; tplFwdIdx = 0;
+  tplAfterChange();
+}
+function tplGoNext() {
+  const hit = tplNextHit();
+  let id, base = null;
+  if (hit) {
+    id = hit.id; base = tplRawPats(tplCur)[hit.i];
+  } else {
+    const ids = tplNextIds();
+    if (!ids.length) return;
+    id = ids[tplFwdIdx % ids.length];
+    tplFwdIdx++;
+    const i = (tplCur.nexts || []).indexOf(id);
+    base = tplRawPats(tplCur)[i >= 0 ? i : 0];
+  }
+  tplManual = true;
+  tplEnter(id, base);
+}
+// このテンプレートを「次の巡」に持っているテンプレート（履歴が無くても戻れるように）
+function tplParentId() {
+  for (const t of tplAll()) {
+    const ids = (t.nexts || []).concat(t.next ? [t.next] : []);
+    if (ids.includes(tplCur.id)) return t.id;
+  }
+  return null;
+}
+function tplGoPrev() {
+  tplManual = true;
+  if (tplHist.length) {
+    const h = tplHist.pop();
+    tplCur = h.t; tplBase = h.base; tplFwdIdx = h.fwd || 0;
+    tplAfterChange();
+    return;
+  }
+  const pt = tplAll().find(t => t.id === tplParentId());
+  if (!pt) return;
+  tplCur = pt; tplBase = null; tplFwdIdx = 0;
+  tplAfterChange();
+}
+function tplAfterChange() {
+  const ti = document.getElementById('tplTitle');
+  if (ti) ti.textContent = tplCur.name;
+  drawTemplate();
+  fitTplCanvas();   // 窓の外枠はそのままで、中の絵だけ大きさを合わせる
+}
+function tplNextHit() {
+  const pats = tplPats();
+  for (let i = 0; i < pats.length; i++) {
+    if (!tplAllPlaced(pats[i])) continue;
+    const id = (tplCur.nexts && tplCur.nexts[i]) || tplCur.next;
+    if (id) return { id: id, i: i };
+  }
+  return null;
+}
+// 盤面・ツモ・HOLD が変わったら、テンプレートの判定をやり直す
+// （リセットやミノ順の入れ替えなど、どこから変わっても取りこぼさないように毎フレーム見る）
+let tplSig = '';
+function tplWatch() {
+  if (!document.getElementById('tplWin') || !tplCur || !board) { tplSig = ''; return; }
+  let s = (cur ? cur.type : '-') + '|' + (holdType || '-') + '|' + bag.join('') + '|'
+        + nextQ.map(q => (q.newBag ? '/' : '') + q.type).join('');
+  for (let r = 0; r < TROW; r++) s += board[r].join(',') + ';';
+  if (s === tplSig) return;
+  tplSig = s;
+  tplRefresh();
+}
+function tplRefresh() {
+  if (!document.getElementById('tplWin') || !tplCur) return;
+  // 1巡目を置き終えたら、自動で2巡目に進む
+  // 地形が空になったら「自分で動かした」状態は解除して、また自動で進むようにする
+  if (board.every(row => row.every(col => !col))) tplManual = false;
+  const hit = tplManual ? null : tplNextHit();
+  if (hit) tplEnter(hit.id, tplRawPats(tplCur)[hit.i]);
+  drawTemplate();
+}
+function tplRawPats(t) { return t.pats ? t.pats : [t.rows]; }
+function tplMirror(rows) { return rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join('')); }
+function tplPats() {
+  // 複数パターンがあるテンプレートは pats に入っている
+  const list = tplRawPats(tplCur);
+  return tplFlip ? list.map(tplMirror) : list;
+}
+function tplRows() { return tplPats()[0]; }   // 1枚目（判定や確認に使う）
+function fitTplCanvas() {
+  const wrap = document.querySelector('#tplWin .pc-cv-wrap');
+  if (!wrap || !tplCur) return;
+  const pats = tplPats();
+  const rows = Math.max(...pats.map(p => p.length));
+  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
+  const cell = vert
+    ? Math.max(5, Math.floor(Math.min(wrap.clientWidth / COLS,
+        (wrap.clientHeight - capH * n - 10 * (n - 1)) / (rows * n))))
+    : Math.max(5, Math.floor(Math.min((wrap.clientWidth - 12 * (n - 1)) / (COLS * n),
+        (wrap.clientHeight - capH) / rows)));
+  if (cell !== tplCell) { tplCell = cell; drawTemplate(); }
+}
+function drawTemplate() {
+  const wrap = document.querySelector('#tplWin .pc-cv-wrap');
+  if (!wrap || !tplCur) return;
+  const pats = tplPats(), cell = tplCell;
+  const base = tplBase ? (tplFlip ? tplMirror(tplBase) : tplBase) : null;
+  wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
+  wrap.innerHTML = '';
+  pats.forEach((rows, i) => {
+    const box = document.createElement('div');
+    box.className = 'tpl-pat';
+    if (pats.length > 1) {
+      const cap = document.createElement('div');
+      cap.className = 'tpl-cap';
+      cap.textContent = (tplCur.caps && tplCur.caps[i]) || (i + 1) + 'つ目';
+      box.appendChild(cap);
+    }
+    const ok = !opts.tplJudge || tplCanBuild(rows);
+    const cv = document.createElement('canvas');
+    const n = rows.length;
+    cv.width = COLS * cell; cv.height = n * cell;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#0d1117'; g.fillRect(0, 0, cv.width, cv.height);
+    g.strokeStyle = '#1f2937'; g.lineWidth = 0.5;
+    for (let r = 0; r < n; r++) for (let c = 0; c < COLS; c++) g.strokeRect(c * cell, r * cell, cell, cell);
+    // rows は下から順なので、描くときは上下をひっくり返す
+    for (let r = 0; r < n; r++) {
+      const line = rows[n - 1 - r];
+      const bline = base && base[n - 1 - r];
+      for (let c = 0; c < COLS; c++) {
+        const ch = line[c];
+        if (!ch || ch === '.') continue;
+        const old = bline && bline[c] && bline[c] !== '.';   // 1巡目で置いたマス
+        const col = (ch === 'X' || old) ? GARBAGE_COLOR : pieceColor(ch);
+        withSkin(visibleSkinId(), () => drawSkinCell(g, c * cell, r * cell, cell, col, ok ? 1 : 0.25));
+      }
+    }
+    const cvbox = document.createElement('div');
+    cvbox.className = 'tpl-cv';
+    cvbox.appendChild(cv);
+    box.appendChild(cvbox);
+    wrap.appendChild(box);
+  });
+  const jb = document.getElementById('tplJudgeBtn');
+  if (jb) jb.classList.toggle('on', !!opts.tplJudge);
+  const pb = document.getElementById('tplPrevBtn');
+  if (pb) pb.disabled = !tplHist.length && !tplParentId();
+  const nb = document.getElementById('tplNextBtn');
+  if (nb) nb.disabled = !tplNextIds().length;
+  const el = document.getElementById('tplLabel');
+  if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
+                         + (pats.length > 1 ? `　${pats.length}パターン` : '');
+}
+
 // ===== パフェ手順の追従 =====
 // 設定がONのときは、手順どおりに置いたときだけ次の手順へ自動で進める。
 // 違う置き方をしたときは何もしない（自分で ‹ › を押せば動かせる）。
@@ -2969,7 +3681,7 @@ function toggleDigMode(){
 function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(tdRun){ updateTdStatus(Math.max(0, tdRun.at - performance.now())); return; }
-  if(tdQueue.length || tdFinishing){
+  if(tdActive){
     el.innerHTML = tdFinishing ? 'TD対策<br><strong style="color:#fbbf24;">あと1手</strong>'
                                : 'TD対策<br>溜まり '+pendingDigRows+'段';
     return;
@@ -2982,11 +3694,28 @@ function updateDigCounter(remainSecOverride){
   const unit = isTime ? '秒' : '個';
   el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>${unit}で競り上げ`;
 }
+// せりあがりまでの残り秒数（盤面下の予告の真ん中に出す）
+function digTimerText() {
+  let ms = null;
+  if (tdRun) ms = tdRun.at - performance.now();
+  else if (tdActive) ms = null;   // RENを出し切ったあとは秒数なし
+  else if (digMode && digTriggerType === 'time' && timeDigLastTs)
+    ms = timeDigInterval * 1000 - (performance.now() - timeDigLastTs);
+  if (ms === null) return '';
+  return 'あと ' + Math.max(0, Math.ceil(ms / 100) / 10).toFixed(1) + '秒';
+}
+let digTimerLast = null;
+function updateDigTimer() {
+  const el = document.getElementById('digPreviewTimer');
+  if (!el) return;
+  const t = digTimerText();
+  if (t !== digTimerLast) { digTimerLast = t; el.textContent = t; }
+}
 // 次に何段上がるかを盤面の外に予告として出す
 function drawDigPreview(){
   const box=document.getElementById('digPreview');
   if(!box) return;
-  const tdOn = tdRun || tdQueue.length || tdFinishing;
+  const tdOn = tdActive;
   if(!tdOn && (!digMode || digTriggerType !== 'time')){ box.style.display='none'; return; }
   box.style.display='flex';
   document.getElementById('digPreviewNext').textContent = tdOn ? 'TD対策' : '次 1段';
@@ -2997,6 +3726,7 @@ function drawDigPreview(){
   else if(opts.digOnLock)  pend.textContent='溜まり '+pendingDigRows+'段';
   else if(pendingDigRows)  pend.textContent='まもなく '+pendingDigRows+'段';
   else                     pend.textContent='';
+  updateDigTimer();
 }
 // 時間経過ぶんを溜める（せりあがりの1秒前に積む）
 function queueDigRows(){ pendingDigRows += 1; }
@@ -3109,6 +3839,7 @@ function tdStart() {
   // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
   startGame();
   tdQueue = []; pendingDigRows = 0;
+  digStaged = false; timeDigLastTs = 0;   // 通常のせりあがりの溜めは持ち込まない
   tdActive = true; tdPeakRen = 0; tdFinishing = false; tdCleared = false;
   // READY → GO の間は操作を止める（40LINEのカウントダウンと同じやり方）
   gameOver = true;
@@ -3237,6 +3968,7 @@ function resetTerrainOnly(){
   ren=0;
   resetLock();
   draw();
+  tplWatch();   // 地形が変わったので、テンプレートの判定をやり直す
 }
 // ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
 function resetQueueOnly(){
@@ -3252,6 +3984,7 @@ function resetQueueOnly(){
   lastWasRotation = false; lastKickIndex = 0;
   while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
   updUI(); draw();
+  tplWatch();   // ツモが変わったので、テンプレートの判定をやり直す
 }
 
 // ===== ミノを捨てる =====
@@ -3365,6 +4098,7 @@ function saveSnapshot(){
 // ===== Undo =====
 function undo(){
   if(!undoStack.length) return;
+  setTimeout(tplRefresh, 0);   // 戻したらテンプレの判定もやり直す
   const s=undoStack.pop(); resetLock();
   board=s.board; cur=mkPiece(s.cur.type); holdType=s.holdType; canHold=s.canHold;
   bag=s.bag; nextQ=s.nextQ; score=s.score; level=s.level; lines=s.lines;
@@ -3399,8 +4133,8 @@ function lock(){
   if(cleared>0){ren++;}else{ren=0;}
   const wasB2B=b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared,tSpin,isPerfect);
-  // せりあがり（ミノごと）
-  if(digMode && digTriggerType==='mino'){
+  // せりあがり（ミノごと）。TD中空け対策の最中は止めておく
+  if(digMode && digTriggerType==='mino' && !tdActive){
     digCount++; updateDigCounter();
     if(digCount%digInterval===0) addGarbage(false);
   }
@@ -3412,8 +4146,8 @@ function lock(){
     // RENを出し切ったあと、この1手で生き残っていればクリア
     if(tdFinishing && !tdQueue.length && !gameOver){ tdFinishing = false; tdClear(); }
   }
-  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
-  if(digMode && digTriggerType==='time'){
+  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる。TD中空け対策の最中は止めておく
+  if(digMode && digTriggerType==='time' && !tdActive){
     if(opts.digOffset) offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
     // 「ライン消去中はせりあがりしない」: 消したときは次に置くまで持ち越す
     const holdByClear = opts.digHoldOnClear && cleared > 0;
@@ -3421,6 +4155,7 @@ function lock(){
   }
   if(pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
   spawn(); draw();
+  tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
 }
 
 // ===== ライン消去 =====
@@ -4137,7 +4872,7 @@ updateMissAgainBtn();
 
 // ===== オプション（PC版と同じ tetren_options に保存して設定を共有する） =====
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
-  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:true, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
+  loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:true, tplJudge:true, tplVertical:false, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
@@ -4431,8 +5166,8 @@ function loop(ts){
     if(!valid(cur,1,0,cur.state)){ gravAccum = 0; if(!isLocking) startLock(); }
   }
 
-  // せりあがり（時間経過）
-  if(digMode && digTriggerType === 'time'){
+  // せりあがり（時間経過）。TD中空け対策の最中は、そちらのせりあがりだけを使う
+  if(digMode && digTriggerType === 'time' && !tdActive){
     if(!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
     // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
@@ -4454,6 +5189,8 @@ function loop(ts){
   // TD中空け対策の進行
   if(tdRun) tdTick(ts);
 
+  updateDigTimer();   // せりあがりまでの残り秒数
+  tplWatch();   // テンプレートの判定を、今の地形・ツモに合わせ直す
   rafId=requestAnimationFrame(loop);
 }
 
@@ -4579,6 +5316,7 @@ function startGame(){
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
   if(renMode) setupRenTerrain();
   updUI(); fillQ(); spawn(); draw();
+  tplWatch();   // 地形もツモも変わったので、テンプレートの判定をやり直す
   rafId=requestAnimationFrame(loop);
 }
 
@@ -5357,7 +6095,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.83.1';
+const APP_VERSION = '1.98.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -5377,11 +6115,22 @@ let shotTopZ = 300;           // 重なり順の最前面。CSSの z-index と�
 
 // 触った1枚をいちばん手前に出す。z-index を増やしていくだけなので、
 // DOMの並び順は触らずに済む（画像の再読み込みが起きない）
-function raiseShot(win) { win.style.zIndex = ++shotTopZ; }
+function raiseShot(win) {
+  // z-index を増やし続けるので、設定画面（2000）に追いつかないよう、
+  // 高くなりすぎたら重なり順を保ったまま振り直す
+  if (shotTopZ > 1500) {
+    shotTopZ = 300;
+    [...document.querySelectorAll('.shot-win')]
+      .sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0))
+      .forEach(w => { w.style.zIndex = ++shotTopZ; });
+  }
+  win.style.zIndex = ++shotTopZ;
+}
 
 function shotWins(){ return [...document.querySelectorAll('.shot-win')]; }
 
 function openShot(){
+  renderTemplateRow();
   document.getElementById('shotOverlay').classList.add('open');
   document.getElementById('shotFile').value = '';
   document.getElementById('shotCtrls').style.display = shotWins().length ? 'flex' : 'none';
@@ -5525,6 +6274,7 @@ initKeyConfig();
 loadGamepadConfig();
 loadSkin();
 loadTd();         // TD中空け対策の設定を復元する
+loadTplUser();    // 自分で登録したテンプレートを復元する
 loadOptions();
 loadGravSpeed();
 loadDigSetting();
