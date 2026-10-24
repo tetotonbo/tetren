@@ -1001,6 +1001,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.2 / 1.95.2</span><span class="vl-date">2026-10-24</span></div><ul><li>リセット・地形のみ・ミノ順のみを押したあと、テンプレートの判定（薄い表示）が古いままだったのを修正</li><li>地形の手直しやNEXT・HOLDの入れ替えなど、どこから変わっても判定が追いつくようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.1 / 1.95.1</span><span class="vl-date">2026-10-24</span></div><ul><li>山岳積み2号2巡目のパターンに「理想形／準理想形／妥協系」の名前を付けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.97.0 / 1.95.0</span><span class="vl-date">2026-10-24</span></div><ul><li>迷走砲を組み終えると、2巡目（3パターン）を自動で表示するようにした</li><li>パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.96.1 / 1.94.1</span><span class="vl-date">2026-10-23</span></div><ul><li>「組めません」の文字をやめて、薄い表示（グレーアウト）だけで知らせるようにした</li></ul></div>
@@ -3099,9 +3100,9 @@ function openTemplate(id) {
   tplHist = []; tplFwdIdx = 0; tplManual = false;
   tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
+  closeTemplate();
   // 開幕から試せるよう、地形もミノ順もリセットしてから出す
   startGame();
-  closeTemplate();
   const win = document.createElement('div');
   win.className = 'shot-win';
   win.id = 'tplWin';
@@ -3371,6 +3372,18 @@ function tplNextHit() {
     if (id) return { id: id, i: i };
   }
   return null;
+}
+// 盤面・ツモ・HOLD が変わったら、テンプレートの判定をやり直す
+// （リセットやミノ順の入れ替えなど、どこから変わっても取りこぼさないように毎フレーム見る）
+let tplSig = '';
+function tplWatch() {
+  if (!document.getElementById('tplWin') || !tplCur || !board) { tplSig = ''; return; }
+  let s = (cur ? cur.type : '-') + '|' + (holdType || '-') + '|' + bag.join('') + '|'
+        + nextQ.map(q => (q.newBag ? '/' : '') + q.type).join('');
+  for (let r = 0; r < TROW; r++) s += board[r].join(',') + ';';
+  if (s === tplSig) return;
+  tplSig = s;
+  tplRefresh();
 }
 function tplRefresh() {
   if (!document.getElementById('tplWin') || !tplCur) return;
@@ -3917,6 +3930,7 @@ function resetTerrainOnly(){
   ren=0;
   resetLock();
   draw();
+  tplWatch();   // 地形が変わったので、テンプレートの判定をやり直す
 }
 // ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
 function resetQueueOnly(){
@@ -3932,6 +3946,7 @@ function resetQueueOnly(){
   lastWasRotation = false; lastKickIndex = 0;
   while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
   updUI(); draw();
+  tplWatch();   // ツモが変わったので、テンプレートの判定をやり直す
 }
 
 // ===== ミノを捨てる =====
@@ -5136,6 +5151,7 @@ function loop(ts){
   // TD中空け対策の進行
   if(tdRun) tdTick(ts);
 
+  tplWatch();   // テンプレートの判定を、今の地形・ツモに合わせ直す
   rafId=requestAnimationFrame(loop);
 }
 
@@ -5261,6 +5277,7 @@ function startGame(){
   const cm=document.getElementById('clearMsg'); if(cm) cm.style.opacity='0';
   if(renMode) setupRenTerrain();
   updUI(); fillQ(); spawn(); draw();
+  tplWatch();   // 地形もツモも変わったので、テンプレートの判定をやり直す
   rafId=requestAnimationFrame(loop);
 }
 
@@ -6039,7 +6056,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.97.1';
+const APP_VERSION = '1.97.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
