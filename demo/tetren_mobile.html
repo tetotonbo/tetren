@@ -1001,6 +1001,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.97.0 / 1.95.0</span><span class="vl-date">2026-10-24</span></div><ul><li>迷走砲を組み終えると、2巡目（3パターン）を自動で表示するようにした</li><li>パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.96.1 / 1.94.1</span><span class="vl-date">2026-10-23</span></div><ul><li>「組めません」の文字をやめて、薄い表示（グレーアウト）だけで知らせるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.96.0 / 1.94.0</span><span class="vl-date">2026-10-23</span></div><ul><li>巡を移っても窓の大きさは変えず、盤が増えるぶんマスを小さくして収めるようにした</li><li>「組めません」を盤の下ではなく、盤の上に重ねて表示するようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.95.0 / 1.93.0</span><span class="vl-date">2026-10-23</span></div><ul><li>その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）</li><li>テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした</li><li>2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる</li></ul></div>
@@ -2981,7 +2982,37 @@ const TEMPLATES = [
       'IIII......',
     ],
   ] },
-  { id:'meiso2', name:'迷走砲', rows: [
+  { id:'meiso22', name:'迷走砲 2巡目', auto:true, caps: ['理想形', '妥協系①', '妥協系②'], pats: [
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'ISZLLL.ZZI',
+      'SSZZ...JJI',
+      'S..Z..OOJI',
+      '......OOJI',
+    ],
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'IOOLLL.ZZI',
+      '.OOS...ZZI',
+      '.JSS..ZZ.I',
+      '.JS......I',
+      '.JJ.......',
+    ],
+    [
+      'ILLST.JJOO',
+      'ILSSTT.JOO',
+      'ILSLT..JZZ',
+      'ISSLLL.ZZI',
+      'JJSS...ZZI',
+      '.JOO..ZZ.I',
+      '.JOO.....I',
+    ],
+  ] },
+  { id:'meiso2', name:'迷走砲', next:'meiso22', rows: [
     'ILLST.JJOO',
     'ILSSTT.JOO',
     'ILS.T..JZZ',
@@ -3383,7 +3414,7 @@ function drawTemplate() {
     if (pats.length > 1) {
       const cap = document.createElement('div');
       cap.className = 'tpl-cap';
-      cap.textContent = (i + 1) + 'つ目';
+      cap.textContent = (tplCur.caps && tplCur.caps[i]) || (i + 1) + 'つ目';
       box.appendChild(cap);
     }
     const ok = !opts.tplJudge || tplCanBuild(rows);
@@ -6007,7 +6038,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.96.1';
+const APP_VERSION = '1.97.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
