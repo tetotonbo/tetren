@@ -1001,6 +1001,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.4 / 1.95.4</span><span class="vl-date">2026-10-24</span></div><ul><li>TD中空け対策の最中に、通常のせりあがりも一緒に動いてしまい、溜まりの数が1秒ごとに1ずつ増える／ミノを置いても上がらずに溜まりだけ0に戻る、という不具合を修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.3 / 1.95.3</span><span class="vl-date">2026-10-24</span></div><ul><li>パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正</li><li>履歴が無くなっても、ひとつ前の巡のテンプレートを辿って戻れるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.2 / 1.95.2</span><span class="vl-date">2026-10-24</span></div><ul><li>リセット・地形のみ・ミノ順のみを押したあと、テンプレートの判定（薄い表示）が古いままだったのを修正</li><li>地形の手直しやNEXT・HOLDの入れ替えなど、どこから変わっても判定が追いつくようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.1 / 1.95.1</span><span class="vl-date">2026-10-24</span></div><ul><li>山岳積み2号2巡目のパターンに「理想形／準理想形／妥協系」の名前を付けた</li></ul></div>
@@ -3677,7 +3678,7 @@ function toggleDigMode(){
 function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(tdRun){ updateTdStatus(Math.max(0, tdRun.at - performance.now())); return; }
-  if(tdQueue.length || tdFinishing){
+  if(tdActive){
     el.innerHTML = tdFinishing ? 'TD対策<br><strong style="color:#fbbf24;">あと1手</strong>'
                                : 'TD対策<br>溜まり '+pendingDigRows+'段';
     return;
@@ -3694,7 +3695,7 @@ function updateDigCounter(remainSecOverride){
 function drawDigPreview(){
   const box=document.getElementById('digPreview');
   if(!box) return;
-  const tdOn = tdRun || tdQueue.length || tdFinishing;
+  const tdOn = tdActive;
   if(!tdOn && (!digMode || digTriggerType !== 'time')){ box.style.display='none'; return; }
   box.style.display='flex';
   document.getElementById('digPreviewNext').textContent = tdOn ? 'TD対策' : '次 1段';
@@ -3817,6 +3818,7 @@ function tdStart() {
   // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
   startGame();
   tdQueue = []; pendingDigRows = 0;
+  digStaged = false; timeDigLastTs = 0;   // 通常のせりあがりの溜めは持ち込まない
   tdActive = true; tdPeakRen = 0; tdFinishing = false; tdCleared = false;
   // READY → GO の間は操作を止める（40LINEのカウントダウンと同じやり方）
   gameOver = true;
@@ -4110,8 +4112,8 @@ function lock(){
   if(cleared>0){ren++;}else{ren=0;}
   const wasB2B=b2b;          // 相殺の計算に使う（addScoreで更新される前の値）
   addScore(cleared,tSpin,isPerfect);
-  // せりあがり（ミノごと）
-  if(digMode && digTriggerType==='mino'){
+  // せりあがり（ミノごと）。TD中空け対策の最中は止めておく
+  if(digMode && digTriggerType==='mino' && !tdActive){
     digCount++; updateDigCounter();
     if(digCount%digInterval===0) addGarbage(false);
   }
@@ -4123,8 +4125,8 @@ function lock(){
     // RENを出し切ったあと、この1手で生き残っていればクリア
     if(tdFinishing && !tdQueue.length && !gameOver){ tdFinishing = false; tdClear(); }
   }
-  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる
-  if(digMode && digTriggerType==='time'){
+  // せりあがり（時間経過）: 置いた攻撃で相殺してから、残りを上げる。TD中空け対策の最中は止めておく
+  if(digMode && digTriggerType==='time' && !tdActive){
     if(opts.digOffset) offsetPendingDig(attackPower(cleared,tSpin,wasB2B,isPerfect));
     // 「ライン消去中はせりあがりしない」: 消したときは次に置くまで持ち越す
     const holdByClear = opts.digHoldOnClear && cleared > 0;
@@ -5143,8 +5145,8 @@ function loop(ts){
     if(!valid(cur,1,0,cur.state)){ gravAccum = 0; if(!isLocking) startLock(); }
   }
 
-  // せりあがり（時間経過）
-  if(digMode && digTriggerType === 'time'){
+  // せりあがり（時間経過）。TD中空け対策の最中は、そちらのせりあがりだけを使う
+  if(digMode && digTriggerType === 'time' && !tdActive){
     if(!timeDigLastTs) timeDigLastTs = ts;
     const remainMs = timeDigInterval * 1000 - (ts - timeDigLastTs);
     // 上がる1秒前になったら「溜まり」へ積む。ここからミノを置くまでが相殺できる時間。
@@ -6071,7 +6073,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.97.3';
+const APP_VERSION = '1.97.4';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
