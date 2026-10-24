@@ -1001,6 +1001,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.1 / 1.95.1</span><span class="vl-date">2026-10-24</span></div><ul><li>山岳積み2号2巡目のパターンに「理想形／準理想形／妥協系」の名前を付けた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.97.0 / 1.95.0</span><span class="vl-date">2026-10-24</span></div><ul><li>迷走砲を組み終えると、2巡目（3パターン）を自動で表示するようにした</li><li>パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.96.1 / 1.94.1</span><span class="vl-date">2026-10-23</span></div><ul><li>「組めません」の文字をやめて、薄い表示（グレーアウト）だけで知らせるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.96.0 / 1.94.0</span><span class="vl-date">2026-10-23</span></div><ul><li>巡を移っても窓の大きさは変えず、盤が増えるぶんマスを小さくして収めるようにした</li><li>「組めません」を盤の下ではなく、盤の上に重ねて表示するようにした</li></ul></div>
@@ -2886,7 +2887,7 @@ const TEMPLATES = [
     '...J......',
     '...J......',
   ] },
-  { id:'mt22', name:'山岳積み2号 2巡目', auto:true, pats: [
+  { id:'mt22', name:'山岳積み2号 2巡目', auto:true, caps: ['理想形', '準理想形', '妥協系'], pats: [
     [
       'OOTSS.LLLI',
       'OOTTSS.ZLI',
@@ -6038,7 +6039,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.97.0';
+const APP_VERSION = '1.97.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
