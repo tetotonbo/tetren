@@ -447,6 +447,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
   padding:4px 8px; font-size:10px; font-weight:bold; letter-spacing:0.5px;
 }
 #digPreviewNext    { color:#93c5fd; }
+#digPreviewTimer   { color:#f472b6; }
 #digPreviewPending { color:#fca5a5; }
 .cfg-btns { display:flex; gap:8px; margin-top:10px; flex:0 0 auto; }
 .cfg-btns button {
@@ -786,6 +787,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     <!-- せりあがりの予告。盤面の外に出して、地形と重ならないようにする -->
     <div id="digPreview" style="display:none;">
       <span id="digPreviewNext"></span>
+      <span id="digPreviewTimer"></span>
       <span id="digPreviewPending"></span>
     </div>
 
@@ -1001,6 +1003,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.98.0 / 1.96.0</span><span class="vl-date">2026-10-24</span></div><ul><li>盤面下の予告に、せりあがりまでの残り秒数を「次」と「溜まり」の間に出すようにした（TD中空け対策・時間経過タイプの両方）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.4 / 1.95.4</span><span class="vl-date">2026-10-24</span></div><ul><li>TD中空け対策の最中に、通常のせりあがりも一緒に動いてしまい、溜まりの数が1秒ごとに1ずつ増える／ミノを置いても上がらずに溜まりだけ0に戻る、という不具合を修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.3 / 1.95.3</span><span class="vl-date">2026-10-24</span></div><ul><li>パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正</li><li>履歴が無くなっても、ひとつ前の巡のテンプレートを辿って戻れるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.2 / 1.95.2</span><span class="vl-date">2026-10-24</span></div><ul><li>リセット・地形のみ・ミノ順のみを押したあと、テンプレートの判定（薄い表示）が古いままだったのを修正</li><li>地形の手直しやNEXT・HOLDの入れ替えなど、どこから変わっても判定が追いつくようにした</li></ul></div>
@@ -3691,6 +3694,23 @@ function updateDigCounter(remainSecOverride){
   const unit = isTime ? '秒' : '個';
   el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>${unit}で競り上げ`;
 }
+// せりあがりまでの残り秒数（盤面下の予告の真ん中に出す）
+function digTimerText() {
+  let ms = null;
+  if (tdRun) ms = tdRun.at - performance.now();
+  else if (tdActive) ms = null;   // RENを出し切ったあとは秒数なし
+  else if (digMode && digTriggerType === 'time' && timeDigLastTs)
+    ms = timeDigInterval * 1000 - (performance.now() - timeDigLastTs);
+  if (ms === null) return '';
+  return 'あと ' + Math.max(0, Math.ceil(ms / 100) / 10).toFixed(1) + '秒';
+}
+let digTimerLast = null;
+function updateDigTimer() {
+  const el = document.getElementById('digPreviewTimer');
+  if (!el) return;
+  const t = digTimerText();
+  if (t !== digTimerLast) { digTimerLast = t; el.textContent = t; }
+}
 // 次に何段上がるかを盤面の外に予告として出す
 function drawDigPreview(){
   const box=document.getElementById('digPreview');
@@ -3706,6 +3726,7 @@ function drawDigPreview(){
   else if(opts.digOnLock)  pend.textContent='溜まり '+pendingDigRows+'段';
   else if(pendingDigRows)  pend.textContent='まもなく '+pendingDigRows+'段';
   else                     pend.textContent='';
+  updateDigTimer();
 }
 // 時間経過ぶんを溜める（せりあがりの1秒前に積む）
 function queueDigRows(){ pendingDigRows += 1; }
@@ -5168,6 +5189,7 @@ function loop(ts){
   // TD中空け対策の進行
   if(tdRun) tdTick(ts);
 
+  updateDigTimer();   // せりあがりまでの残り秒数
   tplWatch();   // テンプレートの判定を、今の地形・ツモに合わせ直す
   rafId=requestAnimationFrame(loop);
 }
@@ -6073,7 +6095,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.97.4';
+const APP_VERSION = '1.98.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
