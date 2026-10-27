@@ -1003,6 +1003,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.98.1 / 1.96.1</span><span class="vl-date">2026-10-27</span></div><ul><li>カンペの窓（カンペ画像・テンプレート・パフェ手順）を、HOLDとNEXTの欄に被らない位置に出すようにした。自分で動かした分はそのまま</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.98.0 / 1.96.0</span><span class="vl-date">2026-10-24</span></div><ul><li>盤面下の予告に、せりあがりまでの残り秒数を「次」と「溜まり」の間に出すようにした（TD中空け対策・時間経過タイプの両方）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.4 / 1.95.4</span><span class="vl-date">2026-10-24</span></div><ul><li>TD中空け対策の最中に、通常のせりあがりも一緒に動いてしまい、溜まりの数が1秒ごとに1ずつ増える／ミノを置いても上がらずに溜まりだけ0に戻る、という不具合を修正</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.3 / 1.95.3</span><span class="vl-date">2026-10-24</span></div><ul><li>パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正</li><li>履歴が無くなっても、ひとつ前の巡のテンプレートを辿って戻れるようにした</li></ul></div>
@@ -2754,8 +2755,7 @@ function openPcSteps() {
   const w = Math.max(cv.width + 16, 250), h = cv.height + SHOT_BAR_H + PC_NAV_H * navs;
   win.style.width  = w + 'px';
   win.style.height = h + 'px';
-  win.style.left = Math.max(8, window.innerWidth - w - 24) + 'px';
-  win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
+  placeWinClear(win, { prefer: 'right' });   // HOLD・NEXTに被らない場所へ
 }
 function closePcSteps() {
   const w = document.getElementById('pcWin');
@@ -3141,8 +3141,7 @@ function openTemplate(id) {
   window.addEventListener('pointermove', fitTplCanvas);
   window.addEventListener('pointerup',   fitTplCanvas);
   tplSizeWin();
-  win.style.left = '16px';   // 盤面と重なりにくい左側に出す
-  win.style.top  = Math.max(8, Math.min(window.innerHeight - 60, 80)) + 'px';
+  placeWinClear(win, { prefer: 'left', top: 60 });   // HOLD・NEXTに被らない場所へ
 }
 // 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
 function tplFitCell(t) {
@@ -6095,7 +6094,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.98.0';
+const APP_VERSION = '1.98.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -6125,6 +6124,43 @@ function raiseShot(win) {
       .forEach(w => { w.style.zIndex = ++shotTopZ; });
   }
   win.style.zIndex = ++shotTopZ;
+}
+
+// HOLD・NEXTの欄に被らない場所に窓を出す。
+// 欄の左右に入るならそこへ、入らなければ欄の下へずらす。
+// どうしても避けられないときは好きな側に寄せる（あとは手で動かしてもらう）
+function hudRects() {
+  return ['holdCanvas', 'nextCanvas'].map(id => {
+    const el = document.getElementById(id);
+    if (!el || !el.offsetParent) return null;
+    return (el.closest('.panel, .mini-panel') || el).getBoundingClientRect();
+  }).filter(Boolean);
+}
+// o = { prefer:'left'|'right'|'center', top:最初に試す高さ, off:2枚目以降のずらし幅 }
+function placeWinClear(win, o) {
+  o = o || {};
+  const pad = 8, vw = window.innerWidth, vh = window.innerHeight;
+  const r = win.getBoundingClientRect(), w = r.width, h = r.height;
+  const rects = hudRects();
+  const hudL = rects.length ? Math.min(...rects.map(q => q.left))  : -1e4;
+  const hudR = rects.length ? Math.max(...rects.map(q => q.right)) : -1e4;
+  const top = o.top || 80, mid = (vw - w) / 2;
+  const lefts = [hudL - pad - w, pad], rights = [hudR + pad, vw - w - pad];
+  const xs = o.prefer === 'right'  ? rights.concat(lefts, [mid])
+           : o.prefer === 'center' ? [mid].concat(lefts, rights)
+           :                         lefts.concat(rights, [mid]);
+  let x = o.prefer === 'right' ? vw - w - pad : o.prefer === 'center' ? mid : pad;
+  let y = top;
+  for (const cx of xs) {
+    if (cx < pad || cx + w > vw - pad) continue;        // 画面からはみ出す
+    const hit = rects.filter(q => q.right > cx && q.left < cx + w);
+    if (!hit.length) { x = cx; y = top; break; }        // 横にずらすだけで避けられた
+    const cy = Math.max(...hit.map(q => q.bottom)) + pad;
+    if (cy + h <= vh - pad) { x = cx; y = cy; break; }  // 欄の下に入れば避けられる
+  }
+  if (o.off) y += o.off;   // 2枚目以降は下にずらす（横にずらすと欄に被るため）
+  win.style.left = Math.round(Math.max(pad, Math.min(vw - w - pad, x))) + 'px';
+  win.style.top  = Math.round(Math.max(pad, Math.min(vh - 60, y))) + 'px';
 }
 
 function shotWins(){ return [...document.querySelectorAll('.shot-win')]; }
@@ -6173,9 +6209,7 @@ function loadShotImage(src){
       const off = (shotSeq++ % 5) * 18;   // 2枚目以降は少しずつずらす
       win.style.width  = w + 'px';
       win.style.height = h + 'px';
-      win.style.left = Math.max(4, Math.min(window.innerWidth - w - 4,
-                        Math.round((window.innerWidth - w) / 2) + off)) + 'px';
-      win.style.top  = Math.max(4, Math.min(window.innerHeight - 50, 60 + off)) + 'px';
+      placeWinClear(win, { prefer: 'center', top: 60, off });   // HOLD・NEXTに被らない場所へ
     }
     closeShot();
   };
