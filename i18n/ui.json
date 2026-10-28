@@ -313,5 +313,7 @@
  "連打を速くする（長押しで連続）": "Make auto-shift faster (hold to repeat)",
  "連打を遅くする（長押しで連続）": "Make auto-shift slower (hold to repeat)",
  "選んだミノをHOLDした状態にして、ミノの順番をリセットします": "Puts the chosen piece in Hold and resets the piece order",
- "選んだミノを最初の1巡から抜いて、ゲームを最初から始めます": "Removes the chosen pieces from the first bag and starts the game over"
+ "選んだミノを最初の1巡から抜いて、ゲームを最初から始めます": "Removes the chosen pieces from the first bag and starts the game over",
+ "スナップ": "Snap",
+ "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size."
 }
