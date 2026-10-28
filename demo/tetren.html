@@ -1519,6 +1519,7 @@ const I18N_EN = {
 "複数段のときの穴継続率": "Hole repeat for multi-row",
 "複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順": "How multiple solutions are ordered. Attack counts T-Spins, Tetrises, REN and B2B and sorts by the most garbage sent (the final piece of the Perfect Clear is not counted); ties go to the fewest soft drops. Speed sorts by the fewest slides and spins.",
 "覚えた地形に戻し、ミノの順番も引き直します": "Go back to the saved board and redraw the piece order",
+"言語切り替え": "Language",
 "記録": "Save",
 "記録・復元（地形の控え）": "Save and restore (board backup)",
 "設定した間隔でおじゃまを自動でせり上げる": "Raise garbage automatically at the interval you set",
@@ -1535,6 +1536,7 @@ const I18N_EN = {
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
 "設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）": "The PC finder settings now have their own tab; they used to live under Other.",
+"設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる": "Added Language to the Display settings, so the English button can be shown or hidden like the other menus.",
 "設定の「表示」の並びも、画面の並びに合わせた": "The order under Display now matches the order on screen.",
 "設定のタブの並びを キーコンフィグ／スキン／表示／パフェ探索／その他 に変更（「その他」を一番右へ）": "Reordered the settings tabs to Key config / Skin / Display / PC finder / Other, with Other on the far right.",
 "設定の文言を「NEXT・HOLD欄のシングルクリック（スマホ版はシングルタップ）でミノを変更する」に変更": "Reworded the setting to \"Single-click NEXT or HOLD to change the piece (single tap on mobile)\".",
@@ -1946,7 +1948,7 @@ if (document.readyState === 'loading') {
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
-      <button id="langBtn" class="kc-open-btn" style="background:#374151;"
+      <button id="langBtn" class="kc-open-btn" data-ui="lang" style="background:#374151;"
         onclick="toggleLang()" title="Switch to English">English</button>
       <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
       <button id="verSwitchBtn" data-ui="verSwitch" title="タッチ操作に向いたスマホ版の画面に切り替える" class="kc-open-btn"
@@ -2491,6 +2493,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.00.0 / 1.98.0</span><span class="vl-date">2026-10-28</span></div><ul><li>設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.3 / 1.97.3</span><span class="vl-date">2026-10-28</span></div><ul><li>パフェ探索の結果や手順の表示など、JSが数字をまぜて作る文が英語にならなかったのを修正（PC版28か所・スマホ版15か所）</li><li>作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.2 / 1.97.2</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記の「ミノ欠け」を Missing piece から Custom bag に変更。抜いた残りで1巡目を組む機能だと伝わりにくかったため</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.1 / 1.97.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語に切り替えるとミノを操作できなくなり、スマホ版の表示も崩れていたのを修正。言語の仕組みを本体スクリプトより後ろに置いていたため、初期化の途中で止まっていた</li><li>スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した</li></ul></div>
@@ -8980,6 +8983,7 @@ const UI_ITEMS = [
   { id:'shot',        label:'カンペ画像' },
   { id:'lines',       label:'LINES' },
   { id:'verSwitch',   label:'スマホ版へ' },
+  { id:'lang',       label:'言語切り替え' },
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
   { id:'ren',         label:'REN' },
@@ -9192,7 +9196,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.97.3';
+const APP_VERSION = '1.98.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
