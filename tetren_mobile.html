@@ -1317,7 +1317,8 @@ const I18N_EN = {
 "自由落下を止める（落下設定の値はそのまま）": "Stop the piece falling on its own (the gravity value stays)",
 "英語に切り替えるとミノを操作できなくなり、スマホ版の表示も崩れていたのを修正。言語の仕組みを本体スクリプトより後ろに置いていたため、初期化の途中で止まっていた": "Fixed pieces becoming uncontrollable in English and the mobile layout breaking. The language code sat after the main script, so initialisation stopped part way through.",
 "英語のときは RENボタンの表記を C4W にした": "The REN button reads C4W in English.",
-"英語表記に対応。画面右の「English」ボタン（スマホ版は左の列）で切り替えられる。初回はブラウザの言語で自動的に決まり、選んだ言語は次回以降も覚える": "Added English. Use the English button on the right (the left column on mobile) to switch. The first visit follows your browser language, and your choice is remembered.",
+"英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる": "The Language button can no longer be hidden while the site is in English, since hiding it would leave no way back to Japanese. Its row in the Display settings is greyed out as well. In Japanese it can still be hidden as before.",
+"英語表記に対応。画面左下の「English」ボタンで切り替えられる（PC版・スマホ版とも）。初回はブラウザの言語で自動的に決まり、選んだ言語は次回以降も覚える": "Added English. Use the English button at the bottom left (on both the desktop and mobile versions) to switch. The first visit follows your browser language, and your choice is remembered.",
 "英語表記の「ミノ欠け」を Missing piece から Custom bag に変更。抜いた残りで1巡目を組む機能だと伝わりにくかったため": "Renamed Missing piece to Custom bag in English; the old name did not convey that it builds the first bag from what is left.",
 "落下設定": "Gravity",
 "落下設定を「デザイン」枠から独立させ、HOLDの直下へ移動": "Pulled Gravity out of the Display panel and moved it directly under HOLD.",
@@ -1611,6 +1612,11 @@ function setLang(l) {
   try { localStorage.setItem('tetren.lang', LANG); } catch (e) {}
   document.documentElement.lang = LANG;
   document.title = I18N_TITLE[LANG] || I18N_TITLE.ja;
+  // 言語で出し分けが変わるものは、訳す前に作り直してもらう
+  //   applyUiHidden … 英語のあいだは言語ボタンを隠さない
+  //   renderUiList  … 「表示」の一覧で言語の行を触らせない
+  try { if (typeof applyUiHidden === 'function') applyUiHidden(); } catch (e) {}
+  try { if (typeof renderUiList === 'function') renderUiList(); } catch (e) {}
   applyLang(document.body);
   i18nWatch(LANG === 'en');
   const b = document.getElementById('langBtn');
@@ -2071,11 +2077,12 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.00.1 / 1.98.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.00.0 / 1.98.0</span><span class="vl-date">2026-10-28</span></div><ul><li>設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.3 / 1.97.3</span><span class="vl-date">2026-10-28</span></div><ul><li>パフェ探索の結果や手順の表示など、JSが数字をまぜて作る文が英語にならなかったのを修正（PC版28か所・スマホ版15か所）</li><li>作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.2 / 1.97.2</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記の「ミノ欠け」を Missing piece から Custom bag に変更。抜いた残りで1巡目を組む機能だと伝わりにくかったため</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.1 / 1.97.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語に切り替えるとミノを操作できなくなり、スマホ版の表示も崩れていたのを修正。言語の仕組みを本体スクリプトより後ろに置いていたため、初期化の途中で止まっていた</li><li>スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した</li></ul></div>
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.99.0 / 1.97.0</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記に対応。画面右の「English」ボタン（スマホ版は左の列）で切り替えられる。初回はブラウザの言語で自動的に決まり、選んだ言語は次回以降も覚える</li><li>更新履歴・ツールチップ・ダイアログを含め、画面に出る文言をすべて英語にした（807語）</li><li>英語のときは RENボタンの表記を C4W にした</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v1.99.0 / 1.97.0</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記に対応。画面左下の「English」ボタンで切り替えられる（PC版・スマホ版とも）。初回はブラウザの言語で自動的に決まり、選んだ言語は次回以降も覚える</li><li>更新履歴・ツールチップ・ダイアログを含め、画面に出る文言をすべて英語にした（807語）</li><li>英語のときは RENボタンの表記を C4W にした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.98.1 / 1.96.1</span><span class="vl-date">2026-10-27</span></div><ul><li>カンペの窓（カンペ画像・テンプレート・パフェ手順）を、HOLDとNEXTの欄に被らない位置に出すようにした。自分で動かした分はそのまま</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.98.0 / 1.96.0</span><span class="vl-date">2026-10-24</span></div><ul><li>盤面下の予告に、せりあがりまでの残り秒数を「次」と「溜まり」の間に出すようにした（TD中空け対策・時間経過タイプの両方）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.97.4 / 1.95.4</span><span class="vl-date">2026-10-24</span></div><ul><li>TD中空け対策の最中に、通常のせりあがりも一緒に動いてしまい、溜まりの数が1秒ごとに1ずつ増える／ミノを置いても上がらずに溜まりだけ0に戻る、という不具合を修正</li></ul></div>
@@ -7121,8 +7128,10 @@ function isUiHidden(id) { return !!uiHiddenMap()[id]; }
 function applyUiHidden() {
   const map = uiHiddenMap();
   document.querySelectorAll('[data-ui]').forEach(el => {
+    // 英語のあいだは言語ボタンだけ隠さない（隠すと日本語に戻す手段が無くなるため）
+    const keep = el.dataset.ui === 'lang' && typeof LANG !== 'undefined' && LANG === 'en';
     // 戻すときは空文字にして、CSS側の指定に判断を返す
-    el.style.display = map[el.dataset.ui] ? 'none' : '';
+    el.style.display = (map[el.dataset.ui] && !keep) ? 'none' : '';
   });
   // 「ミノ捨てる・戻す」を隠すと中央カラムの高さが変わるので組み直す
   initLayout(); applyCtrlPos();
@@ -7157,6 +7166,10 @@ function renderUiList() {
     cb.type = 'checkbox';
     cb.checked = !isUiHidden(it.id);
     cb.addEventListener('change', () => setUiVisible(it.id, cb.checked));
+    // 英語のあいだは言語ボタンを消せないようにする（戻す手段が無くなるため）
+    if (it.id === 'lang' && typeof LANG !== 'undefined' && LANG === 'en') {
+      cb.checked = true; cb.disabled = true; row.classList.add('opt-off');
+    }
     const knob = document.createElement('span');
     knob.className = 'tgl';
     tgl.appendChild(cb); tgl.appendChild(knob);
@@ -7178,7 +7191,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.00.0';
+const APP_VERSION = '2.00.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
