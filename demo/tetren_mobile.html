@@ -607,6 +607,7 @@ const I18N_EN = {
 "DT砲に2パターン目 を追加": "Added a second pattern to the DT Cannon.",
 "DT砲の2巡目（3パターン）を追加。1巡目をテンプレどおりに置き終えると、自動で2巡目の表示に切り替わる": "Added the DT Cannon second bag (3 patterns). Once you finish the first bag as shown, it switches to the second bag automatically.",
 "Enter で「この地形を取り込む」を実行できるようにした。Escape でダイアログを閉じる": "Enter now runs Import this board, and Escape closes the dialog.",
+"HOLD: {0}　NEXT: {1}": "Hold: {0}   Next: {1}",
 "HOLDなし": "No hold",
 "HOLDには何も入れない": "Leave Hold empty",
 "HOLDに指定したミノを、上のミノ選択でもひと目で分かるようにした": "The piece set for Hold is now easy to spot in the picker above as well.",
@@ -689,8 +690,11 @@ const I18N_EN = {
 "TD中空け対策は READY → GO! を盤面に出してから始まるようにした（その間は操作できない）": "TD defense now shows READY → GO! on the board before it starts, with controls locked meanwhile.",
 "TD中空け対策を開く": "Open TD defense",
 "TD対策": "TD defense",
+"TD対策 {0}": "TD defense {0}",
 "TD対策を再開": "Resume TD defense",
 "TD対策：REN開始前にゲームオーバー": "TD defense: game over before REN started",
+"TD対策：{0}REN 受けきりました！": "TD defense: survived {0} REN!",
+"TD対策：{0}RENまで耐えました": "TD defense: held out to {0} REN",
 "Tスピンダブル想定": "For T-Spin Double",
 "Tスピントリプル → Tスピンダブル → REN という、いま一番強いとされる攻めを再現します。": "Reproduces T-Spin Triple → T-Spin Double → REN, currently considered the strongest attack.",
 "Tスピントリプル → Tスピンダブル → REN を再現します。": "Reproduces T-Spin Triple → T-Spin Double → REN.",
@@ -706,16 +710,30 @@ const I18N_EN = {
 "iPadなどのタッチ端末で、ボタンをドラッグするとページも一緒にスクロールしてしまうのを修正": "Fixed the page scrolling along when you dragged a button on iPad and other touch devices.",
 "kcHeader のIDがキーボード側とコントローラ側で重複していたのを、クラス指定に直した": "The kcHeader id was used on both the keyboard and gamepad panes; it is a class now.",
 "site: 検索でインデックスは2ページのみ。ルートURLは「テト練（スマホ版）」のタイトルで登録されている": "A site: search shows only two pages indexed. The root URL is listed under the title \"Tetren (mobile)\".",
+"{0}/{1}　火力{2}・SD{3}・消去{4}": "{0}/{1}   attack {2}, SD {3}, clears {4}",
+"{0}F ・ 次 {1}": "{0}F - next in {1}",
+"{0}つ目": "Pattern {0}",
+"{0}できます（{1}・{2}ms{3}）": "{0} possible ({1}, {2}ms{3})",
+"{0}できます（{1}）": "{0} possible ({1})",
+"{0}でせりあがり": "Rises in {0}",
+"{0}で競り上げ": "until it rises",
+"{0}ライン": "{0} lines",
+"{0}件": "{0} solutions",
+"{0}個のまま、抜くミノを引き直します（前回は {1}）": "Keeps {0} pieces but draws new ones (last time: {1})",
+"{0}手": "{0} moves",
+"{0}手目 / {1}手　{2}ミノ": "Move {0} / {1}   {2} piece",
 "{a}秒後に {b}ライン → {c}秒後に {d}ライン → {e}秒後にREN開始": "{b} lines after {a}s → {d} lines after {c}s → REN starts after {e}s",
 "{f}秒ごとに1RENずつ増え、{g}RENまで（REN中は合計{h}段）": "REN goes up by one every {f}s, up to {g} REN ({h} rows in total during REN)",
 "↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）": "How fast pieces fall while you hold the Down key (5 is standard).",
 "↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す": "The ↻ button now handles multiple pieces: it repeats the last combination, or the single piece if that is what you chose.",
 "⇄ 反転": "⇄ Mirror",
 "⚙ 設定": "⚙ Settings",
+"　{0}パターン": "   {0} patterns",
 "。0にすると一気に端まで動きます。単位をクリックするとフレーム表示に変わります": ". Set it to 0 to move all the way instantly. Click the unit to switch to frames.",
 "。0にすると一気に端まで動きます。単位を押すとフレーム表示に変わります": ". Set it to 0 to move all the way instantly. Tap the unit to switch to frames.",
 "「1欠け」を 「ミノ欠け」 に改称（ボタン・ダイアログ見出し・ツールチップ）": "Renamed One missing to Custom bag on the button, the dialog heading and the tooltip.",
 "「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）": "Added a Single-click to replace NEXT/HOLD switch under Other in the settings.",
+"「{0}」を登録しました": "Saved as “{0}”",
 "「⇄ 反転」 を追加。いまの地形を左右反転する": "Added ⇄ Mirror, which flips the current board left to right.",
 "「このサイトについて」 を追加（PC版・スマホ版・入口ページ）": "Added About this site (desktop, mobile and the entry page).",
 "「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる": "Added a version history to About this site, listing what changed in each release.",
@@ -751,7 +769,7 @@ const I18N_EN = {
 "「都度選択」は復元のたびに選択画面を出します。「予め選択」は下で決めたミノをそのまま入れます（画面は出ません）": "Ask each time opens the picker on every Restore. Preset uses the piece chosen below without asking.",
 "「配置編集」スイッチ を追加。ONにすると操作ボタンをドラッグで好きな位置に動かせる": "Added an Edit layout switch; with it on you can drag the control buttons wherever you like.",
 "」のコメントまでお寄せください。": "」 in the comments.",
-"あと": "in ",
+"あと": "Next",
 "あと1手": "1 piece left",
 "あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、": "The height pruning was fixed too. It measured the rows from the highest block down to the bottom,",
 "いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します": "Checks whether you can follow the reference with your current pieces (active, NEXT and the rest of this bag). Shapes that do not fit are dimmed",
@@ -807,7 +825,6 @@ const I18N_EN = {
 "その他": "Other",
 "その他の設定を初期状態に戻す": "Reset the other settings to default",
 "その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）": "\"Cannot be built\" now disappears once you finish the bag correctly; the dimming stays.",
-"つ目": "",
 "とんぼ_テトリス初心者講座": "Tonbo - Tetris for beginners",
 "なし": "None",
 "の1巡目を表示します": " first bag",
@@ -931,6 +948,7 @@ const I18N_EN = {
 "パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）": "Patterns can now be named (the Meiso Cannon second bag is Ideal / Compromise 1 / Compromise 2).",
 "パッチ（細かい修正）も含めて全部表示します": "Show everything, including patch releases",
 "パフェ": "PC",
+"パフェできません（{0}ms）": "No Perfect Clear ({0}ms)",
 "パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正": "Fixed Previous bag becoming unusable once the board emptied, for example after a Perfect Clear.",
 "パフェの手順": "PC steps",
 "パフェの手順の先頭に 「全体図」 を追加": "Added an overview as the first of the PC steps.",
@@ -950,11 +968,13 @@ const I18N_EN = {
 "パフェ探索の動きを決める": "Set how the Perfect Clear finder works",
 "パフェ探索の横幅をほかのボタンにそろえた": "Made the PC finder button the same width as the others.",
 "パフェ探索の火力の数え方を修正": "Fixed how the PC finder counts attack.",
+"パフェ探索の結果や手順の表示など、JSが数字をまぜて作る文が英語にならなかったのを修正（PC版28か所・スマホ版15か所）": "Fixed text that JavaScript builds with numbers in it - the PC finder result, the step labels and so on - not being translated (28 places on desktop, 15 on mobile).",
 "パフェ探索の表記を「この並びではできません」→「パフェできません」に変更": "Changed the PC finder wording from \"not possible with this order\" to \"no Perfect Clear\".",
 "パフェ探索をミノ欠けの下へ移動（これまでは記録・復元の下）": "Moved the PC finder below Custom bag (it used to be below Save and restore).",
 "パフェ探索中…": "Searching for a PC...",
 "パフェ時のライン消去を火力にふくめる": "Count the final clear as attack",
 "フレーム": "frames",
+"ブロック {0} 個を認識しました。": "Found {0} blocks.",
 "ホーム": "Home",
 "ホールド": "Hold",
 "ホールド・せりあがり・落下まわりの細かい設定": "Details of hold, garbage and gravity",
@@ -1028,6 +1048,7 @@ const I18N_EN = {
 "ライン消去中はせりあがりしない": "No garbage while clearing lines",
 "ライン設定": "Line settings",
 "ランダム": "Random",
+"ランダムに{0}個抜きます。「開始」で始まります。": "{0} pieces will be taken out at random. Press Start to begin.",
 "ランダムに選んだミノで、もう一度DPCセットします（ミノは毎回引き直します）": "Runs the DPC setup again with random pieces (drawn fresh each time)",
 "ランダムに選んだミノをHOLDしてセットします（↻ でそのたびに引き直します）": "Puts a random piece in Hold and sets up (↻ draws again each time)",
 "リスタート": "Restart",
@@ -1040,6 +1061,7 @@ const I18N_EN = {
 "リセットボタンの色を両版でそろえた。PC版は暗すぎ、スマホ版は赤が強すぎたので中間の落ち着いた赤にした": "Matched the reset button colour across both versions: the desktop one was too dark and the mobile one too red, so a calmer red in between was chosen.",
 "リセット・地形のみ・ミノ順のみを押したあと、テンプレートの判定（薄い表示）が古いままだったのを修正": "Fixed the template check (the dimming) staying stale after Reset, Board only or Piece order only.",
 "レトロ": "Retro",
+"・打切": ", cut off",
 "一気に端まで": "all the way",
 "上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた": "Dropped SCORE and LV from the top bar, leaving just the line count. The bar is thinner too, which gives the board more room.",
 "主要なボタンにツールチップ（マウスオーバーで出る説明）を追加": "Added tooltips to the main buttons.",
@@ -1056,6 +1078,7 @@ const I18N_EN = {
 "何も抜かずに始めます。「開始」で始まります。": "Starts with nothing removed. Press Start to begin.",
 "何も抜きません": "Removes nothing",
 "何も選ばずに「開始」を押すと、ミノを抜かずに始めます。": "Press Start without choosing anything to begin with the full bag.",
+"作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした": "Such text now remembers its Japanese and English forms as a pair, so switching language afterwards still swaps it.",
 "保存した表示倍率が再読み込み後に効かない不具合を修正": "Fixed the saved zoom level not taking effect after a reload.",
 "個": " pieces",
 "個ごと": "pieces",
@@ -1069,6 +1092,7 @@ const I18N_EN = {
 "優先順位をつける": "Rank solutions",
 "優先順位決定のための火力を設定します。オフの場合、パフェを取った時のライン消去は火力に含まれません（テトリスパフェは火力０）": "Decides how attack is counted when ranking. When off, the clear that completes the Perfect Clear is not counted (a Tetris PC counts as 0).",
 "元に戻す": "Undo",
+"全体　{0}（1手目は{1}ミノ）": "Overview - {0} (first is {1})",
 "全部は抜けません。6個までにしてください。": "You cannot remove them all. Up to 6, please.",
 "初期値に戻す": "Reset to default",
 "判定": "Check",
@@ -1081,6 +1105,10 @@ const I18N_EN = {
 "削除": "Delete",
 "前の候補": "Previous solution",
 "前の手": "Previous step",
+"前回選んだ {0} だけで、もう一度始めます": "Start again with just {0}, as last time",
+"前回選んだ {0} を抜いて、もう一度始めます": "Start again without {0}, as last time",
+"前回選んだ {0} ミノで、もう一度DPCセットします": "Run the DPC setup again with {0}, as last time",
+"前回選んだ {0} ミノを抜いて、もう一度ミノ欠けで始めます": "Run the custom bag again without {0}, as last time",
 "前回選んだミノで、もう一度DPCセットします": "Run the DPC setup again with the pieces you chose last time",
 "前回選んだミノで、もう一度ミノ欠けで始めます": "Run the custom bag again with the same pieces",
 "割り当てを変えたい欄を押してから、コントローラのボタンを押してください。": "Click the field you want to change, then press a button on your gamepad.",
@@ -1130,6 +1158,7 @@ const I18N_EN = {
 "妥協系①": "Compromise 1",
 "妥協系②": "Compromise 2",
 "完全透明": "Invisible",
+"完成（{0}）": "Done ({0})",
 "対象に ミノを捨てる・戻す・リセット を追加。合計10個になった": "Added Discard, Undo and Reset to the list, making ten in all.",
 "履歴が無くなっても、ひとつ前の巡のテンプレートを辿って戻れるようにした": "Even with no history left, you can go back through the template of the previous bag.",
 "山岳積み2号": "Mountain Stack #2",
@@ -1187,10 +1216,13 @@ const I18N_EN = {
 "接続中:": "Connected:",
 "操作": "Controls",
 "操作ボタン3つ（この地形を取り込む／自動検出しなおす／別の画像）を読み取り結果の下（右カラム）へ移動。縦に長い画像でもボタンを探さずに済むようにした": "Moved the three buttons (Import this board, Detect again, Another image) below the detected result in the right column, so you do not have to hunt for them with a tall image.",
+"操作中のミノ: {0}（ゴーストの真上から検出）": "Active piece: {0} (found just above the ghost)",
+"操作中のミノ: {0}（実ブロックは見つからずゴースト位置を使用）": "Active piece: {0} (no solid blocks found, using the ghost position)",
 "操作中のミノが地形として残る経路を塞いだ。これまでは位置を特定できたときは「その形のマス」だけを除外していたため、位置の推定を誤ると見えている部分が残っていた。位置が分かっている場合も、宙に浮いた同じ色のかたまりを合わせて除外するようにした": "Closed the path that left the active piece behind as part of the board. Only the cells of the detected shape used to be removed, so a wrong guess left the visible part behind. Now the floating block of the same colour is removed as well, even when the position is known.",
 "操作中のミノが盤面の上に見切れて1マスしか見えていない場合も位置を特定できるようにした": "The active piece can now be located even when only one cell of it is visible above the board.",
 "操作中のミノが盤面の上に見切れていても検出できるようにした（見えている2マス以上が一致すれば確定）": "The active piece is detected even when it is cut off at the top of the board (two or more matching visible cells are enough).",
 "操作中のミノの位置が特定できなかったとき、盤面に見えている部分が設置済みブロックとして残ってしまうのを修正。ゴーストと同じ色で宙に浮いているかたまりを探して地形から取り除くようにした（地形のオーバーハングと区別するため、かたまり全体がどこにも乗っていないことを条件にしている）": "Fixed the visible part of the active piece being left as placed blocks when its position could not be worked out. A floating block in the ghost colour is now removed from the board, on condition that the whole block rests on nothing, to tell it apart from an overhang.",
+"数も種類もおまかせで引き直します（前回は {0}）": "Draws a new count and new pieces (last time: {0})",
 "日本語に切り替える": "Switch to Japanese",
 "時計回り回転": "Rotate clockwise",
 "時間内に判定できませんでした（地形が少ないほど時間がかかります）": "Could not finish in time (the emptier the board, the longer it takes)",
@@ -1260,6 +1292,7 @@ const I18N_EN = {
 "相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる": "Added Offset: from one second before the rise until you lock a piece, your clears reduce what is pending.",
 "秒": "s",
 "秒ごと": "seconds",
+"秒後に {0}": "{0} in",
 "穴は、一度に複数段あがるときは70％で同じ列に続き、次のせりあがりでは10％（ランダム）です。": "When several rows rise at once, the hole stays in the same column 70% of the time; on the next rise it is 10% (random).",
 "穴継続率": "Hole repeat",
 "空にする": "Clear board",
@@ -1395,12 +1428,13 @@ const I18N_EN = {
    ・「3段」のような数字つきは I18N_RE の形で拾う
    ・選んだ言語は localStorage に覚える。初回はブラウザの言語で決める */
 const I18N_TITLE = { ja: document.title, en: I18N_TITLE_EN };
+const I18N_PLURAL = (one, many) => (m, n) => n + ' ' + (n === '1' ? one : many);
 const I18N_RE = [
-  [/^(\d+)段$/, '$1 rows'],
-  [/^(\d+)ライン$/, '$1 lines'],
-  [/^(\d+)個$/, '$1 pieces'],
-  [/^(\d+)手$/, '$1 moves'],
-  [/^(\d+)件$/, '$1 items'],
+  [/^(\d+)段$/, I18N_PLURAL('row', 'rows')],
+  [/^(\d+)ライン$/, I18N_PLURAL('line', 'lines')],
+  [/^(\d+)個$/, I18N_PLURAL('piece', 'pieces')],
+  [/^(\d+)手$/, I18N_PLURAL('move', 'moves')],
+  [/^(\d+)件$/, I18N_PLURAL('solution', 'solutions')],
   [/^(\d+(?:\.\d+)?)秒$/, '$1 s'],
 ];
 /* 日本語に無い語でも、英語のときだけ差し替えたいもの（REN → C4W など）。
@@ -1422,6 +1456,23 @@ function i18nWord(t) {
   return null;
 }
 
+// 英語 → 日本語の逆引き。JSが英語で書き込んだ文を日本語に戻すのに使う
+const I18N_JA = {};
+for (const k in I18N_EN) if (!(I18N_EN[k] in I18N_JA)) I18N_JA[I18N_EN[k]] = k;
+if (typeof I18N_EN2 !== 'undefined') for (const k in I18N_EN2) I18N_JA[I18N_EN2[k]] = k;
+
+// T()/TF() が作った文は、作った時点の言語で固まってしまう（元の日本語がDOMに残らない）。
+// 日本語版と英語版を対にして覚えておき、あとからどちらにも戻せるようにする。
+const i18nPairs = new Map();
+
+function i18nRemember(ja, en) {
+  if (!ja || ja === en) return;
+  const pair = { ja, en };
+  i18nPairs.set(ja, pair);
+  i18nPairs.set(en, pair);
+  while (i18nPairs.size > 600) i18nPairs.delete(i18nPairs.keys().next().value);
+}
+
 function T(ja) {
   if (LANG !== 'en' || ja == null) return ja;
   const s = String(ja);
@@ -1433,13 +1484,36 @@ function T(ja) {
   return h2 ? s.replace(t, h2) : ja;
 }
 
+// 数字や記号を埋め込む文は、文そのものを訳してから {0} {1} … を埋める
+function TF(ja) {
+  const v = Array.prototype.slice.call(arguments, 1);
+  // 埋め込む語そのものが日本語のこともあるので（「パフェ」「3手」など）、英語版では引数も訳す
+  const fill = (s, tr) => String(s).replace(/\{(\d+)\}/g, (m, i) => {
+    const x = v[i];
+    if (x === undefined) return m;
+    return (tr && typeof x === 'string') ? (i18nWord(x) || x) : x;
+  });
+  const jaOut = fill(ja, false), enOut = fill(i18nWord(ja) || ja, true);
+  i18nRemember(jaOut, enOut);
+  return (LANG === 'en') ? enOut : jaOut;
+}
+
 // 空白や改行はそのままにして、中身だけ差し替える
 function i18nText(node) {
   const now = node.nodeValue;
-  if (node.__out === undefined || now !== node.__out) node.__ja = now;  // JSが書き換えた
+  if (node.__out === undefined || now !== node.__out) {
+    // JSが書き換えた。英語で書き込まれていたら、対から日本語版を割り出しておく
+    const s0 = now.trim();
+    const pair = i18nPairs.get(s0) || (I18N_JA[s0] ? { ja: I18N_JA[s0] } : null);
+    node.__ja = (pair && pair.ja) ? now.replace(s0, pair.ja) : now;
+  }
   const ja = node.__ja, t = ja.trim();
   if (!t) return;
-  const hit = (LANG === 'en') ? i18nWord(t) : null;
+  let hit = null;
+  if (LANG === 'en') {
+    const pair = i18nPairs.get(t);
+    hit = (pair && pair.en) || i18nWord(t);
+  }
   node.__out = hit ? ja.replace(t, hit) : ja;
   if (now !== node.__out) node.nodeValue = node.__out;
 }
@@ -1995,6 +2069,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.3 / 1.97.3</span><span class="vl-date">2026-10-28</span></div><ul><li>パフェ探索の結果や手順の表示など、JSが数字をまぜて作る文が英語にならなかったのを修正（PC版28か所・スマホ版15か所）</li><li>作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.2 / 1.97.2</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記の「ミノ欠け」を Missing piece から Custom bag に変更。抜いた残りで1巡目を組む機能だと伝わりにくかったため</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.1 / 1.97.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語に切り替えるとミノを操作できなくなり、スマホ版の表示も崩れていたのを修正。言語の仕組みを本体スクリプトより後ろに置いていたため、初期化の途中で止まっていた</li><li>スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v1.99.0 / 1.97.0</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表記に対応。画面右の「English」ボタン（スマホ版は左の列）で切り替えられる。初回はブラウザの言語で自動的に決まり、選んだ言語は次回以降も覚える</li><li>更新履歴・ツールチップ・ダイアログを含め、画面に出る文言をすべて英語にした（807語）</li><li>英語のときは RENボタンの表記を C4W にした</li></ul></div>
@@ -3606,7 +3681,7 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   const btn = document.getElementById('pcStepBtn');
   if (!list.length) {
     if (st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
-    else            show(`パフェできません（${ms}ms）`, '#f87171');
+    else            show(TF('パフェできません（{0}ms）', ms), '#f87171');
     return;
   }
   // 探索した時点の盤面の色を控える（並べ替え直しても絵を作り直せるように）
@@ -3621,7 +3696,8 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   const top = pcSolutions[0];
   const head = top.quad ? 'QPC' : 'パフェ';
   const n = pcSolutions.length;
-  show(`${head}できます（${n > 1 ? n + '件' : top.path.length + '手'}・${ms}ms${st.aborted ? '・打切' : ''}）`, '#4ade80');
+  show(TF('{0}できます（{1}・{2}ms{3}）', head,
+        n > 1 ? (n + '件') : (top.path.length + '手'), ms, st.aborted ? '・打切' : ''), '#4ade80');
   if (el) el.title = (top.quad ? '最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。' : '')
                    + (st.aborted ? '制限時間で打ち切ったので、ほかにも手順があるかもしれません。' : '')
                    + '「手順を見る」から候補を切り替えられます';
@@ -3815,7 +3891,8 @@ function pcRefresh() {
     const el = document.getElementById('pcResult');
     if (el && el.style.display !== 'none' && pcSolutions) {
       const top = pcSolutions[0], n = pcSolutions.length;
-      el.textContent = `${top.quad ? 'QPC' : 'パフェ'}できます（${n > 1 ? n + '件' : top.path.length + '手'}）`;
+      el.textContent = TF('{0}できます（{1}）', top.quad ? 'QPC' : 'パフェ',
+        n > 1 ? (n + '件') : (top.path.length + '手'));
     }
   }
 }
@@ -4058,7 +4135,7 @@ function addTemplateFromBoard() {
   saveTplUser();
   if (box) box.value = '';
   renderTemplateRow();
-  tplSay(`「${name}」を登録しました`, '#4ade80');
+  tplSay(TF('「{0}」を登録しました', name), '#4ade80');
 }
 function deleteTemplate(id) {
   const i = tplUser.findIndex(t => t.id === id);
@@ -4441,7 +4518,7 @@ function drawTemplate() {
     if (pats.length > 1) {
       const cap = document.createElement('div');
       cap.className = 'tpl-cap';
-      cap.textContent = (tplCur.caps && tplCur.caps[i]) || (i + 1) + 'つ目';
+      cap.textContent = (tplCur.caps && tplCur.caps[i]) || TF('{0}つ目', i + 1);
       box.appendChild(cap);
     }
     const ok = !opts.tplJudge || tplCanBuild(rows);
@@ -4478,7 +4555,7 @@ function drawTemplate() {
   if (nb) nb.disabled = !tplNextIds().length;
   const el = document.getElementById('tplLabel');
   if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
-                         + (pats.length > 1 ? `　${pats.length}パターン` : '');
+                         + (pats.length > 1 ? TF('　{0}パターン', pats.length) : '');
 }
 
 // ===== パフェ手順の追従 =====
@@ -4537,9 +4614,9 @@ function drawPcStep() {
   const total = pcSteps.length - 2;          // 全体図と完成の2枚を除いた手数
   const last = pcStep === pcSteps.length - 1;
   document.getElementById('pcStepLabel').textContent =
-    s.overview ? `全体　${total}手（1手目は${s.type}ミノ）`
-    : last     ? `完成（${total}手）`
-               : `${pcStep}手目 / ${total}手　${s.type}ミノ`;
+    s.overview ? TF('全体　{0}（1手目は{1}ミノ）', total + '手', s.type)
+    : last     ? TF('完成（{0}）', total + '手')
+               : TF('{0}手目 / {1}手　{2}ミノ', pcStep, total, s.type);
   document.getElementById('pcPrev').disabled = pcStep === 0;
   document.getElementById('pcNext').disabled = last;
   // 優先順位の行。並べ替えが効いていて、候補が2つ以上あるときだけ出す
@@ -4566,7 +4643,7 @@ function drawPcStep() {
     nav.style.display = many ? '' : 'none';
     if (many) {
       const c = pcSolutions[pcPick];
-      lab.textContent = `${pcPick + 1}/${pcSolutions.length}　火力${c.atk}・SD${c.soft}・消去${c.ev}`;
+      lab.textContent = TF('{0}/{1}　火力{2}・SD{3}・消去{4}', pcPick + 1, pcSolutions.length, c.atk, c.soft, c.ev);
       lab.title = '火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B。パフェを決める最後の1手は数えません）。'
                 + 'SD＝ずらし入れや回し入れが要る置き方の数';
     }
@@ -4686,7 +4763,8 @@ function updateDigCounter(remainSecOverride){
     ? (remainSecOverride !== undefined ? remainSecOverride : timeDigInterval)
     : digInterval-(digCount%digInterval);
   const unit = isTime ? '秒' : '個';
-  el.innerHTML=`あと<br><strong style="font-size:14px;color:#e2e8f0;">${next}</strong><br>${unit}で競り上げ`;
+  el.innerHTML=T('あと') + '<br><strong style="font-size:14px;color:#e2e8f0;">' + next + '</strong><br>'
+        + TF('{0}で競り上げ', unit);
 }
 // せりあがりまでの残り秒数（盤面下の予告の真ん中に出す）
 function digTimerText() {
@@ -4939,9 +5017,9 @@ function updateTdStatus(remainMs) {
   const what = r.phase === 'ren' ? `${r.ren}REN（${rows}LINE）` : `${rows}LINE`;
   const stage = r.phase === 'ren' ? 'REN中' : (r.phase === 'g1' ? '1回目' : '2回目');
   el.innerHTML =
-    `TD対策 ${stage}<br>` +
+    TF('TD対策 {0}', stage) + '<br>' +
     `<strong style="font-size:14px;color:#f472b6;">${sec}</strong><br>` +
-    `秒後に ${what}`;
+    TF('秒後に {0}', what);
 }
 // 盤面に重ねる READY / GO!
 function tdMsgShow(main, note) {
@@ -5745,7 +5823,7 @@ function drawMissGrid(){
       missRandChosen()
         ? (missRandN===null ? '抜く数も種類もおまかせで決めます。「開始」で始まります。'
           : missRandN===0   ? '何も抜かずに始めます。「開始」で始まります。'
-                            : `ランダムに${missRandN}個抜きます。「開始」で始まります。`)
+                            : TF('ランダムに{0}個抜きます。「開始」で始まります。', missRandN))
       : missPick.sel.size>=7 ? '全部は抜けません。6個までにしてください。'
       : missPick.sel.size===0 ? '何も選ばずに「開始」を押すと、ミノを抜かずに始めます。'
                              : '選んだミノを1巡目から抜きます。';
@@ -6286,8 +6364,8 @@ function showOverlay(title,btn){
     if(res){
       res.style.display = tdActive ? '' : 'none';
       res.textContent = !tdActive ? ''
-        : tdCleared ? `TD対策：${td.renMax}REN 受けきりました！`
-        : tdPeakRen ? `TD対策：${tdPeakRen}RENまで耐えました`
+        : tdCleared ? TF('TD対策：{0}REN 受けきりました！', td.renMax)
+        : tdPeakRen ? TF('TD対策：{0}RENまで耐えました', tdPeakRen)
         : 'TD対策：REN開始前にゲームオーバー';
     } }
   document.querySelector('#overlay h1').textContent=title;
@@ -7096,7 +7174,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '1.99.2';
+const APP_VERSION = '1.99.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
