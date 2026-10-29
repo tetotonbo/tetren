@@ -1589,6 +1589,7 @@ const I18N_EN = {
 "配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）": "Fixed Board only and Piece order only not being draggable in Edit layout (a missing data-pos).",
 "配置編集で ボタンの大きさも変えられる ようにした": "Edit layout can now resize the buttons as well.",
 "配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正": "Fixed the board resizing every time you moved a button in Edit layout.",
+"配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）": "Fixed buttons you had not touched sliding over and overlapping when you moved one in Edit layout: the space a moved button leaves behind is now kept. As a result the board no longer changes size when you move buttons — use Board size if you want it bigger.",
 "配置編集で動かす単位をグループからボタン1個ずつに変更": "Edit layout now moves one button at a time instead of whole groups.",
 "配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう": "Added a Snap switch to Edit layout. With it on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen like a magnet, and resizing snaps to the other buttons’ dimensions as well.",
 "配置編集のスイッチを左上の「デザイン」の枠へ移動した": "Moved the Edit layout switch into the Display panel at the top left.",
@@ -2510,6 +2511,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.0 / 1.99.0</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.00.1 / 1.98.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる</li></ul></div>
@@ -6774,15 +6776,37 @@ function loadPanelPos() {
 function savePanelPos() {
   try { localStorage.setItem('tetren_panelpos', JSON.stringify(panelPos)); } catch(e) {}
 }
+// 動かしたボタンは position:fixed になって流し込みから外れる。そのままだと
+// 残りの枠が詰めてきて重なるので、同じ大きさの「場所取り」を元の場所に
+// 残しておき、動かしていないものは一歩も動かないようにする。
+function holdPlace(el) {
+  if (el.__ph) return;
+  const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+  const ph = document.createElement('div');
+  ph.style.width = r.width + 'px';
+  ph.style.height = r.height + 'px';
+  ph.style.margin = cs.margin;
+  // flex の行では伸び縮みさせず、測った大きさのまま場所を取る。
+  // cs.flex をそのまま写すと flex-basis:0 で取り合いになり、1pxずれることがある。
+  ph.style.flex = '0 0 auto';
+  ph.style.visibility = 'hidden';
+  el.parentNode.insertBefore(ph, el);
+  el.__ph = ph;
+}
+function freePlace(el) {
+  if (el.__ph) { el.__ph.remove(); el.__ph = null; }
+}
 // 保存した位置を当てる。画面サイズが変わっても外に出ないよう収める。
 function applyPanelPos() {
   document.querySelectorAll('[data-pos]').forEach(el => {
     const p = panelPos[el.dataset.pos];
     if (!p) {
+      freePlace(el);
       el.classList.remove('moved');
       el.style.left = el.style.top = el.style.width = el.style.height = el.style.fontSize = '';
       return;
     }
+    holdPlace(el);   // 先に場所取りを置いてから流し込みを抜ける
     el.classList.add('moved');
     if (p.w) el.style.width = p.w + 'px';
     if (p.h) el.style.height = p.h + 'px';
@@ -6876,6 +6900,7 @@ function resetPanelPos() {
     w0 = r.width; h0 = r.height; sx = e.clientX; sy = e.clientY;
     if (!el.classList.contains('moved')) {
       // 流し込みから外す前に、今の見た目の大きさと位置で固定する
+      holdPlace(el);
       el.style.width = r.width + 'px';
       el.style.height = r.height + 'px';
       el.classList.add('moved');
@@ -9095,6 +9120,7 @@ function applyUiHidden() {
     const keep = el.dataset.ui === 'lang' && typeof LANG !== 'undefined' && LANG === 'en';
     // 表示に戻すときは空文字にして、CSS側の指定（.open など）に判断を返す
     el.style.display = (map[el.dataset.ui] && !keep) ? 'none' : '';
+    if (el.__ph) el.__ph.style.display = el.style.display;   // 場所取りも一緒に
   });
   // 隠したボタンから開いた画面が置き去りにならないようにする
   if (map.dig)    closeDigPanel();
@@ -9286,7 +9312,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.99.1';
+const APP_VERSION = '1.99.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
