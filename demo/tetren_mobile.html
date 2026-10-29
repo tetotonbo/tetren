@@ -899,6 +899,7 @@ const I18N_EN = {
 "スタート画面の「β版」表記を削除（スマホ版・PC版）": "Removed the beta label from the start screen (desktop and mobile).",
 "スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Sticks and triggers can be assigned too. Auto-shift speed uses the DAS/ARR settings under Other.",
 "スナップ": "Snap",
+"スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した": "Made Snap stronger: it now pulls from 16px on desktop and 20px on mobile, up from 8 and 10. Also fixed resizing being dragged to a distant edge even when a button of the same size sat right there.",
 "スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま": "Phone widths (375×812) are unchanged: full-width buttons, with HOLD and NEXT at side-column width.",
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
@@ -2086,6 +2087,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.0 / 1.99.0</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.00.1 / 1.98.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.00.0 / 1.98.0</span><span class="vl-date">2026-10-28</span></div><ul><li>設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる</li></ul></div>
@@ -6486,7 +6488,7 @@ function syncBtnFont(el){
 // ===== スナップ（磁石のようにピタッと合わせる） =====
 // 近くにある「ほかのボタンの辺・中心」「画面の端・中心」へ吸い付かせる。
 // 大きさを変えるときは、ほかのボタンと同じ寸法にもそろえる。
-const SNAP_PX = 10;        // この距離まで近づいたら吸い付く
+const SNAP_PX = 20;        // この距離まで近づいたら吸い付く
 let snapOn = true;
 function loadSnap() {
   let raw = null;
@@ -6591,9 +6593,11 @@ function resetCtrlPos(){
       let h = Math.max(MIN, Math.min(MAX, h0 + (pt.clientY - sy)));
       if(snapOn){
         const g = snapGuides(target), r = target.getBoundingClientRect();
-        // まず右辺・下辺を線に合わせる。合う線が無ければ、ほかのボタンと同じ寸法にそろえる
-        w = Math.max(MIN, Math.min(MAX, w + (snapGap([[[r.left + w], g.xs]]) || snapGap([[[w], g.ws]]))));
-        h = Math.max(MIN, Math.min(MAX, h + (snapGap([[[r.top  + h], g.ys]]) || snapGap([[[h], g.hs]]))));
+        // 「右辺・下辺を線に合わせる」と「ほかのボタンと同じ寸法にそろえる」を
+        // いっぺんに比べて、近いほうを採る。片方を優先すると、
+        // すぐそこに同じ寸法があっても遠い線に負けて効かなくなる。
+        w = Math.max(MIN, Math.min(MAX, w + snapGap([[[r.left + w], g.xs], [[w], g.ws]])));
+        h = Math.max(MIN, Math.min(MAX, h + snapGap([[[r.top  + h], g.ys], [[h], g.hs]])));
       }
       target.style.width = Math.round(w) + 'px';
       target.style.height = Math.round(h) + 'px';
@@ -7263,7 +7267,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.01.0';
+const APP_VERSION = '2.01.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
