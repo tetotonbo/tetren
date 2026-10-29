@@ -828,6 +828,7 @@ const I18N_EN = {
 "OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります": "When off, double-tap to change it. With a mouse connected it becomes single-click / double-click.",
 "ONにすると、1回のせりあがりで下の割合に従って段数を決めます": "When on, the number of rows per rise follows the chances below",
 "ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）": "When on, pressing Restore opens the piece picker. The piece you choose starts in Hold and is removed from the first bag (Random is also available).",
+"ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
 "ONにすると、手順と同じ置き方をしたときだけ、自動で次の手順へ進みます。違う置き方をしたときはそのままです（‹ › で自分でも動かせます）": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves (you can still step with ‹ ›).",
 "ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves.",
 "ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます": "When on, you can drag the on-screen buttons and panels. The handle at the bottom right resizes them",
@@ -1079,6 +1080,8 @@ const I18N_EN = {
 "スタートを押すと、地形とミノ順をリセットし、READY → GO のあと始まります。": "Pressing Start resets the board and the piece order, then begins after READY → GO.",
 "スタート画面の「β版」表記を削除（スマホ版・PC版）": "Removed the beta label from the start screen (desktop and mobile).",
 "スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Sticks and triggers can be assigned too. Auto-shift speed uses the DAS/ARR settings under Other.",
+"スナップ": "Snap",
+"スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した": "Made Snap stronger: it now pulls from 16px on desktop and 20px on mobile, up from 8 and 10. Also fixed resizing being dragged to a distant edge even when a button of the same size sat right there.",
 "スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま": "Phone widths (375×812) are unchanged: full-width buttons, with HOLD and NEXT at side-column width.",
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
@@ -1586,7 +1589,9 @@ const I18N_EN = {
 "配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）": "Fixed Board only and Piece order only not being draggable in Edit layout (a missing data-pos).",
 "配置編集で ボタンの大きさも変えられる ようにした": "Edit layout can now resize the buttons as well.",
 "配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正": "Fixed the board resizing every time you moved a button in Edit layout.",
+"配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）": "Fixed buttons you had not touched sliding over and overlapping when you moved one in Edit layout: the space a moved button leaves behind is now kept. As a result the board no longer changes size when you move buttons — use Board size if you want it bigger.",
 "配置編集で動かす単位をグループからボタン1個ずつに変更": "Edit layout now moves one button at a time instead of whole groups.",
+"配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう": "Added a Snap switch to Edit layout. With it on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen like a magnet, and resizing snaps to the other buttons’ dimensions as well.",
 "配置編集のスイッチを左上の「デザイン」の枠へ移動した": "Moved the Edit layout switch into the Display panel at the top left.",
 "配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した": "Moved the Edit layout switch outside the on-screen buttons, where it is always visible.",
 "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
@@ -1893,6 +1898,13 @@ if (document.readyState === 'loading') {
           title="ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます">
           <span>配置編集</span>
           <input type="checkbox" id="layoutEditSw" onchange="setLayoutEdit(this.checked)">
+          <span class="tgl"></span>
+        </label>
+        <!-- スナップ。ほかのボタンや画面の端にピタッと合わせる -->
+        <label class="tgl-row" id="snapRow" style="display:none;margin-top:3px;"
+          title="ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます">
+          <span>スナップ</span>
+          <input type="checkbox" id="snapSw" checked onchange="setSnap(this.checked)">
           <span class="tgl"></span>
         </label>
         <button id="posResetBtn" class="garb-btn"
@@ -2499,6 +2511,9 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.0 / 1.99.0</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.00.1 / 1.98.1</span><span class="vl-date">2026-10-28</span></div><ul><li>英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.00.0 / 1.98.0</span><span class="vl-date">2026-10-28</span></div><ul><li>設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v1.99.3 / 1.97.3</span><span class="vl-date">2026-10-28</span></div><ul><li>パフェ探索の結果や手順の表示など、JSが数字をまぜて作る文が英語にならなかったのを修正（PC版28か所・スマホ版15か所）</li><li>作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした</li></ul></div>
@@ -6761,15 +6776,37 @@ function loadPanelPos() {
 function savePanelPos() {
   try { localStorage.setItem('tetren_panelpos', JSON.stringify(panelPos)); } catch(e) {}
 }
+// 動かしたボタンは position:fixed になって流し込みから外れる。そのままだと
+// 残りの枠が詰めてきて重なるので、同じ大きさの「場所取り」を元の場所に
+// 残しておき、動かしていないものは一歩も動かないようにする。
+function holdPlace(el) {
+  if (el.__ph) return;
+  const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+  const ph = document.createElement('div');
+  ph.style.width = r.width + 'px';
+  ph.style.height = r.height + 'px';
+  ph.style.margin = cs.margin;
+  // flex の行では伸び縮みさせず、測った大きさのまま場所を取る。
+  // cs.flex をそのまま写すと flex-basis:0 で取り合いになり、1pxずれることがある。
+  ph.style.flex = '0 0 auto';
+  ph.style.visibility = 'hidden';
+  el.parentNode.insertBefore(ph, el);
+  el.__ph = ph;
+}
+function freePlace(el) {
+  if (el.__ph) { el.__ph.remove(); el.__ph = null; }
+}
 // 保存した位置を当てる。画面サイズが変わっても外に出ないよう収める。
 function applyPanelPos() {
   document.querySelectorAll('[data-pos]').forEach(el => {
     const p = panelPos[el.dataset.pos];
     if (!p) {
+      freePlace(el);
       el.classList.remove('moved');
       el.style.left = el.style.top = el.style.width = el.style.height = el.style.fontSize = '';
       return;
     }
+    holdPlace(el);   // 先に場所取りを置いてから流し込みを抜ける
     el.classList.add('moved');
     if (p.w) el.style.width = p.w + 'px';
     if (p.h) el.style.height = p.h + 'px';
@@ -6785,11 +6822,61 @@ function syncPosFont(el) {
   const h = el.offsetHeight;
   el.style.fontSize = Math.round(Math.max(14, Math.min(60, h * 0.44))) + 'px';
 }
+
+// ===== スナップ（磁石のようにピタッと合わせる） =====
+// 近くにある「ほかのボタンの辺・中心」「画面の端・中心」へ吸い付かせる。
+// 大きさを変えるときは、ほかのボタンと同じ寸法にもそろえる。
+const SNAP_PX = 16;        // この距離まで近づいたら吸い付く
+let snapOn = true;
+function loadSnap() {
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_snap'); } catch(e) {}
+  if (raw !== null) snapOn = raw !== '0';
+  const sw = document.getElementById('snapSw'); if (sw) sw.checked = snapOn;
+}
+function setSnap(on) {
+  snapOn = !!on;
+  try { localStorage.setItem('tetren_snap', snapOn ? '1' : '0'); } catch(e) {}
+}
+// 吸い付く先を集める。辺は辺へ、中心は中心へ合わせたいので別に持つ。
+//   xs/ys   … ほかのボタンの辺と画面の端
+//   cxs/cys … ほかのボタンの中心と画面の中央
+//   ws/hs   … ほかのボタンの寸法（大きさをそろえる用）
+// 動かしている本人と、隠れているものは外す。
+function snapGuides(exclude) {
+  const xs = [0, window.innerWidth], cxs = [Math.round(window.innerWidth / 2)];
+  const ys = [0, window.innerHeight], cys = [Math.round(window.innerHeight / 2)];
+  const ws = [], hs = [];
+  document.querySelectorAll('[data-pos]').forEach(el => {
+    if (el === exclude || !el.offsetParent) return;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return;
+    xs.push(r.left, r.right);   cxs.push(r.left + r.width / 2);
+    ys.push(r.top, r.bottom);   cys.push(r.top + r.height / 2);
+    ws.push(r.width); hs.push(r.height);
+  });
+  return { xs, ys, cxs, cys, ws, hs };
+}
+// 「基準点の配列, 合わせ先の線の配列」の組をいくつか渡し、
+// いちばん近い組のずれを返す。どれも遠ければ0（吸い付かない）。
+// 辺と中心を別の組にしておくことで、「右辺が隣のボタンの中心」のような
+// 意図しない吸い付きを起こさないようにしている。
+function snapGap(pairs) {
+  let gap = 0, best = SNAP_PX + 1;
+  for (const [anchors, lines] of pairs)
+    for (const a of anchors) for (const l of lines) {
+      const d = Math.abs(l - a);
+      if (d < best) { best = d; gap = l - a; }
+    }
+  return best <= SNAP_PX ? gap : 0;
+}
+
 function setLayoutEdit(on) {
   layoutEdit = on;
   document.body.classList.toggle('layout-edit', on);
   const sw = document.getElementById('layoutEditSw'); if (sw) sw.checked = on;
   const rb = document.getElementById('posResetBtn'); if (rb) rb.style.display = on ? '' : 'none';
+  const sr = document.getElementById('snapRow'); if (sr) sr.style.display = on ? '' : 'none';
 }
 function resetPanelPos() {
   panelPos = {};
@@ -6813,6 +6900,7 @@ function resetPanelPos() {
     w0 = r.width; h0 = r.height; sx = e.clientX; sy = e.clientY;
     if (!el.classList.contains('moved')) {
       // 流し込みから外す前に、今の見た目の大きさと位置で固定する
+      holdPlace(el);
       el.style.width = r.width + 'px';
       el.style.height = r.height + 'px';
       el.classList.add('moved');
@@ -6829,8 +6917,16 @@ function resetPanelPos() {
     e.preventDefault();
     const p = panelPos[id] || {};
     if (mode === 'size') {
-      const w = Math.max(MIN, Math.min(MAX, w0 + (e.clientX - sx)));
-      const h = Math.max(MIN, Math.min(MAX, h0 + (e.clientY - sy)));
+      let w = Math.max(MIN, Math.min(MAX, w0 + (e.clientX - sx)));
+      let h = Math.max(MIN, Math.min(MAX, h0 + (e.clientY - sy)));
+      if (snapOn) {
+        const g = snapGuides(target), r = target.getBoundingClientRect();
+        // 「右辺・下辺を線に合わせる」と「ほかの枠と同じ寸法にそろえる」を
+        // いっぺんに比べて、近いほうを採る。片方を優先すると、
+        // すぐそこに同じ寸法があっても遠い線に負けて効かなくなる。
+        w = Math.max(MIN, Math.min(MAX, w + snapGap([[[r.left + w], g.xs], [[w], g.ws]])));
+        h = Math.max(MIN, Math.min(MAX, h + snapGap([[[r.top  + h], g.ys], [[h], g.hs]])));
+      }
       target.style.width = Math.round(w) + 'px';
       target.style.height = Math.round(h) + 'px';
       syncPosFont(target);
@@ -6838,8 +6934,14 @@ function resetPanelPos() {
       return;
     }
     const w = target.offsetWidth, h = target.offsetHeight;
-    const x = Math.max(0, Math.min(window.innerWidth  - w, e.clientX - dx));
-    const y = Math.max(0, Math.min(window.innerHeight - h, e.clientY - dy));
+    let x = e.clientX - dx, y = e.clientY - dy;
+    if (snapOn) {   // 左辺・中心・右辺のどれかが線に近ければ、そこへ寄せる
+      const g = snapGuides(target);
+      x += snapGap([[[x, x + w], g.xs], [[x + w / 2], g.cxs]]);
+      y += snapGap([[[y, y + h], g.ys], [[y + h / 2], g.cys]]);
+    }
+    x = Math.max(0, Math.min(window.innerWidth  - w, x));
+    y = Math.max(0, Math.min(window.innerHeight - h, y));
     target.style.left = x + 'px'; target.style.top = y + 'px';
     panelPos[id] = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:p.h };
   }
@@ -9018,6 +9120,7 @@ function applyUiHidden() {
     const keep = el.dataset.ui === 'lang' && typeof LANG !== 'undefined' && LANG === 'en';
     // 表示に戻すときは空文字にして、CSS側の指定（.open など）に判断を返す
     el.style.display = (map[el.dataset.ui] && !keep) ? 'none' : '';
+    if (el.__ph) el.__ph.style.display = el.style.display;   // 場所取りも一緒に
   });
   // 隠したボタンから開いた画面が置き去りにならないようにする
   if (map.dig)    closeDigPanel();
@@ -9209,7 +9312,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.98.1';
+const APP_VERSION = '1.99.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -9576,6 +9679,7 @@ function switchVersion() { location.href = 'tetren_mobile.html'; }
 initKeyConfig();
 loadSkin();
 loadPanelPos();   // 保存した枠の位置を復元する
+loadSnap();       // スナップのON/OFFを復元する
 loadDigMulti();   // 複数段せりあがりの設定を復元する
 loadTd();         // TD中空け対策の設定を復元する
 loadTplUser();    // 自分で登録したテンプレートを復元する
