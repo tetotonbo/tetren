@@ -1178,6 +1178,7 @@ const I18N_EN = {
 "マラソンでゲームオーバーしたあと、上げた落下速度と詰めた設置時間がそのまま残っていたのを修正": "Fixed the raised gravity and shortened lock delay sticking around after a Marathon game over.",
 "マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした": "After a Marathon game over, Marathon stays on and you start again from 1G and 30F.",
 "マラソンの入切": "Toggle Marathon",
+"マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む": "Marathon now shows READY then GO! on the board before the game starts. The Retry after a game over and the Reset button do the same.",
 "ミノ": "Piece",
 "ミノがどこに落ちるかを薄く表示する": "Show where the piece will land",
 "ミノの参照色を実機スクショの実測値に更新した（水色と青の判別が紙一重で、取り違えることがあった）": "Updated the reference colours from real screenshots; cyan and blue were close enough to be mixed up.",
@@ -2511,6 +2512,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.2 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.0 / 1.99.0</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう</li></ul></div>
@@ -6659,7 +6661,7 @@ function pollGamepad() {
   const off = id => !now[id] && gpActPrev[id];       // 離した瞬間だけ
 
   // ゲームオーバー中でも効く操作
-  if (hit('restart'))  startGame();
+  if (hit('restart'))  startGameUI();
   if (hit('missAgain')) repeatMiss();
   if (hit('sprintAgain')) restartSprint();
 
@@ -8637,6 +8639,8 @@ let marathonMode = false;
 let marathonLines = 0;    // 次の段階までに消した行数
 let marathonLock = 30;    // マラソン中の設置時間（フレーム）
 let marathonSavedGrav = 0;
+const MARATHON_READY_MS = 900;   // READY を出しておく長さ
+const MARATHON_GO_MS    = 700;   // GO! を出しておく長さ（TD対策と同じ間合い）
 
 // 設置時間の下げ幅。残りが少ないほど刻みを細かくする。
 function nextMarathonLock(cur) {
@@ -8655,9 +8659,10 @@ function toggleMarathon() {
     marathonLock = 30;
     gravSpeed = 1;
     updateGravDisplay();
-    startGame();                     // 1Gの状態から始める
+    startMarathonRun();              // READY → GO を見せてから 1Gで始める
   } else {
     btn.style.background = '#374151';
+    clearMarathonReady();            // READY の途中でOFFにされたら止めた盤面を動かし直す
     gravSpeed = marathonSavedGrav;   // 元の落下速度に戻す
     updateGravDisplay();
   }
@@ -8674,6 +8679,37 @@ function resetMarathonRun() {
   gravSpeed = 1;          // 落下速度もマラソン開始時の 1G へ
   updateGravDisplay();
   updateMarathonInfo();
+}
+// 盤面に READY → GO を出してから走り出す。
+// 止めている間は gameOver を立てる（操作ボタンもループもこのフラグを見ている）。
+// 重ねる表示は40LINE・TD対策と同じものを使い回している。
+let marathonReadyTimer = null;
+function startMarathonRun() {
+  startGame();               // 盤面もツモもまっさらから（前回のREADYもここで片付く）
+  gameOver = true;
+  showSprintOverlay('READY', '', T('マラソン'));
+  marathonReadyTimer = setTimeout(() => {
+    showSprintOverlay('GO!', '', T('マラソン'));
+    marathonReadyTimer = setTimeout(() => {
+      hideSprintOverlay();
+      marathonReadyTimer = null;
+      // 止めていたぶんの時間を持ち越さないよう、溜めた値を捨ててから走らせる
+      gameOver = false;
+      lastSoftDrop = 0; gravAccum = 0; softAccum = 0; lastDrop = 0; timeDigLastTs = 0;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    }, MARATHON_GO_MS);
+  }, MARATHON_READY_MS);
+}
+// READY → GO の途中で抜けたときの片付け。止めたままにしないよう盤面を動かし直す
+function clearMarathonReady() {
+  if (!marathonReadyTimer) return;
+  clearTimeout(marathonReadyTimer);
+  marathonReadyTimer = null;
+  hideSprintOverlay();
+  gameOver = false;
+  cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
 }
 // 消した行数を受け取って段階を進める
 function marathonOnClear(n) {
@@ -9312,7 +9348,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '1.99.2';
+const APP_VERSION = '2.00.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -9552,7 +9588,7 @@ document.addEventListener('keydown', e=>{
     return;
   }
   // リスタートはゲームオーバー時も有効
-  if (kcMatch('restart', e.code)) { e.preventDefault(); startGame(); return; }
+  if (kcMatch('restart', e.code)) { e.preventDefault(); startGameUI(); return; }
   // ミノ欠けはゲームを始め直す操作なので、リスタートと同じくゲームオーバー中も効かせる
   if (kcMatch('missAgain', e.code)) { e.preventDefault(); if (!e.repeat) repeatMiss(); return; }
   // 40LINEもゲームを始め直す操作なので、ゲームオーバー中も効かせる
@@ -9661,6 +9697,7 @@ function startGame() {
   // （止まったままの時計とクリア表示が残らないようにする。カウントダウン中は
   //  startSprint() が自分で呼んでいるので触らない）
   if (!sprintCountdown) { hideSprintOverlay(); resetSprintRun(); }
+  clearMarathonReady();   // マラソンの READY → GO の途中でリセットされたとき
   document.getElementById('overlay').style.display = 'none';
   cancelAnimationFrame(rafId);
   heldDirs.length = 0; stopDAS();   // 押しっぱなしの状態を持ち越さない
@@ -9668,7 +9705,14 @@ function startGame() {
   rafId = requestAnimationFrame(loop);
 }
 
-document.getElementById('startBtn').addEventListener('click', startGame);
+// リセットと「もう一度」の入口。マラソン中は READY → GO を挟んでから始める。
+// ほかのモード（40LINE・TD対策・テンプレート）は自前の始め方を持っているので、
+// そちらは startGame() を直に呼んだままにしてある。
+function startGameUI() {
+  if (marathonMode) startMarathonRun();
+  else              startGame();
+}
+document.getElementById('startBtn').addEventListener('click', startGameUI);
 
 // ===== 版の切り替え（デモ版限定） =====
 // URLに /demo/ が含まれるときだけボタンを出す。本番へコピーしても勝手に出ない。
