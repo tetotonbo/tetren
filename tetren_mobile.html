@@ -94,6 +94,13 @@ canvas { display:block; }
 .stat-lbl { font-size:8px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
 .stat-val { font-size:13px; font-weight:bold; color:#fff; line-height:1.2; }
 .ctrl-pad { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+/* 横持ち用。盤面の左右に置く操作ボタンの列。親指が来る画面の下端へ寄せる。
+   下に積んだままだと縦が足りず、ボタンがまるごと画面の外へ出てしまう */
+.pad-col {
+  display:none; flex-direction:column; gap:4px;
+  flex-shrink:0; align-self:stretch; justify-content:flex-end;
+  padding-bottom:2px;
+}
 /* 配置編集中。枠を出し、ボタン自体の反応は止めてドラッグだけを拾う */
 .layout-edit [data-ctrl] {
   outline:2px dashed #818cf8; outline-offset:2px; border-radius:8px;
@@ -576,6 +583,8 @@ const I18N_EN = {
 "1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた": "Removed the handling for other games added in 1.4.0 and went back to Puyo Puyo Tetris only. Dropping the empty-cell test had made almost every cell on the board register as a piece.",
 "100％にそろえる": "Normalize to 100%",
 "10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります": "Gravity speeds up every 10 lines. Once it reaches 20G it returns to 15G and the lock delay shortens instead.",
+"180度回転": "Rotate 180°",
+"180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is D, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
 "1〜10。大きいほど速く落ちます": "1-10. Higher is faster.",
 "1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。": "How likely each number of rows is on a single rise. Make the total 100%.",
 "1回のせりあがりで何段上げるかを、段数ごとの割合で決めます": "Set how many rows rise at once, as a chance for each number of rows.",
@@ -900,6 +909,7 @@ const I18N_EN = {
 "スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Sticks and triggers can be assigned too. Auto-shift speed uses the DAS/ARR settings under Other.",
 "スナップ": "Snap",
 "スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した": "Made Snap stronger: it now pulls from 16px on desktop and 20px on mobile, up from 8 and 10. Also fixed resizing being dragged to a distant edge even when a button of the same size sat right there.",
+"スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない": "Reworked the layout for a phone held sideways. The control buttons now sit on either side of the board instead of below it: moves on the left, rotation, HOLD, DROP, Discard and Undo on the right. Until now, turning the phone sideways pushed every button off the screen, leaving swipes as the only way to play. The board is now sized from the height of the screen, and the side menus no longer soak up the leftover width. The portrait and tablet layouts are unchanged.",
 "スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま": "Phone widths (375×812) are unchanged: full-width buttons, with HOLD and NEXT at side-column width.",
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
@@ -1815,6 +1825,10 @@ if (document.readyState === 'loading') {
     <div id="verLabel"></div>
   </div>
 
+  <!-- 横持ちのとき、操作ボタンをここへ移す（盤面の左＝移動・右＝回転とHOLD/DROP）。
+       縦持ちでは空のまま隠してある -->
+  <div class="pad-col" id="padLeft"></div>
+
   <!-- 中央: ボード + コントロール + オプション -->
   <div id="center-col">
     <!-- 消したライン数だけを出す。盤面を広く使いたいので一段薄くしてある -->
@@ -1886,6 +1900,8 @@ if (document.readyState === 'loading') {
     </div>
     <div id="colorPaletteWrap"></div>
   </div>
+
+  <div class="pad-col" id="padRight"></div>
 
   <!-- 右: NEXT -->
   <div class="side-col" id="rightCol">
@@ -2090,6 +2106,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.0</span><span class="vl-date">2026-11-02</span></div><ul><li>スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
@@ -6657,10 +6674,40 @@ function resetCtrlPos(){
   document.addEventListener('pointercancel', up);
 })();
 
+// ===== 横持ち（縦が短いとき）の並べ替え =====
+// 盤面の下に操作ボタンを積むと、横向きでは縦が足りずボタンがまるごと画面の外へ出る。
+// このページはスクロールしないので、出たら押す手立てが無い。
+// そこで横持ちのときだけ、移動を盤面の左・回転とHOLD/DROPを右へ移す（両手の親指の位置）。
+let padMoved = null;         // いま横持ちの並びになっているか
+let ctrlRowsCache = null;    // 移動 / 回転 / HOLD・DROP の3行
+function setPadColumns(on){
+  if (padMoved === on) return;
+  padMoved = on;
+  if (!ctrlRowsCache) ctrlRowsCache = [...document.querySelectorAll('#ctrlPad .ctrl-row')];
+  const padL = document.getElementById('padLeft');
+  const padR = document.getElementById('padRight');
+  const optsEl = document.getElementById('opts');
+  if (on) {
+    padL.appendChild(ctrlRowsCache[0]);                        // 左の親指: 左・ソフト・右
+    ctrlRowsCache.slice(1).forEach(r => padR.appendChild(r));  // 右の親指: 回転・HOLD・DROP
+    padR.appendChild(optsEl);                                  // ミノ捨てる・戻す も右へ
+    padL.style.display = padR.style.display = 'flex';
+  } else {
+    const pad = document.getElementById('ctrlPad');
+    ctrlRowsCache.forEach(r => pad.appendChild(r));
+    // 元の位置（せりあがりの予告の下・パレットの上）へ戻す
+    document.getElementById('colorPaletteWrap').before(optsEl);
+    padL.style.display = padR.style.display = 'none';
+  }
+}
+
 function initLayout(){
   const vw=window.innerWidth, vh=window.innerHeight;
   // タブレットは短辺が600px以上。スマホ用の上限のままだと画面を使い切れないので緩める。
   const tablet = Math.min(vw, vh) >= 600;
+  // 横持ちはスマホだけの扱い。タブレットは横でも縦が足りているので従来どおり
+  const landscape = !tablet && vw > vh;
+  setPadColumns(landscape);
   const CELL_MAX = tablet ? 46 : 28;   // 1マスの最大px
   const CTRL_H0  = tablet ? 92 : 66;   // 操作ボタンの高さ（縦が足りなければ下で詰める）
   const CTRL_FS0 = tablet ? 42 : 30;   // そのときの矢印の大きさ
@@ -6680,7 +6727,8 @@ function initLayout(){
   // 画面幅いっぱいに広げると、中身に対して枠だけが横長になる。
   // メニューを大きくしたぶんも列幅に要る。NEXT側とメニュー側の必要幅の大きいほうを採る。
   const sideW = tablet ? Math.max(Math.round(100 * menuScale), MINI_BS*4 + 24)
-                       : Math.round(Math.max(44, Math.min(62, Math.floor(vw*0.15))) * menuScale);
+                       // 横持ちでは画面の短いほう（＝縦）を基準にする。横幅で決めると無駄に太る
+                       : Math.round(Math.max(44, Math.min(62, Math.floor(Math.min(vw,vh)*0.15))) * menuScale);
   // タブレットは左右にボタンを置くための余白を残す（片側あたり画面幅の13%）
   const reserve = tablet ? Math.floor(vw * 0.13) : 0;
   // 利用可能ボード幅
@@ -6692,7 +6740,7 @@ function initLayout(){
   const optsEl = document.getElementById('opts');
   // 「表示」で隠したときは高さも食わない
   const optsShown = optsEl && optsEl.style.display !== 'none';
-  const optsInFlow = !!(optsShown && [...optsEl.children].some(inFlow));
+  const optsInFlow = !landscape && !!(optsShown && [...optsEl.children].some(inFlow));
   // 操作まわりの寸法をCSSへ書いて、盤面以外に要る高さを返す。
   // r を下げると操作ボタンと「ミノ捨てる・戻す」が低くなる。
   function fixedHeight(r){
@@ -6712,7 +6760,8 @@ function initLayout(){
       if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
     });
     const optsH = optsInFlow ? Math.round((tablet ? 70 : 60) * r) : 0;
-    return (tablet ? 32 : 22) + ctrlH + optsH + 4*4 + 8;
+    // 中央に積むものが減るぶん、横持ちでは隙間も少なくて済む
+    return (tablet ? 32 : 22) + ctrlH + optsH + (landscape ? 4 + 8 : 4*4 + 8);
   }
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
@@ -6722,15 +6771,29 @@ function initLayout(){
   // そこで収まらなかったときだけ、盤面ではなく操作ボタンのほうを少しずつ低くする。
   // 収まっている端末は1回目で抜けるので、寸法はこれまでと変わらない。
   const CTRL_SQUEEZE_MIN = 0.6;   // これ以上低くすると押しづらい
-  for(let step = 0; ; step++){
-    const r = Math.max(CTRL_SQUEEZE_MIN, 1 - step * 0.05);
-    const fixedH = fixedHeight(r);
-    BS = minBS;
-    let fit = false;
-    for(let b = maxBS; b >= minBS; b--){
-      if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; fit = true; break; }
+  const LAND_PAD_MIN = 110;       // 横持ちのボタン列に最低限残す幅
+  const LAND_PAD_MAX = 240;       // 広い画面でもこれ以上は広げない（間延びする）
+  if (landscape) {
+    // 横持ちでは縦が足かせ。盤面は画面の高さから決め、残った幅を左右のボタン列に配る。
+    // ボタンは下に積まないので、詰める必要もない
+    const fixedH = fixedHeight(1);
+    let byH = Math.floor((vh - fixedH) / ROWS);
+    // 地形編集のときは下にパレットが付くので、入るところまで下げる
+    while (editing && byH > minBS && fixedH + ROWS*byH + paletteMetrics(COLS*byH).h > vh) byH--;
+    // ボタン列のぶんは最低限残しておく（残さないと盤面が横幅を食い切る）
+    const byW = Math.floor((vw - sideW*2 - LAND_PAD_MIN*2 - 28) / COLS);
+    BS = Math.max(minBS, Math.min(byH, byW, CELL_MAX));
+  } else {
+    for(let step = 0; ; step++){
+      const r = Math.max(CTRL_SQUEEZE_MIN, 1 - step * 0.05);
+      const fixedH = fixedHeight(r);
+      BS = minBS;
+      let fit = false;
+      for(let b = maxBS; b >= minBS; b--){
+        if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; fit = true; break; }
+      }
+      if(fit || r <= CTRL_SQUEEZE_MIN) break;
     }
-    if(fit || r <= CTRL_SQUEEZE_MIN) break;
   }
   // ここまでが「ボタンも全部収まる」自動サイズ。
   // タブレットでは画面に対して小さくなりがちなので、好みで広げられるようにする。
@@ -6748,7 +6811,8 @@ function initLayout(){
 
   // サイドカラム幅。スマホは余った幅で埋め、タブレットは中身に合わせた幅のまま。
   // #wrap は中央寄せなので、余ったぶんは左右の空きとしてボタン配置に使える。
-  const actualSide = tablet ? sideW : Math.floor((vw-bw-5*2-8)/2);
+  // 横持ちで余りを吸わせると、盤面より左右のメニューのほうが太くなる
+  const actualSide = (tablet || landscape) ? sideW : Math.floor((vw-bw-5*2-8)/2);
   document.getElementById('leftCol').style.width=actualSide+'px';
   document.getElementById('rightCol').style.width=actualSide+'px';
 
@@ -6772,7 +6836,15 @@ function initLayout(){
     root.setProperty('--opt-col',  Math.min(Math.round(colW * 1.45), Math.floor((bw - 4) / 2)) + 'px');
   }
   document.getElementById('ctrlPad').style.width=bw+'px';
-  document.getElementById('opts').style.width=bw+'px';
+  // 横持ちは、盤面とメニューを引いた残りを左右のボタン列で分ける
+  const padW = landscape
+    ? Math.max(LAND_PAD_MIN, Math.min(LAND_PAD_MAX, Math.floor((vw - bw - actualSide*2 - 28) / 2)))
+    : 0;
+  if (landscape) {
+    document.getElementById('padLeft').style.width  = padW + 'px';
+    document.getElementById('padRight').style.width = padW + 'px';
+  }
+  document.getElementById('opts').style.width=(landscape ? padW : bw)+'px';
   document.getElementById('digPreview').style.width=bw+'px';
   document.getElementById('stats-bar').style.width=bw+'px';
   const palWrap=document.getElementById('colorPaletteWrap');
@@ -7317,7 +7389,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.01.3';
+const APP_VERSION = '2.02.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
