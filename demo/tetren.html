@@ -759,7 +759,7 @@ const I18N_EN = {
 "100％にそろえる": "Normalize to 100%",
 "10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります": "Gravity speeds up every 10 lines. Once it reaches 20G it returns to 15G and the lock delay shortens instead.",
 "180度回転": "Rotate 180°",
-"180度回転を足した。既定のキーは S（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is S, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
+"180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is D, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
 "1〜10。大きいほど速く落ちます": "1-10. Higher is faster.",
 "1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。": "How likely each number of rows is on a single rise. Make the total 100%.",
 "1回のせりあがりで何段上げるかを、段数ごとの割合で決めます": "Set how many rows rise at once, as a chance for each number of rows.",
@@ -2515,7 +2515,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.01.0</span><span class="vl-date">2026-11-01</span></div><ul><li>180度回転を足した。既定のキーは S（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.01.0</span><span class="vl-date">2026-11-01</span></div><ul><li>180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.2 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
@@ -6457,7 +6457,7 @@ const KC_ACTIONS = [
   { id:'softDrop',   label:'ソフトドロップ', d:[  'ArrowDown', null        ] },
   { id:'rotateCW',   label:'時計回り回転',   d:[  'ArrowUp',   'KeyX'      ] },
   { id:'rotateCCW',  label:'反時計回り回転', d:[  'KeyZ',      null        ] },
-  { id:'rotate180',  label:'180度回転',     d:[  'KeyS',      null        ] },
+  { id:'rotate180',  label:'180度回転',     d:[  'KeyD',      null        ] },
   { id:'hardDrop',   label:'ハードドロップ', d:[  'Space',     'KeyC'      ] },
   { id:'hold',       label:'ホールド',       d:[  'ShiftLeft', 'ShiftRight'] },
   { id:'discard',    label:'ミノを捨てる',   d:[  'KeyA',      null        ] },
