@@ -1307,6 +1307,7 @@ const I18N_EN = {
 "約2フレーム": "about 2 frames",
 "素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい": "Plain backtracking. With the board and the piece order both fixed, the search space is small.",
 "紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。": "You are free to use it in articles, videos and streams. No permission needed.",
+"縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした": "Fixed Discard and Undo being pushed off the bottom of the screen, and so out of reach, on devices without much vertical room. When everything will not fit, the control buttons are made shorter so that all of them stay on screen.",
 "置き換えたいミノを選んでください": "Choose the piece to replace",
 "置き換えたいミノを選んでください。": "Choose the piece to replace.",
 "置けばクリア": "to clear",
@@ -2089,6 +2090,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.0 / 1.99.0</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう</li></ul></div>
@@ -6660,7 +6662,9 @@ function initLayout(){
   // タブレットは短辺が600px以上。スマホ用の上限のままだと画面を使い切れないので緩める。
   const tablet = Math.min(vw, vh) >= 600;
   const CELL_MAX = tablet ? 46 : 28;   // 1マスの最大px
-  const CTRL_H   = tablet ? 92 : 66;   // 操作ボタンの高さ
+  const CTRL_H0  = tablet ? 92 : 66;   // 操作ボタンの高さ（縦が足りなければ下で詰める）
+  const CTRL_FS0 = tablet ? 42 : 30;   // そのときの矢印の大きさ
+  let CTRL_H = CTRL_H0, CTRL_FS = CTRL_FS0;
   // 表示倍率。盤面とは別に、NEXT/HOLD と左メニューも好みの大きさにできる。
   const miniScale = (opts.miniScale || 100) / 100;
   const menuScale = (opts.menuScale || 100) / 100;
@@ -6668,17 +6672,9 @@ function initLayout(){
   MINI_BS = Math.max(8, Math.round((tablet ? 24 : 15) * miniScale));
   // ボタン類の寸法をCSS側へ渡す
   const root = document.documentElement.style;
-  root.setProperty('--ctrl-h',      CTRL_H + 'px');
-  root.setProperty('--ctrl-fs',     (tablet ? 42 : 30) + 'px');
-  root.setProperty('--ctrl-lbl-fs', (tablet ? 12 : 9) + 'px');
-  root.setProperty('--opt-pad',     Math.round((tablet ? 18 : 12) * menuScale) + 'px');
-  root.setProperty('--opt-fs',      Math.round((tablet ? 17 : 13) * menuScale) + 'px');
   root.setProperty('--side-pad',    Math.round((tablet ? 9 : 6) * menuScale) + 'px');
   // 文字は小さくしすぎると読めないので下限を置く
   root.setProperty('--side-fs',     Math.max(7, Math.round((tablet ? 12 : 9) * menuScale)) + 'px');
-  // タブレットはボタンを正方形に保つ（横に伸ばすと押しにくく、見た目も間延びする）
-  root.setProperty('--ctrl-col', tablet ? CTRL_H + 'px' : '1fr');
-  root.setProperty('--opt-col',  tablet ? Math.round(CTRL_H * 1.45) + 'px' : '1fr');
 
   // サイドカラム幅。タブレットでは HOLD/NEXT の中身（ミノ4マス分）に合わせる。
   // 画面幅いっぱいに広げると、中身に対して枠だけが横長になる。
@@ -6693,21 +6689,48 @@ function initLayout(){
   // 外に出したボタンは中央カラムの高さを食わないので、
   // 「まだ行に残っているボタンがあるか」で行ごとに数える。
   const inFlow = el => el && !el.classList.contains('moved');
-  let ctrlH = 0;
-  document.querySelectorAll('#ctrlPad .ctrl-row').forEach(row => {
-    if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
-  });
   const optsEl = document.getElementById('opts');
   // 「表示」で隠したときは高さも食わない
   const optsShown = optsEl && optsEl.style.display !== 'none';
-  const optsH = (optsShown && [...optsEl.children].some(inFlow)) ? (tablet ? 70 : 60) : 0;
-  const fixedH = (tablet ? 32 : 22) + ctrlH + optsH + 4*4 + 8;
+  const optsInFlow = !!(optsShown && [...optsEl.children].some(inFlow));
+  // 操作まわりの寸法をCSSへ書いて、盤面以外に要る高さを返す。
+  // r を下げると操作ボタンと「ミノ捨てる・戻す」が低くなる。
+  function fixedHeight(r){
+    CTRL_H  = Math.round(CTRL_H0  * r);
+    CTRL_FS = Math.round(CTRL_FS0 * r);
+    root.setProperty('--ctrl-h',      CTRL_H + 'px');
+    root.setProperty('--ctrl-fs',     CTRL_FS + 'px');
+    root.setProperty('--ctrl-lbl-fs', Math.max(7, Math.round((tablet ? 12 : 9) * r)) + 'px');
+    root.setProperty('--opt-pad',     Math.round((tablet ? 18 : 12) * menuScale * r) + 'px');
+    // 詰めても読めなくならないよう、文字には下限を置く（高さの見積もりは多めのままなので収まる）
+    root.setProperty('--opt-fs',      Math.max(tablet ? 12 : 10, Math.round((tablet ? 17 : 13) * menuScale * r)) + 'px');
+    // タブレットはボタンを正方形に保つ（横に伸ばすと押しにくく、見た目も間延びする）
+    root.setProperty('--ctrl-col', tablet ? CTRL_H + 'px' : '1fr');
+    root.setProperty('--opt-col',  tablet ? Math.round(CTRL_H * 1.45) + 'px' : '1fr');
+    let ctrlH = 0;
+    document.querySelectorAll('#ctrlPad .ctrl-row').forEach(row => {
+      if ([...row.children].some(inFlow)) ctrlH += CTRL_H + 4;
+    });
+    const optsH = optsInFlow ? Math.round((tablet ? 70 : 60) * r) : 0;
+    return (tablet ? 32 : 22) + ctrlH + optsH + 4*4 + 8;
+  }
   const maxBS = Math.min(Math.floor(availW/COLS), CELL_MAX);
   const editing = document.getElementById('colorPaletteWrap').style.display === 'flex';
   const minBS = editing ? 10 : 16;
-  BS = minBS;
-  for(let b = maxBS; b >= minBS; b--){
-    if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; break; }
+  // 縦の短い端末では、盤面を下限まで縮めても一番下の「ミノ捨てる・戻す」が画面の外へ出る。
+  // このページはスクロールしないので、出てしまうと押す手立てが無くなる。
+  // そこで収まらなかったときだけ、盤面ではなく操作ボタンのほうを少しずつ低くする。
+  // 収まっている端末は1回目で抜けるので、寸法はこれまでと変わらない。
+  const CTRL_SQUEEZE_MIN = 0.6;   // これ以上低くすると押しづらい
+  for(let step = 0; ; step++){
+    const r = Math.max(CTRL_SQUEEZE_MIN, 1 - step * 0.05);
+    const fixedH = fixedHeight(r);
+    BS = minBS;
+    let fit = false;
+    for(let b = maxBS; b >= minBS; b--){
+      if(fixedH + ROWS*b + paletteMetrics(COLS*b).h <= vh){ BS = b; fit = true; break; }
+    }
+    if(fit || r <= CTRL_SQUEEZE_MIN) break;
   }
   // ここまでが「ボタンも全部収まる」自動サイズ。
   // タブレットでは画面に対して小さくなりがちなので、好みで広げられるようにする。
@@ -6745,7 +6768,7 @@ function initLayout(){
     const colW = Math.max(48, Math.min(CTRL_H, Math.floor((bw - 4*2) / 3)));
     root.setProperty('--ctrl-col', colW + 'px');
     root.setProperty('--ctrl-h',   colW + 'px');
-    root.setProperty('--ctrl-fs',  Math.round(42 * colW / CTRL_H) + 'px');
+    root.setProperty('--ctrl-fs',  Math.round(CTRL_FS * colW / CTRL_H) + 'px');
     root.setProperty('--opt-col',  Math.min(Math.round(colW * 1.45), Math.floor((bw - 4) / 2)) + 'px');
   }
   document.getElementById('ctrlPad').style.width=bw+'px';
@@ -7294,7 +7317,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.01.2';
+const APP_VERSION = '2.01.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
