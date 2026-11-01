@@ -758,6 +758,8 @@ const I18N_EN = {
 "1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた": "Removed the handling for other games added in 1.4.0 and went back to Puyo Puyo Tetris only. Dropping the empty-cell test had made almost every cell on the board register as a piece.",
 "100％にそろえる": "Normalize to 100%",
 "10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります": "Gravity speeds up every 10 lines. Once it reaches 20G it returns to 15G and the lock delay shortens instead.",
+"180度回転": "Rotate 180°",
+"180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is D, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
 "1〜10。大きいほど速く落ちます": "1-10. Higher is faster.",
 "1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。": "How likely each number of rows is on a single rise. Make the total 100%.",
 "1回のせりあがりで何段上げるかを、段数ごとの割合で決めます": "Set how many rows rise at once, as a chance for each number of rows.",
@@ -1489,6 +1491,7 @@ const I18N_EN = {
 "約2フレーム": "about 2 frames",
 "素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい": "Plain backtracking. With the board and the piece order both fixed, the search space is small.",
 "紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。": "You are free to use it in articles, videos and streams. No permission needed.",
+"縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした": "Fixed Discard and Undo being pushed off the bottom of the screen, and so out of reach, on devices without much vertical room. When everything will not fit, the control buttons are made shorter so that all of them stay on screen.",
 "置き換えたいミノを選んでください": "Choose the piece to replace",
 "置き換えたいミノを選んでください。": "Choose the piece to replace.",
 "置けばクリア": "to clear",
@@ -2512,6 +2515,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.01.0</span><span class="vl-date">2026-11-01</span></div><ul><li>180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.2 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.1 / 1.99.1</span><span class="vl-date">2026-10-29</span></div><ul><li>スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した</li></ul></div>
@@ -3143,6 +3147,11 @@ const KICKS = {
     '2R': [[ 0, 0],[-1, 0],[-1,-1],[ 0,+2],[-1,+2]],
     'L2': [[ 0, 0],[-1, 0],[-1,+1],[ 0,-2],[-1,-2]],
     '0L': [[ 0, 0],[+1, 0],[+1,-1],[ 0,+2],[+1,+2]],
+    // 180度ぶん（TETR.IO の SRS+）。ガイドラインには無いので、TETR.IOの表に合わせてある
+    '02': [[ 0, 0],[ 0,-1],[+1,-1],[-1,-1],[+1, 0],[-1, 0]],
+    'RL': [[ 0, 0],[+1, 0],[+1,-2],[+1,-1],[ 0,-2],[ 0,-1]],
+    '20': [[ 0, 0],[ 0,+1],[-1,+1],[+1,+1],[-1, 0],[+1, 0]],
+    'LR': [[ 0, 0],[-1, 0],[-1,-2],[-1,-1],[ 0,-2],[ 0,-1]],
   },
   I: {
     '0R': [[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],
@@ -3153,10 +3162,16 @@ const KICKS = {
     '2R': [[ 0, 0],[+1, 0],[-2, 0],[+1,+2],[-2,-1]],
     'L2': [[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],
     '0L': [[ 0, 0],[-1, 0],[+2, 0],[-1,-2],[+2,+1]],
+    // Iミノの180度は TETR.IO でも1つしか試さない
+    '02': [[ 0, 0],[ 0,-1]],
+    'RL': [[ 0, 0],[+1, 0]],
+    '20': [[ 0, 0],[ 0,+1]],
+    'LR': [[ 0, 0],[-1, 0]],
   },
   O: { // kick なし
     '0R':[[0,0]],'R2':[[0,0]],'2L':[[0,0]],'L0':[[0,0]],
     'R0':[[0,0]],'2R':[[0,0]],'L2':[[0,0]],'0L':[[0,0]],
+    '02':[[0,0]],'RL':[[0,0]],'20':[[0,0]],'LR':[[0,0]],
   },
 };
 
@@ -3650,9 +3665,11 @@ function hardDrop() {
 
 // ===== 回転 (SRS) =====
 // デカミノモードでも論理座標なのでSRSキック通常通り使用
-function rotate(dir) { // dir: 1=CW, -1=CCW
+// 180度（dir=2）のキックはガイドラインに無いので TETR.IO の SRS+ に合わせてある。
+// 90度ぶんは今までどおりガイドラインのまま
+function rotate(dir) { // dir: 1=CW, -1=CCW, 2=180度
   const from = cur.state;
-  const to   = (from + (dir===1?1:3)) % 4;
+  const to   = (from + (dir===1 ? 1 : dir===2 ? 2 : 3)) % 4;
   const key  = STATE_NAMES[from] + STATE_NAMES[to];
   const kicks = KICKS[PIECE_DEF[cur.type].kickType][key] || [[0,0]];
   for (let ki = 0; ki < kicks.length; ki++) {
@@ -6440,6 +6457,7 @@ const KC_ACTIONS = [
   { id:'softDrop',   label:'ソフトドロップ', d:[  'ArrowDown', null        ] },
   { id:'rotateCW',   label:'時計回り回転',   d:[  'ArrowUp',   'KeyX'      ] },
   { id:'rotateCCW',  label:'反時計回り回転', d:[  'KeyZ',      null        ] },
+  { id:'rotate180',  label:'180度回転',     d:[  'KeyD',      null        ] },
   { id:'hardDrop',   label:'ハードドロップ', d:[  'Space',     'KeyC'      ] },
   { id:'hold',       label:'ホールド',       d:[  'ShiftLeft', 'ShiftRight'] },
   { id:'discard',    label:'ミノを捨てる',   d:[  'KeyA',      null        ] },
@@ -6570,6 +6588,7 @@ const GP_ACTIONS = [
   { id:'hardDrop',   label:'ハードドロップ',   d:['b12','a1-'] },
   { id:'rotateCW',   label:'時計回り回転',     d:['b0', 'b3' ] },
   { id:'rotateCCW',  label:'反時計回り回転',   d:['b1', 'b2' ] },
+  { id:'rotate180',  label:'180度回転',       d:[null, null ] },
   { id:'hold',       label:'ホールド',         d:['b4', 'b5' ] },
   { id:'discard',    label:'ミノを捨てる',     d:[null, null ] },
   { id:'undo',       label:'1手戻す',          d:['b6', null ] },
@@ -6675,6 +6694,7 @@ function pollGamepad() {
     if (off('softDrop'))  downHeld = false;
     if (hit('rotateCW'))  rotate(1);
     if (hit('rotateCCW')) rotate(-1);
+    if (hit('rotate180')) rotate(2);
     if (hit('hardDrop'))  hardDrop();
     if (hit('hold'))      doHold();
     if (hit('discard'))   discardPiece();
@@ -9348,7 +9368,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.00.0';
+const APP_VERSION = '2.01.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -9607,6 +9627,7 @@ document.addEventListener('keydown', e=>{
   }
   else if (kcMatch('rotateCW',  c)) { e.preventDefault(); if (!e.repeat) rotate(1); }
   else if (kcMatch('rotateCCW', c)) { e.preventDefault(); if (!e.repeat) rotate(-1); }
+  else if (kcMatch('rotate180', c)) { e.preventDefault(); if (!e.repeat) rotate(2); }
   else if (kcMatch('hardDrop',  c)) { e.preventDefault(); hardDrop(); }
   else if (kcMatch('hold',      c)) { e.preventDefault(); doHold(); }
   else if (kcMatch('discard',   c)) { e.preventDefault(); discardPiece(); }
