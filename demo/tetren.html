@@ -779,6 +779,7 @@ const I18N_EN = {
 "2巡目からは7ミノすべて出ます。": "From the second bag all 7 pieces appear.",
 "2巡目が複数あるテンプレート（はちみつ砲）は「次の巡」を押すたびに切り替わる": "For templates with several second bags (Hachimitsu), Next bag cycles through them.",
 "2巡目に進んだとき、1巡目で組んだブロックを灰色（おじゃまブロックと同じ色）で表示するようにした": "When you move on to the second bag, the blocks from the first bag are shown in grey, the same colour as garbage.",
+"40LINEが、せりあがりの設定を開いたりDPC・ミノ欠けの選択画面を開いたりしただけで解除されていたのを修正。画面を開くだけなら40LINEは続く": "Fixed 40LINE being cancelled merely by opening the garbage settings or the DPC / missing-piece picker. Opening a panel now leaves the 40LINE run going.",
 "40LINE再スタート": "Restart 40 LINE",
 "40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります": "Times how long you take to clear 40 lines. Starts after a 3 second countdown.",
 "40ライン達成でその場で止まるようにした": "The game now stops as soon as you clear 40 lines.",
@@ -1182,6 +1183,7 @@ const I18N_EN = {
 "マラソンのゲームオーバー後、マラソンはONのまま 1G・30F から挑み直すようにした": "After a Marathon game over, Marathon stays on and you start again from 1G and 30F.",
 "マラソンの入切": "Toggle Marathon",
 "マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む": "Marathon now shows READY then GO! on the board before the game starts. The Retry after a game over and the Reset button do the same.",
+"マラソン中に落下設定を変えると、マラソンを切ったあと画面の表示と次に開いたときの値が食い違っていたのを修正": "Fixed the gravity setting disagreeing between what the screen showed and what was restored on the next visit, after it had been changed during a marathon run.",
 "ミノ": "Piece",
 "ミノがどこに落ちるかを薄く表示する": "Show where the piece will land",
 "ミノの参照色を実機スクショの実測値に更新した（水色と青の判別が紙一重で、取り違えることがあった）": "Updated the reference colours from real screenshots; cyan and blue were close enough to be mixed up.",
@@ -2516,6 +2518,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.1</span><span class="vl-date">2026-11-02</span></div><ul><li>40LINEが、せりあがりの設定を開いたりDPC・ミノ欠けの選択画面を開いたりしただけで解除されていたのを修正。画面を開くだけなら40LINEは続く</li><li>マラソン中に落下設定を変えると、マラソンを切ったあと画面の表示と次に開いたときの値が食い違っていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.01.0</span><span class="vl-date">2026-11-01</span></div><ul><li>180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.2 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
@@ -4346,7 +4349,6 @@ const pick = {
 };
 
 function openDpc() {
-  stopSprint();
   closeDigPanel();
   document.getElementById('dpcOverlay').classList.add('open');
   renderPieceGrid('dpc');
@@ -4355,7 +4357,6 @@ function closeDpc() {
   document.getElementById('dpcOverlay').classList.remove('open');
 }
 function openMiss() {
-  stopSprint();
   closeDigPanel();
   const ks = document.getElementById('missKeepSw'); if (ks) ks.checked = !!opts.missKeep;
   renderMissHoldRow();
@@ -4538,6 +4539,7 @@ function renderPieceGrid(kind) {
 
 // 盤面と履歴を初期化する（DPCセットの共通部分）
 function resetBoardForPick() {
+  stopSprint();   // 決まった地形から始めるので、40LINEの計測とは同時に使えない
   board = Array.from({length:TROW}, ()=>new Array(COLS).fill(null));
   undoStack = []; lastGarbageCol = null; ren = 0;
   if (renMode) setupRenTerrain();   // RENモード中は開始時と同じ地形を敷き直す
@@ -4679,6 +4681,7 @@ function applyMissMulti(types, record) {
 }
 // record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
 function applyMissTypes(types, last, record = true) {
+  stopSprint();   // ミノを抜いて始めるので、40LINEの計測とは同時に使えない
   lastMiss = last;
   updateMissAgainBtn();
   firstBagTypes = ALL_TYPES.filter(t => !types.includes(t));
@@ -7050,7 +7053,7 @@ function renderTd() {
   const stop = document.getElementById('tdStopBtn');
   if (stop) stop.style.display = tdRun ? '' : 'none';
 }
-function openTd() { stopSprint(); renderTd(); document.getElementById('tdOverlay').classList.add('open'); }
+function openTd() { renderTd(); document.getElementById('tdOverlay').classList.add('open'); }
 function closeTd() { document.getElementById('tdOverlay').classList.remove('open'); }
 
 // REN数に応じて上がる段数。ゲーム中の攻撃と同じ表を使う（シングル継続ぶん）
@@ -7063,6 +7066,7 @@ function tdRows(r) {
 }
 let tdReadyTimer = null;
 function tdStart() {
+  stopSprint();   // 盤面に重ねる表示を奪い合うので、40LINEは先に止める
   closeTd();
   // 毎回おなじ条件から始められるよう、地形もミノ順もまっさらにして回し直す。
   // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
@@ -7297,7 +7301,7 @@ function digPanelOpen() {
   const box = document.getElementById('digPanel');
   return !!box && box.style.display === 'block';
 }
-function toggleDigPanel() { stopSprint(); setDigPanelOpen(!digPanelOpen()); }
+function toggleDigPanel() { setDigPanelOpen(!digPanelOpen()); }
 // 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
 function closeDigPanel() { setDigPanelOpen(false); }
 
@@ -8685,6 +8689,7 @@ function toggleMarathon() {
     btn.style.background = '#374151';
     clearMarathonReady();            // READY の途中でOFFにされたら止めた盤面を動かし直す
     gravSpeed = marathonSavedGrav;   // 元の落下速度に戻す
+    saveGravSpeed();                 // マラソン中に触られていても、戻した値を控えへ書き直す
     updateGravDisplay();
   }
   updateMarathonInfo();
@@ -9369,7 +9374,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.01.0';
+const APP_VERSION = '2.01.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
