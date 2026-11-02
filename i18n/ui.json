@@ -316,5 +316,9 @@
  "選んだミノを最初の1巡から抜いて、ゲームを最初から始めます": "Removes the chosen pieces from the first bag and starts the game over",
  "スナップ": "Snap",
  "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
- "180度回転": "Rotate 180°"
+ "180度回転": "Rotate 180°",
+ "ミノ出現までの硬直（ARE）": "Entry delay (ARE)",
+ "ミノを置いてから次が出るまでの待ち時間。0なら従来どおりすぐ出ます。ぷよぷよテトリス2は7Fです": "How long to wait between locking a piece and the next one appearing. 0 means it appears at once, as before. Puyo Puyo Tetris 2 uses 7F.",
+ "先行入力": "Initial input",
+ "上の硬直の間に押し直した回転・HOLD・左右を、次のミノへ持ち越します。回転の予約をIRS、HOLDの予約をIHSと呼びます。押しっぱなしは持ち越しません。硬直が0Fのときは効きません": "Carries a rotation, hold or left/right pressed again during the entry delay over to the next piece. A queued rotation is called IRS and a queued hold IHS. Holding a button down is not carried over. Has no effect while the entry delay is 0F."
 }

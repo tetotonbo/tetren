@@ -1203,6 +1203,8 @@ const I18N_EN = {
 "ミノを捨てる・戻す": "Discard and undo",
 "ミノを最初からHOLDに入れる": "Start with the piece in Hold",
 "ミノを置いたときの攻撃ぶんだけ、溜まっているせりあがりを打ち消します。OFFにすると打ち消さず、溜まったぶんがそのまま上がります": "Your attack cancels out pending garbage. When off, nothing is cancelled and all pending garbage rises.",
+"ミノを置いてから次が出るまでの待ち時間。0なら従来どおりすぐ出ます。ぷよぷよテトリス2は7Fです": "How long to wait between locking a piece and the next one appearing. 0 means it appears at once, as before. Puyo Puyo Tetris 2 uses 7F.",
+"ミノ出現までの硬直（ARE）": "Entry delay (ARE)",
 "ミノ捨てる": "Discard",
 "ミノ捨てる・戻す": "Discard and undo",
 "ミノ欠け": "Custom bag",
@@ -1255,6 +1257,7 @@ const I18N_EN = {
 "・打切": ", cut off",
 "一気に端まで": "all the way",
 "上のバーから SCORE と LV を外し、消したライン数だけにした。バーも一段薄くして、そのぶん盤面を広げた": "Dropped SCORE and LV from the top bar, leaving just the line count. The bar is thinner too, which gives the board more room.",
+"上の硬直の間に押し直した回転・HOLD・左右を、次のミノへ持ち越します。回転の予約をIRS、HOLDの予約をIHSと呼びます。押しっぱなしは持ち越しません。硬直が0Fのときは効きません": "Carries a rotation, hold or left/right pressed again during the entry delay over to the next piece. A queued rotation is called IRS and a queued hold IHS. Holding a button down is not carried over. Has no effect while the entry delay is 0F.",
 "主要なボタンにツールチップ（マウスオーバーで出る説明）を追加": "Added tooltips to the main buttons.",
 "予め選ぶミノ": "Preset piece",
 "予め選ぶミノも追加（7種＋ランダム、既定はランダム）": "Added a preset piece as well (the 7 pieces plus Random; Random by default).",
@@ -1283,6 +1286,7 @@ const I18N_EN = {
 "優先順位をつける": "Rank solutions",
 "優先順位決定のための火力を設定します。オフの場合、パフェを取った時のライン消去は火力に含まれません（テトリスパフェは火力０）": "Decides how attack is counted when ranking. When off, the clear that completes the Perfect Clear is not counted (a Tetris PC counts as 0).",
 "元に戻す": "Undo",
+"先行入力": "Initial input",
 "全体　{0}（1手目は{1}ミノ）": "Overview - {0} (first is {1})",
 "全部は抜けません。6個までにしてください。": "You cannot remove them all. Up to 6, please.",
 "初期値に戻す": "Reset to default",
@@ -1547,6 +1551,7 @@ const I18N_EN = {
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
 "設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）": "The PC finder settings now have their own tab; they used to live under Other.",
+"設定の「操作」に 「ミノ出現までの硬直（ARE）」 と 「先行入力」 を追加。ミノを置いてから次が出るまでの待ち時間を作り、その間に押し直した回転・HOLD・左右を次のミノへ持ち越せる（回転の予約＝IRS、HOLDの予約＝IHS）。ぷよぷよテトリス2の先行入力を練習するためのもので、既定は硬直0F＝従来どおり。ぷよテト準拠は7F。押しっぱなしは持ち越さない": "Added Entry delay (ARE) and Initial input to the Controls settings. A wait can now be put between locking a piece and the next one appearing, and a rotation, hold or left/right pressed again during that wait carries over to the next piece (a queued rotation is IRS, a queued hold IHS). It is there for practising Puyo Puyo Tetris 2 initial input; the default is 0F, exactly as before, and 7F matches Puyo Puyo Tetris 2. Holding a button down is not carried over.",
 "設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる": "Added Language to the Display settings, so the English button can be shown or hidden like the other menus.",
 "設定の「表示」の並びも、画面の並びに合わせた": "The order under Display now matches the order on screen.",
 "設定のタブの並びを キーコンフィグ／スキン／表示／パフェ探索／その他 に変更（「その他」を一番右へ）": "Reordered the settings tabs to Key config / Skin / Display / PC finder / Other, with Other on the far right.",
@@ -2518,6 +2523,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.02.0</span><span class="vl-date">2026-11-02</span></div><ul><li>設定の「操作」に 「ミノ出現までの硬直（ARE）」 と 「先行入力」 を追加。ミノを置いてから次が出るまでの待ち時間を作り、その間に押し直した回転・HOLD・左右を次のミノへ持ち越せる（回転の予約＝IRS、HOLDの予約＝IHS）。ぷよぷよテトリス2の先行入力を練習するためのもので、既定は硬直0F＝従来どおり。ぷよテト準拠は7F。押しっぱなしは持ち越さない</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.1</span><span class="vl-date">2026-11-02</span></div><ul><li>40LINEが、せりあがりの設定を開いたりDPC・ミノ欠けの選択画面を開いたりしただけで解除されていたのを修正。画面を開くだけなら40LINEは続く</li><li>マラソン中に落下設定を変えると、マラソンを切ったあと画面の表示と次に開いたときの値が食い違っていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.01.0</span><span class="vl-date">2026-11-01</span></div><ul><li>180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.01.2 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>マラソンを始めるとき、盤面に READY → GO! を出してからスタートするようにした。ゲームオーバー後の「もう一度」とリセットでも同じように挟む</li></ul></div>
@@ -2872,6 +2878,26 @@ if (document.readyState === 'loading') {
           <span class="opt-val"><span id="optLockFramesVal">30</span><span class="opt-unit"> F</span></span>
           <button class="step-btn" onclick="stepOption('lockFrames',1)">›</button>
         </div>
+      </div>
+
+      <div class="opt-row">
+        <span class="opt-label">ミノ出現までの硬直（ARE）
+          <span class="opt-note">ミノを置いてから次が出るまでの待ち時間。0なら従来どおりすぐ出ます。ぷよぷよテトリス2は7Fです</span></span>
+        <div class="opt-step">
+          <button class="step-btn" onclick="stepOption('areFrames',-1)">‹</button>
+          <span class="opt-val"><span id="optAreFramesVal">0</span><span class="opt-unit"> F</span></span>
+          <button class="step-btn" onclick="stepOption('areFrames',1)">›</button>
+        </div>
+      </div>
+
+      <div class="opt-row" id="optPreInputRow">
+        <span class="opt-label">先行入力
+          <span class="opt-note">上の硬直の間に押し直した回転・HOLD・左右を、次のミノへ持ち越します。回転の予約をIRS、HOLDの予約をIHSと呼びます。押しっぱなしは持ち越しません。硬直が0Fのときは効きません</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPreInput"
+            onchange="setOption('preInput', this.checked)">
+          <span class="tgl"></span>
+        </label>
       </div>
 
       <div class="opt-row">
@@ -3590,7 +3616,42 @@ function mkPiece(type) {
 }
 // noGameOver=true のときは、出現位置がふさがっていてもゲームオーバーにしない。
 // 地形取り込みや地形編集のように「その状況から練習を始める」場面で使う。
+// ===== ミノ出現までの硬直（ARE）と先行入力 =====
+// ぷよぷよテトリス2などは、ミノが固定されてから次が出るまでに硬直がある。
+// その硬直の間に入れた操作を次のミノへ持ち越すのが先行入力で、
+// 回転の予約を IRS、HOLDの予約を IHS と呼ぶ。
+// 予約は「硬直中に押し直したもの」だけにしてある。押しっぱなしも拾う方式は
+// HOLDが連続で入る事故が起きやすい（Tetris Effect: Connected のタイプA/Bでいうタイプ B）。
+// 既定は 0F＝硬直なしなので、設定を触らなければ従来どおり。
+let areUntil = 0;     // 硬直が明ける時刻。0なら硬直していない
+let preRot   = 0;     // 予約した回転（90度いくつぶん）
+let preHold  = false; // 予約したHOLD
+let preDir   = 0;     // 予約した横移動（-1=左 / +1=右）
+// 硬直中はミノに触れない。操作の入口はすべてここで止める
+function areBlocked() { return areUntil > 0; }
+// 操作中のミノを差し替える経路は、硬直も予約も持ち越さない
+function clearAre() { areUntil = 0; preRot = 0; preHold = false; preDir = 0; }
+function startAre() {
+  if (!opts.areFrames) return;
+  areUntil = performance.now() + opts.areFrames * FRAME_MS;
+}
+// 硬直明け。予約を IHS → IRS → 横移動 の順に効かせる。
+// doHold() は中で spawn() を呼んで予約を消すので、先に控えへ取っておく
+function endAre() {
+  const hold = preHold, dir = preDir;
+  const rot = ((preRot % 4) + 4) % 4;
+  areUntil = 0; preHold = false; preRot = 0; preDir = 0;
+  if (hold) doHold();                                     // IHS
+  if (rot)  rotate(rot === 1 ? 1 : rot === 2 ? 2 : -1);   // IRS
+  if (dir)  moveH(dir);
+  // 硬直中に押し始めたぶんのDASはそのまま引き継ぐ（いわゆるDAS重複）
+  resumeDAS();
+  lastSoftDrop = 0;   // 止めていたぶんをまとめて落とさない
+  draw();
+}
+
 function spawn(noGameOver) {
+  clearAre();   // 硬直も予約も持ち越さない
   fillQ();
   cur = mkPiece(nextQ.shift().type);
   resumeDAS();   // 左右を押したまま次のミノに移っても動き続けるようにする
@@ -3644,6 +3705,7 @@ function ghostRow() {
 
 // ===== 移動 =====
 function moveH(dc) {
+  if (areBlocked()) return;
   // デカミノモードでも論理座標で動くので特別処理不要
   if (valid(cur, 0, dc, cur.state)) {
     cur.col += dc;
@@ -3652,6 +3714,7 @@ function moveH(dc) {
   }
 }
 function softDrop() {
+  if (areBlocked()) return false;
   if (valid(cur, 1, 0, cur.state)) {
     cur.row++;
     score++;
@@ -3661,6 +3724,7 @@ function softDrop() {
   return false;
 }
 function hardDrop() {
+  if (areBlocked()) return;
   let d=0;
   while (valid(cur,1,0,cur.state)) { cur.row++; d++; }
   score += d*2;
@@ -3672,6 +3736,7 @@ function hardDrop() {
 // 180度（dir=2）のキックはガイドラインに無いので TETR.IO の SRS+ に合わせてある。
 // 90度ぶんは今までどおりガイドラインのまま
 function rotate(dir) { // dir: 1=CW, -1=CCW, 2=180度
+  if (areBlocked()) return;
   const from = cur.state;
   const to   = (from + (dir===1 ? 1 : dir===2 ? 2 : 3)) % 4;
   const key  = STATE_NAMES[from] + STATE_NAMES[to];
@@ -3691,6 +3756,7 @@ function rotate(dir) { // dir: 1=CW, -1=CCW, 2=180度
 
 // ===== ホールド =====
 function doHold() {
+  if (areBlocked()) return;
   setTimeout(tplRefresh, 0);
   // 連続ホールドOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if (!opts.multiHold && !canHold) return;
@@ -4935,6 +5001,7 @@ function undo() {
   if (!undoStack.length) return;
   setTimeout(tplRefresh, 0);   // 戻したらテンプレの判定もやり直す
   const s = undoStack.pop();
+  clearAre();   // 硬直の途中で戻されても、戻したミノはすぐ操作できる
   resetLock();
   board        = s.board;
   cur          = mkPiece(s.cur.type); // スポーン位置から再出現
@@ -5114,6 +5181,7 @@ function lock() {
 
   if (pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
   spawn();
+  startAre();   // 硬直を設定していれば、次のミノを触れるようになるまで少し待つ
   draw();
   tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
 }
@@ -5304,8 +5372,8 @@ function drawBoard() {
     for (let r=BUF-1;r<TROW;r++) for (let c=0;c<COLS;c++)
       if (board[r][c]) drawBlock(boardCtx, c, r-BUF, board[r][c]);
   }
-  // ゴーストピース（showGhost時のみ）
-  if (!gameOver && showGhost) {
+  // ゴーストピース（showGhost時のみ）。硬直中はまだミノが無いので出さない
+  if (!gameOver && !areUntil && showGhost) {
     const gr = ghostRow();
     const cells = PIECE_DEF[cur.type].cells[cur.state];
     const color = pieceColor(cur.type);
@@ -5395,8 +5463,8 @@ function drawBoard() {
       });
     }
   }
-  // カレントピース（常に表示）
-  if (!gameOver) {
+  // カレントピース（硬直中は出さない）
+  if (!gameOver && !areUntil) {
     const cells = PIECE_DEF[cur.type].cells[cur.state];
     const color = pieceColor(cur.type);
     if (dekaMode) {
@@ -5412,7 +5480,7 @@ function drawBoard() {
     }
   }
   // 軸表示（カレントピースのみ）
-  if (showAxis && !gameOver) {
+  if (showAxis && !gameOver && !areUntil) {
     const [ax, ay] = pieceAxisPos(cur.row, cur.col, cur.type);
     if (ay >= 0) {
       boardCtx.save();
@@ -5587,8 +5655,12 @@ function loop(ts) {
   pollGamepad();          // コントローラは毎フレーム読む
   if (gameOver) return;
 
+  // 硬直が明けたら、予約してあった先行入力をここで効かせる
+  if (areUntil && ts >= areUntil) endAre();
+
   // ↓キー押しっぱなし：ブラウザのキーリピートに頼らずポーリング
-  if (downHeld) {
+  // （硬直中は落とさない。せりあがりの時計は止めたくないので、ループ自体は回したまま）
+  if (downHeld && !areUntil) {
     if (!lastSoftDrop) lastSoftDrop = ts;
     const dt = Math.min(100, ts - lastSoftDrop);   // タブ復帰時に飛びすぎないよう上限を置く
     lastSoftDrop = ts;
@@ -5600,7 +5672,7 @@ function loop(ts) {
 
   // 0G は自動で落とさない（ハードドロップするまでミノは止まったまま）
   // 1G〜20G: フレームベース（小数行/フレームを貯めて、たまった整数行ぶん落とす）
-  if (gravSpeed > 0 && !gravPaused) {
+  if (gravSpeed > 0 && !gravPaused && !areUntil) {
     gravAccum += gravRowsPerFrame(gravSpeed);
     let steps = Math.floor(gravAccum);
     gravAccum -= steps;
@@ -6367,6 +6439,7 @@ function applyImport() {
     const cand = { type: impActivePiece.type, state: impActivePiece.state,
                    row: impActivePiece.row0 + BUF, col: impActivePiece.col0 };
     if (valid(cand, 0, 0, cand.state)) {
+      clearAre();
       cur = cand;
       lastWasRotation = false;
       lastKickIndex = 0;
@@ -6687,6 +6760,18 @@ function pollGamepad() {
   if (hit('restart'))  startGameUI();
   if (hit('missAgain')) repeatMiss();
   if (hit('sprintAgain')) restartSprint();
+
+  // 硬直中（ARE）の回転とHOLDは、先行入力がONなら次のミノへ予約する。
+  // hit() は押した瞬間だけなので、キーボード側と同じく押し直しだけを拾う。
+  // 左右は下の経路を通るだけでDASが始まるので、ここでは向きだけ覚える
+  if (!gameOver && areUntil && opts.preInput) {
+    if (hit('moveLeft'))  preDir = -1;
+    if (hit('moveRight')) preDir = +1;
+    if (hit('rotateCW'))  preRot += 1;
+    if (hit('rotateCCW')) preRot -= 1;
+    if (hit('rotate180')) preRot += 2;
+    if (hit('hold'))      preHold = !preHold;
+  }
 
   if (!gameOver) {
     // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
@@ -8939,10 +9024,12 @@ const OPT_DEFAULTS = {
   sdfMode: false,     // ソフトドロップをSDF（重力の倍率）で指定する
   sdf: 6,             // SDFの値。41は∞（押した瞬間に最下段）
   ctrlOpen: false,    // 「ボタン操作」パネルを開いた状態にしておくか（iPadなど、開きっぱなしで使う人向け）
+  areFrames: 0,       // ミノを置いてから次が出るまでの硬直（フレーム）。0＝従来どおりすぐ出る
+  preInput: false,    // 先行入力。硬直中に押し直した操作を次のミノへ持ち越す
 };
 // [最小, 最大, 刻み]
 const OPT_RANGE = { holeKeep:[10,100,10], softSpeed:[1,10,1], lockFrames:[0,60,5], sdf:[5,41,1],
-                    pcCount:[1,20,1], pcTimeout:[1,30,1] };
+                    pcCount:[1,20,1], pcTimeout:[1,30,1], areFrames:[0,10,1] };
 // DAS/ARR の上下限（ミリ秒）
 const INPUT_RANGE = { dasMs:[0,500], arrMs:[0,167] };
 const FRAME_MS = 1000 / 60;
@@ -9113,6 +9200,10 @@ function applyOptions() {
     ? ('いまの落下設定だと毎秒 ' + (opts.sdf >= SDF_MAX ? '∞' : Math.round(softDropRows())) + ' 行')
     : '');
   put('optLockFramesVal', opts.lockFrames);
+  put('optAreFramesVal', opts.areFrames);
+  check('optPreInput', opts.preInput);
+  // 硬直が無いあいだは予約する間も無いので、先行入力は触らせない
+  setEnabled('optPreInputRow', 'optPreInput', !!opts.areFrames);
   const inF = opts.inputUnit === 'F';
   put('optDasVal', inF ? msToF(opts.dasMs) : opts.dasMs);
   put('optArrVal', inF ? msToF(opts.arrMs) : opts.arrMs);
@@ -9374,7 +9465,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.01.1';
+const APP_VERSION = '2.02.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -9622,6 +9713,19 @@ document.addEventListener('keydown', e=>{
   // ボタンと同じ操作も、ゲームオーバー中から使えるようにする
   if (kcButtonKey(e)) return;
   if (gameOver) return;
+  // 硬直中（ARE）。先行入力がONなら、押し直した操作だけ次のミノへ予約する。
+  // e.repeat を弾いているので、押しっぱなしは次のミノに持ち越さない
+  if (areUntil) {
+    if (!opts.preInput || e.repeat) return;
+    const k = e.code;
+    if      (kcMatch('moveLeft',  k)) { e.preventDefault(); preDir = -1; pressDir('L'); }
+    else if (kcMatch('moveRight', k)) { e.preventDefault(); preDir = +1; pressDir('R'); }
+    else if (kcMatch('rotateCW',  k)) { e.preventDefault(); preRot += 1; }
+    else if (kcMatch('rotateCCW', k)) { e.preventDefault(); preRot -= 1; }
+    else if (kcMatch('rotate180', k)) { e.preventDefault(); preRot += 2; }
+    else if (kcMatch('hold',      k)) { e.preventDefault(); preHold = !preHold; }
+    return;
+  }
   // Ctrl+Z / Cmd+Z → Undo（固定ショートカット）
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); undo(); return; }
   const c = e.code;
