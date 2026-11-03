@@ -123,6 +123,8 @@ canvas { display:block; }
    タブレットは固定幅にしてボタンを正方形に保ち、横に伸ばさない。 */
 .ctrl-row.r2 { grid-template-columns:repeat(2,var(--ctrl-col,1fr)); }
 .ctrl-row.r3 { grid-template-columns:repeat(3,var(--ctrl-col,1fr)); }
+/* 180°は矢印1文字より横に長いので、ボタンの文字サイズに対して小さめに出す */
+.rot180-g { font-size:0.6em; letter-spacing:-0.02em; }
 .ctrl-btn {
   /* 高さと文字サイズは initLayout() が画面幅から決める（タブレットでは大きくする） */
   height:var(--ctrl-h, 66px); background:#1f2937; color:#e5e7eb;
@@ -584,7 +586,9 @@ const I18N_EN = {
 "100％にそろえる": "Normalize to 100%",
 "10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります": "Gravity speeds up every 10 lines. Once it reaches 20G it returns to 15G and the lock delay shortens instead.",
 "180度回転": "Rotate 180°",
+"180度回転を足した。操作ボタンの回転の行に 180° を追加し、キーボード（既定 D）とコントローラからも使える。先行回転（IRS）でも効く。キックは PC版と同じ TETR.IO の SRS+ に合わせた。ボタンが要らないときは設定の「操作」で消せる（消すと左回転・右回転が横に広がる）": "Added 180° rotation. There is now a 180° button in the rotation row, and it also works from the keyboard (D by default) and a controller, as well as with initial rotation (IRS). The kicks match TETR.IO SRS+, same as the desktop version. You can hide the button from Controls in the settings, which makes rotate left / rotate right wider.",
 "180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is D, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
+"180度回転ボタン": "Rotate 180° button",
 "1〜10。大きいほど速く落ちます": "1-10. Higher is faster.",
 "1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。": "How likely each number of rows is on a single rise. Make the total 100%.",
 "1回のせりあがりで何段上げるかを、段数ごとの割合で決めます": "Set how many rows rise at once, as a chance for each number of rows.",
@@ -878,6 +882,7 @@ const I18N_EN = {
 "キーの割り当てを初期状態に戻す": "Reset the key assignments to default",
 "キーの割り当てを変更する": "Change the key assignments",
 "キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正": "Fixed the action firing at the moment you assigned a key to it.",
+"キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く": "Holding a key down no longer repeats the action for any control. This covers HOLD, Discard piece, Undo, Restart and Ctrl+Z. Only the first press counts.",
 "キーを押して...": "Press a key...",
 "キーを押して…": "Press a key...",
 "キーコンフィグ": "Key config",
@@ -959,6 +964,7 @@ const I18N_EN = {
 "ドラッグ＆ドロップ／貼り付けも可": "Drag and drop or paste works too",
 "ハードドロップ": "Hard drop",
 "ハードドロップなどで次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐようにした（spawn() で resumeDAS()）": "If left or right is already held when the next piece appears, auto-shift now carries straight on (resumeDAS() in spawn()).",
+"ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く": "Fixed holding the hard drop key dropping piece after piece through key repeat. Only the first press now counts.",
 "バージョン履歴": "Version history",
 "バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした": "The version history now lists only major changes (releases where C in A.B.C is 0).",
 "パステル": "Pastel",
@@ -1244,6 +1250,7 @@ const I18N_EN = {
 "接続中:": "Connected:",
 "操作": "Controls",
 "操作ボタン3つ（この地形を取り込む／自動検出しなおす／別の画像）を読み取り結果の下（右カラム）へ移動。縦に長い画像でもボタンを探さずに済むようにした": "Moved the three buttons (Import this board, Detect again, Another image) below the detected result in the right column, so you do not have to hunt for them with a tall image.",
+"操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます": "Shows a 180° button among the controls. Hide it and rotate left / rotate right get wider. The keyboard (D by default) and controller bindings work whether or not the button is shown.",
 "操作中のミノ: {0}（ゴーストの真上から検出）": "Active piece: {0} (found just above the ghost)",
 "操作中のミノ: {0}（実ブロックは見つからずゴースト位置を使用）": "Active piece: {0} (no solid blocks found, using the ghost position)",
 "操作中のミノが地形として残る経路を塞いだ。これまでは位置を特定できたときは「その形のマス」だけを除外していたため、位置の推定を誤ると見えている部分が残っていた。位置が分かっている場合も、宙に浮いた同じ色のかたまりを合わせて除外するようにした": "Closed the path that left the active piece behind as part of the board. Only the cells of the detected shape used to be removed, so a wrong guess left the visible part behind. Now the floating block of the same colour is removed as well, even when the position is known.",
@@ -1880,11 +1887,16 @@ if (document.readyState === 'loading') {
           →<span class="ctrl-lbl">右</span>
         </button>
       </div>
-      <div class="ctrl-row r2">
+      <div class="ctrl-row r3" id="rotRow">
         <button class="ctrl-btn" data-ctrl="rotL"
           onmousedown="if(ctrlOK())rotate(-1)"
           ontouchstart="event.preventDefault();if(ctrlOK())rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
+        </button>
+        <button class="ctrl-btn" data-ctrl="rot180" id="btnRot180"
+          onmousedown="if(ctrlOK())rotate(2)"
+          ontouchstart="event.preventDefault();if(ctrlOK())rotate(2)">
+          <span class="rot180-g">180°</span><span class="ctrl-lbl">180度回転</span>
         </button>
         <button class="ctrl-btn" data-ctrl="rotR"
           onmousedown="if(ctrlOK())rotate(1)"
@@ -2127,6 +2139,9 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.04.0 / 2.03.1</span><span class="vl-date">2026-11-03</span></div><ul><li>180度回転を足した。操作ボタンの回転の行に 180° を追加し、キーボード（既定 D）とコントローラからも使える。先行回転（IRS）でも効く。キックは PC版と同じ TETR.IO の SRS+ に合わせた。ボタンが要らないときは設定の「操作」で消せる（消すと左回転・右回転が横に広がる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.03.0 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、両方を同時に押さえればHOLDで入れ替わったミノが回った状態で出てくる。画面のボタン・キーボード・コントローラのどれでも効く。既定はどちらもOFF＝従来どおり。あわせて、HOLDボタンが指を離した瞬間ではなく押した瞬間に効くようにした（左回転・右回転と同じ）</li><li>せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.0</span><span class="vl-date">2026-11-02</span></div><ul><li>スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない</li></ul></div>
@@ -2478,6 +2493,15 @@ if (document.readyState === 'loading') {
           </label>
         </div>
 
+        <div class="opt-row">
+          <span class="opt-label">180度回転ボタン
+            <span class="opt-note">操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optRot180Btn" onchange="setOption('rot180Btn', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
       </div>
 
       <div class="cfg-pane" id="cfgPaneMisc">
@@ -2666,14 +2690,20 @@ const KICKS = {
     '2L':[[ 0, 0],[+1, 0],[+1,-1],[ 0,+2],[+1,+2]],'L0':[[ 0, 0],[-1, 0],[-1,+1],[ 0,-2],[-1,-2]],
     'R0':[[ 0, 0],[+1, 0],[+1,+1],[ 0,-2],[+1,-2]],'2R':[[ 0, 0],[-1, 0],[-1,-1],[ 0,+2],[-1,+2]],
     'L2':[[ 0, 0],[-1, 0],[-1,+1],[ 0,-2],[-1,-2]],'0L':[[ 0, 0],[+1, 0],[+1,-1],[ 0,+2],[+1,+2]],
+    // 180度ぶん（TETR.IO の SRS+）。ガイドラインには無いので、TETR.IOの表に合わせてある
+    '02':[[ 0, 0],[ 0,-1],[+1,-1],[-1,-1],[+1, 0],[-1, 0]],'RL':[[ 0, 0],[+1, 0],[+1,-2],[+1,-1],[ 0,-2],[ 0,-1]],
+    '20':[[ 0, 0],[ 0,+1],[-1,+1],[+1,+1],[-1, 0],[+1, 0]],'LR':[[ 0, 0],[-1, 0],[-1,-2],[-1,-1],[ 0,-2],[ 0,-1]],
   },
   I:{
     '0R':[[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],'R2':[[ 0, 0],[-1, 0],[+2, 0],[-1,-2],[+2,+1]],
     '2L':[[ 0, 0],[+2, 0],[-1, 0],[+2,-1],[-1,+2]],'L0':[[ 0, 0],[+1, 0],[-2, 0],[+1,+2],[-2,-1]],
     'R0':[[ 0, 0],[+2, 0],[-1, 0],[+2,-1],[-1,+2]],'2R':[[ 0, 0],[+1, 0],[-2, 0],[+1,+2],[-2,-1]],
     'L2':[[ 0, 0],[-2, 0],[+1, 0],[-2,+1],[+1,-2]],'0L':[[ 0, 0],[-1, 0],[+2, 0],[-1,-2],[+2,+1]],
+    // Iミノの180度は TETR.IO でも1つしか試さない
+    '02':[[ 0, 0],[ 0,-1]],'RL':[[ 0, 0],[+1, 0]],'20':[[ 0, 0],[ 0,+1]],'LR':[[ 0, 0],[-1, 0]],
   },
-  O:{'0R':[[0,0]],'R2':[[0,0]],'2L':[[0,0]],'L0':[[0,0]],'R0':[[0,0]],'2R':[[0,0]],'L2':[[0,0]],'0L':[[0,0]]},
+  O:{'0R':[[0,0]],'R2':[[0,0]],'2L':[[0,0]],'L0':[[0,0]],'R0':[[0,0]],'2R':[[0,0]],'L2':[[0,0]],'0L':[[0,0]],
+     '02':[[0,0]],'RL':[[0,0]],'20':[[0,0]],'LR':[[0,0]]},
 };
 const STATE_NAMES = ['0','R','2','L'];
 const SCORE_TABLE = [0,100,300,500,800];
@@ -3093,8 +3123,8 @@ function hardDrop(){let d=0;while(valid(cur,1,0,cur.state)){cur.row++;d++;}score
 
 // ===== 回転 (SRS) =====
 // デカミノモードでも論理座標なのでSRS通常通り動作
-function rotate(dir){
-  const from=cur.state, to=(from+(dir===1?1:3))%4;
+function rotate(dir){   // dir: 1=時計回り / -1=反時計回り / 2=180度
+  const from=cur.state, to=(from+(dir===1?1:dir===2?2:3))%4;
   const key=STATE_NAMES[from]+STATE_NAMES[to];
   const kicks=KICKS[PIECE_DEF[cur.type].kickType][key]||[[0,0]];
   for(let ki=0;ki<kicks.length;ki++){
@@ -3134,11 +3164,12 @@ function applyHeldPre(){
   let rot=0;
   if(actionHeld('rotateCW'))  rot+=1;
   if(actionHeld('rotateCCW')) rot-=1;
+  if(actionHeld('rotate180')) rot+=2;
   rot=((rot%4)+4)%4;   // 右回しと左回しを同時に押していれば打ち消し合って0
-  if(rot) rotate(rot===1?1:-1);
+  if(rot) rotate(rot===1?1:rot===2?2:-1);
 }
 // 画面の操作ボタンは data-ctrl で見分ける。指を離したら忘れる
-const CTRL_HELD_ID = { rotL:'rotateCCW', rotR:'rotateCW', hold:'hold' };
+const CTRL_HELD_ID = { rotL:'rotateCCW', rotR:'rotateCW', rot180:'rotate180', hold:'hold' };
 document.addEventListener('pointerdown',e=>{
   const btn = e.target.closest && e.target.closest('[data-ctrl]');
   const id  = btn && CTRL_HELD_ID[btn.dataset.ctrl];
@@ -6083,6 +6114,7 @@ const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrai
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
                        irs:false,              // 先行回転。回転ボタンを押したまま次のミノが出ると、出た瞬間に回る
                        ihs:false,              // 先行ホールド。HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドする
+                       rot180Btn:true,         // 画面の操作ボタンに 180° を出す（消すと左回転・右回転が広がる）
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
                        digHoldOnClear:false,   // ラインを消したときはせりあがりを保留する
@@ -6181,6 +6213,8 @@ function applyOptions(){
   check('optMultiHold', opts.multiHold);
   check('optIrs', opts.irs);
   check('optIhs', opts.ihs);
+  check('optRot180Btn', opts.rot180Btn);
+  applyRot180Btn();
   // 表示系のスイッチも設定から復元する（地形編集はボタンなので applyTerrainEdit() で別に戻す）
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
@@ -6270,6 +6304,16 @@ function resetOptions(){
   applyOptions();
 }
 function setOption(key, value){ opts[key] = value; saveOptions(); applyOptions(); }
+// 180°ボタンの出し入れ。消したぶんは左回転・右回転が広がるよう、行の列数も切り替える
+function applyRot180Btn(){
+  const btn = document.getElementById('btnRot180');
+  const row = document.getElementById('rotRow');
+  if(!btn || !row) return;
+  const on = opts.rot180Btn !== false;
+  btn.style.display = on ? '' : 'none';
+  row.classList.toggle('r3', on);
+  row.classList.toggle('r2', !on);
+}
 function stepOption(key, dir){
   const [min,max,step] = OPT_RANGE[key];
   setOption(key, Math.min(max, Math.max(min, opts[key] + dir*step)));
@@ -6465,22 +6509,24 @@ document.addEventListener('keydown',e=>{
   // 設定画面を開いている間はゲーム操作を止める
   if(document.getElementById('cfgOverlay').classList.contains('open')) return;
   // リスタートとミノ欠けはゲームを始め直す操作なので、ゲームオーバー中も効かせる
-  if(kcMatch('restart',   e.code)){e.preventDefault();startGame();return;}
+  if(kcMatch('restart',   e.code)){e.preventDefault();if(!e.repeat)startGame();return;}
   if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
   // ボタンと同じ操作も、ゲームオーバー中から使えるようにする
   if(kcButtonKey(e)) return;
   if(gameOver) return;
-  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();undo();return;}
+  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();if(!e.repeat)undo();return;}
   const c=e.code;
   if      (kcMatch('moveLeft',  c)){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
   else if (kcMatch('moveRight', c)){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
   else if (kcMatch('softDrop',  c)){e.preventDefault();if(!downHeld){downHeld=true;lastSoftDrop=0;softAccum=0;softDrop();}}
   else if (kcMatch('rotateCW',  c)){e.preventDefault();if(!e.repeat)rotate(1);}
   else if (kcMatch('rotateCCW', c)){e.preventDefault();if(!e.repeat)rotate(-1);}
-  else if (kcMatch('hardDrop',  c)){e.preventDefault();hardDrop();}
-  else if (kcMatch('hold',      c)){e.preventDefault();doHold();}
-  else if (kcMatch('discard',   c)){e.preventDefault();discardPiece();}
-  else if (kcMatch('undo',      c)){e.preventDefault();undo();}
+  else if (kcMatch('rotate180', c)){e.preventDefault();if(!e.repeat)rotate(2);}
+  // 押しっぱなしのキーリピートで何度も繰り返さないよう、どれも押した最初の1回だけ効かせる
+  else if (kcMatch('hardDrop',  c)){e.preventDefault();if(!e.repeat)hardDrop();}
+  else if (kcMatch('hold',      c)){e.preventDefault();if(!e.repeat)doHold();}
+  else if (kcMatch('discard',   c)){e.preventDefault();if(!e.repeat)discardPiece();}
+  else if (kcMatch('undo',      c)){e.preventDefault();if(!e.repeat)undo();}
   else if (kcMatch('dpcAgain',  c)){e.preventDefault();if(!e.repeat)repeatDpc();}
 });
 document.addEventListener('keyup',e=>{
@@ -6973,6 +7019,7 @@ const KC_ACTIONS = [
   { id:'softDrop',   label:'ソフトドロップ',   d:['ArrowDown',  null        ] },
   { id:'rotateCW',   label:'時計回り回転',     d:['ArrowUp',    'KeyX'      ] },
   { id:'rotateCCW',  label:'反時計回り回転',   d:['KeyZ',       null        ] },
+  { id:'rotate180',  label:'180度回転',        d:['KeyD',       null        ] },
   { id:'hardDrop',   label:'ハードドロップ',   d:['Space',      'KeyC'      ] },
   { id:'hold',       label:'ホールド',         d:['ShiftLeft',  'ShiftRight'] },
   { id:'discard',    label:'ミノを捨てる',     d:['KeyA',       null        ] },
@@ -7140,6 +7187,7 @@ const GP_ACTIONS = [
   { id:'hardDrop',   label:'ハードドロップ',   d:['b12','a1-'] },
   { id:'rotateCW',   label:'時計回り回転',     d:['b0', 'b3' ] },
   { id:'rotateCCW',  label:'反時計回り回転',   d:['b1', 'b2' ] },
+  { id:'rotate180',  label:'180度回転',        d:[null, null ] },
   { id:'hold',       label:'ホールド',         d:['b4', 'b5' ] },
   { id:'discard',    label:'ミノを捨てる',     d:[null, null ] },
   { id:'undo',       label:'1手戻す',          d:['b6', null ] },
@@ -7230,6 +7278,7 @@ function pollGamepad() {
     if (off('softDrop'))  downHeld = false;
     if (hit('rotateCW'))  rotate(1);
     if (hit('rotateCCW')) rotate(-1);
+    if (hit('rotate180')) rotate(2);
     if (hit('hardDrop'))  hardDrop();
     if (hit('hold'))      doHold();
     if (hit('discard'))   discardPiece();
@@ -7478,7 +7527,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.03.1';
+const APP_VERSION = '2.04.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
