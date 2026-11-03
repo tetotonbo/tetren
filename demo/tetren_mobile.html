@@ -963,6 +963,7 @@ const I18N_EN = {
 "ドラッグ＆ドロップ／貼り付けも可": "Drag and drop or paste works too",
 "ハードドロップ": "Hard drop",
 "ハードドロップなどで次のミノに切り替わった時点で左右が押されていれば、そのまま自動連打を引き継ぐようにした（spawn() で resumeDAS()）": "If left or right is already held when the next piece appears, auto-shift now carries straight on (resumeDAS() in spawn()).",
+"ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く": "Fixed holding the hard drop key dropping piece after piece through key repeat. Only the first press now counts.",
 "バージョン履歴": "Version history",
 "バージョン履歴は大きな変更（A.B.C の C が 0 の版）だけを出すようにした": "The version history now lists only major changes (releases where C in A.B.C is 0).",
 "パステル": "Pastel",
@@ -2137,6 +2138,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.04.0 / 2.03.1</span><span class="vl-date">2026-11-03</span></div><ul><li>180度回転を足した。操作ボタンの回転の行に 180° を追加し、キーボード（既定 D）とコントローラからも使える。先行回転（IRS）でも効く。キックは PC版と同じ TETR.IO の SRS+ に合わせた。ボタンが要らないときは設定の「操作」で消せる（消すと左回転・右回転が横に広がる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.03.0 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、両方を同時に押さえればHOLDで入れ替わったミノが回った状態で出てくる。画面のボタン・キーボード・コントローラのどれでも効く。既定はどちらもOFF＝従来どおり。あわせて、HOLDボタンが指を離した瞬間ではなく押した瞬間に効くようにした（左回転・右回転と同じ）</li><li>せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま</li></ul></div>
@@ -6518,7 +6520,8 @@ document.addEventListener('keydown',e=>{
   else if (kcMatch('rotateCW',  c)){e.preventDefault();if(!e.repeat)rotate(1);}
   else if (kcMatch('rotateCCW', c)){e.preventDefault();if(!e.repeat)rotate(-1);}
   else if (kcMatch('rotate180', c)){e.preventDefault();if(!e.repeat)rotate(2);}
-  else if (kcMatch('hardDrop',  c)){e.preventDefault();hardDrop();}
+  // 押しっぱなしのキーリピートで何回も落ちないよう、押した最初の1回だけ効かせる
+  else if (kcMatch('hardDrop',  c)){e.preventDefault();if(!e.repeat)hardDrop();}
   else if (kcMatch('hold',      c)){e.preventDefault();doHold();}
   else if (kcMatch('discard',   c)){e.preventDefault();discardPiece();}
   else if (kcMatch('undo',      c)){e.preventDefault();undo();}
@@ -7522,7 +7525,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.04.0';
+const APP_VERSION = '2.04.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
