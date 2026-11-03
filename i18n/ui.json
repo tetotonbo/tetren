@@ -324,5 +324,6 @@
  "先行回転（IRS）": "Initial rotation (IRS)",
  "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます。硬直（ARE）が0Fでも使えます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece. Works even when the entry delay (ARE) is 0F.",
  "先行ホールド（IHS）": "Initial hold (IHS)",
- "HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドします。先行回転と同時に押せば、入れ替わったミノが回った状態で出ます。押しっぱなしの間はミノごとに効くので、置くたびに入れ替わります": "Hold the HOLD button as the next piece appears and it is held at once. Press it together with a rotate button and the swapped-in piece spawns rotated. While the button stays down it applies to every piece, so each lock swaps again."
+ "HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドします。先行回転と同時に押せば、入れ替わったミノが回った状態で出ます。押しっぱなしの間はミノごとに効くので、置くたびに入れ替わります": "Hold the HOLD button as the next piece appears and it is held at once. Press it together with a rotate button and the swapped-in piece spawns rotated. While the button stays down it applies to every piece, so each lock swaps again.",
+ "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece."
 }
