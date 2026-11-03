@@ -882,6 +882,7 @@ const I18N_EN = {
 "キーの割り当てを初期状態に戻す": "Reset the key assignments to default",
 "キーの割り当てを変更する": "Change the key assignments",
 "キーを割り当てた瞬間、そのキーの操作まで走ってしまうのを修正": "Fixed the action firing at the moment you assigned a key to it.",
+"キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く": "Holding a key down no longer repeats the action for any control. This covers HOLD, Discard piece, Undo, Restart and Ctrl+Z. Only the first press counts.",
 "キーを押して...": "Press a key...",
 "キーを押して…": "Press a key...",
 "キーコンフィグ": "Key config",
@@ -2138,6 +2139,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.04.0 / 2.03.1</span><span class="vl-date">2026-11-03</span></div><ul><li>180度回転を足した。操作ボタンの回転の行に 180° を追加し、キーボード（既定 D）とコントローラからも使える。先行回転（IRS）でも効く。キックは PC版と同じ TETR.IO の SRS+ に合わせた。ボタンが要らないときは設定の「操作」で消せる（消すと左回転・右回転が横に広がる）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた</li></ul></div>
@@ -6507,12 +6509,12 @@ document.addEventListener('keydown',e=>{
   // 設定画面を開いている間はゲーム操作を止める
   if(document.getElementById('cfgOverlay').classList.contains('open')) return;
   // リスタートとミノ欠けはゲームを始め直す操作なので、ゲームオーバー中も効かせる
-  if(kcMatch('restart',   e.code)){e.preventDefault();startGame();return;}
+  if(kcMatch('restart',   e.code)){e.preventDefault();if(!e.repeat)startGame();return;}
   if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
   // ボタンと同じ操作も、ゲームオーバー中から使えるようにする
   if(kcButtonKey(e)) return;
   if(gameOver) return;
-  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();undo();return;}
+  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();if(!e.repeat)undo();return;}
   const c=e.code;
   if      (kcMatch('moveLeft',  c)){e.preventDefault();if(!e.repeat)moveH(-1);pressDir('L');}
   else if (kcMatch('moveRight', c)){e.preventDefault();if(!e.repeat)moveH(+1);pressDir('R');}
@@ -6520,11 +6522,11 @@ document.addEventListener('keydown',e=>{
   else if (kcMatch('rotateCW',  c)){e.preventDefault();if(!e.repeat)rotate(1);}
   else if (kcMatch('rotateCCW', c)){e.preventDefault();if(!e.repeat)rotate(-1);}
   else if (kcMatch('rotate180', c)){e.preventDefault();if(!e.repeat)rotate(2);}
-  // 押しっぱなしのキーリピートで何回も落ちないよう、押した最初の1回だけ効かせる
+  // 押しっぱなしのキーリピートで何度も繰り返さないよう、どれも押した最初の1回だけ効かせる
   else if (kcMatch('hardDrop',  c)){e.preventDefault();if(!e.repeat)hardDrop();}
-  else if (kcMatch('hold',      c)){e.preventDefault();doHold();}
-  else if (kcMatch('discard',   c)){e.preventDefault();discardPiece();}
-  else if (kcMatch('undo',      c)){e.preventDefault();undo();}
+  else if (kcMatch('hold',      c)){e.preventDefault();if(!e.repeat)doHold();}
+  else if (kcMatch('discard',   c)){e.preventDefault();if(!e.repeat)discardPiece();}
+  else if (kcMatch('undo',      c)){e.preventDefault();if(!e.repeat)undo();}
   else if (kcMatch('dpcAgain',  c)){e.preventDefault();if(!e.repeat)repeatDpc();}
 });
 document.addEventListener('keyup',e=>{
@@ -7525,7 +7527,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.04.1';
+const APP_VERSION = '2.04.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
