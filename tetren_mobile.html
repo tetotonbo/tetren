@@ -612,6 +612,7 @@ const I18N_EN = {
 "DPCセット": "DPC setup",
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット再": "DPC setup again",
+"DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた": "The DROP button now fires the moment you press it, not when you lift your finger (same as rotate left / rotate right / HOLD). Rotate, HOLD and DROP also no longer fire while you are dragging a button in layout edit mode.",
 "DT砲": "DT Cannon",
 "DT砲 2巡目": "DT Cannon (2nd bag)",
 "DT砲に2パターン目 を追加": "Added a second pattern to the DT Cannon.",
@@ -833,6 +834,7 @@ const I18N_EN = {
 "せりあがりの間隔設定（種別・ミノ数・秒数）を保存して、リセットやページを閉じても保持するようにした（tetren_dig）。PC版・スマホ版とも": "The garbage interval settings (type, pieces, seconds) are saved and survive a reset or closing the page (tetren_dig), on both desktop and mobile.",
 "せりあがりをモード枠の中へ移した": "Moved Garbage inside the Mode panel.",
 "せりあがり方": "Garbage pattern",
+"せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま": "The default garbage trigger changed from Piece to Seconds. Countering only applies to the Seconds type, so this matches the desktop default. Anyone who has switched it before keeps their own setting.",
 "せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）": "Chance that the hole matches the previous one (10% is fully random)",
 "その他": "Other",
 "その他の設定を初期状態に戻す": "Reset the other settings to default",
@@ -1155,6 +1157,7 @@ const I18N_EN = {
 "同じ列に穴が続く確率を下げる（10%＝完全ランダム）": "Lower the chance of the hole staying in the same column (10% = fully random)",
 "同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す": "The same board with the same remaining pieces is remembered and not searched again, and the list of placements is reused per board.",
 "名前（省略可）": "Name (optional)",
+"回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece.",
 "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます。硬直（ARE）が0Fでも使えます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece. Works even when the entry delay (ARE) is 0F.",
 "地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。": "Only when proving that an almost empty board has no solution can it take longer than three seconds.",
 "地形とミノの順番をリセットします": "Resets the board and the piece order.",
@@ -1381,6 +1384,7 @@ const I18N_EN = {
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
 "設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）": "The PC finder settings now have their own tab; they used to live under Other.",
 "設定の「操作」に 「ミノ出現までの硬直（ARE）」 と 「先行入力」 を追加。ミノを置いてから次が出るまでの待ち時間を作り、その間に押し直した回転・HOLD・左右を次のミノへ持ち越せる（回転の予約＝IRS、HOLDの予約＝IHS）。ぷよぷよテトリス2の先行入力を練習するためのもので、既定は硬直0F＝従来どおり。ぷよテト準拠は7F。押しっぱなしは持ち越さない": "Added Entry delay (ARE) and Initial input to the Controls settings. A wait can now be put between locking a piece and the next one appearing, and a rotation, hold or left/right pressed again during that wait carries over to the next piece (a queued rotation is IRS, a queued hold IHS). It is there for practising Puyo Puyo Tetris 2 initial input; the default is 0F, exactly as before, and 7F matches Puyo Puyo Tetris 2. Holding a button down is not carried over.",
+"設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、両方を同時に押さえればHOLDで入れ替わったミノが回った状態で出てくる。画面のボタン・キーボード・コントローラのどれでも効く。既定はどちらもOFF＝従来どおり。あわせて、HOLDボタンが指を離した瞬間ではなく押した瞬間に効くようにした（左回転・右回転と同じ）": "Added Initial rotation (IRS) and Initial hold (IHS) under Controls. Hold a rotate or HOLD button as the next piece appears and the action fires the instant it spawns. Keep the button down and it applies to every piece, and holding both at once makes the swapped-in piece spawn rotated. Works with the on-screen buttons, a keyboard or a controller. Both are off by default, so nothing changes unless you turn them on. The HOLD button now also fires when pressed rather than when released, matching the rotate buttons.",
 "設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、硬直（ARE）が0Fでも使える。両方を同時に押せば、HOLDで入れ替わったミノが回った状態で出てくる。あわせて 「先行入力」 を 「先行入力（横移動）」 に改め、回転とHOLDの持ち越しは新しい2つに任せた。既定はどちらもOFF＝従来どおり": "Added Initial rotation (IRS) and Initial hold (IHS) under Controls. Hold a rotate or HOLD button as the next piece appears and the action fires the instant it spawns. Keep the button down and it applies to every piece, and it works even when the entry delay (ARE) is 0F. Press both together and the swapped-in piece spawns rotated. Pre-input was renamed Pre-input (shift) accordingly, with rotation and hold now handled by the two new options. Both are off by default, so nothing changes unless you turn them on.",
 "設定の「表示」に 「言語切り替え」 を追加。Englishボタンを他のメニューと同じようにON/OFFで出し入れできる": "Added Language to the Display settings, so the English button can be shown or hidden like the other menus.",
 "設定の「表示」の並びも、画面の並びに合わせた": "The order under Display now matches the order on screen.",
@@ -1798,9 +1802,9 @@ if (document.readyState === 'loading') {
       <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
       <div class="dig-type">
         <label><input type="radio" name="digTriggerType" id="digTypeMino"
-          onchange="setDigTriggerType('mino')" checked><span>ミノ</span></label>
+          onchange="setDigTriggerType('mino')"><span>ミノ</span></label>
         <label><input type="radio" name="digTriggerType" id="digTypeTime"
-          onchange="setDigTriggerType('time')"><span>秒</span></label>
+          onchange="setDigTriggerType('time')" checked><span>秒</span></label>
       </div>
     </div>
     <div class="di-row" id="diRow" style="display:none;">
@@ -1877,21 +1881,25 @@ if (document.readyState === 'loading') {
       </div>
       <div class="ctrl-row r2">
         <button class="ctrl-btn" data-ctrl="rotL"
-          onmousedown="if(!gameOver)rotate(-1)"
-          ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)">
+          onmousedown="if(ctrlOK())rotate(-1)"
+          ontouchstart="event.preventDefault();if(ctrlOK())rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
         </button>
         <button class="ctrl-btn" data-ctrl="rotR"
-          onmousedown="if(!gameOver)rotate(1)"
-          ontouchstart="event.preventDefault();if(!gameOver)rotate(1)">
+          onmousedown="if(ctrlOK())rotate(1)"
+          ontouchstart="event.preventDefault();if(ctrlOK())rotate(1)">
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
       <div class="ctrl-row r2">
-        <button class="ctrl-btn ctrl-hold" data-ctrl="hold" onclick="if(!gameOver)doHold()">
+        <button class="ctrl-btn ctrl-hold" data-ctrl="hold"
+          onmousedown="if(ctrlOK())doHold()"
+          ontouchstart="event.preventDefault();if(ctrlOK())doHold()">
           ⇪<span class="ctrl-lbl">HOLD</span>
         </button>
-        <button class="ctrl-btn ctrl-hard" data-ctrl="drop" onclick="if(!gameOver)hardDrop()">
+        <button class="ctrl-btn ctrl-hard" data-ctrl="drop"
+          onmousedown="if(ctrlOK())hardDrop()"
+          ontouchstart="event.preventDefault();if(ctrlOK())hardDrop()">
           ⬇<span class="ctrl-lbl">DROP</span>
         </button>
       </div>
@@ -2118,6 +2126,8 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.03.0 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、両方を同時に押さえればHOLDで入れ替わったミノが回った状態で出てくる。画面のボタン・キーボード・コントローラのどれでも効く。既定はどちらもOFF＝従来どおり。あわせて、HOLDボタンが指を離した瞬間ではなく押した瞬間に効くようにした（左回転・右回転と同じ）</li><li>せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.0</span><span class="vl-date">2026-11-02</span></div><ul><li>スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.2 / 1.99.2</span><span class="vl-date">2026-10-29</span></div><ul><li>配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）</li></ul></div>
@@ -2447,6 +2457,24 @@ if (document.readyState === 'loading') {
               onmousedown="startInputRepeat('arrMs',1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
               ontouchstart="event.preventDefault();startInputRepeat('arrMs',1)" ontouchend="stopRepeat()">›</button>
           </span>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">先行回転（IRS）
+            <span class="opt-note">回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optIrs" onchange="setOption('irs', this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
+        <div class="opt-row">
+          <span class="opt-label">先行ホールド（IHS）
+            <span class="opt-note">HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドします。先行回転と同時に押せば、入れ替わったミノが回った状態で出ます。押しっぱなしの間はミノごとに効くので、置くたびに入れ替わります</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optIhs" onchange="setOption('ihs', this.checked)">
+            <span class="tgl"></span>
+          </label>
         </div>
 
       </div>
@@ -2974,7 +3002,7 @@ let downHeld = false, lastSoftDrop = 0;
 // 「ソフトドロップ速度／SDF」の設定を1か所で効かせる
 let softHeld = false, softAccum = 0;
 let digMode = false, digCount = 0, digInterval = 3;
-let digTriggerType = 'mino';  // トリガー種別: 'mino'=ミノごと / 'time'=秒数
+let digTriggerType = 'time';  // トリガー種別: 'mino'=ミノごと / 'time'=秒数（PC版と同じ既定。相殺はこちらで効く）
 let timeDigInterval = 3;      // 何秒ごとに競り上がるか（0.5〜60）
 let timeDigLastTs = 0;        // 秒数モードで直近せりあがりを起こした時刻（ts基準・0=未初期化）
 let pendingDigRows = 0;       // 設置待ちで溜まっている段数
@@ -3084,6 +3112,48 @@ function doHold(){
   canHold=false;   // spawn() 側で次のミノ出現時に戻る
   resetLock();draw();
 }
+
+// ===== 先行回転（IRS）・先行ホールド（IHS）=====
+// 回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。
+// スマホ版にはミノ出現までの硬直（ARE）が無いので、固定した瞬間がそのまま出現の瞬間になる。
+// 要るのは「いま押しているか」だけなので、画面のボタン・キーボード・コントローラの3つを見る
+const heldCodes = new Set();   // 押しているキー（e.code）
+const heldPtr   = new Map();   // 指やマウスのID → 押している操作ID（2本指で同時に押さえられる）
+function actionHeld(id){
+  for(const held of heldPtr.values()) if(held===id) return true;
+  for(const code of heldCodes) if(kcMatch(id,code)) return true;
+  return gpActPrev[id]===true;
+}
+// 次のミノが出た瞬間に、押したままのぶんを効かせる。IHS → IRS の順なので、
+// 同時に押していれば入れ替わったミノが回った状態で出る。
+// doHold() は中で spawn() を呼ぶが、ここは spawn() の外なので入れ替えは1ミノにつき1回で止まる
+function applyHeldPre(){
+  if(opts.ihs && actionHeld('hold')) doHold();
+  if(!opts.irs) return;
+  let rot=0;
+  if(actionHeld('rotateCW'))  rot+=1;
+  if(actionHeld('rotateCCW')) rot-=1;
+  rot=((rot%4)+4)%4;   // 右回しと左回しを同時に押していれば打ち消し合って0
+  if(rot) rotate(rot===1?1:-1);
+}
+// 画面の操作ボタンは data-ctrl で見分ける。指を離したら忘れる
+const CTRL_HELD_ID = { rotL:'rotateCCW', rotR:'rotateCW', hold:'hold' };
+document.addEventListener('pointerdown',e=>{
+  const btn = e.target.closest && e.target.closest('[data-ctrl]');
+  const id  = btn && CTRL_HELD_ID[btn.dataset.ctrl];
+  if(id) heldPtr.set(e.pointerId, id);
+},true);
+const forgetPtr = e => heldPtr.delete(e.pointerId);
+document.addEventListener('pointerup',     forgetPtr, true);
+document.addEventListener('pointercancel', forgetPtr, true);
+// キーボードは操作の振り分けより先に、どの画面が開いていても取りこぼさず拾う
+document.addEventListener('keydown', e => { heldCodes.add(e.code); });
+document.addEventListener('keyup',   e => { heldCodes.delete(e.code); });
+window.addEventListener('blur', () => { heldCodes.clear(); heldPtr.clear(); });
+// 回転・HOLD・DROP は「指を離した瞬間」でなく「押した瞬間」に効かせる。
+// そのままでは配置編集でボタンをつかんだときにも効いてしまうので、編集中は止める。
+// （マウスなら pointerdown の preventDefault() で mousedown が消えるが、指では touchstart が残る）
+function ctrlOK(){ return !gameOver && !layoutEdit; }
 
 // ===== ロック =====
 function resetLock(){if(lockTimer){clearTimeout(lockTimer);lockTimer=null;}isLocking=false;}
@@ -5288,7 +5358,9 @@ function lock(){
     if(opts.digOnLock && !holdByClear) flushPendingDig();
   }
   if(pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
-  spawn(); draw();
+  spawn();
+  applyHeldPre();   // 押したままの先行回転・先行ホールドは、ここで次のミノに効かせる
+  draw();
   tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
 }
 
@@ -6008,6 +6080,8 @@ updateMissAgainBtn();
 const OPT_DEFAULTS = { multiHold:true, ghost:true, axis:false, grid:true, terrainEdit:true,
   loadHoldOn:false, loadHoldMode:'ask', loadHoldPick:'?', pcPriority:'power', pcAtkLast:false, pcFollow:true, tplJudge:true, tplVertical:false, pcMulti:true, pcRank:true, pcCount:5, pcTimeout:5, swapSingle:false, holeKeep:40, softSpeed:5, lockFrames:30,
                        sdfMode:false, sdf:6,   // ソフトドロップを重力の倍率で指定する（PC版と共通）
+                       irs:false,              // 先行回転。回転ボタンを押したまま次のミノが出ると、出た瞬間に回る
+                       ihs:false,              // 先行ホールド。HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドする
                        digOnLock:false,        // ミノを置いた直後にせりあがる（時間経過タイプのみ）
                        digOffset:true,         // 置いた攻撃ぶんだけ、溜まっているせりあがりを打ち消す
                        digHoldOnClear:false,   // ラインを消したときはせりあがりを保留する
@@ -6104,6 +6178,8 @@ function applyOptions(){
   syncViewScaleLabels();
   const check = (id,v) => { const el = document.getElementById(id); if(el) el.checked = v; };
   check('optMultiHold', opts.multiHold);
+  check('optIrs', opts.irs);
+  check('optIhs', opts.ihs);
   // 表示系のスイッチも設定から復元する（地形編集はボタンなので applyTerrainEdit() で別に戻す）
   check('ghostCheck', opts.ghost);
   check('axisCheck',  opts.axis);
@@ -7401,7 +7477,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.02.0';
+const APP_VERSION = '2.03.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
