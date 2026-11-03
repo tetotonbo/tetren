@@ -612,6 +612,7 @@ const I18N_EN = {
 "DPCセット": "DPC setup",
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット再": "DPC setup again",
+"DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた": "The DROP button now fires the moment you press it, not when you lift your finger (same as rotate left / rotate right / HOLD). Rotate, HOLD and DROP also no longer fire while you are dragging a button in layout edit mode.",
 "DT砲": "DT Cannon",
 "DT砲 2巡目": "DT Cannon (2nd bag)",
 "DT砲に2パターン目 を追加": "Added a second pattern to the DT Cannon.",
@@ -1880,23 +1881,25 @@ if (document.readyState === 'loading') {
       </div>
       <div class="ctrl-row r2">
         <button class="ctrl-btn" data-ctrl="rotL"
-          onmousedown="if(!gameOver)rotate(-1)"
-          ontouchstart="event.preventDefault();if(!gameOver)rotate(-1)">
+          onmousedown="if(ctrlOK())rotate(-1)"
+          ontouchstart="event.preventDefault();if(ctrlOK())rotate(-1)">
           ↺<span class="ctrl-lbl">左回転</span>
         </button>
         <button class="ctrl-btn" data-ctrl="rotR"
-          onmousedown="if(!gameOver)rotate(1)"
-          ontouchstart="event.preventDefault();if(!gameOver)rotate(1)">
+          onmousedown="if(ctrlOK())rotate(1)"
+          ontouchstart="event.preventDefault();if(ctrlOK())rotate(1)">
           ↻<span class="ctrl-lbl">右回転</span>
         </button>
       </div>
       <div class="ctrl-row r2">
         <button class="ctrl-btn ctrl-hold" data-ctrl="hold"
-          onmousedown="if(!gameOver)doHold()"
-          ontouchstart="event.preventDefault();if(!gameOver)doHold()">
+          onmousedown="if(ctrlOK())doHold()"
+          ontouchstart="event.preventDefault();if(ctrlOK())doHold()">
           ⇪<span class="ctrl-lbl">HOLD</span>
         </button>
-        <button class="ctrl-btn ctrl-hard" data-ctrl="drop" onclick="if(!gameOver)hardDrop()">
+        <button class="ctrl-btn ctrl-hard" data-ctrl="drop"
+          onmousedown="if(ctrlOK())hardDrop()"
+          ontouchstart="event.preventDefault();if(ctrlOK())hardDrop()">
           ⬇<span class="ctrl-lbl">DROP</span>
         </button>
       </div>
@@ -2123,6 +2126,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.03.0 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、両方を同時に押さえればHOLDで入れ替わったミノが回った状態で出てくる。画面のボタン・キーボード・コントローラのどれでも効く。既定はどちらもOFF＝従来どおり。あわせて、HOLDボタンが指を離した瞬間ではなく押した瞬間に効くようにした（左回転・右回転と同じ）</li><li>せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.0</span><span class="vl-date">2026-11-02</span></div><ul><li>スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.01.3 / 2.00.0</span><span class="vl-date">2026-11-01</span></div><ul><li>縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした</li></ul></div>
@@ -3146,6 +3150,10 @@ document.addEventListener('pointercancel', forgetPtr, true);
 document.addEventListener('keydown', e => { heldCodes.add(e.code); });
 document.addEventListener('keyup',   e => { heldCodes.delete(e.code); });
 window.addEventListener('blur', () => { heldCodes.clear(); heldPtr.clear(); });
+// 回転・HOLD・DROP は「指を離した瞬間」でなく「押した瞬間」に効かせる。
+// そのままでは配置編集でボタンをつかんだときにも効いてしまうので、編集中は止める。
+// （マウスなら pointerdown の preventDefault() で mousedown が消えるが、指では touchstart が残る）
+function ctrlOK(){ return !gameOver && !layoutEdit; }
 
 // ===== ロック =====
 function resetLock(){if(lockTimer){clearTimeout(lockTimer);lockTimer=null;}isLocking=false;}
@@ -7469,7 +7477,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.03.0';
+const APP_VERSION = '2.03.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
