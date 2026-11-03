@@ -1237,6 +1237,7 @@ const I18N_EN = {
 "モノクローム": "Monochrome",
 "モード": "Mode",
 "モードに 「40LINE」 を追加（マラソンの下）。40ライン消すまでの時間を計る": "Added 40 LINE to the modes, below Marathon, which times how long you take to clear 40 lines.",
+"モードの排他をそろえた。せりあがり・REN・デカミノ・マラソン・40LINE のどれかをONにすると、ほかは全部OFFになる。これまでは40LINEだけせりあがりを切らず、マラソンは40LINEしか切らない、とちぐはぐだった": "Tidied up how the modes exclude each other. Turning on any of Garbage, REN, Big pieces, Marathon or 40 LINE now switches all the others off. Until now 40 LINE alone left Garbage running, and Marathon only switched off 40 LINE.",
 "ライン": "Lines",
 "ラインを消したミノを置いたときは、せりあがりを次に置くまで保留します": "When a piece clears lines, garbage is held back until the next piece is locked.",
 "ラインを消す回数が少ない順に並べ、同じならソフトドロップが少ない順にします。OFFにすると見つけた順のまま出します": "Sorts by the fewest line clears, then by the fewest soft drops. When off, solutions are listed in the order found.",
@@ -2532,6 +2533,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.1</span><span class="vl-date">2026-11-03</span></div><ul><li>モードの排他をそろえた。せりあがり・REN・デカミノ・マラソン・40LINE のどれかをONにすると、ほかは全部OFFになる。これまでは40LINEだけせりあがりを切らず、マラソンは40LINEしか切らない、とちぐはぐだった</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.03.0</span><span class="vl-date">2026-11-03</span></div><ul><li>設定の「操作」に 「先行回転（IRS）」 と 「先行ホールド（IHS）」 を追加。回転ボタンやHOLDボタンを押したまま次のミノが出ると、出た瞬間にその操作が効く。押しっぱなしにしておけばミノごとに効き続け、硬直（ARE）が0Fでも使える。両方を同時に押せば、HOLDで入れ替わったミノが回った状態で出てくる。あわせて 「先行入力」 を 「先行入力（横移動）」 に改め、回転とHOLDの持ち越しは新しい2つに任せた。既定はどちらもOFF＝従来どおり</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.02.0</span><span class="vl-date">2026-11-02</span></div><ul><li>設定の「操作」に 「ミノ出現までの硬直（ARE）」 と 「先行入力」 を追加。ミノを置いてから次が出るまでの待ち時間を作り、その間に押し直した回転・HOLD・左右を次のミノへ持ち越せる（回転の予約＝IRS、HOLDの予約＝IHS）。ぷよぷよテトリス2の先行入力を練習するためのもので、既定は硬直0F＝従来どおり。ぷよテト準拠は7F。押しっぱなしは持ち越さない</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.02.0 / 2.01.1</span><span class="vl-date">2026-11-02</span></div><ul><li>40LINEが、せりあがりの設定を開いたりDPC・ミノ欠けの選択画面を開いたりしただけで解除されていたのを修正。画面を開くだけなら40LINEは続く</li><li>マラソン中に落下設定を変えると、マラソンを切ったあと画面の表示と次に開いたときの値が食い違っていたのを修正</li></ul></div>
@@ -4084,6 +4086,19 @@ function changeDigInterval(delta) {
   saveDigSetting();
 }
 
+// ===== モードの排他 =====
+// せりあがり・REN・デカミノ・マラソン・40LINE は同時に使えない。
+// どれかをONにしたら、ほかは全部OFFにする。
+// 片付けはそれぞれのOFF側に任せる（盤面の掃除や落下速度の戻しが要るため）。
+// 呼ぶのはONにするときだけなので、OFF側から戻ってくることはない。
+function exitOtherModes(keep) {
+  if (sprintMode   && keep !== 'sprint')   stopSprint();
+  if (marathonMode && keep !== 'marathon') toggleMarathon();
+  if (renMode      && keep !== 'ren')      toggleRenMode();
+  if (dekaMode     && keep !== 'deka')     toggleDekaMode();
+  if (digMode      && keep !== 'dig')      toggleDigMode();
+}
+
 function toggleDigMode() {
   digMode = !digMode;
   digCount = 0;
@@ -4094,23 +4109,7 @@ function toggleDigMode() {
   const btn = document.getElementById('digBtn');
   if (digMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
-    // RENモードを強制OFF
-    if (renMode) {
-      renMode = false;
-      document.getElementById('renModeBtn').style.background = '#374151';
-      for (let r = BUF; r < TROW; r++)
-        for (let c = 0; c < COLS; c++) board[r][c] = null;
-      ren = 0;
-      draw();
-    }
-    // デカミノモードを強制OFF
-    if (dekaMode) {
-      dekaMode = false;
-      document.getElementById('dekaModeBtn').style.background = '#374151';
-      for (let r = BUF; r < TROW; r++)
-        for (let c = 0; c < COLS; c++) board[r][c] = null;
-      spawn(); draw();
-    }
+    exitOtherModes('dig');
   } else {
     btn.style.background = '#374151'; // グレー = OFF
   }
@@ -4145,7 +4144,6 @@ function restoreRenWalls() {
 
 // ===== デカミノモード =====
 function toggleDekaMode() {
-  stopSprint();
   closeDigPanel();
   dekaMode = !dekaMode;
   const btn = document.getElementById('dekaModeBtn');
@@ -4155,17 +4153,7 @@ function toggleDekaMode() {
   undoStack = [];
   if (dekaMode) {
     btn.style.background = '#b45309'; // オレンジ茶 = ON
-    // RENモードを強制OFF
-    if (renMode) {
-      renMode = false;
-      document.getElementById('renModeBtn').style.background = '#374151';
-    }
-    // せりあがり自動を強制OFF
-    if (digMode) {
-      digMode = false; digCount = 0; timeDigLastTs = 0;
-      document.getElementById('digBtn').style.background = '#374151';
-      updateDigCounter();
-    }
+    exitOtherModes('deka');
   } else {
     btn.style.background = '#374151';
   }
@@ -4173,25 +4161,12 @@ function toggleDekaMode() {
 }
 
 function toggleRenMode() {
-  stopSprint();
   closeDigPanel();
   renMode = !renMode;
   const btn = document.getElementById('renModeBtn');
   if (renMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
-    // 自動モードを強制OFF
-    if (digMode) {
-      digMode = false;
-      digCount = 0; timeDigLastTs = 0;
-      document.getElementById('digBtn').style.background = '#374151';
-      updateDigCounter();
-    }
-    // デカミノモードを強制OFF
-    if (dekaMode) {
-      dekaMode = false;
-      document.getElementById('dekaModeBtn').style.background = '#374151';
-      spawn(); // 論理座標のピースを通常座標でリスポーン
-    }
+    exitOtherModes('ren');
     setupRenTerrain();
   } else {
     btn.style.background = '#374151'; // グレー = OFF
@@ -8805,12 +8780,13 @@ function nextMarathonLock(cur) {
   return Math.max(1, cur - step);
 }
 function toggleMarathon() {
-  stopSprint();
   closeDigPanel();
   marathonMode = !marathonMode;
   const btn = document.getElementById('marathonBtn');
   if (marathonMode) {
     btn.style.background = '#16a34a'; // 緑 = ON
+    // 盤面を作り直す startMarathonRun() より先に、ほかのモードを終わらせる
+    exitOtherModes('marathon');
     marathonSavedGrav = gravSpeed;
     marathonLines = 0;
     marathonLock = 30;
@@ -8986,11 +8962,7 @@ function resetSprintRun() {
 function toggleSprint() {
   if (sprintMode) { stopSprint(); return; }
   closeDigPanel();
-  // ほかのモードとは同時に使えない（この時点ではまだOFFなので、
-  // 各トグルが呼ぶ stopSprint() は何もしない）
-  if (marathonMode) toggleMarathon();
-  if (renMode)      toggleRenMode();
-  if (dekaMode)     toggleDekaMode();
+  exitOtherModes('sprint');   // ほかのモードとは同時に使えない
   sprintMode = true;
   document.getElementById('sprintBtn').style.background = '#16a34a';
   document.getElementById('sprintPanel').style.display = 'block';
@@ -9517,7 +9489,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.03.0';
+const APP_VERSION = '2.03.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
