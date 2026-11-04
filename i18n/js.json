@@ -229,5 +229,13 @@
  "全体　{0}（1手目は{1}ミノ）": "Overview - {0} (first is {1})",
  "完成（{0}）": "Done ({0})",
  "{0}つ目": "Pattern {0}",
- "言語切り替え": "Language"
+ "言語切り替え": "Language",
+ "計算中…": "Calculating…",
+ "そのまま": "As saved",
+ "左右反転込み": "With mirror",
+ "確率を出す（{0}ミノ）": "Calculate ({0} pieces)",
+ "—（おじゃまや欠けがあるので開幕からは組めません）": "— (contains garbage or stray cells, so it cannot be built from the opening)",
+ "—（{0}ミノは多すぎて数えきれません）": "— ({0} pieces is too many to count)",
+ "—（計算が終わりませんでした）": "— (the calculation did not finish)",
+ "—（計算できませんでした）": "— (could not be calculated)"
 }

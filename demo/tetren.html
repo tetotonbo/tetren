@@ -332,6 +332,14 @@ button, label, .ctrl-lbl, [data-pos] {
 #tplWin .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
 .tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
+/* 組める確率。絵の下に小さく出す */
+.tpl-prob { font-size:10px; color:#9ca3af; text-align:center; line-height:1.35;
+  min-height:28px; max-width:100%; }
+.tpl-prob b { color:#e5e7eb; font-weight:600; }
+.tpl-prob.calc { color:#6b7280; }
+.tpl-prob button { font-size:10px; padding:2px 6px; border:1px solid #4b5563; border-radius:3px;
+  background:#374151; color:#d1d5db; cursor:pointer; }
+.tpl-prob button:hover { background:#4b5563; }
 .tpl-cv { line-height:0; }
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-row button.tpl-mine:hover { background:#2a4d7a; }
@@ -914,6 +922,10 @@ const I18N_EN = {
 "{0}手目 / {1}手　{2}ミノ": "Move {0} / {1}   {2} piece",
 "{a}秒後に {b}ライン → {c}秒後に {d}ライン → {e}秒後にREN開始": "{b} lines after {a}s → {d} lines after {c}s → REN starts after {e}s",
 "{f}秒ごとに1RENずつ増え、{g}RENまで（REN中は合計{h}段）": "REN goes up by one every {f}s, up to {g} REN ({h} rows in total during REN)",
+"—（{0}ミノは多すぎて数えきれません）": "— ({0} pieces is too many to count)",
+"—（おじゃまや欠けがあるので開幕からは組めません）": "— (contains garbage or stray cells, so it cannot be built from the opening)",
+"—（計算が終わりませんでした）": "— (the calculation did not finish)",
+"—（計算できませんでした）": "— (could not be calculated)",
 "↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）": "How fast pieces fall while you hold the Down key (5 is standard).",
 "↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す": "The ↻ button now handles multiple pieces: it repeats the last combination, or the single piece if that is what you chose.",
 "⇄ 反転": "⇄ Mirror",
@@ -1013,6 +1025,7 @@ const I18N_EN = {
 "せりあがり方": "Garbage pattern",
 "せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま": "The default garbage trigger changed from Piece to Seconds. Countering only applies to the Seconds type, so this matches the desktop default. Anyone who has switched it before keeps their own setting.",
 "せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）": "Chance that the hole matches the previous one (10% is fully random)",
+"そのまま": "As saved",
 "その他": "Other",
 "その他の設定を初期状態に戻す": "Reset the other settings to default",
 "その巡を正しく置き終えたときは「組めません」を消すようにした（薄い表示はそのまま）": "\"Cannot be built\" now disappears once you finish the bag correctly; the dimming stays.",
@@ -1075,6 +1088,7 @@ const I18N_EN = {
 "ゲームオーバー": "Game Over",
 "ゲームオーバー画面の「通常ゲーム開始」と「TD対策を再開」を同じ大きさにそろえた": "Made Start a normal game and Resume TD defense the same size on the game-over screen.",
 "ゲームパッドに対応。設定に「コントローラ」タブを追加": "Added gamepad support, with a Gamepad tab in the settings.",
+"ゲーム開始から、この形を組み切れる確率です。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提で数えています。テンプレは盤面そのものなのでミノは捨てられません": "The chance of building this shape from the start of a game. Only the 6 pieces you can see (the one in play plus 5 NEXT) are taken into account; nothing beyond them. A template is the whole board, so no piece can be thrown away.",
 "コントローラ": "Gamepad",
 "コントローラが見つかりません。接続してから、どれかボタンを押してください。": "No gamepad found. Connect one and press any button.",
 "コントローラの設定を、独立したタブから キーコンフィグの中 へ移した": "Moved the gamepad settings from their own tab into the key config.",
@@ -1124,6 +1138,7 @@ const I18N_EN = {
 "テト練（スマホ版）": "Tetren (mobile)",
 "テンプレ": "Template",
 "テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした": "Added ◀ Previous bag and Next bag ▶ to templates, so you can move between the first and second bags.",
+"テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる": "Added a build chance to the template window: the probability of finishing that shape from the start of a game, assuming you only ever see 6 pieces (the one in play plus 5 NEXT). As saved counts the registered shape alone; With mirror keeps the left-right mirrored shape alive as a second candidate. The calculation runs in a Web Worker, so you can keep playing while it works.",
 "テンプレートの窓の右上に 判定 スイッチを追加（既定ON）": "Added a Check switch at the top right of the template window (on by default).",
 "テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした": "The template window now opens smaller by default (cells 26px → 20px) and on the left of the screen.",
 "テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）": "Choosing a template now resets the board and the piece order first, so you can try it from the opening.",
@@ -1193,6 +1208,7 @@ const I18N_EN = {
 "マラソン中に落下設定を変えると、マラソンを切ったあと画面の表示と次に開いたときの値が食い違っていたのを修正": "Fixed the gravity setting disagreeing between what the screen showed and what was restored on the next visit, after it had been changed during a marathon run.",
 "ミノ": "Piece",
 "ミノがどこに落ちるかを薄く表示する": "Show where the piece will land",
+"ミノが多いので時間がかかります（数十秒）。押すと裏で計算します": "This has a lot of pieces, so it takes a while (tens of seconds). Press to calculate it in the background.",
 "ミノの参照色を実機スクショの実測値に更新した（水色と青の判別が紙一重で、取り違えることがあった）": "Updated the reference colours from real screenshots; cyan and blue were close enough to be mixed up.",
 "ミノの回転軸を表示する": "Show the rotation centre of the piece",
 "ミノの見た目を9種類から選ぶ": "Choose from 9 piece styles",
@@ -1386,6 +1402,7 @@ const I18N_EN = {
 "左右を反転する（L↔J・S↔Zも入れ替わります）": "Mirror left to right (L↔J and S↔Z swap too)",
 "左右を押してから自動で動き出すまでの待ち時間。": "Delay before auto-shift starts after you press left or right.",
 "左右キーを長押ししても自動連打が効かなくなることがある問題を修正": "Fixed auto-shift sometimes not kicking in when you held the left or right key.",
+"左右反転込み": "With mirror",
 "左右移動がブラウザのキーリピートと DAS/ARR の二重入力になっていたのをやめ、DAS/ARR に一本化した": "Left and right were being driven by both the browser key repeat and DAS/ARR; it is DAS/ARR alone now.",
 "左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Auto-shift speed uses the DAS/ARR settings under Other.",
 "左右移動はキーボードと同じ経路に流しているので、DAS/ARR の設定がそのまま効く": "Left and right go through the same path as the keyboard, so the DAS/ARR settings apply as they are.",
@@ -1498,6 +1515,7 @@ const I18N_EN = {
 "相手のTST→TSD→RENを再現して、受け方を練習します": "Reproduces an opponent's TST → TSD → REN so you can practise taking it",
 "相殺": "Offset",
 "相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる": "Added Offset: from one second before the rise until you lock a piece, your clears reduce what is pending.",
+"確率を出す（{0}ミノ）": "Calculate ({0} pieces)",
 "秒": "s",
 "秒ごと": "seconds",
 "秒後に {0}": "{0} in",
@@ -1548,6 +1566,7 @@ const I18N_EN = {
 "複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順": "How multiple solutions are ordered. Attack counts T-Spins, Tetrises, REN and B2B and sorts by the most garbage sent (the final piece of the Perfect Clear is not counted); ties go to the fewest soft drops. Speed sorts by the fewest slides and spins.",
 "覚えた地形に戻し、ミノの順番も引き直します": "Go back to the saved board and redraw the piece order",
 "言語切り替え": "Language",
+"計算中…": "Calculating…",
 "記録": "Save",
 "記録・復元（地形の控え）": "Save and restore (board backup)",
 "設定した間隔でおじゃまを自動でせり上げる": "Raise garbage automatically at the interval you set",
@@ -2538,6 +2557,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.03.1 / 2.03.1</span><span class="vl-date">2026-11-03</span></div><ul><li>モードの排他をそろえた。せりあがり・REN・デカミノ・マラソン・40LINE のどれかをONにすると、ほかは全部OFFになる。これまでは40LINEだけせりあがりを切らず、マラソンは40LINEしか切らない、とちぐはぐだった</li></ul></div>
@@ -8263,6 +8283,7 @@ function deleteTemplate(id) {
   renderTemplateRow();
 }
 const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
+const TPL_PROB_H = 34;  // 絵の下に出す「組める確率」の行の高さ（行の高さ28＋すき間）
 const TPL_MIN_W = 340;  // 下のボタンが収まる最小の幅
 let tplCur = null, tplFlip = false, tplCell = TPL_CELL;
 let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
@@ -8337,7 +8358,7 @@ function tplFitCell(t) {
   const pats = t.pats ? t.pats : [t.rows];
   const rows = Math.max(...pats.map(x => x.length));
   const n = pats.length, vert = !!opts.tplVertical;
-  const capH = n > 1 ? 16 : 0;
+  const capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
   const maxW = Math.min(window.innerWidth - 24, 820);
   const maxH = Math.min(window.innerHeight - 24, 680) - SHOT_BAR_H - PC_NAV_H;
   let cell = TPL_CELL;
@@ -8363,7 +8384,7 @@ function tplSizeWin() {
   if (!win || !tplCur) return;
   const pats = tplPats();
   const rows = Math.max(...pats.map(x => x.length));
-  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
+  const n = pats.length, vert = !!opts.tplVertical, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
   const w = vert ? Math.max(COLS * tplCell + 16, TPL_MIN_W)
                  : Math.max(COLS * tplCell * n + 12 * (n - 1) + 16, TPL_MIN_W);
   const h = (vert ? (rows * tplCell + capH) * n + 10 * (n - 1)
@@ -8374,6 +8395,7 @@ function tplSizeWin() {
 function closeTemplate() {
   const w = document.getElementById('tplWin');
   if (w) w.remove();
+  tplProbStop();
   window.removeEventListener('pointermove', fitTplCanvas);
   window.removeEventListener('pointerup',   fitTplCanvas);
 }
@@ -8503,6 +8525,293 @@ function tplCanBuild(rows) {
   };
   return walk(pcRowsFromBoard(), 0, holdType, new Set(left.map((_, i) => i)));
 }
+// ===== テンプレが組める確率 =====
+// 「ゲーム開始から、このテンプレを組み切れる確率」を出す。
+// 見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提で数える。
+// つまり「運が良ければ組める」ではなく「見えているぶんで最善を尽くせば組める」確率。
+//
+// 数え方は expectimax。
+//   ・自分の手番（どこに置くか／ホールドするか）は、いちばん確率の高い手を選ぶ
+//   ・NEXTの末尾に新しいミノが見えるたびに、その巡の残りから等確率で枝分かれして平均を取る
+// テンプレは盤面そのものなので、ミノは捨てられない。引いたミノは必ずこの形のどこかに
+// 収まらないといけないので、種類が足りなくなった時点で枝が死ぬ。
+// そこを打ち切るから、総当たりでも現実的な速さで終わる。
+//
+// 「左右反転込み」は、元の形と左右反転した形を2つとも候補に持ったまま進める。
+// どちらにも当てはまる置き方をしているあいだは両方が生き残り、片方から外れた時点で
+// その候補だけが死ぬ。2つの確率を別々に出して足したり、大きい方を取ったりはしない。
+// 左右対称な形なら2つの候補は最後まで一致するので、同じ数字になる。
+//
+// 置き方の列挙はパフェ探索の pcPlacements をそのまま使う。
+// 宙に浮くミノを先に置けないといった順番の制約も、回し入れでしか入らない置き方も、
+// 本番の操作と同じ扱いになる。
+const TPL_PROB_MAX  = 14;     // ミノ数の上限。これより多い形は組み合わせが多すぎるので出さない
+const TPL_PROB_AUTO = 9;      // ここまでは窓を開いたら勝手に計算する（手元で1秒以内）
+const TPL_PROB_MS   = 30000;  // 1枚あたりの打ち切り時間（遅い端末でも待ちきれる長さ）
+
+// Worker の中身。ページからは呼ばない（文字列にして Worker に渡すだけ）。
+// 前に COLS などの定数と pcPlacements / tplPieces / tplMirror を並べてから実行する
+function tplProbWorkerMain() {
+  const T_CH = ['I','O','T','S','Z','J','L'];
+  const T_IX = { I:0, O:1, T:2, S:3, Z:4, J:5, L:6 };
+  const BAG_ALL = 0x7f;   // 1巡ぶん（7種そろっている）
+  const QSEE = 6;         // 一度に見えるミノの数（操作中＋NEXT5）
+
+  function popc(m) { let n = 0; while (m) { m &= m - 1; n++; } return n; }
+
+  // テンプレ1枚を「置く候補のミノ」に分ける。
+  // 置き場所はテンプレどおりの一箇所しかないので、どれを置いたか（ビット）で盤面が決まる
+  function mkTarget(rows) {
+    const ps = tplPieces(rows);
+    return { ps:ps, keys:ps.map(p => tplKey(p.cells)), ch:ps.map(p => p.ch),
+             n:ps.length, full:(1 << ps.length) - 1 };
+  }
+  function boardOf(t, mask) {
+    const f = new Array(TROW).fill(0);
+    for (let i = 0; i < t.n; i++) {
+      if (!(mask & (1 << i))) continue;
+      const cs = t.ps[i].cells;
+      for (let j = 0; j < cs.length; j++) f[cs[j][0]] |= 1 << cs[j][1];
+    }
+    return f;
+  }
+  // 引いたミノは捨てられない。残りに要るミノが、手元（ホールド＋見えているNEXT）と
+  // これから引けるぶんで足りなければ、その候補はもう組めない。ここで枝を打ち切る
+  function countOk(t, mask, hold, queue, bag) {
+    const rem = [0,0,0,0,0,0,0], pool = [0,0,0,0,0,0,0];
+    let need = 0, have = 0;
+    for (let i = 0; i < t.n; i++) if (!(mask & (1 << i))) { rem[T_IX[t.ch[i]]]++; need++; }
+    if (hold) { pool[T_IX[hold]]++; have++; }
+    for (let i = 0; i < queue.length; i++) { pool[T_IX[queue[i]]]++; have++; }
+    // 置くのは need 個。余るのは多くても1個（ホールドに預けたまま終わるぶん）
+    const d = Math.max(0, need + 1 - have);
+    const b = bag || BAG_ALL;
+    const bags = Math.ceil(Math.max(0, d - popc(b)) / 7);   // 次の巡以降をかじる回数
+    for (let i = 0; i < 7; i++)
+      if (rem[i] > pool[i] + Math.min(d, ((b >> i) & 1) + bags)) return false;
+    return true;
+  }
+
+  let pcCache, keyCache, memo, deadline, over;
+  // その盤面にその種類を置ける場所を、テンプレと見比べられる形（セルの鍵）で集める
+  function putKeys(f, type) {
+    const k = type + pcKey(f);
+    let s = keyCache.get(k);
+    if (!s) {
+      s = new Set();
+      const list = pcPlacements(f, type, pcCache);
+      for (let i = 0; i < list.length; i++) s.add(tplKey(list[i].cells));
+      keyCache.set(k, s);
+    }
+    return s;
+  }
+
+  // masks[k] は候補kの「もう置いたミノ」。-1 はその候補が死んだという意味
+  function solve(ts, masks, hold, queue, bag) {
+    for (let k = 0; k < ts.length; k++)
+      if (masks[k] >= 0 && masks[k] === ts[k].full) return 1;   // 組み終わった
+    // 種類が足りなくなった候補を落とす
+    let live = -1, need = 0, ms = masks;
+    for (let k = 0; k < ts.length; k++) {
+      if (ms[k] < 0) continue;
+      if (!countOk(ts[k], ms[k], hold, queue, bag)) {
+        if (ms === masks) ms = masks.slice();
+        ms[k] = -1; continue;
+      }
+      live = k; need = ts[k].n - popc(ms[k]);
+    }
+    if (live < 0) return 0;                                      // どちらも組めない
+    if (over) return 0;
+    if (performance.now() > deadline) { over = true; return 0; }
+
+    const key = ms.join(',') + '|' + (hold || '-') + '|' + queue.join('') + '|' + bag;
+    const hit = memo.get(key);
+    if (hit !== undefined) return hit;
+
+    // 見えるのは6個までだが、残り need 手なら queue の need 番目より先は
+    // どうやっても手元に来ないので、そこまでで打ち切る（末尾ほど枝が減る）
+    const qcap = Math.min(QSEE, need + (hold ? 0 : 1));
+    let p = 0;
+    if (queue.length < qcap) {
+      // 偶然の分かれ目。その巡の残りから等確率で1つ見える（使い切っていれば次の巡から）
+      const b = bag || BAG_ALL, n = popc(b);
+      for (let i = 0; i < 7; i++) {
+        if (!((b >> i) & 1)) continue;
+        queue.push(T_CH[i]);
+        p += solve(ts, ms, hold, queue, b & ~(1 << i)) / n;
+        queue.pop();
+      }
+    } else {
+      // 自分の手番。そのまま置く／ホールドと入れ替えて置く／ホールドに預けて次を置く
+      const acts = [[queue[0], 1, hold]];
+      if (hold) acts.push([hold, 1, queue[0]]);
+      else if (queue.length > 1) acts.push([queue[1], 2, queue[0]]);
+      const f = boardOf(ts[live], ms[live]);
+      for (let a = 0; a < acts.length && p < 1; a++) {
+        const type = acts[a][0], adv = acts[a][1], nh = acts[a][2];
+        // 置ける場所を候補をまたいで集める。両方にある場所なら、置いても両方が生き残る
+        const cands = new Map();
+        for (let k = 0; k < ts.length; k++) {
+          if (ms[k] < 0) continue;
+          const t = ts[k];
+          for (let i = 0; i < t.n; i++) {
+            if ((ms[k] & (1 << i)) || t.ch[i] !== type) continue;
+            let e = cands.get(t.keys[i]);
+            if (!e) { e = ms.map(() => -1); cands.set(t.keys[i], e); }
+            e[k] = ms[k] | (1 << i);
+          }
+        }
+        if (!cands.size) continue;
+        const ok = putKeys(f, type), q2 = queue.slice(adv);
+        for (const ent of cands) {
+          if (!ok.has(ent[0])) continue;      // そこへは入れられない
+          const v = solve(ts, ent[1], nh, q2, bag);
+          if (v > p) p = v;
+          if (p >= 1) break;
+        }
+      }
+    }
+    memo.set(key, p);
+    return p;
+  }
+
+  onmessage = function (e) {
+    const d = e.data, out = { id:d.id, k:d.k };
+    try {
+      const a = mkTarget(d.rows);
+      out.n = a.n;
+      if (!a.n) throw new Error('ミノに切り分けられない形');
+      pcCache = new Map(); keyCache = new Map();
+      const run = function (ts) {
+        memo = new Map(); over = false;
+        deadline = performance.now() + d.ms;
+        const v = solve(ts, ts.map(function () { return 0; }), null, [], BAG_ALL);
+        return over ? null : v;
+      };
+      out.plain  = run([a]);                                  // 登録した形だけ
+      out.mirror = run([a, mkTarget(tplMirror(d.rows))]);      // 左右反転も候補に残す
+    } catch (err) { out.err = String((err && err.message) || err); }
+    postMessage(out);
+  };
+}
+
+// ----- ページ側 -----
+let tplProbWorker = null;         // 計算は Worker に投げる（画面を止めないため）
+let tplProbSeq = 0;               // 窓を閉じたあとの古い結果を捨てるための番号
+const tplProbCache = new Map();   // 形の鍵 → 結果（'calc' は計算中）
+function tplProbKey(rows) { return rows.join('|'); }
+function tplProbPct(x) { return (x * 100).toFixed(1) + '%'; }
+
+// Worker に渡す中身。盤面の定数と置き方の列挙は、ページのものをそのまま文字列にして使う
+function tplProbSrc() {
+  return [
+    'const COLS=' + COLS + ',TROW=' + TROW + ',BUF=' + BUF + ',PC_FULL_ROW=' + PC_FULL_ROW + ';',
+    'const STATE_NAMES=' + JSON.stringify(STATE_NAMES) + ';',
+    'const PIECE_DEF=' + JSON.stringify(PIECE_DEF) + ';',
+    'const KICKS=' + JSON.stringify(KICKS) + ';',
+    'const TPL_MIRROR=' + JSON.stringify(TPL_MIRROR) + ';',
+    pcPopcount.toString(), pcKey.toString(), pcHoles.toString(), pcFits.toString(),
+    pcTSpin.toString(), pcPlacements.toString(),
+    tplPieces.toString(), tplKey.toString(), tplMirror.toString(),
+    '(' + tplProbWorkerMain.toString() + ')();',
+  ].join('\n');
+}
+function tplProbStop() {
+  if (tplProbWorker) { tplProbWorker.terminate(); tplProbWorker = null; }
+  tplProbSeq++;
+  // 途中で止めたぶんは覚えない。次に開いたときにやり直す
+  for (const k of [...tplProbCache.keys()]) if (tplProbCache.get(k) === 'calc') tplProbCache.delete(k);
+}
+// ミノ数。おじゃま（X）混じりや、ミノ1個ぶんに切り分けられない形は null
+function tplProbCount(rows) {
+  let cells = 0;
+  for (const line of rows) {
+    if (line.indexOf('X') >= 0) return null;
+    for (const ch of line) if (ch !== '.') cells++;
+  }
+  const ps = tplPieces(rows);
+  return (ps.length * 4 === cells) ? ps.length : null;
+}
+// 出ている形を、まだ計算していなければ Worker に投げる。
+// go を渡すと、その形だけは「押されたとき用」の待ちを飛ばして計算する
+function tplProbWant(pats, go) {
+  const todo = [];
+  for (const rows of pats) {
+    const k = tplProbKey(rows);
+    const had = tplProbCache.get(k);
+    if (had !== undefined && !(go === k && had && had.ask)) continue;
+    const n = tplProbCount(rows);
+    if (n === null)       { tplProbCache.set(k, { err:'shape' }); continue; }
+    if (n > TPL_PROB_MAX) { tplProbCache.set(k, { err:'big', n:n }); continue; }
+    // ミノが多い形は数十秒かかるので、遊んでいる間に裏で回り続けないよう押されるまで待つ
+    if (n > TPL_PROB_AUTO && go !== k) { tplProbCache.set(k, { ask:n, rows:rows }); continue; }
+    tplProbCache.set(k, 'calc');
+    todo.push(rows);
+  }
+  tplProbPaint();
+  if (!todo.length) return;
+  if (!tplProbWorker) {
+    const seq = tplProbSeq;
+    try {
+      const url = URL.createObjectURL(new Blob([tplProbSrc()], { type:'text/javascript' }));
+      tplProbWorker = new Worker(url);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      for (const rows of todo) tplProbCache.set(tplProbKey(rows), { err:'ng' });
+      tplProbPaint();
+      return;
+    }
+    tplProbWorker.onmessage = (e) => {
+      if (seq !== tplProbSeq) return;
+      const d = e.data;
+      tplProbCache.set(d.k,
+        d.err ? { err:'ng' }
+        : (d.plain === null || d.mirror === null) ? { err:'slow', n:d.n }
+        : { plain:d.plain, mirror:d.mirror, n:d.n });
+      tplProbPaint();
+    };
+    tplProbWorker.onerror = () => {
+      if (seq !== tplProbSeq) return;
+      for (const k of [...tplProbCache.keys()]) if (tplProbCache.get(k) === 'calc') tplProbCache.set(k, { err:'ng' });
+      tplProbPaint();
+    };
+  }
+  for (const rows of todo)
+    tplProbWorker.postMessage({ id:tplProbSeq, k:tplProbKey(rows), rows:rows, ms:TPL_PROB_MS });
+}
+// 「確率を出す」を押したとき
+function tplProbGo(k) {
+  const v = tplProbCache.get(k);
+  if (!v || !v.ask) return;
+  tplProbWant([v.rows], k);
+}
+// 絵の下の行だけを書き換える（絵は描き直さない）
+function tplProbPaint() {
+  for (const el of document.querySelectorAll('#tplWin .tpl-prob')) {
+    const v = tplProbCache.get(el.dataset.k);
+    el.classList.toggle('calc', v === 'calc');
+    if (!v)              { el.textContent = ''; continue; }
+    if (v === 'calc')    { el.textContent = T('計算中…'); continue; }
+    if (v.err === 'shape') { el.textContent = T('—（おじゃまや欠けがあるので開幕からは組めません）'); continue; }
+    if (v.err === 'big')   { el.textContent = TF('—（{0}ミノは多すぎて数えきれません）', v.n); continue; }
+    if (v.ask) {
+      el.textContent = '';
+      const b = document.createElement('button');
+      b.textContent = TF('確率を出す（{0}ミノ）', v.ask);
+      b.title = 'ミノが多いので時間がかかります（数十秒）。押すと裏で計算します';
+      b.addEventListener('click', () => { b.disabled = true; tplProbGo(el.dataset.k); });
+      el.appendChild(b);
+      continue;
+    }
+    if (v.err === 'slow')  { el.textContent = T('—（計算が終わりませんでした）'); continue; }
+    if (v.err)             { el.textContent = T('—（計算できませんでした）'); continue; }
+    el.textContent = '';
+    const add = (s) => el.appendChild(document.createTextNode(s));
+    const num = (x) => { const b = document.createElement('b'); b.textContent = tplProbPct(x); el.appendChild(b); };
+    add(T('そのまま') + ' '); num(v.plain);
+    add((LANG === 'en' ? ' / ' : ' ／ ') + T('左右反転込み') + ' '); num(v.mirror);
+  }
+}
 function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
 // 複数パターンの並べ方（横／縦）
 function toggleTplVertical() {
@@ -8614,7 +8923,7 @@ function fitTplCanvas() {
   if (!wrap || !tplCur) return;
   const pats = tplPats();
   const rows = Math.max(...pats.map(p => p.length));
-  const n = pats.length, vert = !!opts.tplVertical, capH = n > 1 ? 16 : 0;
+  const n = pats.length, vert = !!opts.tplVertical, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
   const cell = vert
     ? Math.max(5, Math.floor(Math.min(wrap.clientWidth / COLS,
         (wrap.clientHeight - capH * n - 10 * (n - 1)) / (rows * n))))
@@ -8662,8 +8971,15 @@ function drawTemplate() {
     cvbox.className = 'tpl-cv';
     cvbox.appendChild(cv);
     box.appendChild(cvbox);
+    const pr = document.createElement('div');
+    pr.className = 'tpl-prob';
+    pr.dataset.k = tplProbKey(rows);
+    pr.title = 'ゲーム開始から、この形を組み切れる確率です。見えるのは 操作中＋NEXT5個 の6個までで、'
+             + 'その先は見えない前提で数えています。テンプレは盤面そのものなのでミノは捨てられません';
+    box.appendChild(pr);
     wrap.appendChild(box);
   });
+  tplProbWant(pats);
   const jb = document.getElementById('tplJudgeBtn');
   if (jb) jb.classList.toggle('on', !!opts.tplJudge);
   const pb = document.getElementById('tplPrevBtn');
@@ -9496,7 +9812,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.03.3';
+const APP_VERSION = '2.04.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

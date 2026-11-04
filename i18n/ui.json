@@ -327,5 +327,7 @@
  "HOLDボタンを押したまま次のミノが出ると、出た瞬間にホールドします。先行回転と同時に押せば、入れ替わったミノが回った状態で出ます。押しっぱなしの間はミノごとに効くので、置くたびに入れ替わります": "Hold the HOLD button as the next piece appears and it is held at once. Press it together with a rotate button and the swapped-in piece spawns rotated. While the button stays down it applies to every piece, so each lock swaps again.",
  "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece.",
  "180度回転ボタン": "Rotate 180° button",
- "操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます": "Shows a 180° button among the controls. Hide it and rotate left / rotate right get wider. The keyboard (D by default) and controller bindings work whether or not the button is shown."
+ "操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます": "Shows a 180° button among the controls. Hide it and rotate left / rotate right get wider. The keyboard (D by default) and controller bindings work whether or not the button is shown.",
+ "ゲーム開始から、この形を組み切れる確率です。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提で数えています。テンプレは盤面そのものなのでミノは捨てられません": "The chance of building this shape from the start of a game. Only the 6 pieces you can see (the one in play plus 5 NEXT) are taken into account; nothing beyond them. A template is the whole board, so no piece can be thrown away.",
+ "ミノが多いので時間がかかります（数十秒）。押すと裏で計算します": "This has a lot of pieces, so it takes a while (tens of seconds). Press to calculate it in the background."
 }
