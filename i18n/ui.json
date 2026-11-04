@@ -329,5 +329,8 @@
  "180度回転ボタン": "Rotate 180° button",
  "操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます": "Shows a 180° button among the controls. Hide it and rotate left / rotate right get wider. The keyboard (D by default) and controller bindings work whether or not the button is shown.",
  "ゲーム開始から、この形を組み切れる確率です。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提で数えています。テンプレは盤面そのものなのでミノは捨てられません": "The chance of building this shape from the start of a game. Only the 6 pieces you can see (the one in play plus 5 NEXT) are taken into account; nothing beyond them. A template is the whole board, so no piece can be thrown away.",
- "ミノが多いので時間がかかります（数十秒）。押すと裏で計算します": "This has a lot of pieces, so it takes a while (tens of seconds). Press to calculate it in the background."
+ "ミノが多いので時間がかかります（数十秒）。押すと裏で計算します": "This has a lot of pieces, so it takes a while (tens of seconds). Press to calculate it in the background.",
+ "別画面": "Second window",
+ "反転した形を、もう1枚の窓に並べて出します。ONにしておけば次に開いたときも出ます": "Shows the mirrored shape in a second window next to this one. Leave it on and it comes back the next time you open a template.",
+ "別画面を閉じる": "Close the second window"
 }
