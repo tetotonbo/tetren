@@ -1417,7 +1417,7 @@ const I18N_EN = {
 "設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる（14項目）": "Added a Display tab to the settings, which shows and hides each menu (14 items).",
 "設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加": "Added two switches under Rise right after locking, in the Other settings.",
 "設定の「その他」に 「ミノ設置直後にせりあがり」 を追加": "Added Rise right after locking to the Other settings.",
-"設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, with an amber frame and a ⇄ Mirror tag so you can tell the two apart at a glance. ⇄ Mirror inside the window now opens that second window instead of flipping the shape in place, and is hidden while the second window is open. The setting is remembered, so it comes back the next time you open a template. The second window does not repeat the With mirror figure, since it is always identical to the one in the main window.",
+"設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）。反転のほうを組んだときも次の巡へ進む（別画面を出していなければ、そのとき出す）": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, with an amber frame and a ⇄ Mirror tag so you can tell the two apart at a glance. ⇄ Mirror inside the window now opens that second window instead of flipping the shape in place, and is hidden while the second window is open. The setting is remembered, so it comes back the next time you open a template. The second window does not repeat the With mirror figure, since it is always identical to the one in the main window. Building the mirrored version now advances to the next bag as well, opening the second window if it is not already there.",
 "設定の「その他」にパフェ探索の項目を追加": "Added the PC finder settings under Other.",
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
@@ -2170,7 +2170,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）。反転のほうを組んだときも次の巡へ進む（別画面を出していなければ、そのとき出す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
@@ -5011,12 +5011,15 @@ function tplAfterChange() {
   drawTemplate();   // 見出しも drawTemplate で付け直す（反転の印ごと）
   fitTplCanvas();   // 窓の外枠はそのままで、中の絵だけ大きさを合わせる
 }
+// 組み終わったパターンを探す。左右反転して組んだときも同じ続きへ進める
+// （mir はどちらで組んだか。反転なら、別画面を出していないと続きが見えない）
 function tplNextHit() {
   const pats = tplPats();
   for (let i = 0; i < pats.length; i++) {
-    if (!tplAllPlaced(pats[i])) continue;
     const id = (tplCur.nexts && tplCur.nexts[i]) || tplCur.next;
-    if (id) return { id: id, i: i };
+    if (!id) continue;
+    if (tplAllPlaced(pats[i]))              return { id: id, i: i, mir: false };
+    if (tplAllPlaced(tplMirror(pats[i])))   return { id: id, i: i, mir: true };
   }
   return null;
 }
@@ -5038,7 +5041,11 @@ function tplRefresh() {
   // 地形が空になったら「自分で動かした」状態は解除して、また自動で進むようにする
   if (board.every(row => row.every(col => !col))) tplManual = false;
   const hit = tplManual ? null : tplNextHit();
-  if (hit) tplEnter(hit.id, tplRawPats(tplCur)[hit.i]);
+  if (hit) {
+    // 反転のほうを組んだのなら、続きも反転で見たいはずなので別画面を出す
+    if (hit.mir && !opts.tplMirrorWin) setTplMirrorWin(true);
+    tplEnter(hit.id, tplRawPats(tplCur)[hit.i]);
+  }
   drawTemplate();
 }
 function tplRawPats(t) { return t.pats ? t.pats : [t.rows]; }
