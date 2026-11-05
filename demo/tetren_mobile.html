@@ -670,6 +670,7 @@ const I18N_EN = {
 "OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります": "When off, double-tap to change it. With a mouse connected it becomes single-click / double-click.",
 "ONにすると、1回のせりあがりで下の割合に従って段数を決めます": "When on, the number of rows per rise follows the chances below",
 "ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）": "When on, pressing Restore opens the piece picker. The piece you choose starts in Hold and is removed from the first bag (Random is also available).",
+"ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。⇄ 反転 で切り替えなくても、元の形と反転した形を並べて見比べられます": "Turn it on and the mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip.",
 "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
 "ONにすると、手順と同じ置き方をしたときだけ、自動で次の手順へ進みます。違う置き方をしたときはそのままです（‹ › で自分でも動かせます）": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves (you can still step with ‹ ›).",
 "ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves.",
@@ -965,8 +966,8 @@ const I18N_EN = {
 "テト練（スマホ版）": "Tetren (mobile)",
 "テンプレ": "Template",
 "テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした": "Added ◀ Previous bag and Next bag ▶ to templates, so you can move between the first and second bags.",
+"テンプレートの反転を別の窓にも出す": "Show the mirrored template in a second window",
 "テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる": "Added a build chance to the template window: the probability of finishing that shape from the start of a game, assuming you only ever see 6 pieces (the one in play plus 5 NEXT). As saved counts the registered shape alone; With mirror keeps the left-right mirrored shape alive as a second candidate. The calculation runs in a Web Worker, so you can keep playing while it works.",
-"テンプレートの窓の「⇄ 反転」の横に 別画面 スイッチを追加。ONにすると、反転した形をもう1枚の窓に並べて出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Second window switch next to ⇄ Flip in the template window. Turn it on and the mirrored shape appears in a second window beside the first, so you can compare both without toggling ⇄ Flip. The setting is remembered, so it comes back the next time you open a template.",
 "テンプレートの窓の右上に 判定 スイッチを追加（既定ON）": "Added a Check switch at the top right of the template window (on by default).",
 "テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした": "The template window now opens smaller by default (cells 26px → 20px) and on the left of the screen.",
 "テンプレート名を押したら、地形とミノ順をリセットしてから出すようにした（開幕から試せる）": "Choosing a template now resets the board and the piece order first, so you can try it from the opening.",
@@ -1148,7 +1149,6 @@ const I18N_EN = {
 "判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）": "The check result now includes the number of moves (\"Perfect Clear possible (7 moves, 106ms)\").",
 "判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる": "The check looks at whether your current pieces (active plus NEXT plus the rest of the bag, seven in all) can follow the reference.",
 "別の画像": "Another image",
-"別画面": "Second window",
 "別画面を閉じる": "Close the second window",
 "利用について": "Terms of use",
 "制限時間": "Time limit",
@@ -1169,7 +1169,6 @@ const I18N_EN = {
 "十字 右": "D-pad right",
 "十字 左": "D-pad left",
 "反時計回り回転": "Rotate counter-clockwise",
-"反転した形を、もう1枚の窓に並べて出します。ONにしておけば次に開いたときも出ます": "Shows the mirrored shape in a second window next to this one. Leave it on and it comes back the next time you open a template.",
 "反転の下に 「記録」「復元」 を追加。同じ場面を何度も練習するための控え": "Added Save and Restore below Mirror, a backup for practising the same position again and again.",
 "反転（地形の左右反転）": "Mirror (flip the board)",
 "取り込んだ地形が高くてもゲームオーバーにしないようにした。出現位置がふさがっている場合はミノを置ける高さまで上に逃がす。ゲームオーバー中に取り込んだ場合も、その地形から再開できる": "A tall imported board no longer ends the game. If the spawn position is blocked, the piece is moved up until it fits, and importing during a game over lets you carry on from that board.",
@@ -1410,6 +1409,7 @@ const I18N_EN = {
 "設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる（14項目）": "Added a Display tab to the settings, which shows and hides each menu (14 items).",
 "設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加": "Added two switches under Rise right after locking, in the Other settings.",
 "設定の「その他」に 「ミノ設置直後にせりあがり」 を追加": "Added Rise right after locking to the Other settings.",
+"設定の「その他」に テンプレートの反転を別の窓にも出す を追加。ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Show the mirrored template in a second window switch under Other in the settings. Turn it on and the mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip. The setting is remembered, so it comes back the next time you open a template.",
 "設定の「その他」にパフェ探索の項目を追加": "Added the PC finder settings under Other.",
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
@@ -2162,7 +2162,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓の「⇄ 反転」の横に 別画面 スイッチを追加。ONにすると、反転した形をもう1枚の窓に並べて出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加。ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
@@ -2606,6 +2606,16 @@ if (document.readyState === 'loading') {
             <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
           </span>
         </div>
+        <div class="opt-row">
+          <span class="opt-label">テンプレートの反転を別の窓にも出す
+            <span class="opt-note">ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。⇄ 反転 で切り替えなくても、元の形と反転した形を並べて見比べられます</span></span>
+          <label class="cfg-tgl">
+            <input type="checkbox" id="optTplMirrorWin"
+              onchange="setTplMirrorWin(this.checked)">
+            <span class="tgl"></span>
+          </label>
+        </div>
+
         <div class="cfg-btns">
           <button onclick="resetOptions()" style="background:#374151;color:#d1d5db;">デフォルトに戻す</button>
         </div>
@@ -4379,8 +4389,6 @@ function openTemplate(id) {
       '<div class="pc-cv-wrap"></div>' +
       '<div class="pc-nav">' +
         '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
-        '<button id="tplMirWinBtn" onclick="toggleTplMirrorWin();this.blur()" ' +
-          'title="反転した形を、もう1枚の窓に並べて出します。ONにしておけば次に開いたときも出ます">別画面</button>' +
         '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
         '<button id="tplPrevBtn" onclick="tplGoPrev();this.blur()" title="ひとつ前の巡に戻ります">◀ 前</button>' +
         '<button id="tplNextBtn" onclick="tplGoNext();this.blur()" title="次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）">次 ▶</button>' +
@@ -4449,11 +4457,14 @@ function closeTplMirrorWin() {
   const w = document.getElementById('tplWin2');
   if (w) w.remove();
 }
-function toggleTplMirrorWin() {
-  setOption('tplMirrorWin', !opts.tplMirrorWin);
+// 設定（その他タブ）のスイッチから呼ぶ。テンプレートを開いていればその場で出し入れする
+function setTplMirrorWin(on) {
+  setOption('tplMirrorWin', !!on);
   if (opts.tplMirrorWin) openTplMirrorWin(); else closeTplMirrorWin();
   drawTemplate();
 }
+// 別画面の × 。閉じたらスイッチもOFFにする（設定の画面にも反映される）
+function toggleTplMirrorWin() { setTplMirrorWin(!opts.tplMirrorWin); }
 // 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
 function tplFitCell(t) {
   const pats = t.pats ? t.pats : [t.rows];
@@ -5110,8 +5121,6 @@ function drawTemplate() {
     if (t2) t2.textContent = tplCur.name + (tplFlip ? '' : '（反転）');
   }
   tplProbWant(pats);
-  const mb = document.getElementById('tplMirWinBtn');
-  if (mb) mb.classList.toggle('on', !!opts.tplMirrorWin);
   const jb = document.getElementById('tplJudgeBtn');
   if (jb) jb.classList.toggle('on', !!opts.tplJudge);
   const pb = document.getElementById('tplPrevBtn');
@@ -6665,6 +6674,11 @@ function applyOptions(){
   check('optDigOnLock', opts.digOnLock);
   check('optDigOffset', opts.digOffset);
   check('optDigHoldOnClear', opts.digHoldOnClear);
+  check('optTplMirrorWin', opts.tplMirrorWin);
+  // スイッチと別画面の窓をそろえる（「デフォルトに戻す」で切れたときも閉じる）
+  if (tplCur && document.getElementById('tplWin')) {
+    if (opts.tplMirrorWin) openTplMirrorWin(); else closeTplMirrorWin();
+  }
   // 「ミノ設置直後にせりあがり」がOFFのあいだは、どちらも触らせない
   const setEnabled = (rowId, inputId, on) => {
     const row=document.getElementById(rowId), el=document.getElementById(inputId);
