@@ -334,8 +334,10 @@ button, label, .ctrl-lbl, [data-pos] {
 .tpl-cap { font-size:10px; color:#9ca3af; }
 /* 組める確率。絵の下に小さく出す */
 .tpl-prob { font-size:10px; color:#9ca3af; text-align:center; line-height:1.35;
-  min-height:28px; max-width:100%; }
+  min-height:42px; max-width:100%; }
 .tpl-prob b { color:#e5e7eb; font-weight:600; }
+/* 何の数字かを小さく添える */
+.tpl-prob-cap { font-size:9px; color:#6b7280; letter-spacing:0.3px; }
 .tpl-prob.calc { color:#6b7280; }
 .tpl-prob button { font-size:10px; padding:2px 6px; border:1px solid #4b5563; border-radius:3px;
   background:#374151; color:#d1d5db; cursor:pointer; }
@@ -1526,6 +1528,7 @@ const I18N_EN = {
 "相手のTST→TSD→RENを再現して、受け方を練習します": "Reproduces an opponent's TST → TSD → REN so you can practise taking it",
 "相殺": "Offset",
 "相殺 を追加。せりあがりの1秒前からミノを置くまでの間、消したぶんの火力で溜まりを減らせる": "Added Offset: from one second before the rise until you lock a piece, your clears reduce what is pending.",
+"確率の行に 開幕時に組める確率 と小さく添えて、何の数字か分かるようにした": "The probability line now carries a small Chance of building it from the start caption, so it is clear what the number means.",
 "確率を出す（{0}ミノ）": "Calculate ({0} pieces)",
 "秒": "s",
 "秒ごと": "seconds",
@@ -1658,6 +1661,7 @@ const I18N_EN = {
 "開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）": "Opener templates can now hold several patterns, shown side by side with headings (first, second).",
 "開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）": "Added Mountain Stack #2, Hachimitsu and the Meiso Cannon to the opener templates, four with the DT Cannon.",
 "開幕テンプレート（1巡目の置き方）": "Opener templates (first-bag placement)",
+"開幕時に組める確率": "Chance of building it from the start",
 "隠しても設定はここからいつでも戻せます。": "Even when hidden, you can bring them back from here.",
 "集めた候補を切り詰める前に全部 pcAll に持つようにした（以前は上位だけ残していた）": "All collected solutions are kept in pcAll before trimming; only the top ones were kept before.",
 "非公式": "Unofficial",
@@ -2569,6 +2573,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.06.1 / 2.05.1</span><span class="vl-date">2026-11-05</span></div><ul><li>確率の行に 開幕時に組める確率 と小さく添えて、何の数字か分かるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）。反転のほうを組んだときも次の巡へ進む（別画面を出していなければ、そのとき出す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
@@ -8306,7 +8311,7 @@ function deleteTemplate(id) {
   renderTemplateRow();
 }
 const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
-const TPL_PROB_H = 34;  // 絵の下に出す「組める確率」の行の高さ（行の高さ28＋すき間）
+const TPL_PROB_H = 48;  // 絵の下に出す「組める確率」の行の高さ（見出し＋数字で42＋すき間）
 const TPL_MIN_W = 340;  // 下のボタンが収まる最小の幅
 let tplCur = null, tplCell = TPL_CELL, tplCell2 = TPL_CELL;
 let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
@@ -8893,6 +8898,10 @@ function tplProbPaint() {
     if (v.err === 'slow')  { el.textContent = T('—（計算が終わりませんでした）'); continue; }
     if (v.err)             { el.textContent = T('—（計算できませんでした）'); continue; }
     el.textContent = '';
+    const cap = document.createElement('div');
+    cap.className = 'tpl-prob-cap';
+    cap.textContent = T('開幕時に組める確率');
+    el.appendChild(cap);
     const add = (s) => el.appendChild(document.createTextNode(s));
     const num = (x) => { const b = document.createElement('b'); b.textContent = tplProbPct(x); el.appendChild(b); };
     add(T('そのまま') + ' '); num(v.plain);
@@ -9948,7 +9957,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.05.0';
+const APP_VERSION = '2.05.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

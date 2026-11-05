@@ -237,5 +237,6 @@
  "—（{0}ミノは多すぎて数えきれません）": "— ({0} pieces is too many to count)",
  "—（計算が終わりませんでした）": "— (the calculation did not finish)",
  "—（計算できませんでした）": "— (could not be calculated)",
- "左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます": "Opens the mirrored shape in a second window. Close it and this button comes back."
+ "左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます": "Opens the mirrored shape in a second window. Close it and this button comes back.",
+ "開幕時に組める確率": "Chance of building it from the start"
 }
