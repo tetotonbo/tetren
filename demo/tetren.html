@@ -328,13 +328,13 @@ button, label, .ctrl-lbl, [data-pos] {
 .tpl-row button:hover { background:#4b5563; }
 .tpl-row button.tpl-mine { background:#1f3a5f; }
 /* テンプレートの窓。複数パターンは横に並べる */
-#tplWin .pc-cv-wrap { align-items:flex-end; gap:12px; }
-#tplWin .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
-.tpl-pat { display:flex; flex-direction:column; align-items:center; gap:3px; }
+#tplWin .pc-cv-wrap, #tplWin2 .pc-cv-wrap { align-items:flex-end; gap:12px; }
+#tplWin .pc-cv-wrap.vert, #tplWin2 .pc-cv-wrap.vert { flex-direction:column; align-items:center; overflow:auto; }
+.tpl-pat { display:flex; flex-direction:column; align-items:center; gap:2px; }
 .tpl-cap { font-size:10px; color:#9ca3af; }
 /* 組める確率。絵の下に小さく出す */
 .tpl-prob { font-size:10px; color:#9ca3af; text-align:center; line-height:1.35;
-  min-height:42px; max-width:100%; }
+  min-height:28px; max-width:100%; }
 .tpl-prob b { color:#e5e7eb; font-weight:600; }
 /* 何の数字かを小さく添える */
 .tpl-prob-cap { font-size:9px; color:#6b7280; letter-spacing:0.3px; }
@@ -345,6 +345,16 @@ button, label, .ctrl-lbl, [data-pos] {
 .tpl-cv { line-height:0; }
 .tpl-pat canvas { border:1px solid #374151; border-radius:2px; }
 .tpl-row button.tpl-mine:hover { background:#2a4d7a; }
+/* 自作テンプレは名前の右に × を付けて、この一覧から消せるようにする */
+.tpl-chip { display:inline-flex; }
+.tpl-row .tpl-chip button.tpl-mine { border-radius:6px 0 0 6px; }
+.tpl-row button.tpl-del {
+  background:#1f3a5f; color:#93a3b8; border-left:1px solid #121a26;
+  border-radius:0 6px 6px 0; padding:7px 9px; line-height:1;
+}
+.tpl-row button.tpl-del:hover { background:#b91c1c; color:#fff; }
+.tpl-row button.tpl-del.ask { background:#b91c1c; color:#fff; }
+
 .tpl-add { display:flex; gap:6px; align-items:center; margin:0 0 12px; }
 .tpl-add input {
   flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
@@ -357,6 +367,15 @@ button, label, .ctrl-lbl, [data-pos] {
 }
 .pc-nav button:disabled { opacity:0.35; cursor:default; }
 .pc-nav button.on { background:#4338ca; color:#fff; }
+/* テンプレートの窓は、絵にできるだけ場所を割く（余白とボタンを詰める） */
+#tplWin .pc-body, #tplWin2 .pc-body { gap:4px; padding:4px; }
+#tplWin .shot-bar, #tplWin2 .shot-bar { padding:3px 6px; }
+#tplWin .pc-nav { gap:6px; }
+#tplWin .pc-nav button { padding:3px 9px; }
+/* 巡の行き来は主役ではないので、少し控えめにする */
+#tplPrevBtn, #tplNextBtn { background:#2b3340; color:#9ca3af; }
+#tplPrevBtn:hover:not(:disabled), #tplNextBtn:hover:not(:disabled) { background:#3b4454; color:#e5e7eb; }
+
 #pcStepLabel, #pcPickLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto; }
 #tplLabel { font-size:11px; color:#d1d5db; text-align:center; white-space:nowrap; flex:1 1 auto;
             min-width:0; overflow:hidden; text-overflow:ellipsis; }
@@ -940,12 +959,16 @@ const I18N_EN = {
 "↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）": "How fast pieces fall while you hold the Down key (5 is standard).",
 "↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す": "The ↻ button now handles multiple pieces: it repeats the last combination, or the single piece if that is what you chose.",
 "⇄ 反転": "⇄ Mirror",
+"◀ 前": "◀ Prev",
+"◀ 前の巡": "◀ Prev bag",
 "⚙ 設定": "⚙ Settings",
 "　{0}パターン": "   {0} patterns",
 "。0にすると一気に端まで動きます。単位をクリックするとフレーム表示に変わります": ". Set it to 0 to move all the way instantly. Click the unit to switch to frames.",
 "。0にすると一気に端まで動きます。単位を押すとフレーム表示に変わります": ". Set it to 0 to move all the way instantly. Tap the unit to switch to frames.",
 "「1欠け」を 「ミノ欠け」 に改称（ボタン・ダイアログ見出し・ツールチップ）": "Renamed One missing to Custom bag on the button, the dialog heading and the tooltip.",
 "「NEXT・HOLDを1クリックで差し替え」スイッチを追加（設定の「その他」）": "Added a Single-click to replace NEXT/HOLD switch under Other in the settings.",
+"「{0}」を削除しました": "Deleted “{0}”",
+"「{0}」を削除します。もう一度 × を押してください": "This will delete “{0}”. Press × once more to confirm.",
 "「{0}」を登録しました": "Saved as “{0}”",
 "「⇄ 反転」 を追加。いまの地形を左右反転する": "Added ⇄ Mirror, which flips the current board left to right.",
 "「このサイトについて」 を追加（PC版・スマホ版・入口ページ）": "Added About this site (desktop, mobile and the entry page).",
@@ -1150,6 +1173,7 @@ const I18N_EN = {
 "テンプレ": "Template",
 "テンプレートに「◀ 前の巡」「次の巡 ▶」を追加し、1巡目と2巡目を行き来できるようにした": "Added ◀ Previous bag and Next bag ▶ to templates, so you can move between the first and second bags.",
 "テンプレートの反転を別の窓にも出す": "Show the mirrored template in a second window",
+"テンプレートの窓から 並び と 削除 のボタンを外し、絵に場所を回した。複数パターンの並べ方（横／縦）は、絵が大きくなるほうを窓ごとに自動で選ぶ。削除はカンペ画像のテンプレート一覧から、名前の右の × を2回押して行う。あわせて余白とボタンを詰め、マスの既定を 20 → 24px にして、窓に占める絵の割合を広げた（5段の形で 52% → 60%）。◀ 前の巡・次の巡 ▶ は色を落として控えめにした": "Removed the Layout and Delete buttons from the template window and gave the space to the picture. Multi-pattern templates now lay themselves out side by side or stacked, whichever makes the picture bigger, per window. Deleting is done from the template list in the reference image dialog: press the × next to the name twice. Padding and buttons were tightened and the default cell went from 20 to 24px, so the picture takes up more of the window (52% to 60% for a five-row shape). The bag arrows are toned down.",
 "テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる": "Added a build chance to the template window: the probability of finishing that shape from the start of a game, assuming you only ever see 6 pieces (the one in play plus 5 NEXT). As saved counts the registered shape alone; With mirror keeps the left-right mirrored shape alive as a second candidate. The calculation runs in a Web Worker, so you can keep playing while it works.",
 "テンプレートの窓の右上に 判定 スイッチを追加（既定ON）": "Added a Check switch at the top right of the template window (on by default).",
 "テンプレートの窓を既定で小さめ（マス 26→20px）にし、画面の左側に出すようにした": "The template window now opens smaller by default (cells 26px → 20px) and on the left of the screen.",
@@ -1332,11 +1356,11 @@ const I18N_EN = {
 "判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）": "The check result now includes the number of moves (\"Perfect Clear possible (7 moves, 106ms)\").",
 "判定は いまのツモ順（操作中＋NEXT＋この巡の残り＝7手ぶん）でカンペどおりに置けるか を調べる": "The check looks at whether your current pieces (active plus NEXT plus the rest of the bag, seven in all) can follow the reference.",
 "別の画像": "Another image",
+"別画面を出していて2枚が画面に入らないときは、両方を縮めて上下に収めるようにした。これまでは少しずらして重ねていた": "When the second window is open and the two do not fit, both are now shrunk and stacked instead of being offset and overlapped.",
 "別画面を閉じる": "Close the second window",
 "利用について": "Terms of use",
 "制限時間": "Time limit",
 "制限時間で打ち切ったので、ほかにも手順があるかもしれません。": "The search hit the time limit, so there may be other solutions.",
-"削除": "Delete",
 "前の候補": "Previous solution",
 "前の手": "Previous step",
 "前回選んだ {0} だけで、もう一度始めます": "Start again with just {0}, as last time",
@@ -1480,7 +1504,9 @@ const I18N_EN = {
 "欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。": "Click a field, then press a button on your gamepad. Sticks and triggers can be assigned too.",
 "次": "Next",
 "次 1段": "Next 1 row",
+"次 ▶": "Next ▶",
 "次の候補": "Next solution",
+"次の巡 ▶": "Next bag ▶",
 "次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）": "Shows the next bag (press again to cycle when there are several second bags)",
 "次の手": "Next step",
 "次の段も同じ列に穴を開ける確率。10%でほぼランダムになります": "Chance that the next row has its hole in the same column. At 10% it is practically random.",
@@ -1572,7 +1598,6 @@ const I18N_EN = {
 "表示中のカンペ画像をすべて消す": "Close every reference image on screen",
 "表示後は位置とサイズを変えられます": "You can move and resize it afterwards.",
 "複数パターンの並べ方を 横／縦 で切り替えられるようにした（窓の「並び」ボタン）": "Several patterns can now be laid out side by side or stacked (the Layout button in the window).",
-"複数パターンの並べ方を、横並び／縦並びで切り替えます": "Switch between laying the patterns out side by side or stacked",
 "複数段 ボタンを追加。1回のせりあがりで何段上がるかを決められる": "Added a Multi-row button, which sets how many rows rise at once.",
 "複数段で上がるとき、直前の穴と同じ列になる確率（10％＝完全ランダム）": "Chance that the hole matches the previous row when several rows rise (10% = fully random).",
 "複数段にする": "Multi-row rise",
@@ -2573,6 +2598,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.07.0 / 2.06.0</span><span class="vl-date">2026-11-05</span></div><ul><li>テンプレートの窓から 並び と 削除 のボタンを外し、絵に場所を回した。複数パターンの並べ方（横／縦）は、絵が大きくなるほうを窓ごとに自動で選ぶ。削除はカンペ画像のテンプレート一覧から、名前の右の × を2回押して行う。あわせて余白とボタンを詰め、マスの既定を 20 → 24px にして、窓に占める絵の割合を広げた（5段の形で 52% → 60%）。◀ 前の巡・次の巡 ▶ は色を落として控えめにした</li><li>別画面を出していて2枚が画面に入らないときは、両方を縮めて上下に収めるようにした。これまでは少しずらして重ねていた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.06.1 / 2.05.1</span><span class="vl-date">2026-11-05</span></div><ul><li>確率の行に 開幕時に組める確率 と小さく添えて、何の数字か分かるようにした</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）。反転のほうを組んだときも次の巡へ進む（別画面を出していなければ、そのとき出す）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
@@ -8302,6 +8328,21 @@ function addTemplateFromBoard() {
   renderTemplateRow();
   tplSay(TF('「{0}」を登録しました', name), '#4ade80');
 }
+// × は2回押しで消す。1回目は赤くして聞き返す（取り消しはできないので）
+let tplDelAsk = null;
+function askDeleteTemplate(id) {
+  const t = tplAll().find(x => x.id === id);
+  if (!t) return;
+  if (tplDelAsk === id) {
+    tplDelAsk = null;
+    deleteTemplate(id);
+    tplSay(TF('「{0}」を削除しました', t.name), '#9ca3af');
+    return;
+  }
+  tplDelAsk = id;
+  renderTemplateRow();
+  tplSay(TF('「{0}」を削除します。もう一度 × を押してください', t.name), '#f87171');
+}
 function deleteTemplate(id) {
   const i = tplUser.findIndex(t => t.id === id);
   if (i < 0) return;
@@ -8310,10 +8351,12 @@ function deleteTemplate(id) {
   closeTemplate();
   renderTemplateRow();
 }
-const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
-const TPL_PROB_H = 48;  // 絵の下に出す「組める確率」の行の高さ（見出し＋数字で42＋すき間）
+const TPL_CELL = 24;    // 既定のマスの大きさ（あとで窓ごと広げられる）
+const TPL_PROB_H = 34;  // 絵の下に出す「組める確率」の行の高さ（見出し＋数字で28＋すき間）
 const TPL_MIN_W = 340;  // 下のボタンが収まる最小の幅
 let tplCur = null, tplCell = TPL_CELL, tplCell2 = TPL_CELL;
+// 複数パターンの並べ方（縦に積むか）。窓ごとに、絵が大きくなるほうを自動で選ぶ
+let tplVert1 = false, tplVert2 = false;
 let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
 let tplHist = [];     // 巡を行き来するための履歴 [{ t, base }]
 let tplFwdIdx = 0;    // 「次の巡」を押した回数（2巡目が複数あるとき順に見る）
@@ -8331,7 +8374,18 @@ function renderTemplateRow() {
     if (t.mine) b.className = 'tpl-mine';
     b.title = t.mine ? '自分で登録した地形を表示します' : (t.name + 'の1巡目を表示します');
     b.addEventListener('click', () => openTemplate(t.id));
-    box.appendChild(b);
+    if (!t.mine) { box.appendChild(b); continue; }
+    // 自作のぶんだけ、名前の右に × を付ける（押し間違い防止に2回押し）
+    const chip = document.createElement('span');
+    chip.className = 'tpl-chip';
+    chip.appendChild(b);
+    const x = document.createElement('button');
+    x.className = 'tpl-del' + (tplDelAsk === t.id ? ' ask' : '');
+    x.textContent = '×';
+    x.title = 'このテンプレートを削除します';
+    x.addEventListener('click', () => askDeleteTemplate(t.id));
+    chip.appendChild(x);
+    box.appendChild(chip);
   }
   const msg = document.getElementById('tplMsg');
   if (msg) msg.style.display = 'none';
@@ -8339,9 +8393,12 @@ function renderTemplateRow() {
 function openTemplate(id) {
   const t = tplAll().find(x => x.id === id);
   if (!t) return;
+  tplDelAsk = null;
   tplCur = t; tplBase = null;
   tplHist = []; tplFwdIdx = 0; tplManual = false;
-  tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
+  const fit = tplFitCell(t);   // 画面からはみ出さない大きさ・並べ方で出す
+  tplCell = tplCell2 = fit.cell;
+  tplVert1 = tplVert2 = fit.vert;
   closeShot();
   closeTemplate();
   // 開幕から試せるよう、地形もミノ順もリセットしてから出す
@@ -8362,10 +8419,8 @@ function openTemplate(id) {
       '<div class="pc-nav">' +
         '<button id="tplFlipBtn" onclick="setTplMirrorWin(true);this.blur()" ' +
           'title="左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます">⇄ 反転</button>' +
-        '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
         '<button id="tplPrevBtn" onclick="tplGoPrev();this.blur()" title="ひとつ前の巡に戻ります">◀ 前の巡</button>' +
         '<button id="tplNextBtn" onclick="tplGoNext();this.blur()" title="次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）">次の巡 ▶</button>' +
-        (t.mine ? '<button onclick="deleteTemplate(\'' + t.id + '\');this.blur()" title="このテンプレートを削除します">削除</button>' : '') +
         '<div id="tplLabel"></div>' +
       '</div>' +
     '</div>' +
@@ -8391,7 +8446,8 @@ function openTemplate(id) {
 function openTplMirrorWin() {
   if (!tplCur || !document.getElementById('tplWin')) return;
   if (document.getElementById('tplWin2')) return;
-  tplCell2 = tplFitCell(tplCur);
+  const fit2 = tplFitCell(tplCur);
+  tplCell2 = fit2.cell; tplVert2 = fit2.vert;
   const win = document.createElement('div');
   win.className = 'shot-win';
   win.id = 'tplWin2';
@@ -8420,9 +8476,19 @@ function openTplMirrorWin() {
       win.style.left = Math.round(m.left) + 'px';
       win.style.top  = Math.round(m.bottom + 8) + 'px';
     } else {
-      // 下にも入らないときは、せめて両方のタイトルバーをつかめるようにずらす
-      win.style.left = Math.round(Math.min(m.left + 16, window.innerWidth - r.width - 8)) + 'px';
-      win.style.top  = Math.round(Math.min(m.top + SHOT_BAR_H + 6, window.innerHeight - 60)) + 'px';
+      // そのままでは2枚入らないので、両方を縮めて上下に収める（絵は入る大きさに縮む）
+      const h = Math.floor((window.innerHeight - 16 - m.top - 8) / 2);
+      if (h >= 150) {
+        document.getElementById('tplWin').style.height = h + 'px';
+        win.style.height = h + 'px';
+        win.style.left = Math.round(m.left) + 'px';
+        win.style.top  = Math.round(m.top + h + 8) + 'px';
+        fitTplCanvas();
+      } else {
+        // それでも入らないときは、せめて両方のタイトルバーをつかめるようにずらす
+        win.style.left = Math.round(Math.min(m.left + 16, window.innerWidth - r.width - 8)) + 'px';
+        win.style.top  = Math.round(Math.min(m.top + SHOT_BAR_H + 6, window.innerHeight - 60)) + 'px';
+      }
     }
   }
 }
@@ -8438,19 +8504,23 @@ function setTplMirrorWin(on) {
 }
 // 別画面の × 。閉じたらスイッチもOFFにする（設定の画面にも反映される）
 function toggleTplMirrorWin() { setTplMirrorWin(!opts.tplMirrorWin); }
-// 画面に収まるマスの大きさを決める（並べ方で向きが変わる）
+// 画面に収まる「並べ方とマスの大きさ」を決める。絵が大きくなるほうを選ぶ
+// （細い画面では、横に並べるより縦に積んだほうが大きく出せる）
 function tplFitCell(t) {
   const pats = t.pats ? t.pats : [t.rows];
   const rows = Math.max(...pats.map(x => x.length));
-  const n = pats.length, vert = !!opts.tplVertical;
-  const capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
+  const n = pats.length, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
   const maxW = Math.min(window.innerWidth - 24, 820);
   const maxH = Math.min(window.innerHeight - 24, 680) - SHOT_BAR_H - PC_NAV_H;
-  let cell = TPL_CELL;
-  const needW = c => vert ? (COLS * c + 16) : (COLS * c * n + 12 * (n - 1) + 16);
-  const needH = c => vert ? ((rows * c + capH) * n + 10 * (n - 1)) : (rows * c + capH);
-  while (cell > 8 && (needW(cell) > maxW || needH(cell) > maxH)) cell--;
-  return cell;
+  const fit = (vert) => {
+    const needW = c => vert ? (COLS * c + 16) : (COLS * c * n + 12 * (n - 1) + 16);
+    const needH = c => vert ? ((rows * c + capH) * n + 12 * (n - 1)) : (rows * c + capH);
+    let cell = TPL_CELL;
+    while (cell > 8 && (needW(cell) > maxW || needH(cell) > maxH)) cell--;
+    return cell;
+  };
+  const yoko = fit(false), tate = n > 1 ? fit(true) : 0;
+  return tate > yoko ? { cell: tate, vert: true } : { cell: yoko, vert: false };
 }
 // 中身に合わせて窓の大きさを決める
 // バー・ボタン列・余白のぶんの高さ。実際に測って、絵がちょうど収まるようにする
@@ -8464,17 +8534,19 @@ function tplChromeH(win) {
        + (nav ? nav.getBoundingClientRect().height + (parseFloat(cs.rowGap) || 0) : 0)
        + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) + 2;
 }
-// id を省くと本体の窓。別画面の窓はマスの大きさを別に持つ
+// id を省くと本体の窓。別画面の窓はマスの大きさと並べ方を別に持つ
 function tplSizeWin(id, cell) {
   const win = document.getElementById(id || 'tplWin');
   if (!win || !tplCur) return;
-  cell = cell || tplCell;
+  const two = (id === 'tplWin2');
+  cell = cell || (two ? tplCell2 : tplCell);
+  const vert = two ? tplVert2 : tplVert1;
   const pats = tplPats();
   const rows = Math.max(...pats.map(x => x.length));
-  const n = pats.length, vert = !!opts.tplVertical, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
+  const n = pats.length, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
   const w = vert ? Math.max(COLS * cell + 16, TPL_MIN_W)
                  : Math.max(COLS * cell * n + 12 * (n - 1) + 16, TPL_MIN_W);
-  const h = (vert ? (rows * cell + capH) * n + 10 * (n - 1)
+  const h = (vert ? (rows * cell + capH) * n + 12 * (n - 1)
                   : rows * cell + capH) + tplChromeH(win);
   win.style.width  = w + 'px';
   win.style.height = h + 'px';
@@ -8913,14 +8985,6 @@ function tplProbPaint() {
   }
 }
 function toggleTplJudge() { setOption('tplJudge', !opts.tplJudge); drawTemplate(); }
-// 複数パターンの並べ方（横／縦）
-function toggleTplVertical() {
-  setOption('tplVertical', !opts.tplVertical);
-  tplCell = tplCell2 = tplFitCell(tplCur);
-  drawTemplate();
-  tplSizeWin();
-  tplSizeWin('tplWin2', tplCell2);
-}
 // ミノを置いたりHOLDしたら、出ている窓の判定を見直す
 // 置き終えた形に応じて、次に出す巡の id を返す（形ごとに違う続きを持てる）
 // このテンプレートから進める先の id（重複を除く）
@@ -9023,34 +9087,45 @@ function tplPats() {
   return tplRawPats(tplCur);
 }
 function tplRows() { return tplPats()[0]; }   // 1枚目（判定や確認に使う）
-// その窓の中身に合うマスの大きさ。窓が無ければ null
+// そのすき間に入るマスの大きさ（並べ方ごと）
+function tplCellIn(w, h, n, rows, vert) {
+  const capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
+  // 絵には枠線が1pxずつ付くので、その2pxを絵の数だけ引いておく
+  return Math.floor(vert
+    ? Math.min((w - 2) / COLS, (h - capH * n - 12 * (n - 1)) / (rows * n))
+    : Math.min((w - 12 * (n - 1) - 2 * n) / (COLS * n), (h - capH) / rows));
+}
+// その窓に合う「並べ方とマスの大きさ」。絵が大きくなるほうを自動で選ぶ。窓が無ければ null
 function tplFitToWrap(id) {
   const wrap = document.querySelector('#' + id + ' .pc-cv-wrap');
   if (!wrap || !tplCur) return null;
   const pats = tplPats();
   const rows = Math.max(...pats.map(p => p.length));
-  const n = pats.length, vert = !!opts.tplVertical, capH = (n > 1 ? 16 : 0) + TPL_PROB_H;
-  return vert
-    ? Math.max(5, Math.floor(Math.min(wrap.clientWidth / COLS,
-        (wrap.clientHeight - capH * n - 10 * (n - 1)) / (rows * n))))
-    : Math.max(5, Math.floor(Math.min((wrap.clientWidth - 12 * (n - 1)) / (COLS * n),
-        (wrap.clientHeight - capH) / rows)));
+  const n = pats.length, w = wrap.clientWidth, h = wrap.clientHeight;
+  const yoko = tplCellIn(w, h, n, rows, false), tate = tplCellIn(w, h, n, rows, true);
+  return { cell: Math.max(5, yoko, tate), vert: n > 1 && tate > yoko };
 }
 function fitTplCanvas() {
-  const c1 = tplFitToWrap('tplWin'), c2 = tplFitToWrap('tplWin2');
+  const a = tplFitToWrap('tplWin'), b = tplFitToWrap('tplWin2');
   let moved = false;
-  if (c1 !== null && c1 !== tplCell)  { tplCell  = c1; moved = true; }
-  if (c2 !== null && c2 !== tplCell2) { tplCell2 = c2; moved = true; }
+  if (a) {
+    if (a.cell !== tplCell)  { tplCell  = a.cell; moved = true; }
+    if (a.vert !== tplVert1) { tplVert1 = a.vert; moved = true; }
+  }
+  if (b) {
+    if (b.cell !== tplCell2) { tplCell2 = b.cell; moved = true; }
+    if (b.vert !== tplVert2) { tplVert2 = b.vert; moved = true; }
+  }
   if (moved) drawTemplate();
 }
-// 窓1枚に絵を描く。flip はその窓が反転側かどうか、cell はマスの大きさ
-function tplPaintWin(id, flip, cell) {
+// 窓1枚に絵を描く。flip はその窓が反転側かどうか、cell はマスの大きさ、vert は縦並びか
+function tplPaintWin(id, flip, cell, vert) {
   const wrap = document.querySelector('#' + id + ' .pc-cv-wrap');
   if (!wrap || !tplCur) return null;
   const list = tplRawPats(tplCur);
   const pats = flip ? list.map(tplMirror) : list;
   const base = tplBase ? (flip ? tplMirror(tplBase) : tplBase) : null;
-  wrap.classList.toggle('vert', !!opts.tplVertical && pats.length > 1);
+  wrap.classList.toggle('vert', !!vert && pats.length > 1);
   wrap.innerHTML = '';
   pats.forEach((rows, i) => {
     const box = document.createElement('div');
@@ -9111,11 +9186,11 @@ function tplSetTitle(id, flipped) {
 }
 function drawTemplate() {
   if (!tplCur) return;
-  const pats = tplPaintWin('tplWin', false, tplCell);
+  const pats = tplPaintWin('tplWin', false, tplCell, tplVert1);
   if (!pats) return;
   tplSetTitle('tplTitle', false);
   // 別画面は向きだけ逆。確率は左右反転しても同じ数字なので、鍵をまとめて二度計算しない
-  if (tplPaintWin('tplWin2', true, tplCell2)) tplSetTitle('tplTitle2', true);
+  if (tplPaintWin('tplWin2', true, tplCell2, tplVert2)) tplSetTitle('tplTitle2', true);
   tplProbWant(pats);
   const fb = document.getElementById('tplFlipBtn');   // 別画面が出ていれば押す意味が無い
   if (fb) fb.style.display = opts.tplMirrorWin ? 'none' : '';
@@ -9477,7 +9552,6 @@ const OPT_DEFAULTS = {
   grid: true,         // グリッド線（盤面のマス目）
   tabletTouch: false, // 盤面をスライド／タップでミノを操作する（タブレット向け・既定OFF）
   tplJudge: true,     // テンプレートが今のミノで組めるかを判定する
-  tplVertical: false, // 複数パターンを縦に並べる（既定は横）
   tplMirrorWin: true, // 反転した形を、もう1枚の窓に並べて出す
   pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
   pcAtkLast: false,   // パフェを決める最後の1手を火力に数えるか
@@ -9957,7 +10031,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.05.1';
+const APP_VERSION = '2.06.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

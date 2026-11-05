@@ -133,7 +133,6 @@
  "コントローラが見つかりません。接続してから、どれかボタンを押してください。": "No gamepad found. Connect one and press any button.",
  "火力": "Attack",
  "速度": "Speed",
- "削除": "Delete",
  "判定": "Check",
  "前の候補": "Previous solution",
  "次の候補": "Next solution",
@@ -176,7 +175,6 @@
  "ランダムに選んだミノで、もう一度DPCセットします（ミノは毎回引き直します）": "Runs the DPC setup again with random pieces (drawn fresh each time)",
  "ランダムに選んだミノをHOLDしてセットします（↻ でそのたびに引き直します）": "Puts a random piece in Hold and sets up (↻ draws again each time)",
  "の1巡目を表示します": " first bag",
- "複数パターンの並べ方を、横並び／縦並びで切り替えます": "Switch between laying the patterns out side by side or stacked",
  "次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）": "Shows the next bag (press again to cycle when there are several second bags)",
  "最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。": "A Perfect Clear finished with a vertical I for a Tetris (QPC).",
  "制限時間で打ち切ったので、ほかにも手順があるかもしれません。": "The search hit the time limit, so there may be other solutions.",
@@ -238,5 +236,11 @@
  "—（計算が終わりませんでした）": "— (the calculation did not finish)",
  "—（計算できませんでした）": "— (could not be calculated)",
  "左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます": "Opens the mirrored shape in a second window. Close it and this button comes back.",
- "開幕時に組める確率": "Chance of building it from the start"
+ "開幕時に組める確率": "Chance of building it from the start",
+ "「{0}」を削除します。もう一度 × を押してください": "This will delete “{0}”. Press × once more to confirm.",
+ "「{0}」を削除しました": "Deleted “{0}”",
+ "◀ 前の巡": "◀ Prev bag",
+ "次の巡 ▶": "Next bag ▶",
+ "◀ 前": "◀ Prev",
+ "次 ▶": "Next ▶"
 }
