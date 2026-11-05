@@ -176,7 +176,6 @@
  "ランダムに選んだミノで、もう一度DPCセットします（ミノは毎回引き直します）": "Runs the DPC setup again with random pieces (drawn fresh each time)",
  "ランダムに選んだミノをHOLDしてセットします（↻ でそのたびに引き直します）": "Puts a random piece in Hold and sets up (↻ draws again each time)",
  "の1巡目を表示します": " first bag",
- "左右を反転する（L↔J・S↔Zも入れ替わります）": "Mirror left to right (L↔J and S↔Z swap too)",
  "複数パターンの並べ方を、横並び／縦並びで切り替えます": "Switch between laying the patterns out side by side or stacked",
  "次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）": "Shows the next bag (press again to cycle when there are several second bags)",
  "最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。": "A Perfect Clear finished with a vertical I for a Tetris (QPC).",
@@ -237,5 +236,6 @@
  "—（おじゃまや欠けがあるので開幕からは組めません）": "— (contains garbage or stray cells, so it cannot be built from the opening)",
  "—（{0}ミノは多すぎて数えきれません）": "— ({0} pieces is too many to count)",
  "—（計算が終わりませんでした）": "— (the calculation did not finish)",
- "—（計算できませんでした）": "— (could not be calculated)"
+ "—（計算できませんでした）": "— (could not be calculated)",
+ "左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます": "Opens the mirrored shape in a second window. Close it and this button comes back."
 }

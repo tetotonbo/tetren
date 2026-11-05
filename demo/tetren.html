@@ -851,7 +851,7 @@ const I18N_EN = {
 "OFFのときはダブルタップで変更します。マウスをつないでいるときはシングルクリック／ダブルクリックになります": "When off, double-tap to change it. With a mouse connected it becomes single-click / double-click.",
 "ONにすると、1回のせりあがりで下の割合に従って段数を決めます": "When on, the number of rows per rise follows the chances below",
 "ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）": "When on, pressing Restore opens the piece picker. The piece you choose starts in Hold and is removed from the first bag (Random is also available).",
-"ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。⇄ 反転 で切り替えなくても、元の形と反転した形を並べて見比べられます": "Turn it on and the mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip.",
+"ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。OFFのあいだは、窓の中の ⇄ 反転 を押せばその場で出せます": "Turn it on and the mirrored shape appears in its own window beside the template. While it is off, ⇄ Mirror inside the window opens it on the spot.",
 "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
 "ONにすると、手順と同じ置き方をしたときだけ、自動で次の手順へ進みます。違う置き方をしたときはそのままです（‹ › で自分でも動かせます）": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves (you can still step with ‹ ›).",
 "ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves.",
@@ -1410,9 +1410,9 @@ const I18N_EN = {
 "左右の DAS（効き始めまでの待ち時間）と ARR（連打間隔）を設定できるようにした": "DAS (the delay before auto-shift) and ARR (the repeat interval) can now be set.",
 "左右の効き始め（DAS）": "Delay before auto-shift (DAS)",
 "左右の連打間隔（ARR）": "Auto-shift interval (ARR)",
-"左右を反転する（L↔J・S↔Zも入れ替わります）": "Mirror left to right (L↔J and S↔Z swap too)",
 "左右を押してから自動で動き出すまでの待ち時間。": "Delay before auto-shift starts after you press left or right.",
 "左右キーを長押ししても自動連打が効かなくなることがある問題を修正": "Fixed auto-shift sometimes not kicking in when you held the left or right key.",
+"左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます": "Opens the mirrored shape in a second window. Close it and this button comes back.",
 "左右反転込み": "With mirror",
 "左右移動がブラウザのキーリピートと DAS/ARR の二重入力になっていたのをやめ、DAS/ARR に一本化した": "Left and right were being driven by both the browser key repeat and DAS/ARR; it is DAS/ARR alone now.",
 "左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Auto-shift speed uses the DAS/ARR settings under Other.",
@@ -1590,7 +1590,7 @@ const I18N_EN = {
 "設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる（14項目）": "Added a Display tab to the settings, which shows and hides each menu (14 items).",
 "設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加": "Added two switches under Rise right after locking, in the Other settings.",
 "設定の「その他」に 「ミノ設置直後にせりあがり」 を追加": "Added Rise right after locking to the Other settings.",
-"設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。反転した形を出しているほうの窓は、枠と見出しの色を変えて ⇄ 反転 の印をつける。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip. Whichever window shows the mirrored shape gets an amber frame and a ⇄ Mirror tag, so you can tell them apart at a glance. The setting is remembered, so it comes back the next time you open a template.",
+"設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, with an amber frame and a ⇄ Mirror tag so you can tell the two apart at a glance. ⇄ Mirror inside the window now opens that second window instead of flipping the shape in place, and is hidden while the second window is open. The setting is remembered, so it comes back the next time you open a template.",
 "設定の「その他」にパフェ探索の項目を追加": "Added the PC finder settings under Other.",
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
@@ -2569,7 +2569,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。反転した形を出しているほうの窓は、枠と見出しの色を変えて ⇄ 反転 の印をつける。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
@@ -3072,7 +3072,7 @@ if (document.readyState === 'loading') {
 
       <div class="opt-row">
         <span class="opt-label">テンプレートの反転を別の窓にも出す
-          <span class="opt-note">ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。⇄ 反転 で切り替えなくても、元の形と反転した形を並べて見比べられます</span></span>
+          <span class="opt-note">ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。OFFのあいだは、窓の中の ⇄ 反転 を押せばその場で出せます</span></span>
         <label class="tgl-row" style="flex:0 0 auto;">
           <input type="checkbox" id="optTplMirrorWin"
             onchange="setTplMirrorWin(this.checked)">
@@ -8308,7 +8308,7 @@ function deleteTemplate(id) {
 const TPL_CELL = 20;    // 既定のマスの大きさ（窓は小さめに出す。あとで広げられる）
 const TPL_PROB_H = 34;  // 絵の下に出す「組める確率」の行の高さ（行の高さ28＋すき間）
 const TPL_MIN_W = 340;  // 下のボタンが収まる最小の幅
-let tplCur = null, tplFlip = false, tplCell = TPL_CELL, tplCell2 = TPL_CELL;
+let tplCur = null, tplCell = TPL_CELL, tplCell2 = TPL_CELL;
 let tplBase = null;   // 2巡目に進んだとき、1巡目で組んだ形（灰色で描く）
 let tplHist = [];     // 巡を行き来するための履歴 [{ t, base }]
 let tplFwdIdx = 0;    // 「次の巡」を押した回数（2巡目が複数あるとき順に見る）
@@ -8334,7 +8334,7 @@ function renderTemplateRow() {
 function openTemplate(id) {
   const t = tplAll().find(x => x.id === id);
   if (!t) return;
-  tplCur = t; tplFlip = false; tplBase = null;
+  tplCur = t; tplBase = null;
   tplHist = []; tplFwdIdx = 0; tplManual = false;
   tplCell = tplFitCell(t);   // 画面からはみ出さない大きさで出す
   closeShot();
@@ -8355,7 +8355,8 @@ function openTemplate(id) {
     '<div class="pc-body">' +
       '<div class="pc-cv-wrap"></div>' +
       '<div class="pc-nav">' +
-        '<button onclick="flipTemplate();this.blur()" title="左右を反転する（L↔J・S↔Zも入れ替わります）">⇄ 反転</button>' +
+        '<button id="tplFlipBtn" onclick="setTplMirrorWin(true);this.blur()" ' +
+          'title="左右反転した形を、もう1枚の窓に出します。閉じると、このボタンがまた出ます">⇄ 反転</button>' +
         '<button onclick="toggleTplVertical();this.blur()" title="複数パターンの並べ方を、横並び／縦並びで切り替えます">並び</button>' +
         '<button id="tplPrevBtn" onclick="tplGoPrev();this.blur()" title="ひとつ前の巡に戻ります">◀ 前の巡</button>' +
         '<button id="tplNextBtn" onclick="tplGoNext();this.blur()" title="次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）">次の巡 ▶</button>' +
@@ -8481,7 +8482,6 @@ function closeTemplate() {
   window.removeEventListener('pointermove', fitTplCanvas);
   window.removeEventListener('pointerup',   fitTplCanvas);
 }
-function flipTemplate() { tplFlip = !tplFlip; drawTemplate(); }
 // ===== テンプレートが組めるかの判定 =====
 // 「いまのツモ順（操作中＋NEXT＋この巡の残り）で、カンペどおりに置けるか」を見る。
 // 置き方の列挙はパフェ探索と同じ仕組みを使うので、回し入れが要る置き方も拾える。
@@ -9000,8 +9000,7 @@ function tplRawPats(t) { return t.pats ? t.pats : [t.rows]; }
 function tplMirror(rows) { return rows.map(r => [...r].reverse().map(ch => TPL_MIRROR[ch] || ch).join('')); }
 function tplPats() {
   // 複数パターンがあるテンプレートは pats に入っている
-  const list = tplRawPats(tplCur);
-  return tplFlip ? list.map(tplMirror) : list;
+  return tplRawPats(tplCur);
 }
 function tplRows() { return tplPats()[0]; }   // 1枚目（判定や確認に使う）
 // その窓の中身に合うマスの大きさ。窓が無ければ null
@@ -9092,12 +9091,14 @@ function tplSetTitle(id, flipped) {
 }
 function drawTemplate() {
   if (!tplCur) return;
-  const pats = tplPaintWin('tplWin', tplFlip, tplCell);
+  const pats = tplPaintWin('tplWin', false, tplCell);
   if (!pats) return;
-  tplSetTitle('tplTitle', tplFlip);
+  tplSetTitle('tplTitle', false);
   // 別画面は向きだけ逆。確率は左右反転しても同じ数字なので、鍵をまとめて二度計算しない
-  if (tplPaintWin('tplWin2', !tplFlip, tplCell2)) tplSetTitle('tplTitle2', !tplFlip);
+  if (tplPaintWin('tplWin2', true, tplCell2)) tplSetTitle('tplTitle2', true);
   tplProbWant(pats);
+  const fb = document.getElementById('tplFlipBtn');   // 別画面が出ていれば押す意味が無い
+  if (fb) fb.style.display = opts.tplMirrorWin ? 'none' : '';
   const jb = document.getElementById('tplJudgeBtn');
   if (jb) jb.classList.toggle('on', !!opts.tplJudge);
   const pb = document.getElementById('tplPrevBtn');
@@ -9105,7 +9106,7 @@ function drawTemplate() {
   const nb = document.getElementById('tplNextBtn');
   if (nb) nb.disabled = !tplNextIds().length;
   const el = document.getElementById('tplLabel');
-  if (el) el.textContent = tplCur.name + (tplFlip ? '（反転）' : '')
+  if (el) el.textContent = tplCur.name
                          + (pats.length > 1 ? TF('　{0}パターン', pats.length) : '');
 }
 

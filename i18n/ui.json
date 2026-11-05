@@ -332,5 +332,5 @@
  "ミノが多いので時間がかかります（数十秒）。押すと裏で計算します": "This has a lot of pieces, so it takes a while (tens of seconds). Press to calculate it in the background.",
  "別画面を閉じる": "Close the second window",
  "テンプレートの反転を別の窓にも出す": "Show the mirrored template in a second window",
- "ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。⇄ 反転 で切り替えなくても、元の形と反転した形を並べて見比べられます": "Turn it on and the mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip."
+ "ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。OFFのあいだは、窓の中の ⇄ 反転 を押せばその場で出せます": "Turn it on and the mirrored shape appears in its own window beside the template. While it is off, ⇄ Mirror inside the window opens it on the spot."
 }
