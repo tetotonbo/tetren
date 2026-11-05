@@ -379,6 +379,14 @@ button, label, .ctrl-lbl, [data-pos] {
 }
 .sw-btn:hover { background:#4b5563; }
 .sw-btn.on { background:#4f46e5; color:#fff; }
+
+/* 反転した形を出している窓は、ひと目で分かるように色を変える */
+.shot-win.tpl-flipped { border-color:#b45309; }
+.shot-win.tpl-flipped .shot-bar { background:#3b2a15; }
+.sw-flip {
+  margin-left:6px; padding:1px 6px; border:1px solid #b45309; border-radius:3px;
+  background:rgba(180,83,9,0.3); color:#fbbf24; font-weight:700; white-space:nowrap;
+}
 .shot-body {
   flex:1; min-height:0; display:flex; align-items:center;
   justify-content:center; background:#000;
@@ -1582,7 +1590,7 @@ const I18N_EN = {
 "設定に 「表示」タブ を追加。各メニューをON/OFFで出し入れできる（14項目）": "Added a Display tab to the settings, which shows and hides each menu (14 items).",
 "設定の「その他」、ミノ設置直後にせりあがりの下に 2つのスイッチ を追加": "Added two switches under Rise right after locking, in the Other settings.",
 "設定の「その他」に 「ミノ設置直後にせりあがり」 を追加": "Added Rise right after locking to the Other settings.",
-"設定の「その他」に テンプレートの反転を別の窓にも出す を追加。ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Show the mirrored template in a second window switch under Other in the settings. Turn it on and the mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip. The setting is remembered, so it comes back the next time you open a template.",
+"設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。反転した形を出しているほうの窓は、枠と見出しの色を変えて ⇄ 反転 の印をつける。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, so you can compare both without toggling ⇄ Flip. Whichever window shows the mirrored shape gets an amber frame and a ⇄ Mirror tag, so you can tell them apart at a glance. The setting is remembered, so it comes back the next time you open a template.",
 "設定の「その他」にパフェ探索の項目を追加": "Added the PC finder settings under Other.",
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
@@ -2561,7 +2569,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
-<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加。ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.06.0 / 2.05.0</span><span class="vl-date">2026-11-04</span></div><ul><li>設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。⇄ 反転 で切り替えなくても元の形と反転した形を見比べられる。反転した形を出しているほうの窓は、枠と見出しの色を変えて ⇄ 反転 の印をつける。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.05.0 / 2.04.0</span><span class="vl-date">2026-11-04</span></div><ul><li>テンプレートの窓に 組める確率 を追加。「ゲーム開始から、その形を組み切れる確率」を出す。見えるのは 操作中＋NEXT5個 の6個までで、その先は見えない前提。「そのまま」は登録した地形だけ、「左右反転込み」は左右反転した形も候補に残したまま数えたもの。計算はWeb Workerに投げるので、出ているあいだも操作できる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.2 / 2.03.3</span><span class="vl-date">2026-11-03</span></div><ul><li>キーを押しっぱなしにしたときに、キーリピートで何度も効いてしまうのをどの操作でも止めた。HOLD・ミノを捨てる・1手戻す・リスタート・Ctrl+Z が対象。押した最初の1回だけ効く</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.04.1 / 2.03.2</span><span class="vl-date">2026-11-03</span></div><ul><li>ハードドロップのキーを押しっぱなしにすると、キーリピートで何度も落ちていたのを修正。押した最初の1回だけ効く</li></ul></div>
@@ -8955,9 +8963,7 @@ function tplGoPrev() {
   tplAfterChange();
 }
 function tplAfterChange() {
-  const ti = document.getElementById('tplTitle');
-  if (ti) ti.textContent = tplCur.name;
-  drawTemplate();
+  drawTemplate();   // 見出しも drawTemplate で付け直す（反転の印ごと）
   fitTplCanvas();   // 窓の外枠はそのままで、中の絵だけ大きさを合わせる
 }
 function tplNextHit() {
@@ -9070,15 +9076,27 @@ function tplPaintWin(id, flip, cell) {
   });
   return pats;
 }
+// 窓の見出し。反転した形を出している窓には印をつけて、ひと目で分かるようにする
+function tplSetTitle(id, flipped) {
+  const el = document.getElementById(id);
+  if (!el || !tplCur) return;
+  el.textContent = tplCur.name;
+  if (flipped) {
+    const b = document.createElement('span');
+    b.className = 'sw-flip';
+    b.textContent = '\u21c4 反転';
+    el.appendChild(b);
+  }
+  const win = el.closest('.shot-win');
+  if (win) win.classList.toggle('tpl-flipped', !!flipped);
+}
 function drawTemplate() {
   if (!tplCur) return;
   const pats = tplPaintWin('tplWin', tplFlip, tplCell);
   if (!pats) return;
+  tplSetTitle('tplTitle', tplFlip);
   // 別画面は向きだけ逆。確率は左右反転しても同じ数字なので、鍵をまとめて二度計算しない
-  if (tplPaintWin('tplWin2', !tplFlip, tplCell2)) {
-    const t2 = document.getElementById('tplTitle2');
-    if (t2) t2.textContent = tplCur.name + (tplFlip ? '' : '（反転）');
-  }
+  if (tplPaintWin('tplWin2', !tplFlip, tplCell2)) tplSetTitle('tplTitle2', !tplFlip);
   tplProbWant(pats);
   const jb = document.getElementById('tplJudgeBtn');
   if (jb) jb.classList.toggle('on', !!opts.tplJudge);
@@ -9439,7 +9457,7 @@ const OPT_DEFAULTS = {
   tabletTouch: false, // 盤面をスライド／タップでミノを操作する（タブレット向け・既定OFF）
   tplJudge: true,     // テンプレートが今のミノで組めるかを判定する
   tplVertical: false, // 複数パターンを縦に並べる（既定は横）
-  tplMirrorWin: false,// 反転した形を、もう1枚の窓に並べて出す
+  tplMirrorWin: true, // 反転した形を、もう1枚の窓に並べて出す
   pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
   pcAtkLast: false,   // パフェを決める最後の1手を火力に数えるか
   pcFollow: true,     // パフェ手順を、置いたミノに合わせて自動で進める
