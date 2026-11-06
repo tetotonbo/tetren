@@ -494,9 +494,6 @@ button, label, .ctrl-lbl, [data-pos] {
 .hp-tbl td { color:#d1d5db; }
 /* キーの欄は折り返さずに1行で見せる */
 .hp-tbl th.hp-k { width:26%; color:#e5e7eb; white-space:nowrap; }
-/* 使い方のボタンは、はじめて来た人の目に留まるよう設定と色を分ける */
-#helpBtn { background:#0284c7; margin-bottom:8px; }
-#helpBtn:hover { background:#0369a1; }
 
 /* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
 #dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay, #tdOverlay, #swapOverlay, #helpOverlay {
@@ -1024,6 +1021,7 @@ const I18N_EN = {
 "「{0}」を削除します。もう一度 × を押してください": "This will delete “{0}”. Press × once more to confirm.",
 "「{0}」を登録しました": "Saved as “{0}”",
 "「⇄ 反転」 を追加。いまの地形を左右反転する": "Added ⇄ Mirror, which flips the current board left to right.",
+"「❓ 使い方」ボタンを ⚙ 設定 の下へ移し、色もほかのボタンと同じにそろえた（PC版・スマホ版とも）": "The ❓ How to use button moved below ⚙ Settings, and it now has the same colour as the other buttons (both the desktop and mobile builds).",
 "「❓ 使い方」ボタンを追加（PC版は ⚙ 設定 の上、スマホ版は左の列の ⚙ 設定 の上）。「はじめに」「画面の見かた」「やりたいこと別」の3つのタブで、ミノの動かし方・地形の作り方・やり直し方、どの枠に何があるか、やりたいことから使うボタンを引く表を出す。使わない人は設定の「表示」で隠せる": "Added a ❓ How to use button (above ⚙ Settings on desktop, and above ⚙ Settings in the left column on mobile). Its three tabs — Start here, Screen guide and What do you want to do? — cover how to move a piece, build a board and start over, what sits in each panel, and a table that takes you from what you want to practise to the button for it. It can be hidden under Display in the settings.",
 "「このサイトについて」 を追加（PC版・スマホ版・入口ページ）": "Added About this site (desktop, mobile and the entry page).",
 "「このサイトについて」に バージョン履歴 を追加。各版の変更点を一覧で見られる": "Added a version history to About this site, listing what changed in each release.",
@@ -2200,9 +2198,8 @@ if (document.readyState === 'loading') {
 
     <!-- キーコンフィグ -->
     <div class="panel" style="width:108px;">
-      <button id="helpBtn" class="kc-open-btn" data-ui="help" style="margin-top:0;"
-        onclick="openHelp()" title="はじめての方へ。基本の操作と、どのボタンが何をするかの案内">❓ 使い方</button>
       <button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>
+      <button id="helpBtn" class="kc-open-btn" data-ui="help" onclick="openHelp()" title="はじめての方へ。基本の操作と、どのボタンが何をするかの案内">❓ 使い方</button>
       <button id="langBtn" class="kc-open-btn" data-ui="lang" style="background:#374151;"
         onclick="toggleLang()" title="Switch to English">English</button>
       <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
@@ -2962,6 +2959,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.1 / 2.08.1</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを ⚙ 設定 の下へ移し、色もほかのボタンと同じにそろえた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.09.0 / 2.08.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「使い方」に 「ボタンの説明」のタブ を追加。左の列・真ん中・右の列（スマホ版は左の列・盤面の下）の順に、ボタンとスイッチを1つずつ表で説明する。文言はボタンに付いているツールチップと同じものを使った</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.08.0 / 2.07.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを追加（PC版は ⚙ 設定 の上、スマホ版は左の列の ⚙ 設定 の上）。「はじめに」「画面の見かた」「やりたいこと別」の3つのタブで、ミノの動かし方・地形の作り方・やり直し方、どの枠に何があるか、やりたいことから使うボタンを引く表を出す。使わない人は設定の「表示」で隠せる</li><li>はじめて開いた人には、この案内を一度だけ自動で出すようにした。2回目からは出ないので、あとはボタンから開く</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.07.0 / 2.06.0</span><span class="vl-date">2026-11-05</span></div><ul><li>テンプレートの窓から 並び と 削除 のボタンを外し、絵に場所を回した。複数パターンの並べ方（横／縦）は、絵が大きくなるほうを窓ごとに自動で選ぶ。削除はカンペ画像のテンプレート一覧から、名前の右の × を2回押して行う。あわせて余白とボタンを詰め、マスの既定を 20 → 24px にして、窓に占める絵の割合を広げた（5段の形で 52% → 60%）。◀ 前の巡・次の巡 ▶ は色を落として控えめにした</li><li>別画面を出していて2枚が画面に入らないときは、両方を縮めて上下に収めるようにした。これまでは少しずらして重ねていた</li></ul></div>
@@ -10398,7 +10396,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.08.0';
+const APP_VERSION = '2.08.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

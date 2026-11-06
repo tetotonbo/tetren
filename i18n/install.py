@@ -43,10 +43,10 @@ def install(path, btn, after, title_en, over=None, sel=None):
     return len(s)
 
 n1 = install(os.path.join(ROOT, 'tetren.html'), BTN_PC,
-             '''<button class="kc-open-btn" onclick="openConfig()" style="margin-top:0;" title="キーコンフィグ・スキン・その他の設定を開く">⚙ 設定</button>\n''',
+             '''<button id="helpBtn" class="kc-open-btn" data-ui="help" onclick="openHelp()" title="はじめての方へ。基本の操作と、どのボタンが何をするかの案内">❓ 使い方</button>\n''',
              'Tetren | Tetris practice tool')
 n2 = install(os.path.join(ROOT, 'tetren_mobile.html'), BTN_SP,
-             '''<button class="side-btn" onclick="openConfig()" style="margin-top:2px;">⚙ 設定</button>\n''',
+             '''<button class="side-btn" id="helpBtn" data-ui="help" onclick="openHelp()" style="margin-top:2px;" title="はじめての方へ。基本の操作と、どのボタンが何をするかの案内">❓ 使い方</button>\n''',
              'Tetren (mobile) | Tetris practice tool',
              # スマホ版は左の列が細いので、はみ出す語だけ短くする
              {'カンペ画像': 'Reference'},
