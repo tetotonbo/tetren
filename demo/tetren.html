@@ -825,6 +825,7 @@ const I18N_EN = {
 "1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた": "Removed the handling for other games added in 1.4.0 and went back to Puyo Puyo Tetris only. Dropping the empty-cell test had made almost every cell on the board register as a piece.",
 "100％にそろえる": "Normalize to 100%",
 "10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります": "Gravity speeds up every 10 lines. Once it reaches 20G it returns to 15G and the lock delay shortens instead.",
+"180° 180度回転": "180° Rotate 180°",
 "180度回転": "Rotate 180°",
 "180度回転を足した。操作ボタンの回転の行に 180° を追加し、キーボード（既定 D）とコントローラからも使える。先行回転（IRS）でも効く。キックは PC版と同じ TETR.IO の SRS+ に合わせた。ボタンが要らないときは設定の「操作」で消せる（消すと左回転・右回転が横に広がる）": "Added 180° rotation. There is now a 180° button in the rotation row, and it also works from the keyboard (D by default) and a controller, as well as with initial rotation (IRS). The kicks match TETR.IO SRS+, same as the desktop version. You can hide the button from Controls in the settings, which makes rotate left / rotate right wider.",
 "180度回転を足した。既定のキーは D（キーコンフィグで変えられる）。コントローラは未割り当てなので、使う場合は設定から割り当てる。キックは TETR.IO の SRS+ に合わせた（180度回転はガイドラインに規定が無いため）": "Added 180° rotation. The default key is D, and you can change it in the key settings. It is unassigned on a controller, so assign it there if you want it. The kicks follow TETR.IO’s SRS+, since the guideline does not define any for 180° turns.",
@@ -840,6 +841,8 @@ const I18N_EN = {
 "1巡目の差し替えを firstBagTypes に一本化し、単体・複数を同じ仕組みで扱うようにした": "Unified first-bag substitution into firstBagTypes so single and multiple pieces go through the same path.",
 "1手戻す": "Undo one move",
 "1欠け ボタンを DPCセットの下に追加（PC版・スマホ版）": "Added a Custom bag button under DPC setup (desktop and mobile).",
+"2回タップでそのミノを変更できます": "Tap it twice to change that piece.",
+"2回タップでミノを変更できます": "Tap it twice to change the piece.",
 "2回目": "2nd",
 "2回目から": "from the 2nd",
 "2回目の段数": "Second rise",
@@ -997,7 +1000,11 @@ const I18N_EN = {
 "—（おじゃまや欠けがあるので開幕からは組めません）": "— (contains garbage or stray cells, so it cannot be built from the opening)",
 "—（計算が終わりませんでした）": "— (the calculation did not finish)",
 "—（計算できませんでした）": "— (could not be calculated)",
+"← → で左右、↓ で速く落とす、↺ ↻ で回転、⇪ でHOLD、⬇ で一気に落として置く": "← → move, ↓ drops faster, ↺ ↻ rotate, ⇪ holds, ⬇ drops and locks at once.",
+"↓ ソフト": "↓ Soft",
 "↓キーを押しっぱなしにしたときの落ちる速さ（5が標準）": "How fast pieces fall while you hold the Down key (5 is standard).",
+"↺ 左回転": "↺ Rotate CCW",
+"↻ 右回転": "↻ Rotate CW",
 "↻（再）ボタンを複数選択に対応。直前が複数選択ならその組み合わせで、単体ならそのミノでやり直す": "The ↻ button now handles multiple pieces: it repeats the last combination, or the single piece if that is what you chose.",
 "⇄ 反転": "⇄ Mirror",
 "◀ 前": "◀ Prev",
@@ -1037,6 +1044,7 @@ const I18N_EN = {
 "「ライン消去中はせりあがりしない」を、相殺がOFFでも切り替えられるようにした": "No garbage while clearing lines can now be toggled even with Offset off.",
 "「リセット」で開幕の状態に戻ります。「地形のみ」「ミノ順のみ」は片方だけ戻します。": "Reset takes you back to the opening. Board only and Piece order only reset just one of the two.",
 "「予め選択」のときに最初からHOLDへ入れるミノ。ランダムなら復元のたびに引き直します": "The piece placed in Hold when Preset is chosen. With Random it is drawn again on every Restore.",
+"「使い方」に 「ボタンの説明」のタブ を追加。左の列・真ん中・右の列（スマホ版は左の列・盤面の下）の順に、ボタンとスイッチを1つずつ表で説明する。文言はボタンに付いているツールチップと同じものを使った": "Added a Button guide tab to How to use. Going left column, middle, right column (left column and below the board on mobile), it explains every button and switch one by one in a table, using the same wording as the tooltips on the buttons themselves.",
 "「候補を複数出す」をOFFにすると、その下の3つをグレーにして触れなくするようにした": "Turning off Show multiple solutions now greys out and disables the three settings below it.",
 "「復元」でミノの順番も引き直すようにした": "Restore now redraws the piece order as well.",
 "「復元したときのHOLD」を「復元した時にHOLDを選択する」のON/OFFスイッチに変更": "Replaced Hold on restore with an on/off switch, Choose the Hold piece on Restore.",
@@ -1073,6 +1081,7 @@ const I18N_EN = {
 "このテンプレートを削除します": "Delete this template",
 "この地形を取り込む": "Import this board",
 "この時間で終わらなければ打ち切ります。地形がほとんど無い盤面ほど時間がかかります": "The search stops after this time. The emptier the board, the longer it takes.",
+"この案内を開きます": "Opens this guide.",
 "この画像を閉じる": "Close this image",
 "この間は、設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONになります。": "During this, Rise right after locking and Offset are on regardless of your settings.",
 "この間は設定にかかわらず「ミノ設置直後にせりあがり」と「相殺」がONです。": "During this, Rise right after locking and Offset are on regardless of your settings.",
@@ -1110,6 +1119,7 @@ const I18N_EN = {
 "せりあがり方": "Garbage pattern",
 "せりあがり方の既定を 「ミノ」 から 「秒」 に変更。相殺が効くのは「秒」のほうなので、PC版と揃えた。一度でも切り替えたことがある人の設定はそのまま": "The default garbage trigger changed from Piece to Seconds. Countering only applies to the Seconds type, so this matches the desktop default. Anyone who has switched it before keeps their own setting.",
 "せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）": "Chance that the hole matches the previous one (10% is fully random)",
+"せりあがるきっかけを、置いたミノの数にするか、経過した秒数にするかを選びます": "Chooses what makes the garbage rise: the number of pieces you place, or the seconds that pass.",
 "そのまま": "As saved",
 "その他": "Other",
 "その他の設定を初期状態に戻す": "Reset the other settings to default",
@@ -1139,7 +1149,7 @@ const I18N_EN = {
 "もう一度": "Again",
 "やったー！": "Nice!",
 "やめる": "Stop",
-"やりたいこと別": "What do you want to do?",
+"やりたいこと別": "By task",
 "やり直す": "Starting over",
 "アウトライン": "Outline",
 "オート（なぞった形のミノ色になる）": "Auto (uses the colour of the shape you draw)",
@@ -1174,6 +1184,7 @@ const I18N_EN = {
 "キーコンフィグ・スキン・その他の設定を開く": "Open key config, skins and other settings",
 "キーボード": "Keyboard",
 "キーボードで操作します。画面のボタンで動かしたいときは、盤面の下の「ボタン操作 ▼」を押すと出てきます。": "Use the keyboard. If you would rather press buttons, On-screen buttons ▼ below the board brings up a control pad.",
+"キーボードで操作するPC版の画面に切り替える": "Switches to the desktop layout, made for playing with a keyboard.",
 "キーボードをつないだときの割り当てです。欄を押してから、割り当てたいキーを押してください。": "Assignments for a connected keyboard. Click a field, then press the key you want.",
 "クリア": "Clear",
 "クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）": "Click to choose a file  /  or paste (Windows: Ctrl+V, Mac: ⌘V)",
@@ -1303,6 +1314,7 @@ const I18N_EN = {
 "ボタンの位置や大きさは、左の「配置編集」をONにすると変えられます。": "Turn on Edit layout on the left to move the buttons and change their size.",
 "ボタンの位置や大きさを変えたい": "Move or resize the buttons",
 "ボタンの割り当てを初期状態に戻す": "Reset the button assignments to default",
+"ボタンの説明": "Button guide",
 "ボタンを押す…": "Press a button...",
 "ボタンを長押しすると、そのボタンの説明が出ます。使わないボタンは ⚙ 設定 の「表示」で隠せます。": "Press and hold a button to see what it does. Buttons you never use can be hidden in ⚙ Settings → Display.",
 "ボタン操作": "On-screen buttons",
@@ -1325,6 +1337,7 @@ const I18N_EN = {
 "ミノの見た目を選びます。「ほぼ透明」「完全透明」は記憶して積む練習用で、HOLD/NEXTだけは見えるままにしてあります。": "Choose how pieces look. Nearly invisible and Invisible are for practising stacking from memory; HOLD and NEXT stay visible.",
 "ミノの設置時間": "Lock delay",
 "ミノの順番とHOLDだけ引き直します。盤面はそのまま": "Redraws the piece order and Hold only. The board stays as it is",
+"ミノを180度回します": "Rotates the piece 180°.",
 "ミノを1巡目から抜く": "Remove the piece from the first bag",
 "ミノを1巡目に残す": "Keep the piece in the first bag",
 "ミノを4倍の大きさにする": "Make the pieces four times bigger",
@@ -1338,6 +1351,7 @@ const I18N_EN = {
 "ミノを最初からHOLDに入れる": "Start with the piece in Hold",
 "ミノを置いたときの攻撃ぶんだけ、溜まっているせりあがりを打ち消します。OFFにすると打ち消さず、溜まったぶんがそのまま上がります": "Your attack cancels out pending garbage. When off, nothing is cancelled and all pending garbage rises.",
 "ミノを置いてから次が出るまでの待ち時間。0なら従来どおりすぐ出ます。ぷよぷよテトリス2は7Fです": "How long to wait between locking a piece and the next one appearing. 0 means it appears at once, as before. Puyo Puyo Tetris 2 uses 7F.",
+"ミノを預ける・取り出す": "Stores a piece, or takes it back.",
 "ミノ出現までの硬直（ARE）": "Entry delay (ARE)",
 "ミノ捨てる": "Discard",
 "ミノ捨てる・戻す": "Discard and undo",
@@ -1359,6 +1373,7 @@ const I18N_EN = {
 "ミノ欠け再セット": "Custom bag again",
 "ミノ設置": "Lock delay",
 "ミノ設置直後にせりあがり": "Rise right after locking",
+"ミノ設置／時間経過": "Pieces / Time",
 "ミノ選択画面に 「ランダム」ボタン を追加": "Added a Random button to the piece picker.",
 "ミノ選択画面に 複数選択スイッチ を追加（PC版・スマホ版）": "Added a multiple-selection switch to the piece picker (desktop and mobile).",
 "ミノ順のみ": "Piece order only",
@@ -1410,6 +1425,7 @@ const I18N_EN = {
 "何も抜かずに始めます。「開始」で始まります。": "Starts with nothing removed. Press Start to begin.",
 "何も抜きません": "Removes nothing",
 "何も選ばずに「開始」を押すと、ミノを抜かずに始めます。": "Press Start without choosing anything to begin with the full bag.",
+"何個ごと・何秒ごとにせり上げるかを決めます": "Sets how many pieces, or how many seconds, there are between each rise.",
 "作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした": "Such text now remembers its Japanese and English forms as a pair, so switching language afterwards still swaps it.",
 "使い方": "How to use",
 "保存した表示倍率が再読み込み後に効かない不具合を修正": "Fixed the saved zoom level not taking effect after a reload.",
@@ -1438,6 +1454,7 @@ const I18N_EN = {
 "別画面を出していて2枚が画面に入らないときは、両方を縮めて上下に収めるようにした。これまでは少しずらして重ねていた": "When the second window is open and the two do not fit, both are now shrunk and stacked instead of being offset and overlapped.",
 "別画面を閉じる": "Close the second window",
 "利用について": "Terms of use",
+"利用についての案内と、バージョン履歴を出します": "Shows the terms of use and the version history.",
 "制限時間": "Time limit",
 "制限時間で打ち切ったので、ほかにも手順があるかもしれません。": "The search hit the time limit, so there may be other solutions.",
 "前の候補": "Previous solution",
@@ -1447,6 +1464,7 @@ const I18N_EN = {
 "前回選んだ {0} ミノで、もう一度DPCセットします": "Run the DPC setup again with {0}, as last time",
 "前回選んだ {0} ミノを抜いて、もう一度ミノ欠けで始めます": "Run the custom bag again without {0}, as last time",
 "前回選んだミノで、もう一度DPCセットします": "Run the DPC setup again with the pieces you chose last time",
+"前回選んだミノで、もう一度セットし直します": "Sets it up again with the pieces you chose last time.",
 "前回選んだミノで、もう一度ミノ欠けで始めます": "Run the custom bag again with the same pieces",
 "割り当てを変えたい欄を押してから、コントローラのボタンを押してください。": "Click the field you want to change, then press a button on your gamepad.",
 "動き出したあと1マス進むごとの間隔。": "Interval per cell once it starts moving.",
@@ -1493,6 +1511,8 @@ const I18N_EN = {
 "地形操作（地形編集・カラー・取り込み）": "Board (edit, colour, import)",
 "地形編集": "Edit board",
 "地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）": "Removed the Colour heading shown while Edit board is on; the palette stays.",
+"地形編集がONのあいだは、クリック・ドラッグでブロックを置けます": "While Edit board is on, click or drag to place blocks.",
+"地形編集がONのあいだは、タップ・なぞりでブロックを置けます": "While Edit board is on, tap or swipe to place blocks.",
 "地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正": "Fixed the Edit board checkbox not reflecting the setting when you came back from the settings.",
 "地形編集の入り切りが保存されないのを修正": "Fixed the Edit board switch not being saved.",
 "地形編集の入切": "Toggle Edit board",
@@ -1558,6 +1578,7 @@ const I18N_EN = {
 "抜く数も種類もおまかせで決めます。「開始」で始まります。": "The count and the pieces are both chosen for you. Press Start to begin.",
 "抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する": "Choosing pieces after a count clears the count, and pressing Random clears the chosen pieces.",
 "抜く数を選んでからランダムに決める方式に変更": "You now choose how many to remove and the pieces are drawn at random.",
+"押している間だけ、盤面のタップ・なぞりでブロックを置けます。もう一度押すと切れます": "While it is on, tapping or swiping the board places blocks. Press it again to turn it off.",
 "掘って受けるか、相殺して返すかの練習に。秒数は0.1刻みで変えられます。": "For practising whether to dig or to offset and hit back. The time can be changed in 0.1 s steps.",
 "探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。": "The search always works on just the bottom (cleared rows + 4) rows.",
 "探索中…": "Searching...",
@@ -1565,7 +1586,9 @@ const I18N_EN = {
 "接地してから固定されるまで。0にすると接地した瞬間に固定されます": "Time from landing until the piece locks. At 0 it locks the moment it lands.",
 "接地してから固定されるまでの猶予。落下が1G以上のときに効きます": "Grace time from landing until the piece locks. It applies when gravity is 1G or more.",
 "接続中:": "Connected:",
+"描くブロックの色。A はオート（なぞった形のミノの色になります）": "The colour you draw with. A is auto: the block takes the colour of the shape you drew.",
 "操作": "Controls",
+"操作ボタン": "Control pad",
 "操作ボタン3つ（この地形を取り込む／自動検出しなおす／別の画像）を読み取り結果の下（右カラム）へ移動。縦に長い画像でもボタンを探さずに済むようにした": "Moved the three buttons (Import this board, Detect again, Another image) below the detected result in the right column, so you do not have to hunt for them with a tall image.",
 "操作ボタンに 180° を出します。消すと左回転・右回転が横に広がります。キーボード（既定 D）とコントローラの割り当ては、ボタンを消していても使えます": "Shows a 180° button among the controls. Hide it and rotate left / rotate right get wider. The keyboard (D by default) and controller bindings work whether or not the button is shown.",
 "操作中のミノ: {0}（ゴーストの真上から検出）": "Active piece: {0} (found just above the ghost)",
@@ -1604,6 +1627,7 @@ const I18N_EN = {
 "残ったミノから毎回ランダムに選ぶ": "Pick at random from the remaining pieces each time",
 "段": " rows",
 "決まったミノから始めたい": "Start from a particular piece",
+"消したライン数": "Lines cleared",
 "準理想形": "Near-ideal",
 "溜まり": "Pending",
 "溜まりが 30段以上になったら、相殺を待たずに一気に積んでゲームオーバーにする": "Once 30 or more rows are pending, they all rise at once without waiting for an offset, ending the game.",
@@ -1624,11 +1648,13 @@ const I18N_EN = {
 "画像を読み込めませんでした。": "The image could not be loaded.",
 "画面に出すメニューを選ぶ": "Choose which menus to show",
 "画面のどこでも、画像を貼り付ければカンペ画像として出るようにした": "Pasting an image anywhere on the page now opens it as a reference image.",
+"画面の文字を英語に切り替えます。もう一度押すと日本語に戻ります": "Switches the text to English. Press it again to go back to Japanese.",
 "画面の見かた": "Screen guide",
 "画面をすっきりさせたい": "Tidy up the screen",
 "画面上のON/OFFスイッチをすべて保存するようにした。ゴースト・軸表示・地形編集（PC版）を tetren_options に追加（連続HOLDは従来から保存済み）": "Every on-screen switch is now saved. Ghost, axis and Edit board (desktop) were added to tetren_options; infinite hold was already saved.",
 "画面上の操作ボタンを開閉する": "Show or hide the on-screen buttons",
 "番目のミノを変更": "Change piece no.",
+"盤面": "Board",
 "盤面が暗い場面でゴーストを検出できず、操作中のミノが地形として残っていたのを修正": "Fixed the ghost not being detected on a dark board, which left the active piece behind as part of the stack.",
 "盤面が空です。地形を作ってから押してください": "The board is empty. Build something first.",
 "盤面だけでなく NEXT/HOLD と 左メニュー の大きさも 50〜200％ で調整できるようにした": "NEXT/HOLD and the left menus can now be scaled between 50% and 200% as well as the board.",
@@ -1639,6 +1665,7 @@ const I18N_EN = {
 "盤面の下 … 操作ボタンと、ミノ捨てる・戻す": "Below the board — the control pad, plus Discard piece and Undo.",
 "盤面の下のボタンで操作します。← → で左右、↺ ↻ と 180° で回転、HOLD はミノを預ける・取り出す、DROP は一気に落として置く、です。": "Use the buttons below the board: ← → to move, ↺ ↻ and 180° to rotate, HOLD to store a piece or take it back, DROP to drop and lock at once.",
 "盤面の下端に予告を表示するようにした": "The warning is now shown at the bottom edge of the board.",
+"盤面の下（操作ボタン）": "Below the board (control pad)",
 "盤面の左右におじゃまの壁を作り、4列だけで練習する": "Walls off both sides so you practise in just four columns",
 "盤面の空きマスとおじゃまブロックに使っていた埋め込み画像2枚を削除し、同じ見た目をコードで描くようにした": "Dropped the two embedded images used for empty cells and garbage, and draw the same look in code.",
 "盤面の範囲をもう一度自動で検出する": "Detect the board area again",
@@ -1648,6 +1675,7 @@ const I18N_EN = {
 "盤面を大きくする（長押しで連続）": "Make the board bigger (hold to repeat)",
 "盤面を小さくする（長押しで連続）": "Make the board smaller (hold to repeat)",
 "盤面サイズ": "Board size",
+"盤面サイズ・NEXT/HOLD・メニュー": "Board size, NEXT/HOLD, Menu",
 "盤面サイズ・NEXT/HOLD・メニューの3つを 「配置編集」ONのときだけ表示するようにした": "Board size, NEXT/HOLD and menus are now shown only while Edit layout is on.",
 "盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする": "Reset the board, piece order, B2B and the rest to the state at the start of a game",
 "盤面下の予告に、せりあがりまでの残り秒数を「次」と「溜まり」の間に出すようにした（TD中空け対策・時間経過タイプの両方）": "The warning below the board now shows the seconds until the next rise, between Next and Pending (for both TD defense and the over-time type).",
@@ -1664,6 +1692,7 @@ const I18N_EN = {
 "秒後に {0}": "{0} in",
 "穴は、一度に複数段あがるときは70％で同じ列に続き、次のせりあがりでは10％（ランダム）です。": "When several rows rise at once, the hole stays in the same column 70% of the time; on the next rise it is 10% (random).",
 "穴継続率": "Hole repeat",
+"穴継続率 ‹ ›": "Hole repeat ‹ ›",
 "空にする": "Clear board",
 "窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）": "The window sizes itself so it never runs off the screen, including on phones.",
 "立体": "3D",
@@ -1683,10 +1712,12 @@ const I18N_EN = {
 "自動検出しました。ズレていたら枠をドラッグ、角で大きさを調整できます。": "Detected automatically. Drag the frame to move it, or the corners to resize.",
 "自動検出できませんでした。枠を盤面（10列×20段）に合わせてください。": "Could not detect it. Line the frame up with the board (10 columns × 20 rows).",
 "自己ベスト更新！　T キーでもう一度": "New best!  Press T to try again",
+"自然に落ちる速さを決めます（0G＝落ちない、20G＝1フレームで最下段）": "Sets how fast pieces fall by themselves (0G = not at all, 20G = to the bottom in one frame).",
 "自由落下の一時停止": "Pause free fall",
 "自由落下を再開する": "Resume free fall",
 "自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）": "While free fall is paused, the G value is no longer struck through; the icon colour shows it instead.",
 "自由落下を止める（落下設定の値はそのまま）": "Stop the piece falling on its own (the gravity value stays)",
+"色（A・おじゃま・各ミノ）": "Colour (A, garbage, each piece)",
 "英語に切り替えるとミノを操作できなくなり、スマホ版の表示も崩れていたのを修正。言語の仕組みを本体スクリプトより後ろに置いていたため、初期化の途中で止まっていた": "Fixed pieces becoming uncontrollable in English and the mobile layout breaking. The language code sat after the main script, so initialisation stopped part way through.",
 "英語のときは RENボタンの表記を C4W にした": "The REN button reads C4W in English.",
 "英語表示のあいだは「言語切り替え」を隠せないようにした（隠すと日本語に戻す手段が無くなるため）。設定の「表示」でもその行はグレーにして触れなくしている。日本語表示のときはこれまで通り隠せる": "The Language button can no longer be hidden while the site is in English, since hiding it would leave no way back to Japanese. Its row in the Display settings is greyed out as well. In Japanese it can still be hidden as before.",
@@ -1695,6 +1726,7 @@ const I18N_EN = {
 "落下設定": "Gravity",
 "落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）": "Gravity — how fast pieces fall by themselves (0G = not at all, 20G = straight to the bottom).",
 "落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）。⏸ は自由落下だけ止めます": "Gravity — how fast pieces fall by themselves (0G = not at all, 20G = straight to the bottom). ⏸ stops only the falling.",
+"落下設定 ‹ ›": "Gravity ‹ ›",
 "落下設定を「デザイン」枠から独立させ、HOLDの直下へ移動": "Pulled Gravity out of the Display panel and moved it directly under HOLD.",
 "落下速度の ‹ › を長押しで連続変更できるようにした（PC版・スマホ版とも）": "Holding ‹ or › now changes the gravity continuously (desktop and mobile).",
 "落下速度をリセット後もページを閉じても保持するようにした（tetren_grav に保存）": "The gravity setting now survives a reset and closing the page (saved in tetren_grav).",
@@ -1710,6 +1742,7 @@ const I18N_EN = {
 "複数段にする": "Multi-row rise",
 "複数段のときの穴継続率": "Hole repeat for multi-row",
 "複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順": "How multiple solutions are ordered. Attack counts T-Spins, Tetrises, REN and B2B and sorts by the most garbage sent (the final piece of the Perfect Clear is not counted); ties go to the fewest soft drops. Speed sorts by the fewest slides and spins.",
+"見つかったパーフェクトクリアの置き方を、順番に見られる窓を出します": "Opens a window that steps through the perfect clear it found.",
 "覚えた地形に戻し、ミノの順番も引き直します": "Go back to the saved board and redraw the piece order",
 "言語切り替え": "Language",
 "計算中…": "Calculating…",
@@ -1779,15 +1812,18 @@ const I18N_EN = {
 "選んだミノを最初の1巡から抜いて、ゲームを最初から始めます": "Removes the chosen pieces from the first bag and starts the game over",
 "都度選択": "Ask each time",
 "配置を": "Layout",
+"配置を元に戻す": "Reset layout",
 "配置編集": "Edit layout",
 "配置編集 を追加。「ボタン操作」で開く操作ボタンの配置を自分で決められる": "Added Edit layout, which lets you arrange the on-screen buttons yourself.",
 "配置編集で 「地形のみ」「ミノ順のみ」が動かせなかったのを修正（data-pos の付け忘れ）": "Fixed Board only and Piece order only not being draggable in Edit layout (a missing data-pos).",
 "配置編集で ボタンの大きさも変えられる ようにした": "Edit layout can now resize the buttons as well.",
 "配置編集でボタンを動かすたびに盤面の大きさが変わってしまう問題を修正": "Fixed the board resizing every time you moved a button in Edit layout.",
 "配置編集でボタンを動かすと、動かしていないボタンが詰めてきて重なることがあったのを修正。動かしたボタンの場所を元の位置に残すようにした。あわせて、ボタンを動かしても盤面の大きさは変わらなくなった（大きくしたいときは「盤面サイズ」で）": "Fixed buttons you had not touched sliding over and overlapping when you moved one in Edit layout: the space a moved button leaves behind is now kept. As a result the board no longer changes size when you move buttons — use Board size if you want it bigger.",
+"配置編集で動かしたボタンを、元の位置と大きさに戻します": "Puts the buttons you moved with Edit layout back to their original place and size.",
 "配置編集で動かす単位をグループからボタン1個ずつに変更": "Edit layout now moves one button at a time instead of whole groups.",
 "配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう": "Added a Snap switch to Edit layout. With it on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen like a magnet, and resizing snaps to the other buttons’ dimensions as well.",
 "配置編集のスイッチを左上の「デザイン」の枠へ移動した": "Moved the Edit layout switch into the Display panel at the top left.",
+"配置編集をONにすると出ます。盤面・NEXT/HOLD・左のボタンの大きさを変えられます": "These appear when Edit layout is on. They change the size of the board, NEXT/HOLD and the buttons on the left.",
 "配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した": "Moved the Edit layout switch outside the on-screen buttons, where it is always visible.",
 "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
 "閉じる": "Close",
@@ -1797,13 +1833,15 @@ const I18N_EN = {
 "開幕テンプレートに 山岳積み2号 / はちみつ砲 / 迷走砲 を追加（DT砲と合わせて4つ）": "Added Mountain Stack #2, Hachimitsu and the Meiso Cannon to the opener templates, four with the DT Cannon.",
 "開幕テンプレート（1巡目の置き方）": "Opener templates (first-bag placement)",
 "開幕時に組める確率": "Chance of building it from the start",
+"間隔 ‹ ›": "Interval ‹ ›",
 "隠しても設定はここからいつでも戻せます。": "Even when hidden, you can bring them back from here.",
 "集めた候補を切り詰める前に全部 pcAll に持つようにした（以前は上位だけ残していた）": "All collected solutions are kept in pcAll before trimming; only the top ones were kept before.",
 "非公式": "Unofficial",
 "（反転）": " (mirrored)",
 "（長押しで連続変更）": "(hold to repeat)",
 "📱 スマホ版へ": "📱 Mobile",
-"🖥 PC版": "🖥 Desktop"
+"🖥 PC版": "🖥 Desktop",
+"🖥 PC版へ": "🖥 Desktop"
 };
 /* ===== 日本語 ⇄ 英語 =====
    日本語の文字そのものをキーにして、画面に出ている文字を入れ替える。
@@ -2692,6 +2730,7 @@ if (document.readyState === 'loading') {
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="helpTabStart" onclick="switchHelpTab('start')">はじめに</button>
       <button class="cfg-tab"        id="helpTabMap"   onclick="switchHelpTab('map')">画面の見かた</button>
+      <button class="cfg-tab"        id="helpTabBtn"   onclick="switchHelpTab('btn')">ボタンの説明</button>
       <button class="cfg-tab"        id="helpTabDo"    onclick="switchHelpTab('do')">やりたいこと別</button>
     </div>
     <div class="cfg-pane active" id="helpPaneStart">
@@ -2755,6 +2794,117 @@ if (document.readyState === 'loading') {
         <li>モード … DPCセット・ミノ欠け・REN・デカミノ・マラソン・40LINE・せりあがり</li>
       </ul>
     </div>
+    <div class="cfg-pane" id="helpPaneBtn">
+      <div class="hp-h">左の列</div>
+      <table class="hp-tbl">
+        <tr><th>HOLD</th>
+            <td>ダブルクリックでミノを変更できます</td></tr>
+        <tr><th>連続HOLD</th>
+            <td>OFFにすると通常のテトリスと同じく、ミノを置くまで再ホールドできません（その間HOLDは薄く表示）</td></tr>
+        <tr><th>落下設定 ‹ ›</th>
+            <td>自然に落ちる速さを決めます（0G＝落ちない、20G＝1フレームで最下段）</td></tr>
+        <tr><th>⏸</th>
+            <td>自由落下を止める（落下設定の値はそのまま）</td></tr>
+        <tr><th>ゴースト</th>
+            <td>ミノがどこに落ちるかを薄く表示する</td></tr>
+        <tr><th>軸表示</th>
+            <td>ミノの回転軸を表示する</td></tr>
+        <tr><th>グリッド</th>
+            <td>盤面のマス目の線を表示する</td></tr>
+        <tr><th>配置編集</th>
+            <td>ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます</td></tr>
+        <tr><th>スナップ</th>
+            <td>ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます</td></tr>
+        <tr><th>元に戻す</th>
+            <td>配置編集で動かしたボタンを、元の位置と大きさに戻します</td></tr>
+        <tr><th>地形編集</th>
+            <td>ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます</td></tr>
+        <tr><th>色（A・おじゃま・各ミノ）</th>
+            <td>描くブロックの色。A はオート（なぞった形のミノの色になります）</td></tr>
+        <tr><th>↑</th>
+            <td>地形を一段せり上げる（直前と同じ穴）</td></tr>
+        <tr><th>↓</th>
+            <td>地形を強制的に一段下にシフトする</td></tr>
+        <tr><th>地形取り込み</th>
+            <td>ぷよテトのゲーム画面のスクショから地形を読み取ります</td></tr>
+        <tr><th>⇄ 反転</th>
+            <td>地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります</td></tr>
+        <tr><th>記録</th>
+            <td>いまの地形を覚えます。もう一度押すと覚え直します</td></tr>
+        <tr><th>復元</th>
+            <td>覚えた地形に戻し、ミノの順番も引き直します</td></tr>
+        <tr><th>パフェ探索</th>
+            <td>いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます</td></tr>
+        <tr><th>手順を見る</th>
+            <td>見つかったパーフェクトクリアの置き方を、順番に見られる窓を出します</td></tr>
+        <tr><th>カンペ画像</th>
+            <td>画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます</td></tr>
+        <tr><th>❓ 使い方</th>
+            <td>この案内を開きます</td></tr>
+        <tr><th>⚙ 設定</th>
+            <td>キーコンフィグ・スキン・その他の設定を開く</td></tr>
+        <tr><th>English</th>
+            <td>画面の文字を英語に切り替えます。もう一度押すと日本語に戻ります</td></tr>
+        <tr><th>📱 スマホ版へ</th>
+            <td>タッチ操作に向いたスマホ版の画面に切り替える</td></tr>
+        <tr><th>このサイトについて</th>
+            <td>利用についての案内と、バージョン履歴を出します</td></tr>
+      </table>
+      <div class="hp-h">真ん中</div>
+      <table class="hp-tbl">
+        <tr><th>盤面</th>
+            <td>地形編集がONのあいだは、クリック・ドラッグでブロックを置けます</td></tr>
+        <tr><th>LINE</th>
+            <td>消したライン数</td></tr>
+        <tr><th>ミノを捨てる</th>
+            <td>現在のミノを捨てて次を出す</td></tr>
+        <tr><th>戻す</th>
+            <td>1手戻す</td></tr>
+        <tr><th>リセット</th>
+            <td>盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする</td></tr>
+        <tr><th>地形のみ</th>
+            <td>盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま</td></tr>
+        <tr><th>ミノ順のみ</th>
+            <td>ミノの順番とHOLDだけ引き直します。盤面はそのまま</td></tr>
+        <tr><th>ボタン操作</th>
+            <td>画面上の操作ボタンを開閉する</td></tr>
+        <tr><th>操作ボタン</th>
+            <td>← → で左右、↓ で速く落とす、↺ ↻ で回転、⇪ でHOLD、⬇ で一気に落として置く</td></tr>
+      </table>
+      <div class="hp-h">右の列</div>
+      <table class="hp-tbl">
+        <tr><th>NEXT</th>
+            <td>ダブルクリックでそのミノを変更できます</td></tr>
+        <tr><th>DPCセット</th>
+            <td>選んだミノをHOLDした状態にして、ミノの順番をリセットします</td></tr>
+        <tr><th>↻</th>
+            <td>前回選んだミノで、もう一度セットし直します</td></tr>
+        <tr><th>ミノ欠け</th>
+            <td>選んだミノを最初の1巡から抜いて、ゲームを最初から始めます</td></tr>
+        <tr><th>REN</th>
+            <td>盤面の左右におじゃまの壁を作り、4列だけで練習する</td></tr>
+        <tr><th>デカミノ</th>
+            <td>ミノを4倍の大きさにする</td></tr>
+        <tr><th>マラソン</th>
+            <td>10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります</td></tr>
+        <tr><th>40LINE</th>
+            <td>40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります</td></tr>
+        <tr><th>せりあがり</th>
+            <td>せりあがりの設定とスタートボタンを開きます</td></tr>
+        <tr><th>スタート</th>
+            <td>設定した間隔でおじゃまを自動でせり上げる</td></tr>
+        <tr><th>ライン設定</th>
+            <td>1回のせりあがりで何段上げるかを、段数ごとの割合で決めます</td></tr>
+        <tr><th>TD中空け対策</th>
+            <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
+        <tr><th>ミノ設置／時間経過</th>
+            <td>せりあがるきっかけを、置いたミノの数にするか、経過した秒数にするかを選びます</td></tr>
+        <tr><th>間隔 ‹ ›</th>
+            <td>何個ごと・何秒ごとにせり上げるかを決めます</td></tr>
+        <tr><th>穴継続率 ‹ ›</th>
+            <td>せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）</td></tr>
+      </table>
+    </div>
     <div class="cfg-pane" id="helpPaneDo">
       <table class="hp-tbl">
         <tr><th>開幕の形を覚えたい</th>
@@ -2812,6 +2962,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.09.0 / 2.08.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「使い方」に 「ボタンの説明」のタブ を追加。左の列・真ん中・右の列（スマホ版は左の列・盤面の下）の順に、ボタンとスイッチを1つずつ表で説明する。文言はボタンに付いているツールチップと同じものを使った</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.08.0 / 2.07.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを追加（PC版は ⚙ 設定 の上、スマホ版は左の列の ⚙ 設定 の上）。「はじめに」「画面の見かた」「やりたいこと別」の3つのタブで、ミノの動かし方・地形の作り方・やり直し方、どの枠に何があるか、やりたいことから使うボタンを引く表を出す。使わない人は設定の「表示」で隠せる</li><li>はじめて開いた人には、この案内を一度だけ自動で出すようにした。2回目からは出ないので、あとはボタンから開く</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.07.0 / 2.06.0</span><span class="vl-date">2026-11-05</span></div><ul><li>テンプレートの窓から 並び と 削除 のボタンを外し、絵に場所を回した。複数パターンの並べ方（横／縦）は、絵が大きくなるほうを窓ごとに自動で選ぶ。削除はカンペ画像のテンプレート一覧から、名前の右の × を2回押して行う。あわせて余白とボタンを詰め、マスの既定を 20 → 24px にして、窓に占める絵の割合を広げた（5段の形で 52% → 60%）。◀ 前の巡・次の巡 ▶ は色を落として控えめにした</li><li>別画面を出していて2枚が画面に入らないときは、両方を縮めて上下に収めるようにした。これまでは少しずらして重ねていた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.06.1 / 2.05.1</span><span class="vl-date">2026-11-05</span></div><ul><li>確率の行に 開幕時に組める確率 と小さく添えて、何の数字か分かるようにした</li></ul></div>
@@ -10247,7 +10398,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.07.0';
+const APP_VERSION = '2.08.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
@@ -10265,7 +10416,7 @@ const APP_VERSION = '2.07.0';
 function openHelp()  { switchHelpTab('start'); document.getElementById('helpOverlay').classList.add('open'); }
 function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
 function switchHelpTab(name) {
-  const TABS = { start:['helpTabStart','helpPaneStart'], map:['helpTabMap','helpPaneMap'], do:['helpTabDo','helpPaneDo'] };
+  const TABS = { start:['helpTabStart','helpPaneStart'], map:['helpTabMap','helpPaneMap'], btn:['helpTabBtn','helpPaneBtn'], do:['helpTabDo','helpPaneDo'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     const t = document.getElementById(tab), p = document.getElementById(pane);
