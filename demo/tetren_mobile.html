@@ -955,6 +955,7 @@ const I18N_EN = {
 "のテトリス練習ツールです。\n      特定のゲームのメーカーや公式サイトとは関係ありません。": "Tetris practice tool. It is not affiliated with any game publisher or official site.",
 "のテトリス練習ツールです。特定のゲームのメーカーや公式サイトとは関係ありません。": "Tetris practice tool. It is not affiliated with any game publisher or official site.",
 "はじめての方へ。基本の操作と、どのボタンが何をするかの案内": "New here? The basic controls, and what each button does",
+"はじめて開いたときに「使い方」の窓を自動で出すのをやめた。使い方は ⚙ 設定 の下の ❓ 使い方 からいつでも開ける（PC版・スマホ版とも）": "The How to use window no longer opens by itself on your first visit. Open it any time from ❓ How to use, below ⚙ Settings (both the desktop and mobile builds).",
 "はじめて開いた人には、この案内を一度だけ自動で出すようにした。2回目からは出ないので、あとはボタンから開く": "The guide now opens by itself the first time you visit, once only. After that it stays closed and you open it from the button.",
 "はじめに": "Start here",
 "はちみつ砲": "Hachimitsu",
@@ -2543,6 +2544,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.2 / 2.08.2</span><span class="vl-date">2026-11-07</span></div><ul><li>はじめて開いたときに「使い方」の窓を自動で出すのをやめた。使い方は ⚙ 設定 の下の ❓ 使い方 からいつでも開ける（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.1 / 2.08.1</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを ⚙ 設定 の下へ移し、色もほかのボタンと同じにそろえた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.09.0 / 2.08.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「使い方」に 「ボタンの説明」のタブ を追加。左の列・真ん中・右の列（スマホ版は左の列・盤面の下）の順に、ボタンとスイッチを1つずつ表で説明する。文言はボタンに付いているツールチップと同じものを使った</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.08.0 / 2.07.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを追加（PC版は ⚙ 設定 の上、スマホ版は左の列の ⚙ 設定 の上）。「はじめに」「画面の見かた」「やりたいこと別」の3つのタブで、ミノの動かし方・地形の作り方・やり直し方、どの枠に何があるか、やりたいことから使うボタンを引く表を出す。使わない人は設定の「表示」で隠せる</li><li>はじめて開いた人には、この案内を一度だけ自動で出すようにした。2回目からは出ないので、あとはボタンから開く</li></ul></div>
@@ -8414,15 +8416,6 @@ function switchHelpTab(name) {
   const panel = document.getElementById('helpPanel');
   if (panel) panel.scrollTop = 0;   // タブを変えたら頭から読めるように
 }
-// はじめて来た人には、何も押さなくても1回だけ出す（次からは「使い方」ボタンで開く）
-(function firstVisitHelp(){
-  let seen = '1';
-  try { seen = localStorage.getItem('tetren.helpSeen'); } catch (e) {}
-  if (seen) return;
-  try { localStorage.setItem('tetren.helpSeen', '1'); } catch (e) {}
-  openHelp();
-})();
-
 function openAbout(){ switchAboutTab('info'); document.getElementById('aboutOverlay').classList.add('open'); }
 function switchAboutTab(name){
   const TABS = { info:['aboutTabInfo','aboutPaneInfo'], log:['aboutTabLog','aboutPaneLog'] };
@@ -8434,7 +8427,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.09.1';
+const APP_VERSION = '2.09.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
