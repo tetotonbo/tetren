@@ -855,8 +855,10 @@ const I18N_EN = {
 "40ライン達成でその場で止まるようにした": "The game now stops as soon as you clear 40 lines.",
 "4列でRENを回す練習": "Practise combos in 4 columns",
 "DAS/ARR を ミリ秒で指定できるようにした": "DAS and ARR can now be set in milliseconds.",
+"DPCの練習をしたい": "Practise a DPC",
 "DPCセット": "DPC setup",
 "DPCセット はHOLDに入れて開幕から、ミノ欠け は選んだミノを1巡目から抜いて始めます": "DPC setup puts it in hold and starts from the opening; Custom bag takes the pieces you choose out of the first bag.",
+"DPCセット。HOLDに入れたいミノを選ぶと、そのミノを持った状態で開幕から始まります。複数選ぶと、そのミノだけで1巡目を組みます。↻ で同じ組み合わせのまま何度でもやり直せます": "DPC setup. Pick the piece you want in hold and the game starts from the opening with it held; pick several and the first bag is built from just those. ↻ starts over with the same choice as often as you like.",
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, Big pieces, C4W and Garbage — the practice modes.",
 "DPCセット再": "DPC setup again",
@@ -1428,6 +1430,7 @@ const I18N_EN = {
 "何個ごと・何秒ごとにせり上げるかを決めます": "Sets how many pieces, or how many seconds, there are between each rise.",
 "作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした": "Such text now remembers its Japanese and English forms as a pair, so switching language afterwards still swaps it.",
 "使い方": "How to use",
+"使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）": "Added \"Practise a DPC\" to the By task tab of the help panel, and reordered the Screen guide and Button list tabs so they start from the right-hand column (desktop and mobile).",
 "保存した表示倍率が再読み込み後に効かない不具合を修正": "Fixed the saved zoom level not taking effect after a reload.",
 "個": " pieces",
 "個ごと": "pieces",
@@ -2774,6 +2777,16 @@ if (document.readyState === 'loading') {
       <p class="hp-note">ボタンの上にマウスを置くと、そのボタンの説明が出ます。使わないボタンは ⚙ 設定 の「表示」で隠せます。</p>
     </div>
     <div class="cfg-pane" id="helpPaneMap">
+      <div class="hp-h">右の列</div>
+      <ul class="hp-list">
+        <li>NEXT … 次に来るミノ。ダブルクリックで変えられます</li>
+        <li>モード … DPCセット・ミノ欠け・REN・デカミノ・マラソン・40LINE・せりあがり</li>
+      </ul>
+      <div class="hp-h">真ん中</div>
+      <ul class="hp-list">
+        <li>盤面と、その上の LINE（消したライン数）</li>
+        <li>盤面の下 … ミノを捨てる・戻す・リセット・地形のみ・ミノ順のみ。「ボタン操作 ▼」で画面上の操作ボタンが出ます</li>
+      </ul>
       <div class="hp-h">左の列</div>
       <ul class="hp-list">
         <li>HOLD … 預けているミノ。ダブルクリックで好きなミノに変えられます</li>
@@ -2783,18 +2796,62 @@ if (document.readyState === 'loading') {
         <li>カンペ画像 … 参考画像や開幕テンプレートを画面に重ねて出します</li>
         <li>⚙ 設定 … キーコンフィグ・スキン・操作まわりの細かい設定</li>
       </ul>
-      <div class="hp-h">真ん中</div>
-      <ul class="hp-list">
-        <li>盤面と、その上の LINE（消したライン数）</li>
-        <li>盤面の下 … ミノを捨てる・戻す・リセット・地形のみ・ミノ順のみ。「ボタン操作 ▼」で画面上の操作ボタンが出ます</li>
-      </ul>
-      <div class="hp-h">右の列</div>
-      <ul class="hp-list">
-        <li>NEXT … 次に来るミノ。ダブルクリックで変えられます</li>
-        <li>モード … DPCセット・ミノ欠け・REN・デカミノ・マラソン・40LINE・せりあがり</li>
-      </ul>
     </div>
     <div class="cfg-pane" id="helpPaneBtn">
+      <div class="hp-h">右の列</div>
+      <table class="hp-tbl">
+        <tr><th>NEXT</th>
+            <td>ダブルクリックでそのミノを変更できます</td></tr>
+        <tr><th>DPCセット</th>
+            <td>選んだミノをHOLDした状態にして、ミノの順番をリセットします</td></tr>
+        <tr><th>↻</th>
+            <td>前回選んだミノで、もう一度セットし直します</td></tr>
+        <tr><th>ミノ欠け</th>
+            <td>選んだミノを最初の1巡から抜いて、ゲームを最初から始めます</td></tr>
+        <tr><th>REN</th>
+            <td>盤面の左右におじゃまの壁を作り、4列だけで練習する</td></tr>
+        <tr><th>デカミノ</th>
+            <td>ミノを4倍の大きさにする</td></tr>
+        <tr><th>マラソン</th>
+            <td>10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります</td></tr>
+        <tr><th>40LINE</th>
+            <td>40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります</td></tr>
+        <tr><th>せりあがり</th>
+            <td>せりあがりの設定とスタートボタンを開きます</td></tr>
+        <tr><th>スタート</th>
+            <td>設定した間隔でおじゃまを自動でせり上げる</td></tr>
+        <tr><th>ライン設定</th>
+            <td>1回のせりあがりで何段上げるかを、段数ごとの割合で決めます</td></tr>
+        <tr><th>TD中空け対策</th>
+            <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
+        <tr><th>ミノ設置／時間経過</th>
+            <td>せりあがるきっかけを、置いたミノの数にするか、経過した秒数にするかを選びます</td></tr>
+        <tr><th>間隔 ‹ ›</th>
+            <td>何個ごと・何秒ごとにせり上げるかを決めます</td></tr>
+        <tr><th>穴継続率 ‹ ›</th>
+            <td>せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）</td></tr>
+      </table>
+      <div class="hp-h">真ん中</div>
+      <table class="hp-tbl">
+        <tr><th>盤面</th>
+            <td>地形編集がONのあいだは、クリック・ドラッグでブロックを置けます</td></tr>
+        <tr><th>LINE</th>
+            <td>消したライン数</td></tr>
+        <tr><th>ミノを捨てる</th>
+            <td>現在のミノを捨てて次を出す</td></tr>
+        <tr><th>戻す</th>
+            <td>1手戻す</td></tr>
+        <tr><th>リセット</th>
+            <td>盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする</td></tr>
+        <tr><th>地形のみ</th>
+            <td>盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま</td></tr>
+        <tr><th>ミノ順のみ</th>
+            <td>ミノの順番とHOLDだけ引き直します。盤面はそのまま</td></tr>
+        <tr><th>ボタン操作</th>
+            <td>画面上の操作ボタンを開閉する</td></tr>
+        <tr><th>操作ボタン</th>
+            <td>← → で左右、↓ で速く落とす、↺ ↻ で回転、⇪ でHOLD、⬇ で一気に落として置く</td></tr>
+      </table>
       <div class="hp-h">左の列</div>
       <table class="hp-tbl">
         <tr><th>HOLD</th>
@@ -2850,65 +2907,13 @@ if (document.readyState === 'loading') {
         <tr><th>このサイトについて</th>
             <td>利用についての案内と、バージョン履歴を出します</td></tr>
       </table>
-      <div class="hp-h">真ん中</div>
-      <table class="hp-tbl">
-        <tr><th>盤面</th>
-            <td>地形編集がONのあいだは、クリック・ドラッグでブロックを置けます</td></tr>
-        <tr><th>LINE</th>
-            <td>消したライン数</td></tr>
-        <tr><th>ミノを捨てる</th>
-            <td>現在のミノを捨てて次を出す</td></tr>
-        <tr><th>戻す</th>
-            <td>1手戻す</td></tr>
-        <tr><th>リセット</th>
-            <td>盤面・ミノ順・B2Bなどをゲーム開始時と同じ状態にリセットする</td></tr>
-        <tr><th>地形のみ</th>
-            <td>盤面のブロックだけ消します。ミノの順番・HOLD・スコアはそのまま</td></tr>
-        <tr><th>ミノ順のみ</th>
-            <td>ミノの順番とHOLDだけ引き直します。盤面はそのまま</td></tr>
-        <tr><th>ボタン操作</th>
-            <td>画面上の操作ボタンを開閉する</td></tr>
-        <tr><th>操作ボタン</th>
-            <td>← → で左右、↓ で速く落とす、↺ ↻ で回転、⇪ でHOLD、⬇ で一気に落として置く</td></tr>
-      </table>
-      <div class="hp-h">右の列</div>
-      <table class="hp-tbl">
-        <tr><th>NEXT</th>
-            <td>ダブルクリックでそのミノを変更できます</td></tr>
-        <tr><th>DPCセット</th>
-            <td>選んだミノをHOLDした状態にして、ミノの順番をリセットします</td></tr>
-        <tr><th>↻</th>
-            <td>前回選んだミノで、もう一度セットし直します</td></tr>
-        <tr><th>ミノ欠け</th>
-            <td>選んだミノを最初の1巡から抜いて、ゲームを最初から始めます</td></tr>
-        <tr><th>REN</th>
-            <td>盤面の左右におじゃまの壁を作り、4列だけで練習する</td></tr>
-        <tr><th>デカミノ</th>
-            <td>ミノを4倍の大きさにする</td></tr>
-        <tr><th>マラソン</th>
-            <td>10ライン消すごとに落下速度が上がっていくモード。20Gまで上がると15Gに戻り、代わりにミノの設置時間が短くなります</td></tr>
-        <tr><th>40LINE</th>
-            <td>40ライン消すまでの時間を計ります。押すと3秒のカウントダウンのあと始まります</td></tr>
-        <tr><th>せりあがり</th>
-            <td>せりあがりの設定とスタートボタンを開きます</td></tr>
-        <tr><th>スタート</th>
-            <td>設定した間隔でおじゃまを自動でせり上げる</td></tr>
-        <tr><th>ライン設定</th>
-            <td>1回のせりあがりで何段上げるかを、段数ごとの割合で決めます</td></tr>
-        <tr><th>TD中空け対策</th>
-            <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
-        <tr><th>ミノ設置／時間経過</th>
-            <td>せりあがるきっかけを、置いたミノの数にするか、経過した秒数にするかを選びます</td></tr>
-        <tr><th>間隔 ‹ ›</th>
-            <td>何個ごと・何秒ごとにせり上げるかを決めます</td></tr>
-        <tr><th>穴継続率 ‹ ›</th>
-            <td>せりあがり時に直前の穴と一致する確率（10％だと完全ランダム）</td></tr>
-      </table>
     </div>
     <div class="cfg-pane" id="helpPaneDo">
       <table class="hp-tbl">
         <tr><th>開幕の形を覚えたい</th>
             <td>カンペ画像 の「開幕テンプレート」。DT砲などの置き方を窓に出し、そのとおりに置けているかも判定します</td></tr>
+        <tr><th>DPCの練習をしたい</th>
+            <td>DPCセット。HOLDに入れたいミノを選ぶと、そのミノを持った状態で開幕から始まります。複数選ぶと、そのミノだけで1巡目を組みます。↻ で同じ組み合わせのまま何度でもやり直せます</td></tr>
         <tr><th>参考画像を見ながら練習したい</th>
             <td>カンペ画像。手持ちの画像を画面に重ねて、位置と大きさを変えられます</td></tr>
         <tr><th>ゲームの場面を再現したい</th>
@@ -2962,6 +2967,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.2 / 2.09.2</span><span class="vl-date">2026-11-15</span></div><ul><li>使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.1 / 2.09.1</span><span class="vl-date">2026-11-14</span></div><ul><li>HOLDで入れ替えたミノと、1手戻したミノも、出現位置がふさがっていたら上に逃がすようにした。これまでは地形に重なったまま出ていた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.10.0 / 2.09.0</span><span class="vl-date">2026-11-14</span></div><ul><li>出現位置がふさがっているときに、1段上（21段目）に出すようにした。真ん中の20段目が埋まっていても、ぷよテトと同じようにその上にミノが出るので、すぐにゲームオーバーにならない（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.2 / 2.08.2</span><span class="vl-date">2026-11-07</span></div><ul><li>はじめて開いたときに「使い方」の窓を自動で出すのをやめた。使い方は ⚙ 設定 の下の ❓ 使い方 からいつでも開ける（PC版・スマホ版とも）</li></ul></div>
@@ -10411,7 +10417,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.09.1';
+const APP_VERSION = '2.09.2';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

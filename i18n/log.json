@@ -1,4 +1,5 @@
 {
+ "使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）": "Added \"Practise a DPC\" to the By task tab of the help panel, and reordered the Screen guide and Button list tabs so they start from the right-hand column (desktop and mobile).",
  ".shot-win にそのまま乗せた。移動・サイズ変更・最前面はカンペ側の仕組みを流用": "Built on .shot-win as is. Moving, resizing and pinning reuse the reference-image machinery.",
  "1.16.2 で右の枠のボタンの色を落としたが、意図と違ったため元に戻した（背景 #374151・文字 #fff）": "1.16.2 toned down the colour of the buttons in the right panel, which was not what was wanted, so it was reverted (background #374151, text #fff).",
  "1.4.0 で入れた他ゲーム向けの適応処理を撤去し、ぷよぷよテトリス専用に戻した。 空きマスを弾く条件を外していたため、盤面のほぼ全マスがミノとして誤検出されていた": "Removed the handling for other games added in 1.4.0 and went back to Puyo Puyo Tetris only. Dropping the empty-cell test had made almost every cell on the board register as a piece.",

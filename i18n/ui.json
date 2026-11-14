@@ -389,6 +389,8 @@
  "盤面の下 … 操作ボタンと、ミノ捨てる・戻す": "Below the board — the control pad, plus Discard piece and Undo.",
  "開幕の形を覚えたい": "Learn an opening",
  "カンペ画像 の「開幕テンプレート」。DT砲などの置き方を窓に出し、そのとおりに置けているかも判定します": "Reference image → opening template. It shows how openings such as the DT cannon are built, and tells you whether you followed it.",
+ "DPCの練習をしたい": "Practise a DPC",
+ "DPCセット。HOLDに入れたいミノを選ぶと、そのミノを持った状態で開幕から始まります。複数選ぶと、そのミノだけで1巡目を組みます。↻ で同じ組み合わせのまま何度でもやり直せます": "DPC setup. Pick the piece you want in hold and the game starts from the opening with it held; pick several and the first bag is built from just those. ↻ starts over with the same choice as often as you like.",
  "参考画像を見ながら練習したい": "Practise while looking at a picture",
  "カンペ画像。手持ちの画像を画面に重ねて、位置と大きさを変えられます": "Reference image. Lay your own picture over the screen, then move and resize it.",
  "ゲームの場面を再現したい": "Recreate a situation from a game",
