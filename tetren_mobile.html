@@ -696,6 +696,7 @@ const I18N_EN = {
 "HOLD … 預けているミノ。2回タップで好きなミノに変えられます": "HOLD — the piece you are holding. Tap it twice to swap in any piece.",
 "HOLD … 預けているミノ。ダブルクリックで好きなミノに変えられます": "HOLD — the piece you are holding. Double-click it to swap in any piece.",
 "HOLD: {0}　NEXT: {1}": "Hold: {0}   Next: {1}",
+"HOLDで入れ替えたミノと、1手戻したミノも、出現位置がふさがっていたら上に逃がすようにした。これまでは地形に重なったまま出ていた（PC版・スマホ版とも）": "A piece swapped in with HOLD, or brought back by Undo, is now also moved up when the spawn position is blocked. Until now it appeared overlapping the stack (both the desktop and mobile builds).",
 "HOLDなし": "No hold",
 "HOLDには何も入れない": "Leave Hold empty",
 "HOLDに指定したミノを、上のミノ選択でもひと目で分かるようにした": "The piece set for Hold is now easy to spot in the picker above as well.",
@@ -1272,6 +1273,7 @@ const I18N_EN = {
 "先行回転（IRS）": "Initial rotation (IRS)",
 "全体　{0}（1手目は{1}ミノ）": "Overview - {0} (first is {1})",
 "全部は抜けません。6個までにしてください。": "You cannot remove them all. Up to 6, please.",
+"出現位置がふさがっているときに、1段上（21段目）に出すようにした。真ん中の20段目が埋まっていても、ぷよテトと同じようにその上にミノが出るので、すぐにゲームオーバーにならない（PC版・スマホ版とも）": "When the spawn position is blocked, the piece now appears one row higher (row 21). With the middle of row 20 filled the piece still comes out above it, just as in Puyo Puyo Tetris, instead of ending the game at once (both the desktop and mobile builds).",
 "初期値に戻す": "Reset to default",
 "判定": "Check",
 "判定の結果に手数も出すようにした（「パフェできます（7手・106ms）」）": "The check result now includes the number of moves (\"Perfect Clear possible (7 moves, 106ms)\").",
@@ -2544,6 +2546,8 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.1 / 2.09.1</span><span class="vl-date">2026-11-14</span></div><ul><li>HOLDで入れ替えたミノと、1手戻したミノも、出現位置がふさがっていたら上に逃がすようにした。これまでは地形に重なったまま出ていた（PC版・スマホ版とも）</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.10.0 / 2.09.0</span><span class="vl-date">2026-11-14</span></div><ul><li>出現位置がふさがっているときに、1段上（21段目）に出すようにした。真ん中の20段目が埋まっていても、ぷよテトと同じようにその上にミノが出るので、すぐにゲームオーバーにならない（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.2 / 2.08.2</span><span class="vl-date">2026-11-07</span></div><ul><li>はじめて開いたときに「使い方」の窓を自動で出すのをやめた。使い方は ⚙ 設定 の下の ❓ 使い方 からいつでも開ける（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.09.1 / 2.08.1</span><span class="vl-date">2026-11-06</span></div><ul><li>「❓ 使い方」ボタンを ⚙ 設定 の下へ移し、色もほかのボタンと同じにそろえた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.09.0 / 2.08.0</span><span class="vl-date">2026-11-06</span></div><ul><li>「使い方」に 「ボタンの説明」のタブ を追加。左の列・真ん中・右の列（スマホ版は左の列・盤面の下）の順に、ボタンとスイッチを1つずつ表で説明する。文言はボタンに付いているツールチップと同じものを使った</li></ul></div>
@@ -3507,11 +3511,22 @@ function mkPiece(type){
   if(dekaMode) return{type,state:0,row:BUF/2-1,col:type==='I'?0:1};
   return{type,state:0,row:d.spawnRow,col:d.spawnCol};
 }
+// 出現位置がふさがっていたら上に逃がす。
+// まず1段上（21段目＝ぷよテトなどと同じ高さ）、そこも無理ならバッファ内で置ける高さまで。
+// 戻り値は「1段以内で収まったか」
+function fitSpawn(){
+  if(valid(cur,0,0,cur.state)) return true;
+  if(cur.row>0 && valid(cur,-1,0,cur.state)){cur.row--; return true;}
+  while(cur.row>0 && !valid(cur,0,0,cur.state)) cur.row--;
+  return false;
+}
+
 function spawn(){
   fillQ(); cur=mkPiece(nextQ.shift().type);
   resumeDAS();   // 左右を押したまま次のミノに移っても動き続けるようにする
   canHold=true; lastWasRotation=false; lastKickIndex=0;
-  if(!valid(cur,0,0,cur.state)){gameOver=true;setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);}
+  // ふさがっていたら上に逃がす。1段上（21段目）で収まらなければゲームオーバー
+  if(!fitSpawn()){gameOver=true;setTimeout(()=>showOverlay('ゲームオーバー','もう一度'),100);}
 }
 
 // ===== 衝突判定 =====
@@ -3562,7 +3577,7 @@ function doHold(){
   // 連続HOLDがOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if(!opts.multiHold && !canHold) return;
   if(holdType===null){holdType=cur.type;spawn();}
-  else{const t=holdType;holdType=cur.type;cur=mkPiece(t);}
+  else{const t=holdType;holdType=cur.type;cur=mkPiece(t);fitSpawn();}  // 重ならないよう上へ
   canHold=false;   // spawn() 側で次のミノ出現時に戻る
   resetLock();draw();
 }
@@ -6097,7 +6112,7 @@ function resetQueueOnly(){
   cur = mkPiece(nextQ.shift().type);
   resumeDAS();
   lastWasRotation = false; lastKickIndex = 0;
-  while(!valid(cur,0,0,cur.state) && cur.row>0) cur.row--;
+  fitSpawn();
   updUI(); draw();
   tplWatch();   // ツモが変わったので、テンプレートの判定をやり直す
 }
@@ -6215,7 +6230,7 @@ function undo(){
   if(!undoStack.length) return;
   setTimeout(tplRefresh, 0);   // 戻したらテンプレの判定もやり直す
   const s=undoStack.pop(); resetLock();
-  board=s.board; cur=mkPiece(s.cur.type); holdType=s.holdType; canHold=s.canHold;
+  board=s.board; cur=mkPiece(s.cur.type); fitSpawn(); holdType=s.holdType; canHold=s.canHold;
   bag=s.bag; nextQ=s.nextQ; score=s.score; level=s.level; lines=s.lines;
   b2b=s.b2b; ren=s.ren; dropInterval=s.dropInterval; digCount=s.digCount; lastDrop=0;
   updUI(); updateDigCounter(); draw();
@@ -8427,7 +8442,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.09.2';
+const APP_VERSION = '2.10.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
