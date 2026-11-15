@@ -1661,6 +1661,7 @@ const I18N_EN = {
 "配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した": "Moved the Edit layout switch outside the on-screen buttons, where it is always visible.",
 "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
 "閉じる": "Close",
+"開いた直後の落下設定を、自由落下を止めた状態（⏸）から始めるようにした。落下設定の値はそのままで、▶ を押せばこれまでどおり落ちる（PC版・スマホ版とも）": "The page now opens with free fall paused (⏸). The gravity value is unchanged, and ▶ starts the pieces falling as before (desktop and mobile).",
 "開始": "Start",
 "開幕の形を覚えたい": "Learn an opening",
 "開幕テンプレートが 複数パターン を持てるようにした。パターンがあるぶんだけ横に並べて表示する（「1つ目」「2つ目」の見出しつき）": "Opener templates can now hold several patterns, shown side by side with headings (first, second).",
@@ -2554,6 +2555,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.11.1 / 2.10.1</span><span class="vl-date">2026-11-15</span></div><ul><li>開いた直後の落下設定を、自由落下を止めた状態（⏸）から始めるようにした。落下設定の値はそのままで、▶ を押せばこれまでどおり落ちる（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.11.0 / 2.10.0</span><span class="vl-date">2026-11-15</span></div><ul><li>設定の「パフェ探索」に 「QPCを優先して出す」 を追加。ONの間は、QPCのある盤面ではいつでもQPCの手順から出す。QPCの無い盤面では「優先するもの」（火力／速度）の並びで出すが、設定は残るので、次にQPCがあればまたQPCに戻る。これまでは手順ウィンドウのQPCボタンだけで、探索し直すと解除され、QPCの無い盤面に当たった時点でも解除されていた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.2 / 2.09.2</span><span class="vl-date">2026-11-15</span></div><ul><li>使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.1 / 2.09.1</span><span class="vl-date">2026-11-14</span></div><ul><li>HOLDで入れ替えたミノと、1手戻したミノも、出現位置がふさがっていたら上に逃がすようにした。これまでは地形に重なったまま出ていた（PC版・スマホ版とも）</li></ul></div>
@@ -3467,7 +3469,7 @@ let score, level, lines, b2b, gameOver;
 let dropInterval, lastDrop, lockTimer, isLocking;
 let gravSpeed = 0, gravAccum = 0;   // 落下速度 0〜20G（0=自由落下なし。起動時に loadGravSpeed() で復元）
 // 一時停止。値はそのままに自由落下だけ止める（ページを開き直すと解除）
-let gravPaused = false;
+let gravPaused = true;   // 開いた直後は止まった状態から始める
 let undoStack = [];
 const UNDO_MAX = 50;
 let showGhost = true;
@@ -8468,7 +8470,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.11.0';
+const APP_VERSION = '2.11.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
