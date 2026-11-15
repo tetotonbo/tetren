@@ -1201,7 +1201,7 @@ const I18N_EN = {
 "キーボードで操作するPC版の画面に切り替える": "Switches to the desktop layout, made for playing with a keyboard.",
 "キーボードをつないだときの割り当てです。欄を押してから、割り当てたいキーを押してください。": "Assignments for a connected keyboard. Click a field, then press the key you want.",
 "クリア": "Clear",
-"クリア！　連続{0}問": "Solved!　{0} in a row",
+"クリア！": "Solved!",
 "クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）": "Click to choose a file  /  or paste (Windows: Ctrl+V, Mac: ⌘V)",
 "グリッド": "Grid",
 "グリッド線": "Grid lines",
@@ -1307,6 +1307,7 @@ const I18N_EN = {
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
 "パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
+"パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる": "PC puzzle no longer shows the run of solved problems, and moves on to the next problem by itself once you solve one (after showing \"Solved!\" briefly). A failed attempt still stops, so you can use Again or Show the answer.",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
@@ -1658,7 +1659,7 @@ const I18N_EN = {
 "次の手": "Next step",
 "次の段も同じ列に穴を開ける確率。10%でほぼランダムになります": "Chance that the next row has its hole in the same column. At 10% it is practically random.",
 "残ったミノから毎回ランダムに選ぶ": "Pick at random from the remaining pieces each time",
-"残り{0}手　連続{1}問": "{0} left　{1} in a row",
+"残り{0}手": "{0} left",
 "段": " rows",
 "決まったミノから始めたい": "Start from a particular piece",
 "消したライン数": "Lines cleared",
@@ -3022,6 +3023,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.4 / 2.11.4</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.3 / 2.11.3</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.2 / 2.11.2</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.1 / 2.11.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）</li></ul></div>
@@ -8592,8 +8594,8 @@ const PUZZLE_LEVELS = [
 let puzzleMode   = false;      // パフェパズル中か
 let puzzleId     = 'normal';   // 選んでいる難易度
 let puzzleStart  = null;       // いまの問題の最初の状態（やり直しと答え合わせに使う）
-let puzzleStreak = 0;          // 連続正解
 let puzzleOver   = false;      // いまの問題は決着済みか
+let puzzleNextTimer = null;    // クリアを少し見せてから次の問題へ進むためのタイマー
 
 // 向きちがいも含めた、ミノの形の一覧。左上そろえの相対座標で持つ
 let puzzleShapeList = null;
@@ -8680,6 +8682,7 @@ function puzzleResume() {
 
 // 作った問題を盤面に乗せる
 function puzzleApply(p) {
+  clearTimeout(puzzleNextTimer);
   clearPcResult();
   closePcSteps();
   board = Array.from({ length: TROW }, () => new Array(COLS).fill(null));
@@ -8701,6 +8704,7 @@ function puzzleApply(p) {
 // 出されたときの状態に戻す
 function puzzleRestore() {
   if (!puzzleStart) return;
+  clearTimeout(puzzleNextTimer);
   clearPcResult();
   board = puzzleStart.board.map(r => [...r]);
   nextQ = puzzleStart.queue.map(t => ({ type: t, newBag: false, idx: 0 }));
@@ -8722,8 +8726,12 @@ function puzzleJudge() {
   puzzleOver = true;
   gameOver = true;     // 次のミノは出さず、操作も止める
   resetLock(); clearAre();
-  if (empty) puzzleStreak++; else puzzleStreak = 0;
   puzzleHud(empty ? 'clear' : 'fail');
+  // クリアしたら、少しだけ見せてから次の問題へ進む
+  if (empty) {
+    clearTimeout(puzzleNextTimer);
+    puzzleNextTimer = setTimeout(() => { if (puzzleMode) nextPuzzle(); }, 900);
+  }
   return true;
 }
 
@@ -8736,7 +8744,7 @@ function puzzleHud(kind) {
   const msg = document.getElementById('puzzleMsg');
   if (msg) {
     if (kind === 'clear') {
-      msg.textContent = TF('クリア！　連続{0}問', puzzleStreak);
+      msg.textContent = 'クリア！';
       msg.style.color = '#4ade80';
     } else if (kind === 'fail') {
       msg.textContent = '空になりませんでした';
@@ -8745,8 +8753,7 @@ function puzzleHud(kind) {
       msg.textContent = '問題が作れませんでした。もう一度押してください';
       msg.style.color = '#f87171';
     } else {
-      msg.textContent = TF('残り{0}手　連続{1}問',
-        nextQ.length + 1 + (holdType !== null ? 1 : 0), puzzleStreak);
+      msg.textContent = TF('残り{0}手', nextQ.length + 1 + (holdType !== null ? 1 : 0));
       msg.style.color = '#d1d5db';
     }
   }
@@ -8783,12 +8790,12 @@ function togglePuzzle() {
   closeDigPanel();
   exitOtherModes('puzzle');
   puzzleMode = true;
-  puzzleStreak = 0;
   if (!nextPuzzle()) { puzzleMode = false; puzzleHud(); }
 }
 function stopPuzzle() {
+  clearTimeout(puzzleNextTimer);
   puzzleMode = false; puzzleOver = false;
-  puzzleStart = null; puzzleStreak = 0;
+  puzzleStart = null;
   gameOver = false;
   puzzleHud();
   resetGameState(false);   // ふつうの練習に戻す
@@ -10749,7 +10756,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.11.3';
+const APP_VERSION = '2.11.4';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
