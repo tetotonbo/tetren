@@ -250,5 +250,18 @@
  "残り{0}手": "{0} left",
  "空になりませんでした": "The board did not come out empty",
  "問題が作れませんでした。もう一度押してください": "Could not build a problem. Press it again.",
- "{0}段・{1}手の問題を出します": "Builds a {0}-row problem with {1} pieces"
+ "{0}段・{1}手の問題を出します": "Builds a {0}-row problem with {1} pieces",
+ "開幕パフェ積み": "Opening stack",
+ "1巡目を積み終えた形から始めます。残りをきれいに消せばパフェです": "Starts from the shape left after the first bag. Clear what is left and you have a Perfect Clear.",
+ "1巡目を積み終えた形から始めます": "Starts from the shape left after the first bag",
+ "しない": "Off",
+ "する": "On",
+ "ランダム": "Random",
+ "あり": "On",
+ "いつも同じ向きで出します": "Always the same way round",
+ "いつも左右を入れ替えた形で出します": "Always mirrored",
+ "問題ごとに向きを決めます": "Decided for each problem",
+ "ホールドは空のまま、3手で埋める形にします": "Hold stays empty and three pieces fill the gap",
+ "Iミノをホールドに持った、4手で埋める形にします": "You hold an I and four pieces fill the gap",
+ "問題ごとに決めます": "Decided for each problem"
 }

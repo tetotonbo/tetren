@@ -463,10 +463,16 @@
  "最初の状態に戻して、パフェ探索の手順を出します": "Puts the problem back to the start and shows the PC finder’s solution",
  "パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
  "パフェの手順を自分で考えたい": "Work out a Perfect Clear by yourself",
- "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
+ "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・3手）／ふつう（4段・4手）／むずかしい（4段・6手）／開幕パフェ積み（1巡目を積み終えた形）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 3 pieces), Normal (4 rows, 4 pieces), Hard (4 rows, 6 pieces) or Opening stack (the shape left after the first bag). If you get stuck, Show the answer lays out the solution.",
  "モード … DPCセット・ミノ欠け・パフェパズル・REN・デカミノ・マラソン・40LINE・せりあがり": "Mode — DPC setup, Custom bag, PC puzzle, C4W, Big pieces, Marathon, 40 LINE and Garbage.",
  "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
  "パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer.",
  "DPC": "DPC",
- "DPCセット。選んだミノをHOLDした状態にして、ミノの順番をリセットします": "DPC setup. Puts the piece you choose into hold and deals the pieces again from the start."
+ "DPCセット。選んだミノをHOLDした状態にして、ミノの順番をリセットします": "DPC setup. Puts the piece you choose into hold and deals the pieces again from the start.",
+ "パフェパズルの難しさ": "PC puzzle difficulty",
+ "開いたときに選ばれている難しさ。やさしい＝2〜4段を3手／ふつう＝4段を4手／むずかしい＝4段を6手／開幕パフェ積み＝1巡目を積み終えた形から": "Which difficulty is selected when you open PC puzzle. Easy = 2–4 rows in 3 pieces, Normal = 4 rows in 4, Hard = 4 rows in 6, Opening stack = the shape left after the first bag.",
+ "開幕パフェ積みの左右反転": "Mirror the opening stack",
+ "「する」で左右を入れ替えた形にします。「ランダム」なら問題ごとに決めます": "On gives you the mirrored shape; Random decides for each problem.",
+ "開幕パフェ積みのIミノホールド": "I piece in hold (opening stack)",
+ "「あり」はIミノをホールドに持った形から始めます（右の壁が1列少なく、4手で埋めます）。「ランダム」なら問題ごとに決めます": "With it on you start holding an I, so the right wall is one column shorter and four pieces are needed. Random decides for each problem."
 }
