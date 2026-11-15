@@ -169,6 +169,8 @@ canvas { display:block; }
 /* せりあがりは「▼」のぶんだけ長いので、1行に収まるよう少し詰める
    （JS側で style.cssText を書き換えるため、ここはCSSで指定する） */
 #digBtn { margin-top:2px; white-space:nowrap; font-size:8px; letter-spacing:-0.2px; }
+/* 「🖥 PC版へ」も1行に収める */
+#verSwitchBtn { white-space:nowrap; font-size:8px; letter-spacing:-0.2px; }
 /* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
 #colorPaletteWrap {
   display:none; flex-wrap:wrap; gap:4px;
@@ -687,10 +689,12 @@ const I18N_EN = {
 "40ライン達成でその場で止まるようにした": "The game now stops as soon as you clear 40 lines.",
 "4列でRENを回す練習": "Practise combos in 4 columns",
 "DAS/ARR を ミリ秒で指定できるようにした": "DAS and ARR can now be set in milliseconds.",
+"DPC": "DPC",
 "DPCの練習をしたい": "Practise a DPC",
 "DPCセット": "DPC setup",
 "DPCセット はHOLDに入れて開幕から、ミノ欠け は選んだミノを1巡目から抜いて始めます": "DPC setup puts it in hold and starts from the opening; Custom bag takes the pieces you choose out of the first bag.",
 "DPCセット。HOLDに入れたいミノを選ぶと、そのミノを持った状態で開幕から始まります。複数選ぶと、そのミノだけで1巡目を組みます。↻ で同じ組み合わせのまま何度でもやり直せます": "DPC setup. Pick the piece you want in hold and the game starts from the opening with it held; pick several and the first bag is built from just those. ↻ starts over with the same choice as often as you like.",
+"DPCセット。選んだミノをHOLDした状態にして、ミノの順番をリセットします": "DPC setup. Puts the piece you choose into hold and deals the pieces again from the start.",
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, Big pieces, C4W and Garbage — the practice modes.",
 "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
@@ -1135,6 +1139,7 @@ const I18N_EN = {
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
 "パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり": "PC puzzle boards no longer have blocks hanging in mid-air. Each column is now hollowed out from the top down, so the stack sits the way a real one would, and because only neighbouring columns are hollowed the empty space stays in one piece.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
+"パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）": "PC puzzle no longer shows how many pieces are left, and Easy now deals three pieces instead of two, which was too easy. On mobile the DPC setup and Desktop buttons no longer wrap onto two lines (DPC setup is shortened to \"DPC\" in the narrow column, with the full name in its tooltip).",
 "パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
 "パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる": "PC puzzle no longer shows the run of solved problems, and moves on to the next problem by itself once you solve one (after showing \"Solved!\" briefly). A failed attempt still stops, so you can use Again or Show the answer.",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
@@ -2037,7 +2042,9 @@ if (document.readyState === 'loading') {
         title="覚えた地形に戻し、ミノの順番も引き直します">復元</button>
     </div>
     <div class="dpc-side-row" data-ui="dpc">
-      <button class="side-btn" style="flex:1;" onclick="if(!gameOver)openDpc()">DPC<br>セット</button>
+      <button class="side-btn" style="flex:1;min-width:0;white-space:nowrap;"
+        title="DPCセット。選んだミノをHOLDした状態にして、ミノの順番をリセットします"
+        onclick="if(!gameOver)openDpc()">DPC</button>
       <button class="side-btn again" id="dpcAgainBtn" onclick="if(!gameOver)repeatDpc()">↻</button>
     </div>
     <div class="dpc-side-row" data-ui="miss">
@@ -2112,7 +2119,7 @@ if (document.readyState === 'loading') {
       onclick="toggleLang()">English</button>
     <!-- 版の切り替え。どちらの版からでも移れるよう常に出す -->
     <button class="side-btn" id="verSwitchBtn" data-ui="verSwitch" style="margin-top:2px;"
-      onclick="switchVersion()">🖥 PC版<br>へ</button>
+      onclick="switchVersion()">🖥 PC版へ</button>
     <div id="verLabel"></div>
   </div>
 
@@ -2609,6 +2616,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.7 / 2.11.7</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.6 / 2.11.6</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.5 / 2.11.5</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.4 / 2.11.4</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる</li></ul></div>
@@ -4612,7 +4620,7 @@ function movePcPick(d) {
 // 出す前に、いつものパフェ探索に解けるかどうかを確かめてもらっている。
 
 const PUZZLE_LEVELS = [
-  { id:'easy',   name:'やさしい',   rows:[2,3,4], give:2 },
+  { id:'easy',   name:'やさしい',   rows:[2,3,4], give:3 },
   { id:'normal', name:'ふつう',     rows:[4],     give:4 },
   { id:'hard',   name:'むずかしい', rows:[4],     give:6 },
 ];
@@ -4786,7 +4794,7 @@ function puzzleHud(kind){
     if(kind==='clear'){ msg.textContent='クリア！'; msg.style.color='#4ade80'; }
     else if(kind==='fail'){ msg.textContent='空になりませんでした'; msg.style.color='#f87171'; }
     else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
-    else { msg.textContent=TF('残り{0}手', nextQ.length+1+(holdType!==null?1:0)); msg.style.color='#d1d5db'; }
+    else { msg.textContent=''; }   // 打っている間は何も出さない
   }
   renderPuzzleLevels();
 }
@@ -6643,7 +6651,7 @@ function lock(){
   // パフェパズル: 盤面が空になったら正解。決着したら次のミノは出さない
   if(puzzleMode && puzzleJudge()){ draw(); return; }
   spawn();
-  if(puzzleMode) puzzleHud();   // 残り手数を減らす
+  if(puzzleMode) puzzleHud();   // 前の問題の「クリア！」を消す
   applyHeldPre();   // 押したままの先行回転・先行ホールドは、ここで次のミノに効かせる
   draw();
   tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
@@ -8814,7 +8822,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.6';
+const APP_VERSION = '2.12.7';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

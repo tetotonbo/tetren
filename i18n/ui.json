@@ -466,5 +466,7 @@
  "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
  "モード … DPCセット・ミノ欠け・パフェパズル・REN・デカミノ・マラソン・40LINE・せりあがり": "Mode — DPC setup, Custom bag, PC puzzle, C4W, Big pieces, Marathon, 40 LINE and Garbage.",
  "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
- "パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer."
+ "パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer.",
+ "DPC": "DPC",
+ "DPCセット。選んだミノをHOLDした状態にして、ミノの順番をリセットします": "DPC setup. Puts the piece you choose into hold and deals the pieces again from the start."
 }
