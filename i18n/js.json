@@ -183,7 +183,7 @@
  "SD＝ずらし入れや回し入れが要る置き方の数": "SD = the number of placements needing a slide or spin",
  "火力＝相手に送れる段数（Tスピン・テトリス・REN・B2B。パフェを決める最後の1手は数えません）。": "Attack = rows sent to the opponent (T-Spins, Tetrises, REN, B2B; the final piece of the PC is not counted).",
  "ずらし入れや回し入れが少ない順。次にラインを消す回数が少ない順": "Fewest slides and spins first, then fewest line clears",
- "最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視": "Shows only solutions that finish with a Tetris. Sorted by speed",
+ "最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視。ここで選ぶと設定にも残り、次の探索でもQPCがあればQPCから出します": "Shows only solutions that finish with a Tetris, sorted by speed. Choosing it here is remembered, so later searches show a QPC again whenever one exists.",
  "いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します": "Checks whether you can follow the reference with your current pieces (active, NEXT and the rest of this bag). Shapes that do not fit are dimmed",
  "自動検出しました。ズレていたら枠をドラッグ、角で大きさを調整できます。": "Detected automatically. Drag the frame to move it, or the corners to resize.",
  "自動検出できませんでした。枠を盤面（10列×20段）に合わせてください。": "Could not detect it. Line the frame up with the board (10 columns × 20 rows).",

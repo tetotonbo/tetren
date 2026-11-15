@@ -219,6 +219,8 @@
  "紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。": "You are free to use it in articles, videos and streams. No permission needed.",
  "複数段で上がるとき、直前の穴と同じ列になる確率（10％＝完全ランダム）": "Chance that the hole matches the previous row when several rows rise (10% = fully random).",
  "複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順": "How multiple solutions are ordered. Attack counts T-Spins, Tetrises, REN and B2B and sorts by the most garbage sent (the final piece of the Perfect Clear is not counted); ties go to the fewest soft drops. Speed sorts by the fewest slides and spins.",
+ "QPCを優先して出す": "Always show a QPC first",
+ "最後をテトリス（4ライン同時消し）で締める手順（QPC）があれば、いつでもそれを先に出します。QPCが無い盤面では「優先するもの」の並びで出しますが、設定は残るので、次にQPCがあればまたQPCを出します": "Whenever a solution that finishes with a Tetris (a QPC) exists, it is shown first. On a board with no QPC the solutions are ordered by Sort by instead, but the setting stays on, so the next board with a QPC shows a QPC again.",
  "選んだミノをHOLDした状態にして、ミノの順番を最初から組み直します。": "Puts the chosen piece in Hold and rebuilds the piece order from the start.",
  "選んだミノを抜いた残りで1巡目を回し、ゲームを最初から始めます。": "Runs the first bag without the chosen pieces and starts the game over.",
  "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
