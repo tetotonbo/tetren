@@ -410,6 +410,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
 
 /* パフェパズル */
 #puzzleMsg { font-size:8px; text-align:center; margin-top:2px; line-height:1.35; color:#d1d5db; }
+#puzzleMsg:empty { display:none; }   /* 何も出さないときは隙間を作らない */
+#puzzleAnsBtn { background:#4a2b33; border-color:#6b3a44; }   /* 答えは少し赤みがかった色 */
 #puzzleLevelRow { display:flex; gap:2px; margin-top:2px; }
 #puzzleLevelRow .rand-num { flex:1; min-width:0; padding:4px 0; font-size:8px; }
 #puzzlePanel .side-btn { min-width:0; }
@@ -1138,6 +1140,7 @@ const I18N_EN = {
 "パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
 "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
 "パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）": "In PC puzzle you can now undo after \"The board did not come out empty\" and carry on from there. The count of pieces left also goes down as you place them (it used to stay at the starting number).",
+"パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた": "In PC puzzle, Again has been replaced by Previous, so you can move back and forth between problems (the last 30 are kept; use Reset to restart the current one). Show the answer is now a slightly red button, \"Solved!\" appears over the board instead of in the panel, and the gap under the PC puzzle button is gone.",
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
 "パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり": "PC puzzle boards no longer have blocks hanging in mid-air. Each column is now hollowed out from the top down, so the stack sits the way a real one would, and because only neighbouring columns are hollowed the empty space stays in one piece.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
@@ -2069,12 +2072,12 @@ if (document.readyState === 'loading') {
         <div id="puzzleMsg"></div>
         <div id="puzzleLevelRow"></div>
         <div class="dpc-side-row">
+          <button class="side-btn" id="puzzlePrevBtn" style="flex:1;" title="1つ前に出した問題に戻ります"
+            onclick="prevPuzzle()">前の問題</button>
           <button class="side-btn" style="flex:1;" title="新しい問題を作ります"
             onclick="nextPuzzle()">次の問題</button>
-          <button class="side-btn" style="flex:1;" title="いまの問題を、出されたときの状態からやり直します"
-            onclick="retryPuzzle()">もう一度</button>
         </div>
-        <button class="side-btn" style="width:100%;margin-top:2px;"
+        <button class="side-btn" id="puzzleAnsBtn" style="width:100%;margin-top:2px;"
           title="最初の状態に戻して、パフェ探索の手順を出します" onclick="puzzleAnswer()">答えを見る</button>
       </div>
     </div>
@@ -2619,6 +2622,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.10 / 2.11.10</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.9 / 2.11.9</span><span class="vl-date">2026-11-15</span></div><ul><li>スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.8 / 2.11.8</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.7 / 2.11.7</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）</li></ul></div>
@@ -4776,12 +4780,24 @@ function puzzleJudge(){
   puzzleOver=true; gameOver=true;            // 次のミノは出さず、操作も止める
   resetLock();
   puzzleHud(empty?'clear':'fail');
+  if(empty) puzzleFieldMsg('クリア！','#4ade80');   // 文字は盤面の上に出す
   // クリアしたら、少しだけ見せてから次の問題へ進む
   if(empty){
     clearTimeout(puzzleNextTimer);
     puzzleNextTimer=setTimeout(()=>{ if(puzzleMode) nextPuzzle(); },900);
   }
   return true;
+}
+
+// 盤面の上に文字を出す。ふだんのライン消去の文字と同じ場所・同じ出かた
+function puzzleFieldMsg(text,color){
+  const el=document.getElementById('clearMsg');
+  if(!el) return;
+  el.innerHTML='<div style="font-size:22px;font-weight:bold;color:'+color+
+    ';text-shadow:0 2px 10px rgba(0,0,0,0.95);line-height:1.2;">'+T(text)+'</div>';
+  el.style.opacity='1';
+  if(clearMsgTimer) clearTimeout(clearMsgTimer);
+  clearMsgTimer=setTimeout(()=>{el.style.opacity='0';},1200);
 }
 
 // 画面の表示を、いまの状態に合わせる
@@ -4796,11 +4812,13 @@ function puzzleHud(kind){
   if(panel) panel.style.display = puzzleMode?'':'none';
   const msg=document.getElementById('puzzleMsg');
   if(msg){
-    if(kind==='clear'){ msg.textContent='クリア！'; msg.style.color='#4ade80'; }
+    if(kind==='clear'){ msg.textContent=''; }   // クリアの文字は盤面のほうに出す
     else if(kind==='fail'){ msg.textContent='空になりませんでした'; msg.style.color='#f87171'; }
     else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
     else { msg.textContent=''; }   // 打っている間は何も出さない
   }
+  const prev=document.getElementById('puzzlePrevBtn');
+  if(prev){ const ok=puzzleAt>0; prev.style.opacity=ok?'':'0.45'; prev.disabled=!ok; }
   renderPuzzleLevels();
 }
 
@@ -4841,18 +4859,34 @@ function togglePuzzle(){
 function stopPuzzle(){
   clearTimeout(puzzleNextTimer);
   puzzleMode=false; puzzleOver=false;
-  puzzleStart=null; gameOver=false;
+  puzzleStart=null; puzzleLog=[]; puzzleAt=-1; gameOver=false;
   puzzleHud();
   startGame();   // ふつうの練習に戻す
 }
-// 新しい問題を出す
+// 出した問題の控え。「前の問題」で戻れるようにするために持っておく
+let puzzleLog = [];    // 出した順
+let puzzleAt  = -1;    // いま見ている問題の位置
+const PUZZLE_LOG_MAX = 30;
+
+// 新しい問題を出す。控えに次の問題が残っていれば、それを出す
 function nextPuzzle(){
+  if(puzzleAt>=0 && puzzleAt<puzzleLog.length-1){
+    puzzleAt++; puzzleApply(puzzleLog[puzzleAt]); return true;
+  }
   const lv=PUZZLE_LEVELS.find(x=>x.id===puzzleId)||PUZZLE_LEVELS[1];
   const p=puzzleMake(lv);
   if(!p){ puzzleHud('none'); return false; }
+  puzzleLog.push(p);
+  if(puzzleLog.length>PUZZLE_LOG_MAX) puzzleLog.shift();
+  puzzleAt=puzzleLog.length-1;
   puzzleApply(p); return true;
 }
-// 同じ問題をやり直す
+// 1つ前に出した問題に戻る
+function prevPuzzle(){
+  if(puzzleAt<=0) return;
+  puzzleAt--; puzzleApply(puzzleLog[puzzleAt]);
+}
+// 同じ問題を、出されたときの状態からやり直す（リセットボタンから使う）
 function retryPuzzle(){ puzzleRestore(); }
 // 答えを見る: 最初の状態に戻してから、いつものパフェ探索にかける
 function puzzleAnswer(){
@@ -8827,7 +8861,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.9';
+const APP_VERSION = '2.12.10';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
