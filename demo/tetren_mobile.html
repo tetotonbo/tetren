@@ -766,6 +766,7 @@ const I18N_EN = {
 "ONの間だけ、盤面のクリック/ドラッグでブロックを設置・消去できます": "While on, you can click or drag on the board to add and erase blocks",
 "Oミノを最初からHOLDに入れる": "Start with the O piece in Hold",
 "PC版とスマホ版でバージョンがずれていたので、この版で 1.15.0 に揃えた": "The desktop and mobile versions had drifted apart, so both were lined up at 1.15.0 here.",
+"PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる": "On desktop the Display and Board groups lost their headings and boxes, leaving just the controls. The dashed frame still appears while editing the layout, so you can see what to grab.",
 "PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした": "The tab row on desktop now scrolls sideways when the window is too narrow for it.",
 "PC版へ": "Desktop version",
 "QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている": "It is slower because it has to prove there is no QPC. 40% of the time limit is given to the QPC search.",
@@ -2622,6 +2623,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.11 / 2.11.11</span><span class="vl-date">2026-11-15</span></div><ul><li>PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.10 / 2.11.10</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.9 / 2.11.9</span><span class="vl-date">2026-11-15</span></div><ul><li>スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.8 / 2.11.8</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした</li></ul></div>
@@ -8861,7 +8863,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.10';
+const APP_VERSION = '2.12.11';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
