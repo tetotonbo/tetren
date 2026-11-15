@@ -930,6 +930,7 @@ const I18N_EN = {
 "PC版へ": "Desktop version",
 "QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている": "It is slower because it has to prove there is no QPC. 40% of the time limit is given to the QPC search.",
 "QPCの判定を「最後の1手がIミノの縦置き」から「最後の1手が4ライン同時消し」に変えた": "Changed the QPC test from \"the last piece is a vertical I\" to \"the last piece clears four lines\".",
+"QPCを優先して出す": "Always show a QPC first",
 "REN。盤面の左右をおじゃまで埋めて、4列だけにします": "C4W. It fills both sides of the board with garbage, leaving only 4 columns.",
 "RENの入切": "Toggle C4W",
 "RENの間隔": "REN interval",
@@ -1610,7 +1611,8 @@ const I18N_EN = {
 "最初からHOLDに入れておくミノ": "The piece to start with in Hold",
 "最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。": "A Perfect Clear finished with a vertical I for a Tetris (QPC).",
 "最後まで受けきったときは 「やったー！」 を出して、ゲームオーバーと同じように終了する（「もう一度」「TD対策を再開」から再開できる）": "Surviving to the end now shows Nice! and finishes like a game over, with Again and Resume TD defense to start over.",
-"最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視": "Shows only solutions that finish with a Tetris. Sorted by speed",
+"最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視。ここで選ぶと設定にも残り、次の探索でもQPCがあればQPCから出します": "Shows only solutions that finish with a Tetris, sorted by speed. Choosing it here is remembered, so later searches show a QPC again whenever one exists.",
+"最後をテトリス（4ライン同時消し）で締める手順（QPC）があれば、いつでもそれを先に出します。QPCが無い盤面では「優先するもの」の並びで出しますが、設定は残るので、次にQPCがあればまたQPCを出します": "Whenever a solution that finishes with a Tetris (a QPC) exists, it is shown first. On a board with no QPC the solutions are ordered by Sort by instead, but the setting stays on, so the next board with a QPC shows a QPC again.",
 "最悪ケースで約0.8秒（1段に2マスだけ＝自由度最大の形）。ふつうは10ms未満。": "The worst case is about 0.8s (two cells in a row, the freest shape). It is usually under 10ms.",
 "枝刈り3つ": "Three pruning rules",
 "枝刈りを減らしたぶん、穴が少なくなる置き方から試す順序付けを入れた": "With less pruning, placements that leave fewer holes are now tried first.",
@@ -1764,6 +1766,7 @@ const I18N_EN = {
 "設定の「その他」に 「ミノ設置直後にせりあがり」 を追加": "Added Rise right after locking to the Other settings.",
 "設定の「その他」に テンプレートの反転を別の窓にも出す を追加（既定ON）。テンプレートの窓とは別に、左右反転した形の窓も出す。反転の窓は枠と見出しをオレンジにして ⇄ 反転 の印をつけるので、ひと目で見分けられる。あわせて窓の中の ⇄ 反転 を、その場で入れ替えるのではなく反転の窓を出すボタンにした（出ているあいだは隠す）。ONかOFFかは覚えているので、閉じても開き直しても次から同じように出る。反転の窓には「左右反転込み」の確率は出さない（本体とまったく同じ数字になるため）。反転のほうを組んだときも次の巡へ進む（別画面を出していなければ、そのとき出す）": "Added a Show the mirrored template in a second window switch under Other in the settings, on by default. The mirrored shape appears in its own window beside the template, with an amber frame and a ⇄ Mirror tag so you can tell the two apart at a glance. ⇄ Mirror inside the window now opens that second window instead of flipping the shape in place, and is hidden while the second window is open. The setting is remembered, so it comes back the next time you open a template. The second window does not repeat the With mirror figure, since it is always identical to the one in the main window. Building the mirrored version now advances to the next bag as well, opening the second window if it is not already there.",
 "設定の「その他」にパフェ探索の項目を追加": "Added the PC finder settings under Other.",
+"設定の「パフェ探索」に 「QPCを優先して出す」 を追加。ONの間は、QPCのある盤面ではいつでもQPCの手順から出す。QPCの無い盤面では「優先するもの」（火力／速度）の並びで出すが、設定は残るので、次にQPCがあればまたQPCに戻る。これまでは手順ウィンドウのQPCボタンだけで、探索し直すと解除され、QPCの無い盤面に当たった時点でも解除されていた（PC版・スマホ版とも）": "Added \"Always show a QPC first\" to the PC finder settings. While it is on, any board with a QPC shows the QPC solution first; a board with no QPC falls back to the Sort by order (Attack or Speed), but the setting stays on, so the next board with a QPC shows a QPC again. Until now this lived only in the QPC button of the steps window: it was cleared by the next search, and by the first board with no QPC (desktop and mobile).",
 "設定の「パフェ探索」に 「パフェ時のライン消去を火力にふくめる」 を追加（既定はOFF＝含めない）": "Added Count the final clear as attack to the PC finder settings (off by default).",
 "設定の「パフェ探索」に 「手順をミノの操作に追従する」（既定ON）を追加": "Added Follow my moves through the steps to the PC finder settings (on by default).",
 "設定の「パフェ探索」を独立したタブにした（これまでは「その他」の中）": "The PC finder settings now have their own tab; they used to live under Other.",
@@ -2967,6 +2970,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.11.0 / 2.10.0</span><span class="vl-date">2026-11-15</span></div><ul><li>設定の「パフェ探索」に 「QPCを優先して出す」 を追加。ONの間は、QPCのある盤面ではいつでもQPCの手順から出す。QPCの無い盤面では「優先するもの」（火力／速度）の並びで出すが、設定は残るので、次にQPCがあればまたQPCに戻る。これまでは手順ウィンドウのQPCボタンだけで、探索し直すと解除され、QPCの無い盤面に当たった時点でも解除されていた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.2 / 2.09.2</span><span class="vl-date">2026-11-15</span></div><ul><li>使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.1 / 2.09.1</span><span class="vl-date">2026-11-14</span></div><ul><li>HOLDで入れ替えたミノと、1手戻したミノも、出現位置がふさがっていたら上に逃がすようにした。これまでは地形に重なったまま出ていた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.10.0 / 2.09.0</span><span class="vl-date">2026-11-14</span></div><ul><li>出現位置がふさがっているときに、1段上（21段目）に出すようにした。真ん中の20段目が埋まっていても、ぷよテトと同じようにその上にミノが出るので、すぐにゲームオーバーにならない（PC版・スマホ版とも）</li></ul></div>
@@ -3537,6 +3541,14 @@ if (document.readyState === 'loading') {
         <span class="opt-label">優先するもの
           <span class="opt-note">複数見つかったときの並べ替え方。火力重視は Tスピン・テトリス・REN・B2B を数えて、相手に送れる段数が多い順（パフェを決める最後の1手は数えません）。同じ火力ならソフトドロップが少ない順。速度重視は、ずらし入れや回し入れが少ない順</span></span>
         <div class="opt-step" id="optPcPriorityRow"></div>
+      </div>
+      <div class="opt-row" id="optPcQpcFirstRow">
+        <span class="opt-label">QPCを優先して出す
+          <span class="opt-note">最後をテトリス（4ライン同時消し）で締める手順（QPC）があれば、いつでもそれを先に出します。QPCが無い盤面では「優先するもの」の並びで出しますが、設定は残るので、次にQPCがあればまたQPCを出します</span></span>
+        <label class="tgl-row" style="flex:0 0 auto;">
+          <input type="checkbox" id="optPcQpcFirst" onchange="setPcQuadOnly(this.checked)">
+          <span class="tgl"></span>
+        </label>
       </div>
       <div class="opt-row">
         <span class="opt-label">手順をミノの操作に追従する
@@ -8234,7 +8246,9 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   // 「候補を複数出す」がOFFなら並べ替えもしない（設定画面でもグレーアウトしている）。
   // 並べ替えるときは多めに集めてから。つけないときは必要数で打ち切る（そのぶん速い）
   const rank = opts.pcMulti && opts.pcRank;
-  const cap = rank ? Math.min(300, want * 10) : want;
+  const cap = rank ? Math.min(300, want * 10)
+            : opts.pcQpcFirst ? Math.min(300, Math.max(want, 5) * 10)   // QPC優先。1件で打ち切るとQPCに当たらない
+            : want;
   const st = {
     nodes: 0, aborted: false, found: [], cap,
     deadline: performance.now() + Math.max(1, opts.pcTimeout | 0 || 5) * 1000,
@@ -8265,7 +8279,7 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
     pcBase = [];
     for (let r = 0; r < n; r++) pcBase.push(board[base + r].slice()); }
   pcAll = list.map(path => ({ path, k: pcStats(path) }));
-  pcQuadOnly = false;
+  pcQuadOnly = !!opts.pcQpcFirst;   // 設定がONなら、探索し直してもQPCから出す
   pcWant = want;
   pcRankOn = rank;
   pcApplyRank();
@@ -8366,7 +8380,7 @@ function openPcSteps() {
                 'onclick="setPcPriority(\'power\');this.blur()">火力</button>' +
         '<button id="pcPrioSpd" title="ずらし入れや回し入れが少ない順。次にラインを消す回数が少ない順" ' +
                 'onclick="setPcPriority(\'speed\');this.blur()">速度</button>' +
-        '<button id="pcPrioQpc" title="最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視" ' +
+        '<button id="pcPrioQpc" title="最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視。ここで選ぶと設定にも残り、次の探索でもQPCがあればQPCから出します" ' +
                 'onclick="setPcQuadOnly(true);this.blur()">QPC</button>' +
       '</div>' +
       '<div class="pc-nav" id="pcPickNav">' +
@@ -8448,14 +8462,18 @@ function setPcAtkLast(on) {
   }
 }
 
-// QPC（最後がテトリス）だけに絞る／やめる
+// QPC（最後がテトリス）だけに絞る／やめる。
+// 設定にも残すので、探索し直してもQPCから出る。
+// QPCの無い盤面では pcApplyRank() が一時的に外すだけで、設定はそのまま
 function setPcQuadOnly(on) {
   pcQuadOnly = !!on;
+  setOption('pcQpcFirst', !!on);
   pcRefresh();
 }
 // 優先順位の切り替え。設定からも手順ウィンドウからも、ここを通る
 function setPcPriority(v) {
   pcQuadOnly = false;          // 火力／速度を選んだらQPC抽出はやめる
+  setOption('pcQpcFirst', false);   // 自分で選び直したので、QPC優先も解除する
   setOption('pcPriority', v);
   pcRefresh();
 }
@@ -9939,6 +9957,7 @@ const OPT_DEFAULTS = {
   tplJudge: true,     // テンプレートが今のミノで組めるかを判定する
   tplMirrorWin: true, // 反転した形を、もう1枚の窓に並べて出す
   pcPriority: 'power',// パフェ探索の優先（'power'=火力重視／'speed'=速度重視）
+  pcQpcFirst: false,  // QPCがあればいつでもQPCを先に出す（無い盤面だけ pcPriority の並び）
   pcAtkLast: false,   // パフェを決める最後の1手を火力に数えるか
   pcFollow: true,     // パフェ手順を、置いたミノに合わせて自動で進める
   pcMulti: true,      // パフェ探索で候補を複数出す
@@ -10128,6 +10147,7 @@ function applyOptions() {
     dim('optPcPriorityOuterRow', opts.pcMulti && opts.pcRank);
     dim('optPcAtkLastRow',        opts.pcMulti); }
   check('optPcFollow', opts.pcFollow);
+  check('optPcQpcFirst', opts.pcQpcFirst);
   showGhost = opts.ghost;
   showAxis  = opts.axis;
   showGrid  = opts.grid;
@@ -10417,7 +10437,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.09.2';
+const APP_VERSION = '2.10.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
