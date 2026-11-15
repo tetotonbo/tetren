@@ -1131,6 +1131,7 @@ const I18N_EN = {
 "パフェパズル": "PC puzzle",
 "パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
 "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
+"パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）": "In PC puzzle you can now undo after \"The board did not come out empty\" and carry on from there. The count of pieces left also goes down as you place them (it used to stay at the starting number).",
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
 "パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり": "PC puzzle boards no longer have blocks hanging in mid-air. Each column is now hollowed out from the top down, so the stack sits the way a real one would, and because only neighbouring columns are hollowed the empty space stays in one piece.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
@@ -2195,7 +2196,7 @@ if (document.readyState === 'loading') {
       <button class="opt-btn" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn" data-ctrl="undo"
-        onclick="if(!gameOver&&undoStack.length)undo()">戻す ↩</button>
+        onclick="if((!gameOver||puzzleUndoOK())&&undoStack.length)undo()">戻す ↩</button>
     </div>
     <div id="colorPaletteWrap"></div>
   </div>
@@ -2608,6 +2609,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.6 / 2.11.6</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.5 / 2.11.5</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.4 / 2.11.4</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.3 / 2.11.3</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした</li></ul></div>
@@ -6570,8 +6572,18 @@ function saveSnapshot(){
 }
 
 // ===== Undo =====
+// パフェパズルで決着したあと、1手戻して続きを考えられる場面かどうか
+function puzzleUndoOK(){ return puzzleMode && puzzleOver && undoStack.length>0; }
+
 function undo(){
   if(!undoStack.length) return;
+  // パズルの決着後なら、戻した時点から続きを打てるようにする
+  if(puzzleMode && puzzleOver){
+    clearTimeout(puzzleNextTimer);
+    puzzleOver=false; gameOver=false;
+    puzzleResume();
+    setTimeout(puzzleHud,0);
+  }
   setTimeout(tplRefresh, 0);   // 戻したらテンプレの判定もやり直す
   const s=undoStack.pop(); resetLock();
   board=s.board; cur=mkPiece(s.cur.type); fitSpawn(); holdType=s.holdType; canHold=s.canHold;
@@ -6631,6 +6643,7 @@ function lock(){
   // パフェパズル: 盤面が空になったら正解。決着したら次のミノは出さない
   if(puzzleMode && puzzleJudge()){ draw(); return; }
   spawn();
+  if(puzzleMode) puzzleHud();   // 残り手数を減らす
   applyHeldPre();   // 押したままの先行回転・先行ホールドは、ここで次のミノに効かせる
   draw();
   tplRefresh();   // 手持ちが変わったので、テンプレートの判定を見直す
@@ -7762,6 +7775,11 @@ document.addEventListener('keydown',e=>{
   if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
   // ボタンと同じ操作も、ゲームオーバー中から使えるようにする
   if(kcButtonKey(e)) return;
+  // パフェパズルで「空になりませんでした」となったあとも、1手戻すだけは効かせる
+  if(puzzleUndoOK() && !e.repeat &&
+     (kcMatch('undo',e.code) || ((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'))){
+    e.preventDefault(); undo(); return;
+  }
   if(gameOver) return;
   if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();if(!e.repeat)undo();return;}
   const c=e.code;
@@ -8518,6 +8536,8 @@ function pollGamepad() {
   if (hit('restart'))   startGame();
   if (hit('missAgain')) repeatMiss();
 
+  if (puzzleUndoOK() && hit('undo')) undo();   // パズルの決着後も1手戻せるように
+
   if (!gameOver) {
     // 左右はキーボードと同じ経路に流し、DAS/ARRの設定をそのまま使う
     if (hit('moveLeft'))  { moveH(-1); pressDir('L'); }
@@ -8794,7 +8814,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.5';
+const APP_VERSION = '2.12.6';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
