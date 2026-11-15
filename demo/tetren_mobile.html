@@ -1131,6 +1131,7 @@ const I18N_EN = {
 "パフェパズル": "PC puzzle",
 "パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
 "パフェパズル。パフェができる問題を自動で作ります。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
+"パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
@@ -2603,6 +2604,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.1 / 2.11.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.12.0 / 2.11.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.11.1 / 2.10.1</span><span class="vl-date">2026-11-15</span></div><ul><li>開いた直後の落下設定を、自由落下を止めた状態（⏸）から始めるようにした。落下設定の値はそのままで、▶ を押せばこれまでどおり落ちる（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.11.0 / 2.10.0</span><span class="vl-date">2026-11-15</span></div><ul><li>設定の「パフェ探索」に 「QPCを優先して出す」 を追加。ONの間は、QPCのある盤面ではいつでもQPCの手順から出す。QPCの無い盤面では「優先するもの」（火力／速度）の並びで出すが、設定は残るので、次にQPCがあればまたQPCに戻る。これまでは手順ウィンドウのQPCボタンだけで、探索し直すと解除され、QPCの無い盤面に当たった時点でも解除されていた（PC版・スマホ版とも）</li></ul></div>
@@ -3594,9 +3596,13 @@ function fitSpawn(){
 
 function spawn(){
   fillQ();
-  // パフェパズル中、出題したミノを使い切ったらそこで決着
-  if(puzzleMode && !nextQ.length){ puzzleJudge(); return; }
-  cur=mkPiece(nextQ.shift().type);
+  // パフェパズル中、ツモが尽きたとき。HOLDに預けたミノが残っていれば、それを出して続ける
+  let 次の型;
+  if(puzzleMode && !nextQ.length){
+    if(holdType===null){ puzzleJudge(); return; }   // 打つミノがもう無い＝ここで決着
+    次の型=holdType; holdType=null;
+  } else 次の型=nextQ.shift().type;
+  cur=mkPiece(次の型);
   resumeDAS();   // 左右を押したまま次のミノに移っても動き続けるようにする
   canHold=true; lastWasRotation=false; lastKickIndex=0;
   // ふさがっていたら上に逃がす。1段上（21段目）で収まらなければゲームオーバー
@@ -4657,16 +4663,27 @@ function puzzleMake(lv){
   while(performance.now()<limit){
     const tiles=puzzleTiling(lv.rows);
     if(!tiles||tiles.length<=lv.give) continue;
-    // 上にあるミノほど「あとから置く」ことになるので、そちらをツモに回す
+    // 上にあるミノほど「あとから置く」ことになるので、そちらをツモに回す。
+    // ただし配るミノは、7種1巡の法則にならって同じ種類が重ならないように選ぶ
     const 上=t=>Math.min(...t.cells.map(c=>c[0]));
     const order=tiles.slice().sort((a,b)=>上(a)-上(b));
-    const give=order.slice(0,lv.give), keep=order.slice(lv.give);
+    const give=[], keep=[], 使った=new Set();
+    for(const t of order){
+      if(give.length<lv.give && !使った.has(t.type)){ 使った.add(t.type); give.push(t); }
+      else keep.push(t);
+    }
+    if(give.length<lv.give) continue;   // 種類が足りなかった。別の敷き詰めでやり直す
+    // 地形を組み立て、すでに揃っている行はここで消しておく（出した瞬間に消えるのを避ける）
+    let grid=Array.from({length:lv.rows},()=>new Array(COLS).fill(null));
+    for(const t of keep) for(const [r,c] of t.cells) grid[r][c]=GARBAGE_COLOR;
+    grid=grid.filter(row=>row.some(v=>!v));
+    if(!grid.length) continue;          // 全部消えてしまう形は問題にならない
     // 重力で本当に置けるか、いつものパフェ探索に確かめてもらう
-    const H=lv.rows+PC_PAD, f=new Array(H).fill(0);
-    for(const t of keep) for(const [r,c] of t.cells) f[H-lv.rows+r] |= (1<<c);
+    const rows=grid.length, H=rows+PC_PAD, f=new Array(H).fill(0);
+    for(let r=0;r<rows;r++) for(let c=0;c<COLS;c++) if(grid[r][c]) f[H-rows+r]|=(1<<c);
     const st={nodes:0,aborted:false,found:[],cap:1,deadline:performance.now()+200};
     pcCollect(f, give.map(t=>t.type), 0, null, new Map(), new Map(), st, []);
-    if(st.found.length) return {rows:lv.rows, keep, give};
+    if(st.found.length) return {rows, grid, give};
   }
   return null;
 }
@@ -4678,7 +4695,7 @@ function puzzleResume(){ cancelAnimationFrame(rafId); rafId=requestAnimationFram
 function puzzleApply(p){
   clearPcResult(); closePcSteps();
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
-  for(const t of p.keep) for(const [r,c] of t.cells) board[TROW-p.rows+r][c]=pieceColor(t.type);
+  for(let r=0;r<p.rows;r++) for(let c=0;c<COLS;c++) board[TROW-p.rows+r][c]=p.grid[r][c];
   bag=[]; nextQ=p.give.map(t=>({type:t.type,newBag:false,idx:0}));
   holdType=null; canHold=true;
   undoStack=[]; ren=0; b2b=false; lastGarbageCol=null;
@@ -4706,7 +4723,7 @@ function puzzleRestore(){
 function puzzleJudge(){
   if(!puzzleMode||puzzleOver) return false;
   const empty=board.every(row=>row.every(v=>!v));
-  if(!empty && nextQ.length) return false;   // まだ打てる
+  if(!empty && (nextQ.length||holdType!==null)) return false;   // HOLDが残っていればまだ打てる
   puzzleOver=true; gameOver=true;            // 次のミノは出さず、操作も止める
   resetLock();
   if(empty) puzzleStreak++; else puzzleStreak=0;
@@ -4729,7 +4746,8 @@ function puzzleHud(kind){
     if(kind==='clear'){ msg.textContent=TF('クリア！　連続{0}問',puzzleStreak); msg.style.color='#4ade80'; }
     else if(kind==='fail'){ msg.textContent='空になりませんでした'; msg.style.color='#f87171'; }
     else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
-    else { msg.textContent=TF('残り{0}手　連続{1}問',nextQ.length+1,puzzleStreak); msg.style.color='#d1d5db'; }
+    else { msg.textContent=TF('残り{0}手　連続{1}問',
+      nextQ.length+1+(holdType!==null?1:0), puzzleStreak); msg.style.color='#d1d5db'; }
   }
   renderPuzzleLevels();
 }
@@ -8734,7 +8752,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.0';
+const APP_VERSION = '2.12.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
