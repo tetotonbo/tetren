@@ -1750,6 +1750,7 @@ const I18N_EN = {
 "開幕テンプレート（1巡目の置き方）": "Opener templates (first-bag placement)",
 "開幕パフェ積み": "Opening stack",
 "開幕パフェ積みのIミノホールド": "I piece in hold (opening stack)",
+"開幕パフェ積みの地形を、毎回ちがう積み方で作るようにした。これまでは1つの形（と左右反転）だけだったので、似た問題ばかり出ていた。「地形が1巡目の7種のミノちょうどで組める」「残りが配るミノで重力どおりに置けてパフェになる」の2つを満たす形だけを出すので、積み方が変わっても必ず解ける（Iミノホールドのときは、Iを除く6種で組める形から作る）": "The opening stack is now built fresh for every problem. It used to be one fixed shape (plus its mirror), so the problems all looked alike. Only shapes that satisfy both rules are used — the stack must be buildable from exactly the seven pieces of the first bag, and what is left must be placeable with gravity for a Perfect Clear — so however the stack changes, it can always be solved. With an I in hold the stack is built from the other six pieces.",
 "開幕パフェ積みの左右反転": "Mirror the opening stack",
 "開幕時に組める確率": "Chance of building it from the start",
 "間隔 ‹ ›": "Interval ‹ ›",
@@ -2664,6 +2665,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.3 / 2.12.3</span><span class="vl-date">2026-11-16</span></div><ul><li>開幕パフェ積みの地形を、毎回ちがう積み方で作るようにした。これまでは1つの形（と左右反転）だけだったので、似た問題ばかり出ていた。「地形が1巡目の7種のミノちょうどで組める」「残りが配るミノで重力どおりに置けてパフェになる」の2つを満たす形だけを出すので、積み方が変わっても必ず解ける（Iミノホールドのときは、Iを除く6種で組める形から作る）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.2 / 2.12.2</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズル中にリスタートのキー（既定はN）やゲームオーバーの「もう一度」を押すと、盤面が空のまま止まってしまっていたのを修正。パズル中はどこから始め直しても、同じ問題を出し直すようにした（PC版。リセットボタンは以前から同じ動き）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.1 / 2.12.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.13.0 / 2.12.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルに「開幕パフェ積み」を追加。1巡目を積み終えた形を固定の地形として出し、残りをパフェで消してもらう。設定の「パフェ探索」にパフェパズルの項目を作り、開いたときの難しさ・開幕パフェ積みの左右反転（しない／する／ランダム）・Iミノホールド（なし／あり／ランダム。ありのときは右の壁が1列少なく4手で埋める形）を選べるようにした</li></ul></div>
@@ -4703,21 +4705,6 @@ const PUZZLE_LEVELS = [
   { id:'opener', name:'開幕パフェ積み', opener:true },
 ];
 
-// 開幕パフェ積み。1巡目を積み終えたときの形（# が地形、. が空き）。
-// 左が階段、右が壁。残りの12マスを次の3手で埋めるとパフェになる
-const PUZZLE_OPENER = [
-  '##....####',
-  '###...####',
-  '####..####',
-  '###...####',
-];
-// Iミノをホールドに残したとき。右の壁が1列ぶん少なく、16マスを4手で埋める
-const PUZZLE_OPENER_I = [
-  '##.....###',
-  '###....###',
-  '####...###',
-  '###....###',
-];
 
 let puzzleMode   = false;      // パフェパズル中か
 let puzzleId     = 'normal';   // 選んでいる難易度
@@ -4766,7 +4753,7 @@ function puzzleHoles(rows, cells){
 
 // 穴を、種類のちがうミノ need 個でぴったり埋める組み合わせを探す。
 // 左上の空きから順に埋めていき、入らなければ1つ戻ってやり直す
-function puzzleFill(穴, rows, need, must){
+function puzzleFill(穴, rows, need, must, exclude){
   const shapes=puzzleShapes(), 残り=穴.map(r=>r.slice());
   const 使った=new Set(), 置いた=[];
   const 空き=()=>{
@@ -4782,7 +4769,8 @@ function puzzleFill(穴, rows, need, must){
     const order=shapes.slice();
     for(let i=order.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[order[i],order[j]]=[order[j],order[i]];}
     for(const sh of order){
-      if(使った.has(sh.type)) continue;   // 7種1巡の法則にならって、同じ種類は使わない
+      // 7種1巡の法則にならって同じ種類は使わない。exclude は「今回は使わないミノ」
+      if(使った.has(sh.type) || sh.type===exclude) continue;
       const [br,bc]=sh.cells[0];
       const put=sh.cells.map(([a,b])=>[r0+a-br,c0+b-bc]);
       if(put.some(([a,b])=>a<0||a>=rows||b<0||b>=COLS||!残り[a][b])) continue;
@@ -4800,37 +4788,63 @@ function puzzleFill(穴, rows, need, must){
 // 「しない／する／ランダム」の設定を、その問題の true / false に決める
 function puzzlePick(v){ return v==='random' ? Math.random()<0.5 : v==='on'; }
 
-// 開幕パフェ積みの問題を作る。地形は決まっているので、
-// 決めるのは「左右反転するか」「Iミノをホールドに持つか」と、埋めるミノの並び
+// 開幕パフェ積みの問題を作る。1巡目を積み終えた形を、毎回ちがう形で作る。
+// 条件は実際の開幕パフェと同じで、
+//   ・地形が7種のミノちょうどで組めること（Iをホールドに残すときは、Iを除く6種）
+//   ・残りのマスが、配るミノで重力どおりに置けてパフェになること
+// この2つを満たす形だけを出すので、積み方は毎回ちがっても必ず解ける。
 function puzzleMakeOpener(){
-  const iHold=puzzlePick(opts.puzzleIHold||'random');
-  const mirror=puzzlePick(opts.puzzleMirror||'random');
-  const base=iHold?PUZZLE_OPENER_I:PUZZLE_OPENER;
-  let 穴=base.map(line=>line.split('').map(ch=>ch==='.'));
-  if(mirror) 穴=穴.map(line=>line.slice().reverse());
-  const rows=穴.length, need=iHold?4:3;
-  const H=rows+PC_PAD, f=new Array(H).fill(0);
-  for(let r=0;r<rows;r++) for(let c=0;c<COLS;c++) if(!穴[r][c]) f[H-rows+r]|=(1<<c);
-  const grid=穴.map(line=>line.map(v=>v?null:GARBAGE_COLOR));
-  // 埋め方は何通りかあるので、まず集めてから1つ選ぶ（同じ組み合わせばかりにならないように）
-  const 組=new Map();
-  for(let i=0;i<24;i++){
-    const types=puzzleFill(穴, rows, need, iHold?'I':null);
-    if(!types) break;
-    組.set(types.slice().sort().join(''), types);
-  }
-  const 候補=[...組.values()];
-  for(let i=候補.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[候補[i],候補[j]]=[候補[j],候補[i]];}
-  for(const types of 候補){
-    const 配る=iHold?types.filter(t=>t!=='I'):types;
-    const st={nodes:0,aborted:false,found:[],cap:20,deadline:performance.now()+300};
-    pcCollect(f, 配る, 0, iHold?'I':null, new Map(), new Map(), st, []);
-    if(!st.found.length) continue;   // 置く順番で詰まる組み合わせだった。別の埋め方へ
-    // 手順の並びからホールドのIを除いたものが、そのまま配るツモになる。
-    // 見つかった手順の中から1つ選ぶので、置く順番も毎回同じにはならない
-    const path=st.found[Math.random()*st.found.length|0];
-    const give=path.map(m=>m.type).filter(t=>!(iHold&&t==='I'));
-    return {rows, grid, give, hold: iHold?'I':null};
+  const iHold  = puzzlePick(opts.puzzleIHold  || 'random');
+  const mirror = puzzlePick(opts.puzzleMirror || 'random');
+  const rows = 4, need = iHold ? 4 : 3, 巡 = iHold ? 6 : 7;
+  const shapes = puzzleShapes();
+  const limit = performance.now() + 1500;
+  const 混ぜる = a => { for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  while (performance.now() < limit) {
+    // 配るミノ。次の巡から引くので種類は重ならない。Iホールドのときは I を必ず入れる
+    let types = 混ぜる(ALL_TYPES.slice());
+    types = iHold ? 混ぜる(types.filter(t => t !== 'I').slice(0, need - 1).concat('I'))
+                  : types.slice(0, need);
+    // 配るミノの置き跡を穴にする。穴どうしはつながるように掘る
+    const 穴 = Array.from({ length: rows }, () => new Array(COLS).fill(false));
+    let ok = true;
+    for (const type of types) {
+      const cand = [];
+      for (const sh of shapes) {
+        if (sh.type !== type) continue;
+        for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++) {
+          const put = sh.cells.map(([a, b]) => [r + a, c + b]);
+          if (put.every(([a, b]) => a >= 0 && a < rows && b >= 0 && b < COLS && !穴[a][b])) cand.push(put);
+        }
+      }
+      if (!cand.length) { ok = false; break; }
+      const 接する = cand.filter(put => put.some(([a, b]) =>
+        (a > 0 && 穴[a - 1][b]) || (a < rows - 1 && 穴[a + 1][b]) ||
+        (b > 0 && 穴[a][b - 1]) || (b < COLS - 1 && 穴[a][b + 1])));
+      const 候補 = 接する.length ? 接する : cand;
+      候補[Math.random() * 候補.length | 0].forEach(([a, b]) => 穴[a][b] = true);
+    }
+    if (!ok) continue;
+    if (!穴.every(row => row.some(v => v))) continue;   // 穴の無い行は、出した時点で揃ってしまう
+    // 1巡目のミノちょうどで積める形か（Iをホールドに残すときは、Iを使わずに組めるか）
+    const 地形 = 穴.map(row => row.map(v => !v));
+    if (!puzzleFill(地形, rows, 巡, null, iHold ? 'I' : null)) continue;
+    const 向き = mirror ? 穴.map(row => row.slice().reverse()) : 穴;
+    // 重力で本当に置けるか、いつものパフェ探索に確かめてもらう
+    const H = rows + PC_PAD, f = new Array(H).fill(0);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < COLS; c++)
+      if (!向き[r][c]) f[H - rows + r] |= (1 << c);
+    const 配る = iHold ? types.filter(t => t !== 'I') : types;
+    const st = { nodes:0, aborted:false, found:[], cap:20,
+                 deadline: performance.now() + 200 };
+    pcCollect(f, 配る, 0, iHold ? 'I' : null, new Map(), new Map(), st, []);
+    if (!st.found.length) continue;
+    // 見つかった手順から1つ選ぶので、同じ形でも置く順番は毎回同じにはならない
+    const path = st.found[Math.random() * st.found.length | 0];
+    const give = path.map(m => m.type).filter(t => !(iHold && t === 'I'));
+    const grid = 向き.map(row => row.map(v => v ? null : GARBAGE_COLOR));
+    return { rows, grid, give, hold: iHold ? 'I' : null };
   }
   return null;
 }
@@ -9022,7 +9036,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.2';
+const APP_VERSION = '2.13.3';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
