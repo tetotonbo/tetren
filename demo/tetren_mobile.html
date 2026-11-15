@@ -68,6 +68,14 @@ canvas { display:block; }
 #holdCanvas, #nextCanvas { margin:0 auto; }
 #boardCanvas { border:2px solid #374151; border-radius:2px; display:block; }
 #boardWrap { position:relative; line-height:0; }
+/* パフェパズルの「クリア！」。盤面の上に重ねる */
+#puzzleField {
+  position:absolute; left:0; right:0; top:38%; z-index:4;
+  text-align:center; pointer-events:none;
+  font-size:30px; font-weight:bold; letter-spacing:2px; line-height:1.2;
+  color:#4ade80; text-shadow:0 3px 14px rgba(0,0,0,.95);
+  opacity:0; transition:opacity .35s;
+}
 /* 盤面に重ねる READY / GO!。押せないように素通りさせる */
 #tdMsg {
   position:absolute; inset:0; z-index:3; display:none;
@@ -1143,6 +1151,7 @@ const I18N_EN = {
 "パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）": "In PC puzzle you can now undo after \"The board did not come out empty\" and carry on from there. The count of pieces left also goes down as you place them (it used to stay at the starting number).",
 "パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた": "In PC puzzle, Again has been replaced by Previous, so you can move back and forth between problems (the last 30 are kept; use Reset to restart the current one). Show the answer is now a slightly red button, \"Solved!\" appears over the board instead of in the panel, and the gap under the PC puzzle button is gone.",
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
+"パフェパズルの「クリア！」を、盤面の真ん中に重ねて出すようにした。これまでは左右の列にある「ライン消去メッセージ」の場所に出ていて、盤面の外に表示されていた": "\"Solved!\" in PC puzzle is now drawn across the middle of the board. It used to go where the line-clear message sits, which is outside the board.",
 "パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり": "PC puzzle boards no longer have blocks hanging in mid-air. Each column is now hollowed out from the top down, so the stack sits the way a real one would, and because only neighbouring columns are hollowed the empty space stays in one piece.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
 "パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）": "PC puzzle no longer shows how many pieces are left, and Easy now deals three pieces instead of two, which was too easy. On mobile the DPC setup and Desktop buttons no longer wrap onto two lines (DPC setup is shortened to \"DPC\" in the narrow column, with the full name in its tooltip).",
@@ -2146,6 +2155,8 @@ if (document.readyState === 'loading') {
 
     <div id="boardWrap">
       <canvas id="boardCanvas"></canvas>
+      <!-- パフェパズルの「クリア！」。盤面の真ん中に重ねて出す -->
+      <div id="puzzleField"></div>
       <!-- TD中空け対策の READY / GO! -->
       <div id="tdMsg"><div id="tdMsgMain"></div><div id="tdMsgNote"></div></div>
     </div>
@@ -2623,6 +2634,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.12 / 2.11.12</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「クリア！」を、盤面の真ん中に重ねて出すようにした。これまでは左右の列にある「ライン消去メッセージ」の場所に出ていて、盤面の外に表示されていた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.11 / 2.11.11</span><span class="vl-date">2026-11-15</span></div><ul><li>PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.10 / 2.11.10</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.9 / 2.11.9</span><span class="vl-date">2026-11-15</span></div><ul><li>スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）</li></ul></div>
@@ -4792,14 +4804,15 @@ function puzzleJudge(){
 }
 
 // 盤面の上に文字を出す。ふだんのライン消去の文字と同じ場所・同じ出かた
+let puzzleMsgTimer=null;
 function puzzleFieldMsg(text,color){
-  const el=document.getElementById('clearMsg');
+  const el=document.getElementById('puzzleField');
   if(!el) return;
-  el.innerHTML='<div style="font-size:22px;font-weight:bold;color:'+color+
-    ';text-shadow:0 2px 10px rgba(0,0,0,0.95);line-height:1.2;">'+T(text)+'</div>';
+  el.textContent=T(text);
+  el.style.color=color;
   el.style.opacity='1';
-  if(clearMsgTimer) clearTimeout(clearMsgTimer);
-  clearMsgTimer=setTimeout(()=>{el.style.opacity='0';},1200);
+  if(puzzleMsgTimer) clearTimeout(puzzleMsgTimer);
+  puzzleMsgTimer=setTimeout(()=>{el.style.opacity='0';},1200);
 }
 
 // 画面の表示を、いまの状態に合わせる
@@ -8863,7 +8876,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.11';
+const APP_VERSION = '2.12.12';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

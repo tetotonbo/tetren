@@ -1,4 +1,5 @@
 {
+ "パフェパズルの「クリア！」を、盤面の真ん中に重ねて出すようにした。これまでは左右の列にある「ライン消去メッセージ」の場所に出ていて、盤面の外に表示されていた": "\"Solved!\" in PC puzzle is now drawn across the middle of the board. It used to go where the line-clear message sits, which is outside the board.",
  "PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる": "On desktop the Display and Board groups lost their headings and boxes, leaving just the controls. The dashed frame still appears while editing the layout, so you can see what to grab.",
  "パフェパズルの「もう一度」を「前の問題」に替えて、前の問題・次の問題で行き来できるようにした（出した問題を30問ぶん控えておく。同じ問題のやり直しはリセットボタンで）。「答えを見る」を少し赤みがかった色にした。「クリア！」の文字は盤面の上に出すようにして、パフェパズルの下にできていた隙間も埋めた": "In PC puzzle, Again has been replaced by Previous, so you can move back and forth between problems (the last 30 are kept; use Reset to restart the current one). Show the answer is now a slightly red button, \"Solved!\" appears over the board instead of in the panel, and the gap under the PC puzzle button is gone.",
  "スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）": "Snap pulls harder again: from 24px on desktop and 30px on mobile, up from 16 and 20.",
