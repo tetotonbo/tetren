@@ -496,9 +496,13 @@ button, label, .ctrl-lbl, [data-pos] {
 .hp-tbl th.hp-k { width:26%; color:#e5e7eb; white-space:nowrap; }
 
 /* ===== パフェパズル ===== */
+/* パネルを開いても枠の幅が変わらないよう、中のボタンは縮められるようにしておく
+   （モード枠のボタンは折り返さない指定なので、ここで打ち消す） */
 #puzzleMsg { font-size:11px; text-align:center; line-height:1.35; min-height:15px; color:#d1d5db; }
+#puzzlePanel, #puzzlePanel .garb-btn { min-width:0; }
+#puzzlePanel .garb-btn { white-space:normal; font-size:11px; height:auto; padding:5px 0; }
 #puzzleLevelRow { display:flex; gap:4px; margin-top:5px; }
-#puzzleLevelRow .rand-num { flex:1; padding:5px 0; font-size:10px; }
+#puzzleLevelRow .rand-num { flex:1; min-width:0; padding:4px 0; font-size:9px; letter-spacing:-0.3px; }
 
 /* ===== DPCセット／ミノ欠け／このサイトについて（同じ見た目を共用） ===== */
 #dpcOverlay, #missOverlay, #aboutOverlay, #digMultiOverlay, #tdOverlay, #swapOverlay, #helpOverlay {
@@ -1314,6 +1318,7 @@ const I18N_EN = {
 "パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
 "パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる": "PC puzzle no longer shows the run of solved problems, and moves on to the next problem by itself once you solve one (after showing \"Solved!\" briefly). A failed attempt still stops, so you can use Again or Show the answer.",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
+"パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
 "パフェ探索。組めるときは「手順を見る」で置き方が出ます": "PC finder. When one is possible, Show steps lays out the order.",
@@ -3028,6 +3033,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.8 / 2.11.8</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.7 / 2.11.7</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.6 / 2.11.6</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.5 / 2.11.5</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの地形から、浮いたブロックを無くした。穴は各列の上から下へ続く形だけにしたので、地形はふつうに積んだときと同じ、宙に浮かない形になる。横に並んだ列にだけ穴を開けるため、穴は引き続き一つながり</li></ul></div>
@@ -10810,7 +10816,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.11.7';
+const APP_VERSION = '2.11.8';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
