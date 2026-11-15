@@ -60,7 +60,7 @@ html, body {
 }
 .side-col::-webkit-scrollbar { display:none; }
 .m-lbl {
-  font-size:9px; color:#6b7280; letter-spacing:1px;
+  font-size:9px; color:#9ca3af; letter-spacing:1px;
   text-transform:uppercase; text-align:center; margin-bottom:2px;
 }
 canvas { display:block; }
@@ -99,7 +99,7 @@ canvas { display:block; }
 }
 /* ライン数だけの1行。ラベルと数字を横に並べて高さを抑える */
 .stat-col { flex:1; padding:2px 4px; display:flex; align-items:baseline; justify-content:center; gap:6px; }
-.stat-lbl { font-size:8px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
+.stat-lbl { font-size:9px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
 .stat-val { font-size:13px; font-weight:bold; color:#fff; line-height:1.2; }
 .ctrl-pad { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
 /* 横持ち用。盤面の左右に置く操作ボタンの列。親指が来る画面の下端へ寄せる。
@@ -146,7 +146,9 @@ canvas { display:block; }
   transition:background .08s, transform .06s;
 }
 .ctrl-btn:active { background:#374151; transform:scale(0.94); }
-.ctrl-lbl { font-size:var(--ctrl-lbl-fs, 9px); color:#6b7280; line-height:1; }
+.ctrl-lbl { font-size:var(--ctrl-lbl-fs, 9px); color:#9ca3af; line-height:1; }
+/* 色つきのボタン（HOLD・DROP）は、灰色だと地の色に沈むのでボタンの文字色に合わせる */
+.ctrl-btn.ctrl-hold .ctrl-lbl, .ctrl-btn.ctrl-hard .ctrl-lbl { color:inherit; opacity:.85; }
 .ctrl-btn.ctrl-hold { background:#2d1b4e; border-color:#7c3aed; color:#c4b5fd; }
 .ctrl-btn.ctrl-hold:active { background:#5b21b6; }
 .ctrl-btn.ctrl-hard { background:#1e3a5f; border-color:#2563eb; color:#93c5fd; }
@@ -176,9 +178,9 @@ canvas { display:block; }
 .side-btn:active { background:#374151; }
 /* せりあがりは「▼」のぶんだけ長いので、1行に収まるよう少し詰める
    （JS側で style.cssText を書き換えるため、ここはCSSで指定する） */
-#digBtn { margin-top:2px; white-space:nowrap; font-size:8px; letter-spacing:-0.2px; }
-/* 「🖥 PC版へ」も1行に収める */
-#verSwitchBtn { white-space:nowrap; font-size:8px; letter-spacing:-0.2px; }
+#digBtn { margin-top:2px; white-space:nowrap; letter-spacing:-0.6px; padding-left:0; padding-right:0; }
+/* 「🖥 PC版へ」「パフェパズル」も1行に収める */
+#verSwitchBtn, #puzzleBtn { white-space:nowrap; letter-spacing:-0.6px; padding-left:0; padding-right:0; }
 /* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
 #colorPaletteWrap {
   display:none; flex-wrap:wrap; gap:4px;
@@ -199,40 +201,48 @@ canvas { display:block; }
   border-radius:6px; padding:5px; width:100%;
 }
 #dig-info {
-  font-size:9px; color:#6b7280; text-align:center; line-height:1.5;
+  font-size:9px; color:#9ca3af; text-align:center; line-height:1.5;
 }
 .di-row { display:flex; align-items:center; gap:2px; margin-top:2px; }
 .di-btn {
   background:#374151; color:#fff; border:none;
-  width:20px; height:20px; border-radius:3px;
-  font-size:12px; cursor:pointer; flex-shrink:0;
+  width:21px; height:26px; border-radius:4px;
+  font-size:14px; cursor:pointer; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
 }
-.di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; }
-/* 「落下設定」の見出しと、自由落下を止める小さなボタン */
-.grav-head { display:flex; align-items:center; justify-content:center; gap:2px; margin:4px 0 0; }
+.di-val { font-size:10px; color:#e2e8f0; flex:1; text-align:center; line-height:1.15; }
+.di-unit { font-size:8px; color:#9ca3af; }
+/* 「落下設定」の見出し。行まるごとが、自由落下を止める／動かすボタンになっている
+   （マークだけだと 14px しかなく、指で押せなかった） */
+.grav-head {
+  display:flex; align-items:center; justify-content:center; gap:3px;
+  margin:4px 0 2px; padding:4px 0; min-height:24px; cursor:pointer;
+  background:#1f2937; border:1px solid #374151; border-radius:5px;
+  -webkit-tap-highlight-color:transparent;
+}
+.grav-head:active { background:#374151; }
 /* 左の列は狭いので、見出しを折り返さずボタンと1行に収める */
 .grav-head .m-lbl { letter-spacing:0; white-space:nowrap; }
 .grav-pause {
-  background:none; border:1px solid #4b5563; color:#9ca3af;
-  width:14px; height:14px; border-radius:3px; padding:0;
-  font-size:7px; line-height:1; flex:0 0 auto;
-  display:flex; align-items:center; justify-content:center;
-  -webkit-tap-highlight-color:transparent;
+  background:none; border:none; color:#9ca3af; padding:0;
+  font-size:10px; line-height:1; flex:0 0 auto;
+  pointer-events:none;   /* 押すのは行のほう */
 }
 /* 止めている間は、再生マークの色で分かるようにする（値の表示はそのまま） */
-.grav-pause.paused { color:#f59e0b; border-color:#f59e0b; }
+.grav-pause.paused { color:#f59e0b; }
 /* ===== トグルスイッチ（PC版と見た目を揃える） ===== */
 /* 左カラムが狭いので、文字とスイッチを小さめにして1行に収める */
 .tgl-row {
   display:flex; align-items:center; justify-content:space-between; gap:2px;
-  width:100%; cursor:pointer; font-size:8px; color:#9ca3af;
+  width:100%; cursor:pointer; font-size:var(--tgl-fs, 8px); color:#9ca3af;
   line-height:1.2; white-space:nowrap;
   user-select:none; -webkit-tap-highlight-color:transparent;
 }
 .tgl-row input { display:none; }
+/* 英語は「Edit layout」のように横に長いので、大きくせず少し詰める */
+html[lang="en"] .tgl-row { font-size:8px; letter-spacing:-0.2px; }
 .tgl {
-  flex:0 0 auto; width:22px; height:12px; border-radius:6px;
+  flex:0 0 auto; width:20px; height:12px; border-radius:6px;
   background:#4b5563; position:relative; transition:background .15s;
 }
 .tgl::after {
@@ -241,13 +251,28 @@ canvas { display:block; }
   transition:transform .15s;
 }
 input:checked + .tgl { background:#16a34a; }
-input:checked + .tgl::after { transform:translateX(10px); }
+input:checked + .tgl::after { transform:translateX(8px); }
 
 /* ===== バージョン表示 ===== */
 #verLabel {
-  margin-top:2px; text-align:center; font-size:8px;
-  color:#4b5563; letter-spacing:0.5px;
+  margin-top:2px; text-align:center; font-size:9px;
+  color:#9ca3af; letter-spacing:0.5px;
 }
+
+/* ===== 左の列の「まだ続きがあります」の印 =====
+   列はスクロールできるが、スクロールバーを出していないので気づけない。
+   上下に続きがあるときだけ矢印を出し、押すとその方向へ送る */
+.col-more {
+  position:fixed; z-index:5; display:none; height:24px;
+  align-items:center; justify-content:center;
+  font-size:11px; line-height:1; color:#d1d5db;
+  -webkit-tap-highlight-color:transparent; cursor:pointer;
+}
+.col-more.on { display:flex; }
+#leftMoreUp   { align-items:flex-start; padding-top:1px;
+  background:linear-gradient(to bottom, #111827 45%, rgba(17,24,39,0)); }
+#leftMoreDown { align-items:flex-end; padding-bottom:1px;
+  background:linear-gradient(to top, #111827 45%, rgba(17,24,39,0)); }
 
 /* ===== カンペ画像（画面に重ねて表示する参考画像） ===== */
 #shotOverlay {
@@ -313,8 +338,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
   min-height:28px; max-width:100%; }
 .tpl-prob b { color:#e5e7eb; font-weight:600; }
 /* 何の数字かを小さく添える */
-.tpl-prob-cap { font-size:9px; color:#6b7280; letter-spacing:0.3px; }
-.tpl-prob.calc { color:#6b7280; }
+.tpl-prob-cap { font-size:9px; color:#9ca3af; letter-spacing:0.3px; }
+.tpl-prob.calc { color:#9ca3af; }
 .tpl-prob button { font-size:10px; padding:2px 6px; border:1px solid #4b5563; border-radius:3px;
   background:#374151; color:#d1d5db; cursor:pointer; }
 .tpl-prob button:hover { background:#4b5563; }
@@ -417,12 +442,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #helpPanel .cfg-tab { padding:7px 4px; }
 
 /* パフェパズル */
-#puzzleMsg { font-size:8px; text-align:center; margin-top:2px; line-height:1.35; color:#d1d5db; }
+#puzzleMsg { font-size:9px; text-align:center; margin-top:2px; line-height:1.35; color:#d1d5db; }
 #puzzleMsg:empty { display:none; }   /* 何も出さないときは隙間を作らない */
 #puzzleAnsBtn { background:#4a2b33; border-color:#6b3a44; }   /* 答えは少し赤みがかった色 */
 #puzzleLevelRow { display:flex; flex-wrap:wrap; gap:2px; margin-top:2px; }
-#puzzleLevelRow .rand-num.wide { flex:0 0 100%; font-size:8px; }
-#puzzleLevelRow .rand-num { flex:1; min-width:0; padding:4px 0; font-size:8px; }
+/* 難しさは縦に積む。横に3つ並べると、1文字ずつの縦書きになって読めない */
+#puzzleLevelRow .rand-num { flex:0 0 100%; min-width:0; padding:4px 0; font-size:9px; white-space:nowrap; }
+#puzzleLevelRow .rand-num.wide { font-size:8px; letter-spacing:-0.6px; }
 #puzzlePanel { width:0; min-width:100%; }   /* 列の幅を広げない */
 #puzzlePanel .side-btn { min-width:0; }
 
@@ -491,7 +517,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .opt-note { display:block; font-size:10px; color:#9ca3af; margin-top:2px; line-height:1.6; }
 .opt-step { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
 .opt-val { font-size:13px; color:#e2e8f0; min-width:56px; text-align:center; }
-.opt-unit { font-size:10px; color:#6b7280; }
+.opt-unit { font-size:10px; color:#9ca3af; }
 /* クリックで ms ⇄ F を切り替える単位表示 */
 .unit-btn { cursor:pointer; text-decoration:underline dotted; }
 .opt-step .di-btn { width:30px; height:30px; font-size:16px; }
@@ -505,8 +531,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .kc-sub { display:none; }
 .kc-sub.active { display:block; }
 .kc-header { display:flex; align-items:center; gap:6px; padding:0 4px 4px; }
-.kc-header .kc-label { font-size:9px; color:#6b7280; font-weight:bold; }
-.kc-header .kc-slot-head { width:86px; flex:0 0 auto; font-size:9px; color:#6b7280; text-align:center; }
+.kc-header .kc-label { font-size:9px; color:#9ca3af; font-weight:bold; }
+.kc-header .kc-slot-head { width:86px; flex:0 0 auto; font-size:9px; color:#9ca3af; text-align:center; }
 .kc-row { display:flex; align-items:center; gap:6px; padding:5px 4px; border-radius:6px; }
 .kc-row:nth-child(odd) { background:#111827; }
 .kc-label { font-size:11px; color:#e5e7eb; flex:1; min-width:0; }
@@ -519,7 +545,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .kc-key.waiting { background:#1e40af; border-color:#60a5fa; color:#bfdbfe; }
 .kc-del {
   flex:0 0 auto; width:18px; background:none; border:1px solid #374151;
-  border-radius:4px; color:#6b7280; font-size:10px; cursor:pointer; padding:5px 0;
+  border-radius:4px; color:#9ca3af; font-size:10px; cursor:pointer; padding:5px 0;
 }
 /* スキン選択 */
 #skinList { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
@@ -589,7 +615,7 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .rand-num:disabled { opacity:0.3; }
 /* 欠けに選べないミノ（HOLDに指定しているもの） */
 .dpc-btn:disabled { opacity:0.3; }
-#aboutLink { color:#6b7280; text-decoration:underline; font-size:10px; }
+#aboutLink { color:#9ca3af; text-decoration:underline; font-size:10px; }
 #aboutPanel p { margin:0 0 10px; font-size:11px; color:#d1d5db; line-height:1.9; text-align:left; }
 #aboutPanel h3 { font-size:11px; color:#9ca3af; margin:12px 0 5px; text-align:left; }
 #aboutPanel a { color:#818cf8; }
@@ -605,14 +631,14 @@ input:checked + .tgl::after { transform:translateX(10px); }
 .ver-log.all .vl-patch { display:block; }
 .vl-more {
   display:block; margin:10px auto 0; background:none; border:none;
-  color:#4b5563; font-size:10px; cursor:pointer; padding:4px 8px;
+  color:#9ca3af; font-size:10px; cursor:pointer; padding:4px 8px;
   text-decoration:underline dotted;
 }
 .vl-more:hover { color:#9ca3af; }
 .vl-item + .vl-item { margin-top:7px; border-top:1px solid #273244; padding-top:7px; }
 .vl-head { display:flex; align-items:baseline; gap:6px; }
 .vl-no { font-size:11px; font-weight:bold; color:#c7d2fe; }
-.vl-date { font-size:9px; color:#6b7280; }
+.vl-date { font-size:9px; color:#9ca3af; }
 .ver-log ul { margin:3px 0 0 15px; padding:0; }
 .ver-log li { font-size:10px; color:#d1d5db; line-height:1.7; }
 #dpcPanel .sub2, #missPanel .sub2 { font-size:10px; color:#9ca3af; text-align:center; margin-bottom:10px; line-height:1.6; }
@@ -787,6 +813,8 @@ const I18N_EN = {
 "PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる": "On desktop the Display and Board groups lost their headings and boxes, leaving just the controls. The dashed frame still appears while editing the layout, so you can see what to grab.",
 "PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした": "The tab row on desktop now scrolls sideways when the window is too narrow for it.",
 "PC版へ": "Desktop version",
+"PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない": "Desktop: when the window is too short and the lower buttons are cut off, the whole screen is now scaled down to fit. It can be turned off under Settings → Display, and it does not apply while you have moved buttons with Edit layout.",
+"PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした": "Desktop: made the colour palette and the gravity ▶ / ⏸ button larger.",
 "QPCが無いことを確かめるぶん遅くなる。QPC探索には制限時間の4割を割り当てている": "It is slower because it has to prove there is no QPC. 40% of the time limit is given to the QPC search.",
 "QPCの判定を「最後の1手がIミノの縦置き」から「最後の1手が4ライン同時消し」に変えた": "Changed the QPC test from \"the last piece is a vertical I\" to \"the last piece clears four lines\".",
 "QPCを優先して出す": "Always show a QPC first",
@@ -1078,6 +1106,8 @@ const I18N_EN = {
 "コントローラの設定を、独立したタブから キーコンフィグの中 へ移した": "Moved the gamepad settings from their own tab into the key config.",
 "ゴースト": "Ghost",
 "ゴーストと操作中のミノを検出できるようにした。ぷよテトのゴーストは「暗い半透明＋ドット模様」で描かれており、セル中央の代表色では暗いマスに見えてしまうため、明るい側の画素の色でも判定するようにした": "The ghost and the active piece are now detected. The game draws its ghost as a dark translucent dotted pattern, which looks like a dark cell when sampled at the centre, so the brighter pixels are taken into account as well.",
+"ゴースト・軸表示・グリッド … 表示の入切。「配置編集」をONにすると、ボタンや枠をドラッグで動かせます": "Ghost, Axis, Grid — turn each on or off. Turn on Edit layout to drag the buttons and panels where you want them.",
+"ゴースト・軸表示・グリッド・配置編集": "Ghost, axis, grid, edit layout",
 "ゴースト・軸表示・グリッド・配置編集 … 画面の見た目とボタンの配置": "Ghost, Axis, Grid and Edit layout — how the screen looks and where the buttons sit.",
 "スキン": "Skin",
 "スキンが「完全透明」「ほぼ透明」のとき、地形編集でミノの色を選んでも置いたマスが見えなかったのを修正": "Fixed cells being invisible when you painted them in Edit board while the skin was Invisible or Nearly invisible.",
@@ -1099,6 +1129,9 @@ const I18N_EN = {
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
 "スマホ版へ": "Mobile version",
+"スマホ版：「パフェパズル」のボタンを1行に収め、難しさのボタンは縦に並べた（横に3つ並べると1文字ずつの縦書きになっていた）": "Mobile: the PC puzzle button now fits on one line, and the difficulty buttons are stacked vertically (side by side they broke into one character per line).",
+"スマホ版：左の列に続きがあるときは ▲ ▼ を出して、押すとその方向へ送るようにした。パフェパズルを開いたときは、難しさや「次の問題」が見えるところまで自動で送る": "Mobile: the left column now shows ▲ ▼ when there is more above or below, and tapping them scrolls that way. Opening PC puzzle scrolls automatically so the difficulty and New problem buttons are in view.",
+"スマホ版：落下設定は、見出しの行のどこを押しても止める／動かすが切り替わるようにした（これまでは 14px の小さなマークだった）。‹ › のボタンも大きくした": "Mobile: tapping anywhere on the Gravity heading row now pauses or resumes the fall (it used to be a tiny 14px icon). The ‹ › buttons are larger too.",
 "スライドやタップでミノを操作する": "Swipe and tap to control pieces",
 "スロット 1": "Slot 1",
 "スロット 2": "Slot 2",
@@ -1136,10 +1169,7 @@ const I18N_EN = {
 "デカミノの入切": "Toggle big pieces",
 "デカミノ中は判定できません": "Cannot check while big pieces are on",
 "デザイン": "Display",
-"デザイン … ゴースト・軸表示・グリッドの入切。「配置編集」をONにすると、ボタンや枠をドラッグで動かせます": "Display — ghost, axis and grid on or off. Turn on Edit layout to drag the buttons and panels where you want them.",
-"デザイン の「配置編集」をON。ドラッグで動かし、右下のつまみで大きさを変えます": "Turn on Edit layout under Display. Drag to move them, and use the handle at the bottom right to resize.",
 "デザインに「グリッド」のON/OFFスイッチを追加。盤面のマス目の線を消せるようにした": "Added a Grid switch under Display, so the grid lines on the board can be turned off.",
-"デザイン（ゴースト・軸表示・グリッド線）": "Display (ghost, axis, grid)",
 "デフォルトに戻す": "Reset to default",
 "ドラッグ＆ドロップ／貼り付けも可": "Drag and drop or paste works too",
 "ハードドロップ": "Hard drop",
@@ -1152,7 +1182,7 @@ const I18N_EN = {
 "パッチ（細かい修正）も含めて全部表示します": "Show everything, including patch releases",
 "パフェ": "PC",
 "パフェができる問題を自動で作ります。出されたミノだけを使って、盤面を空にしてください": "Builds a board that can be cleared completely. Empty it using only the pieces you are given.",
-"パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer.",
+"パフェができる問題を自動で作ります。難しさを選べ、「前の問題」「次の問題」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use Previous, New problem and Show the answer.",
 "パフェできません（{0}ms）": "No Perfect Clear ({0}ms)",
 "パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正": "Fixed Previous bag becoming unusable once the board emptied, for example after a Perfect Clear.",
 "パフェの手順": "PC steps",
@@ -1333,6 +1363,7 @@ const I18N_EN = {
 "作った文は日本語版と英語版を対で覚えるようにして、あとから言語を切り替えても出し直せるようにした": "Such text now remembers its Japanese and English forms as a pair, so switching language afterwards still swaps it.",
 "使い方": "How to use",
 "使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）": "Added \"Practise a DPC\" to the By task tab of the help panel, and reordered the Screen guide and Button list tabs so they start from the right-hand column (desktop and mobile).",
+"使い方の説明を今の画面に合わせて直した（パフェパズルの「もう一度」、PC版の「デザイン」「地形操作」、落下設定の ⏸ の説明）": "Brought the How-to-use text up to date with the current screen (Again in PC puzzle, the Display and Board panels on desktop, and the gravity ⏸ note).",
 "保存した表示倍率が再読み込み後に効かない不具合を修正": "Fixed the saved zoom level not taking effect after a reload.",
 "個": " pieces",
 "個ごと": "pieces",
@@ -1364,6 +1395,7 @@ const I18N_EN = {
 "制限時間": "Time limit",
 "制限時間で打ち切ったので、ほかにも手順があるかもしれません。": "The search hit the time limit, so there may be other solutions.",
 "前の候補": "Previous solution",
+"前の問題": "Previous",
 "前の手": "Previous step",
 "前回選んだ {0} だけで、もう一度始めます": "Start again with just {0}, as last time",
 "前回選んだ {0} を抜いて、もう一度始めます": "Start again without {0}, as last time",
@@ -1416,15 +1448,15 @@ const I18N_EN = {
 "地形取り込み": "Import board",
 "地形取り込み。ぷよぷよテトリス2 の画面を撮った画像から地形を読み取ります": "Import board. It reads the stack from a screenshot of Puyo Puyo Tetris 2.",
 "地形操作": "Board",
-"地形操作 … 地形編集の入切と色、↑ ↓ で一段せり上げ・下げ、地形取り込み、⇄ 反転、記録・復元、パフェ探索": "Board — edit mode and colours, ↑ ↓ to raise or lower a row, Import board, ⇄ Mirror, Save / Load and PC finder.",
-"地形操作（地形編集・カラー・取り込み）": "Board (edit, colour, import)",
 "地形編集": "Edit board",
+"地形編集 … 入切と色のパレット。その下に ↑ ↓（一段せり上げ・下げ）、地形取り込み、⇄ 反転、記録・復元、パフェ探索が並びます": "Edit board — on/off and the colour palette. Below it: ↑ ↓ to raise or lower a row, Import board, ⇄ Mirror, Save / Load and PC finder.",
 "地形編集ONのときに出る「カラー」の見出しを外した（パレットはそのまま）": "Removed the Colour heading shown while Edit board is on; the palette stays.",
 "地形編集がONのあいだは、クリック・ドラッグでブロックを置けます": "While Edit board is on, click or drag to place blocks.",
 "地形編集がONのあいだは、タップ・なぞりでブロックを置けます": "While Edit board is on, tap or swipe to place blocks.",
 "地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正": "Fixed the Edit board checkbox not reflecting the setting when you came back from the settings.",
 "地形編集の入り切りが保存されないのを修正": "Fixed the Edit board switch not being saved.",
 "地形編集の入切": "Toggle Edit board",
+"地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)",
 "多くするほど探索に時間がかかります": "More solutions take longer to search.",
 "大きさも変えられるようにした": "You can resize it too.",
 "大きな変更だけ表示": "Show major changes only",
@@ -1449,6 +1481,7 @@ const I18N_EN = {
 "左の列": "Left column",
 "左の列に 「⚙ 設定」 を追加し、PC版と同じタブ式の設定画面を用意した": "Added ⚙ Settings to the left column, with the same tabbed settings screen as the desktop version.",
 "左の列に 「画面サイズ」 を追加。盤面の大きさを 50〜200％ で調整できる": "Added Screen size to the left column, which scales the board between 50% and 200%.",
+"左の列の「配置編集」をON。ドラッグで動かし、右下のつまみで大きさを変えます": "Turn on Edit layout in the left column. Drag to move them, and use the handle at the bottom right to resize.",
 "左の列（上から）": "Left column (top to bottom)",
 "左右に余白を残すようにした（片側あたり画面幅の13%）": "Left some margin on both sides (13% of the screen width each).",
 "左右に動かす": "Move left / right",
@@ -1488,6 +1521,7 @@ const I18N_EN = {
 "抜く数を選んだあとにミノを選ぶと数の選択を解除し、逆にランダムを押すとミノの選択を解除する": "Choosing pieces after a count clears the count, and pressing Random clears the chosen pieces.",
 "抜く数を選んでからランダムに決める方式に変更": "You now choose how many to remove and the pieces are drawn at random.",
 "押している間だけ、盤面のタップ・なぞりでブロックを置けます。もう一度押すと切れます": "While it is on, tapping or swiping the board places blocks. Press it again to turn it off.",
+"押すたびに、自由落下を動かす／止める（落下設定の値はそのまま）。開いた直後は止まっています": "Each tap starts or stops the piece falling on its own (the gravity value stays). It starts paused.",
 "掘って受けるか、相殺して返すかの練習に。秒数は0.1刻みで変えられます。": "For practising whether to dig or to offset and hit back. The time can be changed in 0.1 s steps.",
 "探索はいつも「下から (消える行数+4) 行」だけを切り出して行う。": "The search always works on just the bottom (cleared rows + 4) rows.",
 "探索中…": "Searching...",
@@ -1560,10 +1594,12 @@ const I18N_EN = {
 "画像を画面に重ねて表示します。位置とサイズを変えられ、最前面固定も切り替えられます": "Shows the image over the screen. You can move and resize it, and pin it on top",
 "画像を画面上に浮かせて表示します。表示後は位置とサイズを自由に変えられます。": "Floats the image over the screen. You can move and resize it freely afterwards.",
 "画像を読み込めませんでした。": "The image could not be loaded.",
+"画面が低くて下のボタンが切れるときに、全体を縮めて1画面に収めます。配置編集でボタンを動かしているあいだは働きません": "When the window is too short and the lower buttons are cut off, the whole screen is scaled down to fit. It does not apply while you have moved buttons with Edit layout.",
 "画面に出すメニューを選ぶ": "Choose which menus to show",
 "画面のどこでも、画像を貼り付ければカンペ画像として出るようにした": "Pasting an image anywhere on the page now opens it as a reference image.",
 "画面の文字を英語に切り替えます。もう一度押すと日本語に戻ります": "Switches the text to English. Press it again to go back to Japanese.",
 "画面の見かた": "Screen guide",
+"画面の高さに合わせて縮める": "Shrink to fit the window height",
 "画面をすっきりさせたい": "Tidy up the screen",
 "画面上のON/OFFスイッチをすべて保存するようにした。ゴースト・軸表示・地形編集（PC版）を tetren_options に追加（連続HOLDは従来から保存済み）": "Every on-screen switch is now saved. Ghost, axis and Edit board (desktop) were added to tetren_options; infinite hold was already saved.",
 "画面上の操作ボタンを開閉する": "Show or hide the on-screen buttons",
@@ -1618,7 +1654,7 @@ const I18N_EN = {
 "素直なバックトラック。盤面もミノ列も決まっているので探索範囲は小さい": "Plain backtracking. With the board and the piece order both fixed, the search space is small.",
 "紹介・動画・配信でのご利用は自由です。許可のご連絡も不要です。": "You are free to use it in articles, videos and streams. No permission needed.",
 "練習したい場面を自分で作れるのが、このサイトの中心です。ブロックの色は、下に出るパレットで選びます。": "Building the situation you want to practise is what this site is for. Pick the block colour from the palette that appears below.",
-"練習したい場面を自分で作れるのが、このサイトの中心です。ブロックの色は左の「地形操作」で選びます。": "Building the situation you want to practise is what this site is for. Pick the block colour under Board on the left.",
+"練習したい場面を自分で作れるのが、このサイトの中心です。ブロックの色は、左の列にある色のパレットで選びます。": "Building the situation you want to practise is what this site is for. Pick the block colour from the palette in the left column.",
 "縦の短い端末で、盤面の下の「ミノ捨てる」「戻す ↩」が画面からはみ出して押せなくなっていたのを修正。入り切らないときは操作ボタンのほうを低くして、全部が画面に収まるようにした": "Fixed Discard and Undo being pushed off the bottom of the screen, and so out of reach, on devices without much vertical room. When everything will not fit, the control buttons are made shorter so that all of them stay on screen.",
 "置き換えたいミノを選んでください": "Choose the piece to replace",
 "置き換えたいミノを選んでください。": "Choose the piece to replace.",
@@ -1631,6 +1667,7 @@ const I18N_EN = {
 "自然に落ちる速さを決めます（0G＝落ちない、20G＝1フレームで最下段）": "Sets how fast pieces fall by themselves (0G = not at all, 20G = to the bottom in one frame).",
 "自由落下の一時停止": "Pause free fall",
 "自由落下を再開する": "Resume free fall",
+"自由落下を動かす／止める（落下設定の値はそのまま）。開いた直後は止まっています": "Starts or stops the piece falling on its own (the gravity value stays). It starts paused.",
 "自由落下を止めている間、落下設定のGの値に付けていた取り消し線をやめた（マークの色だけで示す）": "While free fall is paused, the G value is no longer struck through; the icon colour shows it instead.",
 "自由落下を止める（落下設定の値はそのまま）": "Stop the piece falling on its own (the gravity value stays)",
 "色（A・おじゃま・各ミノ）": "Colour (A, garbage, each piece)",
@@ -1641,13 +1678,16 @@ const I18N_EN = {
 "英語表記の「ミノ欠け」を Missing piece から Custom bag に変更。抜いた残りで1巡目を組む機能だと伝わりにくかったため": "Renamed Missing piece to Custom bag in English; the old name did not convey that it builds the first bag from what is left.",
 "落下設定": "Gravity",
 "落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）": "Gravity — how fast pieces fall by themselves (0G = not at all, 20G = straight to the bottom).",
-"落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）。⏸ は自由落下だけ止めます": "Gravity — how fast pieces fall by themselves (0G = not at all, 20G = straight to the bottom). ⏸ stops only the falling.",
+"落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）。開いた直後は止まっていて、速さを変えるか ▶ を押すと動き出します": "Gravity — how fast pieces fall by themselves (0G = not at all, 20G = straight to the bottom). It starts paused; change the value or press ▶ to start.",
 "落下設定 ‹ ›": "Gravity ‹ ›",
+"落下設定 ▶ / ⏸": "Gravity ▶ / ⏸",
+"落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した": "Changing the gravity value now starts the pieces falling even while it is paused. Since it starts paused, raising the value used to do nothing. On desktop, Marathon also failed to start while paused; that is fixed too.",
 "落下設定を「デザイン」枠から独立させ、HOLDの直下へ移動": "Pulled Gravity out of the Display panel and moved it directly under HOLD.",
 "落下速度の ‹ › を長押しで連続変更できるようにした（PC版・スマホ版とも）": "Holding ‹ or › now changes the gravity continuously (desktop and mobile).",
 "落下速度をリセット後もページを閉じても保持するようにした（tetren_grav に保存）": "The gravity setting now survives a reset and closing the page (saved in tetren_grav).",
 "落下速度を上げる（20Gは1フレームで最下段・長押しで連続）": "Increase gravity (at 20G the piece reaches the bottom in one frame; hold to repeat)",
 "落下速度を下げる（0Gは自由落下なし・長押しで連続）": "Decrease gravity (0G means no free fall; hold to repeat)",
+"薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした": "Lightened the grey text that was hard to read (the HOLD, NEXT and Gravity headings, the captions under the control buttons, the version and so on) and made the smallest text a size larger.",
 "行": " lines",
 "表示": "Display",
 "表示中のカンペ画像をすべて消す": "Close every reference image on screen",
@@ -1983,6 +2023,9 @@ if (document.readyState === 'loading') {
 
 </script>
 <!-- i18n:end -->
+<!-- 左の列に続きがあるときの印（押すとその方向へ送る） -->
+<div id="leftMoreUp" class="col-more" onclick="scrollLeftCol(-1)">▲</div>
+<div id="leftMoreDown" class="col-more" onclick="scrollLeftCol(1)">▼</div>
 <div id="wrap">
 
   <!-- 左: HOLD -->
@@ -2062,17 +2105,17 @@ if (document.readyState === 'loading') {
       </div>
     </div>
     <div data-ui="grav" style="width:100%;">
-      <div class="grav-head">
+      <!-- 設定した値はそのままに、自由落下だけ止める。行のどこを押しても切り替わる -->
+      <div class="grav-head" onclick="toggleGravPause()">
         <span class="m-lbl" style="margin:0;">落下設定</span>
-        <!-- 設定した値はそのままに、自由落下だけ止める -->
-        <button id="gravPauseBtn" class="grav-pause" type="button" onclick="toggleGravPause()"
-          title="自由落下を止める（落下設定の値はそのまま）">⏸</button>
+        <span id="gravPauseBtn" class="grav-pause"
+          title="自由落下を止める（落下設定の値はそのまま）">⏸</span>
       </div>
       <div class="di-row" style="margin-top:0;">
         <button class="di-btn"
           onmousedown="startRepeat(()=>changeGravSpeed(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
           ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(-1))" ontouchend="stopRepeat()">‹</button>
-        <div class="di-val"><span id="gravSpeedVal">0</span> G</div>
+        <div class="di-val"><span id="gravSpeedVal">0</span> <span class="di-unit">G</span></div>
         <button class="di-btn"
           onmousedown="startRepeat(()=>changeGravSpeed(+1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
           ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
@@ -2105,7 +2148,7 @@ if (document.readyState === 'loading') {
     <div data-ui="pcSearch" style="width:100%;margin-top:2px;">
       <button class="side-btn" style="width:100%;" onclick="searchPerfectClear()"
         title="いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます">パフェ探索</button>
-      <div id="pcResult" style="display:none;font-size:8px;text-align:center;margin-top:2px;line-height:1.3;"></div>
+      <div id="pcResult" style="display:none;font-size:9px;text-align:center;margin-top:2px;line-height:1.3;"></div>
       <button class="side-btn" id="pcStepBtn" style="display:none;width:100%;margin-top:2px;background:#1f3a5f;"
         onclick="openPcSteps()">手順を見る</button>
     </div>
@@ -2143,7 +2186,7 @@ if (document.readyState === 'loading') {
       <button class="di-btn"
         onmousedown="startRepeat(()=>changeDigInterval(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
         ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span id="digIntervalUnit" style="font-size:8px;color:#6b7280;">個ごと</span></div>
+      <div class="di-val"><span id="digIntervalVal">3</span><br><span id="digIntervalUnit" class="di-unit">個ごと</span></div>
       <button class="di-btn"
         onmousedown="startRepeat(()=>changeDigInterval(1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
         ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(1))" ontouchend="stopRepeat()">›</button>
@@ -2560,8 +2603,8 @@ if (document.readyState === 'loading') {
             <td>配置編集をONにすると出ます。盤面・NEXT/HOLD・左のボタンの大きさを変えられます</td></tr>
         <tr><th>落下設定 ‹ ›</th>
             <td>自然に落ちる速さを決めます（0G＝落ちない、20G＝1フレームで最下段）</td></tr>
-        <tr><th>⏸</th>
-            <td>自由落下を止める（落下設定の値はそのまま）</td></tr>
+        <tr><th>落下設定 ▶ / ⏸</th>
+            <td>押すたびに、自由落下を動かす／止める（落下設定の値はそのまま）。開いた直後は止まっています</td></tr>
         <tr><th>TD対策</th>
             <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
         <tr><th>地形編集</th>
@@ -2581,7 +2624,7 @@ if (document.readyState === 'loading') {
         <tr><th>↻</th>
             <td>前回選んだミノで、もう一度セットし直します</td></tr>
         <tr><th>パフェパズル</th>
-            <td>パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます</td></tr>
+            <td>パフェができる問題を自動で作ります。難しさを選べ、「前の問題」「次の問題」「答えを見る」で進めます</td></tr>
         <tr><th>パフェ探索</th>
             <td>いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます</td></tr>
         <tr><th>手順を見る</th>
@@ -2669,6 +2712,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.14.0 / 2.13.0</span><span class="vl-date">2026-11-16</span></div><ul><li>落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した</li><li>薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした</li><li>PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない</li><li>PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした</li><li>スマホ版：落下設定は、見出しの行のどこを押しても止める／動かすが切り替わるようにした（これまでは 14px の小さなマークだった）。‹ › のボタンも大きくした</li><li>スマホ版：左の列に続きがあるときは ▲ ▼ を出して、押すとその方向へ送るようにした。パフェパズルを開いたときは、難しさや「次の問題」が見えるところまで自動で送る</li><li>スマホ版：「パフェパズル」のボタンを1行に収め、難しさのボタンは縦に並べた（横に3つ並べると1文字ずつの縦書きになっていた）</li><li>使い方の説明を今の画面に合わせて直した（パフェパズルの「もう一度」、PC版の「デザイン」「地形操作」、落下設定の ⏸ の説明）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.7 / 2.12.7</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.6 / 2.12.6</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.5 / 2.12.5</span><span class="vl-date">2026-11-16</span></div><ul><li>開幕パフェ積みの地形を、1巡目を積み終えた形に戻した（2.13.3で毎回ちがう形にしたが、ここは固定でよいとのこと）。そのかわり、埋め方と手順は集めきってから均等に選ぶようにして、配られるミノと解き筋が偏らないようにした</li></ul></div>
@@ -3261,7 +3305,7 @@ if (document.readyState === 'loading') {
 </div>
 
 <div id="overlay">
-  <h1>テト練<br><span style="font-size:13px;color:#6b7280;">スマホ版</span></h1>
+  <h1>テト練<br><span style="font-size:13px;color:#9ca3af;">スマホ版</span></h1>
   <div class="sub">タッチ操作でプレイ</div>
   <!-- TD中空け対策の結果（何RENまで耐えたか） -->
   <div id="tdResult" style="display:none;margin:6px 0 2px;font-size:13px;font-weight:bold;color:#fbbf24;"></div>
@@ -5006,7 +5050,10 @@ function togglePuzzle(){
   if(dekaMode) toggleDekaMode();
   if(digMode) toggleDigMode();
   puzzleMode=true;
-  if(!nextPuzzle()){ puzzleMode=false; puzzleHud(); }
+  if(!nextPuzzle()){ puzzleMode=false; puzzleHud(); return; }
+  // 難しさや「次の問題」は列の下のほうに出る。画面の外なら見えるところまで送る
+  const pp=document.getElementById('puzzlePanel');
+  if(pp && pp.scrollIntoView) pp.scrollIntoView({block:'nearest'});
 }
 function stopPuzzle(){
   clearTimeout(puzzleNextTimer);
@@ -7893,6 +7940,9 @@ function loadGravSpeed(){
 }
 function changeGravSpeed(delta){
   gravSpeed = Math.min(20, Math.max(0, gravSpeed + delta));
+  // 速さを変えたのに落ちてこない、を避ける。開いた直後は止めてあるので、
+  // 値を触ったら「動かしたい」と受け取って、止めているのを解く
+  if(gravSpeed > 0) gravPaused = false;
   updateGravDisplay();
   saveGravSpeed();
   lastDrop = 0; gravAccum = 0;
@@ -8457,6 +8507,8 @@ function initLayout(){
   const actualSide = (tablet || landscape) ? sideW : Math.floor((vw-bw-5*2-8)/2);
   document.getElementById('leftCol').style.width=actualSide+'px';
   document.getElementById('rightCol').style.width=actualSide+'px';
+  // スイッチの行は「4文字 + スイッチ(20px)」が列に入る大きさまで文字を大きくする
+  root.setProperty('--tgl-fs', Math.max(8, Math.min(11, Math.floor((actualSide - 22) / 4 * 2) / 2)) + 'px');
 
   // HOLD/NEXT はミノの大きさに合わせる（横も縦も）。
   // 縦の余白はスマホのほうを厚くする。NEXTが5個並ぶので、詰まって見えやすいため。
@@ -8626,7 +8678,7 @@ function renderKcBtn(id, slot) {
   const code = keyConfig[id][slot];
   btn.classList.remove('waiting');
   btn.textContent = keyDisplayName(code);
-  btn.style.color = code ? '#f9fafb' : '#6b7280';
+  btn.style.color = code ? '#f9fafb' : '#9ca3af';
 }
 function cancelKcWait() {
   if (!kcWaiting) return;
@@ -8659,7 +8711,7 @@ function buildKcRows() {
       btn.className = 'kc-key';
       btn.id = kcBtnId(a.id, slot);
       btn.textContent = keyDisplayName(keyConfig[a.id][slot]);
-      if (!keyConfig[a.id][slot]) btn.style.color = '#6b7280';
+      if (!keyConfig[a.id][slot]) btn.style.color = '#9ca3af';
       btn.onclick = () => startKeyWait(a.id, slot, btn);
       const del = document.createElement('button');
       del.className = 'kc-del';
@@ -8814,7 +8866,7 @@ function renderGpBtn(id, slot) {
   const code = gpConfig[id][slot];
   btn.classList.remove('waiting');
   btn.textContent = gpDisplayName(code);
-  btn.style.color = code ? '#f9fafb' : '#6b7280';
+  btn.style.color = code ? '#f9fafb' : '#9ca3af';
 }
 function startGpWait(id, slot, btn) {
   if (gpWaiting) renderGpBtn(gpWaiting.id, gpWaiting.slot);
@@ -8856,7 +8908,7 @@ function buildGpRows() {
       btn.className = 'kc-key';
       btn.id = gpBtnId(a.id, slot);
       btn.textContent = gpDisplayName(gpConfig[a.id][slot]);
-      if (!gpConfig[a.id][slot]) btn.style.color = '#6b7280';
+      if (!gpConfig[a.id][slot]) btn.style.color = '#9ca3af';
       btn.onclick = () => startGpWait(a.id, slot, btn);
       const del = document.createElement('button');
       del.className = 'kc-del';
@@ -9054,7 +9106,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.7';
+const APP_VERSION = '2.14.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -9279,6 +9331,37 @@ loadCtrlPos();   // 保存した操作ボタンの位置を復元し、盤面の
 loadSnap();      // スナップのON/OFFを復元する
 initLayout();
 window.addEventListener('resize',()=>{initLayout();applyCtrlPos();if(!gameOver&&board)draw();});
+
+// ===== 左の列の「続きがあります」の印 =====
+// 列の中身が画面より長いとき、上下どちらに続きがあるかを矢印で知らせる
+function updateColMore(){
+  const col=document.getElementById('leftCol');
+  const up=document.getElementById('leftMoreUp'), dn=document.getElementById('leftMoreDown');
+  if(!col||!up||!dn) return;
+  const r=col.getBoundingClientRect();
+  const more=col.scrollHeight-col.clientHeight;
+  const place=(el,on,top)=>{
+    el.classList.toggle('on',on);
+    if(!on) return;
+    el.style.left=r.left+'px'; el.style.width=r.width+'px'; el.style.top=top+'px';
+  };
+  place(up, more>4 && col.scrollTop>4, r.top);
+  place(dn, more>4 && col.scrollTop<more-4, r.bottom-24);
+}
+function scrollLeftCol(dir){
+  const col=document.getElementById('leftCol');
+  col.scrollBy({top:dir*Math.round(col.clientHeight*0.7), behavior:'smooth'});
+}
+{
+  const col=document.getElementById('leftCol');
+  let wait=false;
+  const later=()=>{ if(wait) return; wait=true; requestAnimationFrame(()=>{ wait=false; updateColMore(); }); };
+  col.addEventListener('scroll', later, {passive:true});
+  window.addEventListener('resize', later);
+  // ボタンが出たり消えたりして列の長さが変わったときも見直す
+  new MutationObserver(later).observe(col, {subtree:true, childList:true, attributes:true, attributeFilter:['style','class']});
+  later();
+}
 setTerrainMode(!!opts.terrainEditM);   // 地形編集の入り切りを復元する
 applyUiHidden();   // 隠す設定を画面に反映する（レイアウトも組み直す）
 updateTerrainSaveBtn();   // 控えが無いうちは「復元」を押せなくする

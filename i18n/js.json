@@ -41,8 +41,6 @@
  "カンペ画像を開く": "Open reference image",
  "自由落下の一時停止": "Pause free fall",
  "TD中空け対策を開く": "Open TD defense",
- "デザイン（ゴースト・軸表示・グリッド線）": "Display (ghost, axis, grid)",
- "地形操作（地形編集・カラー・取り込み）": "Board (edit, colour, import)",
  "反転（地形の左右反転）": "Mirror (flip the board)",
  "記録・復元（地形の控え）": "Save and restore (board backup)",
  "スマホ版へ": "Mobile version",
@@ -263,5 +261,7 @@
  "問題ごとに向きを決めます": "Decided for each problem",
  "ホールドは空のまま、3手で埋める形にします": "Hold stays empty and three pieces fill the gap",
  "Iミノをホールドに持った、4手で埋める形にします": "You hold an I and four pieces fill the gap",
- "問題ごとに決めます": "Decided for each problem"
+ "問題ごとに決めます": "Decided for each problem",
+ "ゴースト・軸表示・グリッド・配置編集": "Ghost, axis, grid, edit layout",
+ "地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)"
 }
