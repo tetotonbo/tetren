@@ -1181,6 +1181,7 @@ const I18N_EN = {
 "パフェパズルの難しさと、開幕パフェ積みの出かた": "PC puzzle difficulty and how the opening stack is dealt",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
+"パフェパズル中にリスタートのキー（既定はN）やゲームオーバーの「もう一度」を押すと、盤面が空のまま止まってしまっていたのを修正。パズル中はどこから始め直しても、同じ問題を出し直すようにした（PC版。リセットボタンは以前から同じ動き）": "Fixed the restart key (N by default) and the Again button leaving PC puzzle stuck on an empty board. While a puzzle is up, every way of starting over now deals the same problem again (desktop; the Reset button already behaved this way).",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
 "パフェ探索。組めるときは「手順を見る」で置き方が出ます": "PC finder. When one is possible, Show steps lays out the order.",
@@ -2663,6 +2664,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.2 / 2.12.2</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズル中にリスタートのキー（既定はN）やゲームオーバーの「もう一度」を押すと、盤面が空のまま止まってしまっていたのを修正。パズル中はどこから始め直しても、同じ問題を出し直すようにした（PC版。リセットボタンは以前から同じ動き）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.1 / 2.12.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.13.0 / 2.12.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルに「開幕パフェ積み」を追加。1巡目を積み終えた形を固定の地形として出し、残りをパフェで消してもらう。設定の「パフェ探索」にパフェパズルの項目を作り、開いたときの難しさ・開幕パフェ積みの左右反転（しない／する／ランダム）・Iミノホールド（なし／あり／ランダム。ありのときは右の壁が1列少なく4手で埋める形）を選べるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.13 / 2.11.13</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで次の問題が出るまでを 0.9秒 → 0.8秒 に縮めた。「クリア！」の文字は1.2秒のままなので、次の問題が出たあと少しだけ重なって消える</li></ul></div>
@@ -9020,7 +9022,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.1';
+const APP_VERSION = '2.13.2';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
