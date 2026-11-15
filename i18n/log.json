@@ -1,4 +1,5 @@
 {
+ "PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）": "Desktop: moved the Tablet tab in Settings to just before Other (Keys, Controls, Skin, Display, PC finder, PC puzzle, Tablet, Other).",
  "落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した": "Changing the gravity value now starts the pieces falling even while it is paused. Since it starts paused, raising the value used to do nothing. On desktop, Marathon also failed to start while paused; that is fixed too.",
  "薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした": "Lightened the grey text that was hard to read (the HOLD, NEXT and Gravity headings, the captions under the control buttons, the version and so on) and made the smallest text a size larger.",
  "PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない": "Desktop: when the window is too short and the lower buttons are cut off, the whole screen is now scaled down to fit. It can be turned off under Settings → Display, and it does not apply while you have moved buttons with Edit layout.",

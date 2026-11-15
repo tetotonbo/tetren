@@ -964,6 +964,7 @@ const I18N_EN = {
 "PC版とスマホ版でバージョンがずれていたので、この版で 1.15.0 に揃えた": "The desktop and mobile versions had drifted apart, so both were lined up at 1.15.0 here.",
 "PC版の「デザイン」「地形操作」から、見出しの文字と枠を外して中身だけ見せるようにした。配置編集のときは点線の枠が出るので、つかむ場所はこれまでどおり分かる": "On desktop the Display and Board groups lost their headings and boxes, leaving just the controls. The dashed frame still appears while editing the layout, so you can see what to grab.",
 "PC版のタブ行も、ウィンドウが狭くて入りきらないときは横スクロールで見せるようにした": "The tab row on desktop now scrolls sideways when the window is too narrow for it.",
+"PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）": "Desktop: moved the Tablet tab in Settings to just before Other (Keys, Controls, Skin, Display, PC finder, PC puzzle, Tablet, Other).",
 "PC版へ": "Desktop version",
 "PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない": "Desktop: when the window is too short and the lower buttons are cut off, the whole screen is now scaled down to fit. It can be turned off under Settings → Display, and it does not apply while you have moved buttons with Edit layout.",
 "PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした": "Desktop: made the colour palette and the gravity ▶ / ⏸ button larger.",
@@ -3102,6 +3103,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.14.1 / 2.13.1</span><span class="vl-date">2026-11-16</span></div><ul><li>PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.14.0 / 2.13.0</span><span class="vl-date">2026-11-16</span></div><ul><li>落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した</li><li>薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした</li><li>PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない</li><li>PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした</li><li>スマホ版：落下設定は、見出しの行のどこを押しても止める／動かすが切り替わるようにした（これまでは 14px の小さなマークだった）。‹ › のボタンも大きくした</li><li>スマホ版：左の列に続きがあるときは ▲ ▼ を出して、押すとその方向へ送るようにした。パフェパズルを開いたときは、難しさや「次の問題」が見えるところまで自動で送る</li><li>スマホ版：「パフェパズル」のボタンを1行に収め、難しさのボタンは縦に並べた（横に3つ並べると1文字ずつの縦書きになっていた）</li><li>使い方の説明を今の画面に合わせて直した（パフェパズルの「もう一度」、PC版の「デザイン」「地形操作」、落下設定の ⏸ の説明）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.7 / 2.12.7</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.6 / 2.12.6</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）</li></ul></div>
@@ -3358,11 +3360,11 @@ if (document.readyState === 'loading') {
     <div class="cfg-tabs">
       <button class="cfg-tab active" id="cfgTabKey" title="キーの割り当てを変更する"  onclick="switchConfigTab('key')">キーコンフィグ</button>
       <button class="cfg-tab"        id="cfgTabCtrl" title="ソフトドロップ・設置時間・DAS/ARRなど操作まわり" onclick="switchConfigTab('ctrl')">操作</button>
-      <button class="cfg-tab"        id="cfgTabTablet" title="タブレットでのタッチ操作" onclick="switchConfigTab('tablet')">タブレット</button>
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab"        id="cfgTabUi" title="画面に出すメニューを選ぶ" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab"        id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
       <button class="cfg-tab"        id="cfgTabPuzzle" title="パフェパズルの難しさと、開幕パフェ積みの出かた" onclick="switchConfigTab('puzzle')">パフェパズル</button>
+      <button class="cfg-tab"        id="cfgTabTablet" title="タブレットでのタッチ操作" onclick="switchConfigTab('tablet')">タブレット</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
@@ -11139,7 +11141,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.13.0';
+const APP_VERSION = '2.13.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
