@@ -317,7 +317,6 @@
  "選んだミノをHOLDした状態にして、ミノの順番をリセットします": "Puts the chosen piece in Hold and resets the piece order",
  "選んだミノを最初の1巡から抜いて、ゲームを最初から始めます": "Removes the chosen pieces from the first bag and starts the game over",
  "スナップ": "Snap",
- "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
  "180度回転": "Rotate 180°",
  "ミノ出現までの硬直（ARE）": "Entry delay (ARE)",
  "ミノを置いてから次が出るまでの待ち時間。0なら従来どおりすぐ出ます。ぷよぷよテトリス2は7Fです": "How long to wait between locking a piece and the next one appearing. 0 means it appears at once, as before. Puyo Puyo Tetris 2 uses 7F.",
@@ -481,5 +480,6 @@
  "左の列の「配置編集」をON。ドラッグで動かし、右下のつまみで大きさを変えます": "Turn on Edit layout in the left column. Drag to move them, and use the handle at the bottom right to resize.",
  "画面の高さに合わせて縮める": "Shrink to fit the window height",
  "画面が低くて下のボタンが切れるときに、全体を縮めて1画面に収めます。配置編集でボタンを動かしているあいだは働きません": "When the window is too short and the lower buttons are cut off, the whole screen is scaled down to fit. It does not apply while you have moved buttons with Edit layout.",
- "前の問題": "Previous"
+ "前の問題": "Previous",
+ "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. It also snaps to even spacing between buttons, and resizing snaps to a nearby button’s size."
 }
