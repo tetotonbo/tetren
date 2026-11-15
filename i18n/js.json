@@ -242,5 +242,13 @@
  "◀ 前の巡": "◀ Prev bag",
  "次の巡 ▶": "Next bag ▶",
  "◀ 前": "◀ Prev",
- "次 ▶": "Next ▶"
+ "次 ▶": "Next ▶",
+ "やさしい": "Easy",
+ "ふつう": "Normal",
+ "むずかしい": "Hard",
+ "クリア！　連続{0}問": "Solved!　{0} in a row",
+ "残り{0}手　連続{1}問": "{0} left　{1} in a row",
+ "空になりませんでした": "The board did not come out empty",
+ "問題が作れませんでした。もう一度押してください": "Could not build a problem. Press it again.",
+ "{0}段・{1}手の問題を出します": "Builds a {0}-row problem with {1} pieces"
 }

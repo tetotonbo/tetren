@@ -406,6 +406,11 @@ input:checked + .tgl::after { transform:translateX(10px); }
 /* タブが4つあるので、細い画面でも1行に収まるよう左右を詰める */
 #helpPanel .cfg-tab { padding:7px 4px; }
 
+/* パフェパズル */
+#puzzleMsg { font-size:8px; text-align:center; margin-top:2px; line-height:1.35; color:#d1d5db; }
+#puzzleLevelRow { display:flex; gap:2px; margin-top:2px; }
+#puzzleLevelRow .rand-num { flex:1; padding:4px 0; font-size:8px; }
+
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
 #dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay, #tdOverlay, #swapOverlay, #helpOverlay {
   display:none; position:fixed; inset:0; z-index:30;
@@ -688,6 +693,7 @@ const I18N_EN = {
 "DPCセット。HOLDに入れたいミノを選ぶと、そのミノを持った状態で開幕から始まります。複数選ぶと、そのミノだけで1巡目を組みます。↻ で同じ組み合わせのまま何度でもやり直せます": "DPC setup. Pick the piece you want in hold and the game starts from the opening with it held; pick several and the first bag is built from just those. ↻ starts over with the same choice as often as you like.",
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, Big pieces, C4W and Garbage — the practice modes.",
+"DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
 "DPCセット再": "DPC setup again",
 "DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた": "The DROP button now fires the moment you press it, not when you lift your finger (same as rotate left / rotate right / HOLD). Rotate, HOLD and DROP also no longer fire while you are dragging a button in layout edit mode.",
 "DT砲": "DT Cannon",
@@ -822,6 +828,7 @@ const I18N_EN = {
 "{0}個のまま、抜くミノを引き直します（前回は {1}）": "Keeps {0} pieces but draws new ones (last time: {1})",
 "{0}手": "{0} moves",
 "{0}手目 / {1}手　{2}ミノ": "Move {0} / {1}   {2} piece",
+"{0}段・{1}手の問題を出します": "Builds a {0}-row problem with {1} pieces",
 "{a}秒後に {b}ライン → {c}秒後に {d}ライン → {e}秒後にREN開始": "{b} lines after {a}s → {d} lines after {c}s → REN starts after {e}s",
 "{f}秒ごとに1RENずつ増え、{g}RENまで（REN中は合計{h}段）": "REN goes up by one every {f}s, up to {g} REN ({h} rows in total during REN)",
 "—（{0}ミノは多すぎて数えきれません）": "— ({0} pieces is too many to count)",
@@ -896,6 +903,7 @@ const I18N_EN = {
 "あわせて高さの枝刈りも直した。「一番上のブロックから下端までの段数」で見ていたため、": "The height pruning was fixed too. It measured the rows from the highest block down to the bottom,",
 "いまのツモ順（操作中・NEXT・この巡の残り）で、カンペどおりに置けるかを見ます。置けない形・外れた形は薄く表示します": "Checks whether you can follow the reference with your current pieces (active, NEXT and the rest of this bag). Shapes that do not fit are dimmed",
 "いまのミノを捨てる": "Discard the current piece",
+"いまの問題を、出されたときの状態からやり直します": "Puts the current problem back the way it started",
 "いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます": "Checks whether a Perfect Clear is possible from the current board with the active, held and next pieces",
 "いまの地形を登録": "Save the current board",
 "いまの地形を覚えます。もう一度押すと覚え直します": "Remembers the current board. Press again to overwrite it",
@@ -968,6 +976,7 @@ const I18N_EN = {
 "はちみつ砲の1パターン目を組み終えると、専用の2巡目（3パターン）を自動で表示するようにした": "Finishing the first Hachimitsu pattern now shows its own second bag (3 patterns) automatically.",
 "はちみつ砲の2パターン目を組み終えると、専用の2巡目（2パターン）を自動で表示するようにした": "Finishing the second Hachimitsu pattern now shows its own second bag (2 patterns) automatically.",
 "ひとつ前の巡に戻ります": "Goes back to the previous bag",
+"ふつう": "Normal",
 "ぷよぷよテトリス以外のゲーム画面からも取り込めるようにした。おじゃまの判定を「明るさの絶対値」から「その画像の空きマスよりはっきり明るい無彩色」に変更したため、白でもグレーでもおじゃまとして拾える": "Boards can now be imported from games other than Puyo Puyo Tetris. Garbage is no longer judged by absolute brightness but as a grey clearly brighter than the empty cells in that image, so white and grey garbage are both picked up.",
 "ぷよテトのゲーム画面のスクショから地形を読み取ります": "Reads the board from a screenshot of the game",
 "ぷテ": "PPT",
@@ -976,7 +985,9 @@ const I18N_EN = {
 "ほぼ透明": "Nearly invisible",
 "まだミノを選んでいません（押すと選択画面が開きます）": "No piece chosen yet (press to open the picker)",
 "まもなく": "Soon",
+"むずかしい": "Hard",
 "もう一度": "Again",
+"やさしい": "Easy",
 "やったー！": "Nice!",
 "やめる": "Stop",
 "やりたいこと別": "By task",
@@ -1017,6 +1028,7 @@ const I18N_EN = {
 "キーボードで操作するPC版の画面に切り替える": "Switches to the desktop layout, made for playing with a keyboard.",
 "キーボードをつないだときの割り当てです。欄を押してから、割り当てたいキーを押してください。": "Assignments for a connected keyboard. Click a field, then press the key you want.",
 "クリア": "Clear",
+"クリア！　連続{0}問": "Solved!　{0} in a row",
 "クリックでファイルを選択　／　貼り付け（Windows: Ctrl+V／Mac: ⌘V）": "Click to choose a file  /  or paste (Windows: Ctrl+V, Mac: ⌘V)",
 "グリッド": "Grid",
 "グリッド線": "Grid lines",
@@ -1104,15 +1116,22 @@ const I18N_EN = {
 "パターンごとに名前を付けられるようにした（迷走砲2巡目は「理想形／妥協系①／妥協系②」）": "Patterns can now be named (the Meiso Cannon second bag is Ideal / Compromise 1 / Compromise 2).",
 "パッチ（細かい修正）も含めて全部表示します": "Show everything, including patch releases",
 "パフェ": "PC",
+"パフェができる問題を自動で作ります。出されたミノだけを使って、盤面を空にしてください": "Builds a board that can be cleared completely. Empty it using only the pieces you are given.",
+"パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer.",
 "パフェできません（{0}ms）": "No Perfect Clear ({0}ms)",
 "パフェなどで地形が空になると「前の巡」が押せなくなっていたのを修正": "Fixed Previous bag becoming unusable once the board emptied, for example after a Perfect Clear.",
 "パフェの手順": "PC steps",
 "パフェの手順の先頭に 「全体図」 を追加": "Added an overview as the first of the PC steps.",
 "パフェの手順をカンペ画像と同じ浮かぶウィンドウにした": "The PC steps now appear in the same kind of floating window as reference images.",
+"パフェの手順を自分で考えたい": "Work out a Perfect Clear by yourself",
 "パフェの手順ウィンドウで、優先順位（火力／速度）を切り替えられるようにした": "The PC steps window can now switch the ranking between Attack and Speed.",
 "パフェの手順ウィンドウに QPCボタンを追加（QPCができる状況のときだけ出る）": "Added a QPC button to the PC steps window, shown only when a QPC is possible.",
 "パフェの手順ウィンドウの並びを 優先順位 → 候補の切り替え → 盤面 → 手順の送り に変更": "Reordered the PC steps window: ranking → solution switcher → board → step controls.",
 "パフェの手順ウィンドウの表示を 「火力・SD・消去」の順に変更（これまでは火力・消去・SD）": "The PC steps window now shows attack, SD and clears in that order (it used to be attack, clears, SD).",
+"パフェパズル": "PC puzzle",
+"パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
+"パフェパズル。パフェができる問題を自動で作ります。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
+"パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
 "パフェ探索。組めるときは「手順を見る」で置き方が出ます": "PC finder. When one is possible, Show steps lays out the order.",
@@ -1213,6 +1232,7 @@ const I18N_EN = {
 "モノクローム": "Monochrome",
 "モード": "Mode",
 "モード … DPCセット・ミノ欠け・REN・デカミノ・マラソン・40LINE・せりあがり": "Mode — DPC setup, Custom bag, C4W, Big pieces, Marathon, 40 LINE and Garbage.",
+"モード … DPCセット・ミノ欠け・パフェパズル・REN・デカミノ・マラソン・40LINE・せりあがり": "Mode — DPC setup, Custom bag, PC puzzle, C4W, Big pieces, Marathon, 40 LINE and Garbage.",
 "モードに 「40LINE」 を追加（マラソンの下）。40ライン消すまでの時間を計る": "Added 40 LINE to the modes, below Marathon, which times how long you take to clear 40 lines.",
 "モードの排他をそろえた。せりあがり・REN・デカミノ・マラソン・40LINE のどれかをONにすると、ほかは全部OFFになる。これまでは40LINEだけせりあがりを切らず、マラソンは40LINEしか切らない、とちぐはぐだった": "Tidied up how the modes exclude each other. Turning on any of Garbage, REN, Big pieces, Marathon or 40 LINE now switches all the others off. Until now 40 LINE alone left Garbage running, and Marathon only switched off 40 LINE.",
 "ライン": "Lines",
@@ -1322,6 +1342,7 @@ const I18N_EN = {
 "同じ場面を何度も練習するときは、「記録」で覚えてから「復元」で呼び戻します。": "To practise the same situation again and again, keep it with Save and bring it back with Load.",
 "同じ盤面・同じ残りミノは記憶して再探索しない。置き方の列挙結果も盤面ごとに使い回す": "The same board with the same remaining pieces is remembered and not searched again, and the list of placements is reused per board.",
 "名前（省略可）": "Name (optional)",
+"問題が作れませんでした。もう一度押してください": "Could not build a problem. Press it again.",
 "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece.",
 "回転ボタンを押したまま次のミノが出ると、出た瞬間に回ります。押しっぱなしにしておけばミノごとに効きます。硬直（ARE）が0Fでも使えます": "Hold a rotate button as the next piece appears and it spawns already rotated. Keep it held and it applies to every piece. Works even when the entry delay (ARE) is 0F.",
 "地形がほとんど無い盤面で「できない」ことを証明する場合だけ、3秒では終わらないことがある。": "Only when proving that an almost empty board has no solution can it take longer than three seconds.",
@@ -1430,12 +1451,14 @@ const I18N_EN = {
 "操作中のミノが盤面の上に見切れていても検出できるようにした（見えている2マス以上が一致すれば確定）": "The active piece is detected even when it is cut off at the top of the board (two or more matching visible cells are enough).",
 "操作中のミノの位置が特定できなかったとき、盤面に見えている部分が設置済みブロックとして残ってしまうのを修正。ゴーストと同じ色で宙に浮いているかたまりを探して地形から取り除くようにした（地形のオーバーハングと区別するため、かたまり全体がどこにも乗っていないことを条件にしている）": "Fixed the visible part of the active piece being left as placed blocks when its position could not be worked out. A floating block in the ghost colour is now removed from the board, on condition that the whole block rests on nothing, to tell it apart from an overhang.",
 "数も種類もおまかせで引き直します（前回は {0}）": "Draws a new count and new pieces (last time: {0})",
+"新しい問題を作ります": "Builds a new problem",
 "日本語に切り替える": "Switch to Japanese",
 "時計回り回転": "Rotate clockwise",
 "時間内に判定できませんでした（地形が少ないほど時間がかかります）": "Could not finish in time (the emptier the board, the longer it takes)",
 "時間経過": "Over time",
 "更新履歴・ツールチップ・ダイアログを含め、画面に出る文言をすべて英語にした（807語）": "Everything on screen is translated, including the version history, the tooltips and the dialogs (807 entries).",
 "最初からHOLDに入れておくミノ": "The piece to start with in Hold",
+"最初の状態に戻して、パフェ探索の手順を出します": "Puts the problem back to the start and shows the PC finder’s solution",
 "最後にIミノを立てて4ライン同時消しで決めるパフェ（QPC）です。": "A Perfect Clear finished with a vertical I for a Tetris (QPC).",
 "最後まで受けきったときは 「やったー！」 を出して、ゲームオーバーと同じように終了する（「もう一度」「TD対策を再開」から再開できる）": "Surviving to the end now shows Nice! and finishes like a game over, with Again and Resume TD defense to start over.",
 "最後をテトリス（4ライン同時消し）で締める手順だけを出します。並びは速度重視。ここで選ぶと設定にも残り、次の探索でもQPCがあればQPCから出します": "Shows only solutions that finish with a Tetris, sorted by speed. Choosing it here is remembered, so later searches show a QPC again whenever one exists.",
@@ -1453,11 +1476,13 @@ const I18N_EN = {
 "次 1段": "Next 1 row",
 "次 ▶": "Next ▶",
 "次の候補": "Next solution",
+"次の問題": "New problem",
 "次の巡 ▶": "Next bag ▶",
 "次の巡を見ます（2巡目が複数あるときは押すたびに切り替わります）": "Shows the next bag (press again to cycle when there are several second bags)",
 "次の手": "Next step",
 "次の段も同じ列に穴を開ける確率。10%でほぼランダムになります": "Chance that the next row has its hole in the same column. At 10% it is practically random.",
 "残ったミノから毎回ランダムに選ぶ": "Pick at random from the remaining pieces each time",
+"残り{0}手　連続{1}問": "{0} left　{1} in a row",
 "段": " rows",
 "決まったミノから始めたい": "Start from a particular piece",
 "消したライン数": "Lines cleared",
@@ -1527,8 +1552,10 @@ const I18N_EN = {
 "穴継続率": "Hole repeat",
 "穴継続率 ‹ ›": "Hole repeat ‹ ›",
 "空にする": "Clear board",
+"空になりませんでした": "The board did not come out empty",
 "窓の大きさは画面からはみ出さないよう自動で決めるようにした（スマホでも収まる）": "The window sizes itself so it never runs off the screen, including on phones.",
 "立体": "3D",
+"答えを見る": "Show the answer",
 "約": "approx. ",
 "約10フレーム": "about 10 frames",
 "約2フレーム": "about 2 frames",
@@ -2018,6 +2045,23 @@ if (document.readyState === 'loading') {
       <button class="side-btn" id="pcStepBtn" style="display:none;width:100%;margin-top:2px;background:#1f3a5f;"
         onclick="openPcSteps()">手順を見る</button>
     </div>
+    <div data-ui="puzzle" style="width:100%;margin-top:2px;">
+      <button class="side-btn" id="puzzleBtn" style="width:100%;"
+        title="パフェができる問題を自動で作ります。出されたミノだけを使って、盤面を空にしてください"
+        onclick="togglePuzzle()">パフェパズル</button>
+      <div id="puzzlePanel" style="display:none;">
+        <div id="puzzleMsg"></div>
+        <div id="puzzleLevelRow"></div>
+        <div class="dpc-side-row">
+          <button class="side-btn" style="flex:1;" title="新しい問題を作ります"
+            onclick="nextPuzzle()">次の問題</button>
+          <button class="side-btn" style="flex:1;" title="いまの問題を、出されたときの状態からやり直します"
+            onclick="retryPuzzle()">もう一度</button>
+        </div>
+        <button class="side-btn" style="width:100%;margin-top:2px;"
+          title="最初の状態に戻して、パフェ探索の手順を出します" onclick="puzzleAnswer()">答えを見る</button>
+      </div>
+    </div>
     <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ</button>
     <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN</button>
     <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()">せりあがり▼</button>
@@ -2391,7 +2435,7 @@ if (document.readyState === 'loading') {
         <li>ゴースト・軸表示・グリッド・配置編集 … 画面の見た目とボタンの配置</li>
         <li>落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）</li>
         <li>TD対策・地形編集・⇄ 反転・記録・復元 … 地形まわり</li>
-        <li>DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード</li>
+        <li>DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード</li>
         <li>カンペ画像 … 参考画像や開幕テンプレートを画面に重ねて出します</li>
         <li>リセット・地形のみ・ミノ順のみ … やり直し</li>
         <li>⚙ 設定 … スキン・操作まわりの細かい設定、画面に出すボタンの選択</li>
@@ -2470,6 +2514,8 @@ if (document.readyState === 'loading') {
             <td>選んだミノを最初の1巡から抜いて、ゲームを最初から始めます</td></tr>
         <tr><th>↻</th>
             <td>前回選んだミノで、もう一度セットし直します</td></tr>
+        <tr><th>パフェパズル</th>
+            <td>パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます</td></tr>
         <tr><th>パフェ探索</th>
             <td>いまの地形と、操作中・HOLD・NEXTのミノだけでパーフェクトクリアができるかを調べます</td></tr>
         <tr><th>手順を見る</th>
@@ -2518,6 +2564,8 @@ if (document.readyState === 'loading') {
             <td>地形取り込み。ぷよぷよテトリス2 の画面を撮った画像から地形を読み取ります</td></tr>
         <tr><th>パーフェクトクリアの練習</th>
             <td>パフェ探索。組めるときは「手順を見る」で置き方が出ます</td></tr>
+        <tr><th>パフェの手順を自分で考えたい</th>
+            <td>パフェパズル。パフェができる問題を自動で作ります。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます</td></tr>
         <tr><th>相手の攻撃を受ける練習</th>
             <td>せりあがり。間隔と穴の出かたを決められます。TD中空け対策 は相手の TST → TSD → REN を再現します</td></tr>
         <tr><th>決まったミノから始めたい</th>
@@ -2555,6 +2603,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.12.0 / 2.11.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.11.1 / 2.10.1</span><span class="vl-date">2026-11-15</span></div><ul><li>開いた直後の落下設定を、自由落下を止めた状態（⏸）から始めるようにした。落下設定の値はそのままで、▶ を押せばこれまでどおり落ちる（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.11.0 / 2.10.0</span><span class="vl-date">2026-11-15</span></div><ul><li>設定の「パフェ探索」に 「QPCを優先して出す」 を追加。ONの間は、QPCのある盤面ではいつでもQPCの手順から出す。QPCの無い盤面では「優先するもの」（火力／速度）の並びで出すが、設定は残るので、次にQPCがあればまたQPCに戻る。これまでは手順ウィンドウのQPCボタンだけで、探索し直すと解除され、QPCの無い盤面に当たった時点でも解除されていた（PC版・スマホ版とも）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.10.2 / 2.09.2</span><span class="vl-date">2026-11-15</span></div><ul><li>使い方の「やりたいこと別」に 「DPCの練習をしたい」 を足した。また「画面の見かた」「ボタンの説明」の並びを、右の列から順に説明するように入れ替えた（PC版・スマホ版とも）</li></ul></div>
@@ -3515,6 +3564,7 @@ function newBag() {
 // 番号はカウンタを持たず、残り枚数から毎回出す。
 // こうしておくと、1手戻すなどで巡の途中へ戻ってもずれない
 function fillQ() {
+  if(puzzleMode) return;   // パフェパズル中は、出題したミノだけで打ってもらう
   while(nextQ.length < NEXT_SHOW+1){
     const isNew=(bag.length===0); if(isNew) bag=newBag();
     const type=bag.shift();
@@ -3543,7 +3593,10 @@ function fitSpawn(){
 }
 
 function spawn(){
-  fillQ(); cur=mkPiece(nextQ.shift().type);
+  fillQ();
+  // パフェパズル中、出題したミノを使い切ったらそこで決着
+  if(puzzleMode && !nextQ.length){ puzzleJudge(); return; }
+  cur=mkPiece(nextQ.shift().type);
   resumeDAS();   // 左右を押したまま次のミノに移っても動き続けるようにする
   canHold=true; lastWasRotation=false; lastKickIndex=0;
   // ふさがっていたら上に逃がす。1段上（21段目）で収まらなければゲームオーバー
@@ -3597,6 +3650,8 @@ function doHold(){
   setTimeout(tplRefresh, 0);
   // 連続HOLDがOFFのときは、ミノを置くまで再ホールドできない（通常のテトリスと同じ）
   if(!opts.multiHold && !canHold) return;
+  // パフェパズルで最後の1手を預けると、打つミノが無くなってしまうので受け付けない
+  if(holdType===null && puzzleMode && !nextQ.length) return;
   if(holdType===null){holdType=cur.type;spawn();}
   else{const t=holdType;holdType=cur.type;cur=mkPiece(t);fitSpawn();}  // 重ならないよう上へ
   canHold=false;   // spawn() 側で次のミノ出現時に戻る
@@ -4299,6 +4354,7 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
   // 集めたぶんを全部残しておくと、あとから優先順位を切り替えても探索し直さずに済む
   const btn = document.getElementById('pcStepBtn');
   if (!list.length) {
+    pcAutoOpen = false;
     if (st.aborted) show('時間内に判定できませんでした（地形が少ないほど時間がかかります）', '#9ca3af');
     else            show(TF('パフェできません（{0}ms）', ms), '#f87171');
     return;
@@ -4321,6 +4377,7 @@ function pcRunSearch(rows, seq, hold, maxLines, show, el) {
                    + (st.aborted ? '制限時間で打ち切ったので、ほかにも手順があるかもしれません。' : '')
                    + '「手順を見る」から候補を切り替えられます';
   if (btn) btn.style.display = '';
+  if (pcAutoOpen) { pcAutoOpen = false; openPcSteps(); }   // 「答えを見る」から来たとき
 }
 
 // ===== パフェ手順の表示 =====
@@ -4332,6 +4389,7 @@ let pcBase   = null;      // 探索した時点の盤面の色。手順の絵は
 let pcWant   = 5;         // 出す件数
 let pcRankOn = true;      // 並べ替えるかどうか
 let pcQuadOnly = false;   // QPC（最後がテトリス）だけに絞っているか
+let pcAutoOpen = false;   // 探索が終わったら手順の窓まで開く（パフェパズルの「答えを見る」）
 let pcSolutions = null;   // 見せている候補 [{path, steps, ev, soft, quad}]
 let pcPick  = 0;          // 選んでいる候補
 let pcSteps = null;   // [{type, grid, cells}]（grid は色の2次元配列）
@@ -4530,6 +4588,205 @@ function movePcPick(d) {
   fitPcCanvas();
   drawPcStep();
 }
+// ===== パフェパズル =====
+// パフェができる問題を自動で作って、手順のほうを自分で打ってもらうモード。
+// 作り方は「先に2段／4段ぶんをミノで敷き詰めてから、上のほうの何個かを取り除く」。
+// 取り除いたミノがそのまま出題のツモになるので、形のうえでは必ず埋まる。
+// ただし「形が埋まること」と「重力で本当にそこへ置けること」は別なので、
+// 出す前に、いつものパフェ探索に解けるかどうかを確かめてもらっている。
+
+const PUZZLE_LEVELS = [
+  { id:'easy',   name:'やさしい',   rows:2, give:2 },
+  { id:'normal', name:'ふつう',     rows:4, give:4 },
+  { id:'hard',   name:'むずかしい', rows:4, give:6 },
+];
+
+let puzzleMode   = false;      // パフェパズル中か
+let puzzleId     = 'normal';   // 選んでいる難易度
+let puzzleStart  = null;       // いまの問題の最初の状態（やり直しと答え合わせに使う）
+let puzzleStreak = 0;          // 連続正解
+let puzzleOver   = false;      // いまの問題は決着済みか
+
+// 向きちがいも含めた、ミノの形の一覧。左上そろえの相対座標で持つ
+let puzzleShapeList = null;
+function puzzleShapes(){
+  if(puzzleShapeList) return puzzleShapeList;
+  const seen=new Set(); puzzleShapeList=[];
+  for(const type of ALL_TYPES) for(let st=0;st<4;st++){
+    const cs=PIECE_DEF[type].cells[st];
+    const mr=Math.min(...cs.map(x=>x[0])), mc=Math.min(...cs.map(x=>x[1]));
+    const cells=cs.map(([r,c])=>[r-mr,c-mc]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+    const key=type+cells.map(x=>x.join(',')).join(' ');
+    if(seen.has(key)) continue;   // Oミノのように、回しても同じ形になるものは1つでよい
+    seen.add(key); puzzleShapeList.push({type,cells});
+  }
+  return puzzleShapeList;
+}
+
+// rows段×10列を、ミノでぴったり敷き詰める。
+// いちばん左上の空きマスから順に埋め、入らなければ1つ戻ってやり直す
+function puzzleTiling(rows){
+  const g=Array.from({length:rows},()=>new Array(COLS).fill(false));
+  const tiles=[], shapes=puzzleShapes();
+  const 空き=()=>{
+    for(let r=0;r<rows;r++) for(let c=0;c<COLS;c++) if(!g[r][c]) return [r,c];
+    return null;
+  };
+  const rec=()=>{
+    const at=空き();
+    if(!at) return true;
+    const [r0,c0]=at;
+    const order=shapes.slice();   // 毎回ちがう問題になるよう、試す順番を混ぜる
+    for(let i=order.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[order[i],order[j]]=[order[j],order[i]];}
+    for(const sh of order){
+      const [br,bc]=sh.cells[0];   // 形のいちばん上のセルを、いま埋めたいマスに合わせる
+      const put=sh.cells.map(([r,c])=>[r0+r-br,c0+c-bc]);
+      if(put.some(([r,c])=>r<0||r>=rows||c<0||c>=COLS||g[r][c])) continue;
+      put.forEach(([r,c])=>g[r][c]=true); tiles.push({type:sh.type,cells:put});
+      if(rec()) return true;
+      put.forEach(([r,c])=>g[r][c]=false); tiles.pop();
+    }
+    return false;
+  };
+  return rec()?tiles:null;
+}
+
+// 問題を1つ作る。作れなければ null
+function puzzleMake(lv){
+  const limit=performance.now()+1500;   // 何度か作り直すので、全体の上限を決めておく
+  while(performance.now()<limit){
+    const tiles=puzzleTiling(lv.rows);
+    if(!tiles||tiles.length<=lv.give) continue;
+    // 上にあるミノほど「あとから置く」ことになるので、そちらをツモに回す
+    const 上=t=>Math.min(...t.cells.map(c=>c[0]));
+    const order=tiles.slice().sort((a,b)=>上(a)-上(b));
+    const give=order.slice(0,lv.give), keep=order.slice(lv.give);
+    // 重力で本当に置けるか、いつものパフェ探索に確かめてもらう
+    const H=lv.rows+PC_PAD, f=new Array(H).fill(0);
+    for(const t of keep) for(const [r,c] of t.cells) f[H-lv.rows+r] |= (1<<c);
+    const st={nodes:0,aborted:false,found:[],cap:1,deadline:performance.now()+200};
+    pcCollect(f, give.map(t=>t.type), 0, null, new Map(), new Map(), st, []);
+    if(st.found.length) return {rows:lv.rows, keep, give};
+  }
+  return null;
+}
+
+// 止まっていたループを動かし直す（決着後に次の問題を始めるとき）
+function puzzleResume(){ cancelAnimationFrame(rafId); rafId=requestAnimationFrame(loop); }
+
+// 作った問題を盤面に乗せる
+function puzzleApply(p){
+  clearPcResult(); closePcSteps();
+  board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
+  for(const t of p.keep) for(const [r,c] of t.cells) board[TROW-p.rows+r][c]=pieceColor(t.type);
+  bag=[]; nextQ=p.give.map(t=>({type:t.type,newBag:false,idx:0}));
+  holdType=null; canHold=true;
+  undoStack=[]; ren=0; b2b=false; lastGarbageCol=null;
+  gameOver=false; puzzleOver=false;
+  resetLock(); spawn();
+  // やり直しと答え合わせのために、出したときの形を控えておく
+  puzzleStart={board:board.map(r=>[...r]), cur:cur.type, queue:nextQ.map(q=>q.type)};
+  puzzleResume(); updUI(); draw(); puzzleHud();
+}
+
+// 出されたときの状態に戻す
+function puzzleRestore(){
+  if(!puzzleStart) return;
+  clearPcResult();
+  board=puzzleStart.board.map(r=>[...r]);
+  nextQ=puzzleStart.queue.map(t=>({type:t,newBag:false,idx:0}));
+  holdType=null; canHold=true;
+  undoStack=[]; ren=0; b2b=false;
+  gameOver=false; puzzleOver=false;
+  resetLock(); cur=mkPiece(puzzleStart.cur); fitSpawn();
+  puzzleResume(); updUI(); draw(); puzzleHud();
+}
+
+// 設置のたびに呼ばれる。決着が付いたら true
+function puzzleJudge(){
+  if(!puzzleMode||puzzleOver) return false;
+  const empty=board.every(row=>row.every(v=>!v));
+  if(!empty && nextQ.length) return false;   // まだ打てる
+  puzzleOver=true; gameOver=true;            // 次のミノは出さず、操作も止める
+  resetLock();
+  if(empty) puzzleStreak++; else puzzleStreak=0;
+  puzzleHud(empty?'clear':'fail');
+  return true;
+}
+
+// 画面の表示を、いまの状態に合わせる
+function puzzleHud(kind){
+  const btn=document.getElementById('puzzleBtn');
+  if(btn){
+    btn.style.background  = puzzleMode?'#16a34a':'';
+    btn.style.borderColor = puzzleMode?'#22c55e':'';
+    btn.style.color       = puzzleMode?'#fff':'';
+  }
+  const panel=document.getElementById('puzzlePanel');
+  if(panel) panel.style.display = puzzleMode?'':'none';
+  const msg=document.getElementById('puzzleMsg');
+  if(msg){
+    if(kind==='clear'){ msg.textContent=TF('クリア！　連続{0}問',puzzleStreak); msg.style.color='#4ade80'; }
+    else if(kind==='fail'){ msg.textContent='空になりませんでした'; msg.style.color='#f87171'; }
+    else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
+    else { msg.textContent=TF('残り{0}手　連続{1}問',nextQ.length+1,puzzleStreak); msg.style.color='#d1d5db'; }
+  }
+  renderPuzzleLevels();
+}
+
+// 難易度のボタン
+function renderPuzzleLevels(){
+  const box=document.getElementById('puzzleLevelRow');
+  if(!box) return;
+  box.innerHTML='';
+  for(const lv of PUZZLE_LEVELS){
+    const b=document.createElement('button');
+    b.className='rand-num'+(lv.id===puzzleId?' sel':'');
+    b.textContent=T(lv.name);
+    b.title=TF('{0}段・{1}手の問題を出します',lv.rows,lv.give);
+    b.addEventListener('click',()=>setPuzzleLevel(lv.id));
+    box.appendChild(b);
+  }
+}
+function setPuzzleLevel(id){
+  puzzleId=id;
+  if(puzzleMode) nextPuzzle();   // その場で、その難しさの問題に変える
+  else renderPuzzleLevels();
+}
+
+// モードの出入り
+function togglePuzzle(){
+  if(puzzleMode){ stopPuzzle(); return; }
+  // ほかのモードとは同時に使えない
+  if(renMode) toggleRenMode();
+  if(dekaMode) toggleDekaMode();
+  if(digMode) toggleDigMode();
+  puzzleMode=true; puzzleStreak=0;
+  if(!nextPuzzle()){ puzzleMode=false; puzzleHud(); }
+}
+function stopPuzzle(){
+  puzzleMode=false; puzzleOver=false;
+  puzzleStart=null; puzzleStreak=0; gameOver=false;
+  puzzleHud();
+  startGame();   // ふつうの練習に戻す
+}
+// 新しい問題を出す
+function nextPuzzle(){
+  const lv=PUZZLE_LEVELS.find(x=>x.id===puzzleId)||PUZZLE_LEVELS[1];
+  const p=puzzleMake(lv);
+  if(!p){ puzzleHud('none'); return false; }
+  puzzleApply(p); return true;
+}
+// 同じ問題をやり直す
+function retryPuzzle(){ puzzleRestore(); }
+// 答えを見る: 最初の状態に戻してから、いつものパフェ探索にかける
+function puzzleAnswer(){
+  if(!puzzleStart) return;
+  puzzleRestore();
+  pcAutoOpen=true;
+  searchPerfectClear();
+}
+
 // ===== 開幕テンプレート =====
 // 1巡目の置き方を、盤面と同じ絵で見られるようにする。
 // rows は「下の行から順」に、1文字＝1マス（ミノの種類／. は空き）で書いてある。
@@ -6311,6 +6568,8 @@ function lock(){
     if(opts.digOnLock && !holdByClear) flushPendingDig();
   }
   if(pcPlaced) pcFollowLock(pcPlaced, pcPlacedType);
+  // パフェパズル: 盤面が空になったら正解。決着したら次のミノは出さない
+  if(puzzleMode && puzzleJudge()){ draw(); return; }
   spawn();
   applyHeldPre();   // 押したままの先行回転・先行ホールドは、ここで次のミノに効かせる
   draw();
@@ -6429,6 +6688,7 @@ function restoreRenWalls(){
   for(let r=REN_WALL_TOP;r<TROW;r++) for(const c of REN_WALL_COLS) board[r][c]=GARBAGE_COLOR;
 }
 function toggleDekaMode(){
+  if(puzzleMode) stopPuzzle();   // パフェパズルとは同時に使えない
   dekaMode=!dekaMode;
   const btn=document.getElementById('dekaModeBtn');
   for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
@@ -6448,6 +6708,7 @@ function toggleDekaMode(){
   spawn(); draw();
 }
 function toggleRenMode(){
+  if(puzzleMode) stopPuzzle();   // パフェパズルとは同時に使えない
   renMode=!renMode;
   const btn=document.getElementById('renModeBtn');
   if(renMode){
@@ -6582,6 +6843,7 @@ function drawNext(){
   const itemH=Math.floor(nextCanvas.height/NEXT_SHOW);
   for(let i=0;i<NEXT_SHOW;i++){
     const item=nextQ[i];
+    if(!item) break;   // パフェパズル中は、残りのツモが足りないことがある
     if(item.newBag&&i>0){
       const y=i*itemH-3;
       nextCtx.save();
@@ -7482,6 +7744,7 @@ function showOverlay(title,btn){
 
 // ===== ゲームスタート =====
 function startGame(){
+  if(puzzleMode){ retryPuzzle(); return; }   // パズル中のリセットは、同じ問題を出し直す
   clearPcResult();
   tdRun = null; tdQueue = []; tdActive = false; tdFinishing = false;
   if(tdReadyTimer){ clearTimeout(tdReadyTimer); tdReadyTimer = null; tdMsgHide(); }
@@ -8370,6 +8633,7 @@ const UI_ITEMS = [
   { id:'dpc',         label:'DPCセット' },
   { id:'miss',        label:'ミノ欠け' },
   { id:'pcSearch',    label:'パフェ探索' },
+  { id:'puzzle',      label:'パフェパズル' },
   { id:'deka',        label:'デカミノ' },
   { id:'ren',         label:'REN' },
   { id:'dig',         label:'せりあがり' },
@@ -8470,7 +8734,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.11.1';
+const APP_VERSION = '2.12.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

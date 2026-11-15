@@ -452,5 +452,19 @@
  "盤面": "Board",
  "消したライン数": "Lines cleared",
  "地形編集がONのあいだは、クリック・ドラッグでブロックを置けます": "While Edit board is on, click or drag to place blocks.",
- "地形編集がONのあいだは、タップ・なぞりでブロックを置けます": "While Edit board is on, tap or swipe to place blocks."
+ "地形編集がONのあいだは、タップ・なぞりでブロックを置けます": "While Edit board is on, tap or swipe to place blocks.",
+ "パフェパズル": "PC puzzle",
+ "パフェができる問題を自動で作ります。出されたミノだけを使って、盤面を空にしてください": "Builds a board that can be cleared completely. Empty it using only the pieces you are given.",
+ "次の問題": "New problem",
+ "新しい問題を作ります": "Builds a new problem",
+ "もう一度": "Again",
+ "いまの問題を、出されたときの状態からやり直します": "Puts the current problem back the way it started",
+ "答えを見る": "Show the answer",
+ "最初の状態に戻して、パフェ探索の手順を出します": "Puts the problem back to the start and shows the PC finder’s solution",
+ "パフェパズル … パフェができる問題を自動で作り、出されたミノだけで解きます": "PC puzzle — builds a board that can be cleared completely, to be solved with the pieces you are given.",
+ "パフェの手順を自分で考えたい": "Work out a Perfect Clear by yourself",
+ "パフェパズル。パフェができる問題を自動で作ります。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
+ "モード … DPCセット・ミノ欠け・パフェパズル・REN・デカミノ・マラソン・40LINE・せりあがり": "Mode — DPC setup, Custom bag, PC puzzle, C4W, Big pieces, Marathon, 40 LINE and Garbage.",
+ "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
+ "パフェができる問題を自動で作ります。難しさを選べ、「次の問題」「もう一度」「答えを見る」で進めます": "Builds a board that can be cleared completely. Pick a difficulty, then use New problem, Again and Show the answer."
 }
