@@ -1184,6 +1184,7 @@ const I18N_EN = {
 "パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
 "パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）": "Fixed PC puzzle breaking when other features were used during a problem. Board only and Piece order only now deal the same problem again (they used to wipe just the board, or run the queue dry and fail at once). DPC setup, Custom bag, Restore, TD defense, Import board and Garbage now leave the puzzle first instead of mixing with its board.",
 "パフェパズル中にリスタートのキー（既定はN）やゲームオーバーの「もう一度」を押すと、盤面が空のまま止まってしまっていたのを修正。パズル中はどこから始め直しても、同じ問題を出し直すようにした（PC版。リセットボタンは以前から同じ動き）": "Fixed the restart key (N by default) and the Again button leaving PC puzzle stuck on an empty board. While a puzzle is up, every way of starting over now deals the same problem again (desktop; the Reset button already behaved this way).",
+"パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない": "Discard piece and the ↑ ↓ board shift can no longer be used during PC puzzle — they left you short of pieces or changed the board, so the problem could not be solved. The buttons are dimmed while a puzzle is up, and the keys and controller are blocked too.",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
 "パフェ探索。組めるときは「手順を見る」で置き方が出ます": "PC finder. When one is possible, Show steps lays out the order.",
@@ -2252,7 +2253,7 @@ if (document.readyState === 'loading') {
     </div>
 
     <div id="opts" data-ui="undoDiscard">
-      <button class="opt-btn" data-ctrl="discard"
+      <button class="opt-btn no-puzzle" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn" data-ctrl="undo"
         onclick="if((!gameOver||puzzleUndoOK())&&undoStack.length)undo()">戻す ↩</button>
@@ -2668,6 +2669,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.7 / 2.12.7</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.6 / 2.12.6</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.5 / 2.12.5</span><span class="vl-date">2026-11-16</span></div><ul><li>開幕パフェ積みの地形を、1巡目を積み終えた形に戻した（2.13.3で毎回ちがう形にしたが、ここは固定でよいとのこと）。そのかわり、埋め方と手順は集めきってから均等に選ぶようにして、配られるミノと解き筋が偏らないようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.4 / 2.12.4</span><span class="vl-date">2026-11-16</span></div><ul><li>やさしい・ふつう・むずかしいでも、どの列も底まで空いた長方形の穴ばかり出ていたのを直した（むずかしいでは4問に1問ほど同じ長方形だった）。ぴったりの幅は長方形にしかならないので、そこを控えめに選ぶようにした</li></ul></div>
@@ -4962,6 +4964,8 @@ function puzzleHud(kind){
     else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
     else { msg.textContent=''; }   // 打っている間は何も出さない
   }
+  // パズル中は使えないボタンを薄くして、押せないことが分かるようにする
+  document.querySelectorAll('.no-puzzle').forEach(b=>{ b.disabled=puzzleMode; b.style.opacity=puzzleMode?'0.35':''; });
   const prev=document.getElementById('puzzlePrevBtn');
   if(prev){ const ok=puzzleAt>0; prev.style.opacity=ok?'':'0.45'; prev.disabled=!ok; }
   renderPuzzleLevels();
@@ -6663,7 +6667,10 @@ function resetQueueOnly(){
 }
 
 // ===== ミノを捨てる =====
-function discardPiece(){resetLock();spawn();draw();}
+function discardPiece(){
+  if(puzzleMode) return;   // パフェパズル中は捨てられない（配ったミノが足りなくなる）
+  resetLock();spawn();draw();
+}
 
 // ===== おじゃま =====
 // 積み上がりすぎ判定: 真ん中4列が21段目以上まで到達したら終了
@@ -9047,7 +9054,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.6';
+const APP_VERSION = '2.13.7';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

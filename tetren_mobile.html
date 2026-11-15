@@ -1182,7 +1182,9 @@ const I18N_EN = {
 "パフェパズルの難しさと、開幕パフェ積みの出かた": "PC puzzle difficulty and how the opening stack is dealt",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
+"パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）": "Fixed PC puzzle breaking when other features were used during a problem. Board only and Piece order only now deal the same problem again (they used to wipe just the board, or run the queue dry and fail at once). DPC setup, Custom bag, Restore, TD defense, Import board and Garbage now leave the puzzle first instead of mixing with its board.",
 "パフェパズル中にリスタートのキー（既定はN）やゲームオーバーの「もう一度」を押すと、盤面が空のまま止まってしまっていたのを修正。パズル中はどこから始め直しても、同じ問題を出し直すようにした（PC版。リセットボタンは以前から同じ動き）": "Fixed the restart key (N by default) and the Again button leaving PC puzzle stuck on an empty board. While a puzzle is up, every way of starting over now deals the same problem again (desktop; the Reset button already behaved this way).",
+"パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない": "Discard piece and the ↑ ↓ board shift can no longer be used during PC puzzle — they left you short of pieces or changed the board, so the problem could not be solved. The buttons are dimmed while a puzzle is up, and the keys and controller are blocked too.",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
 "パフェ探索。組めるときは「手順を見る」で置き方が出ます": "PC finder. When one is possible, Show steps lays out the order.",
@@ -2251,7 +2253,7 @@ if (document.readyState === 'loading') {
     </div>
 
     <div id="opts" data-ui="undoDiscard">
-      <button class="opt-btn" data-ctrl="discard"
+      <button class="opt-btn no-puzzle" data-ctrl="discard"
         onclick="if(!gameOver)discardPiece()">ミノ捨てる</button>
       <button class="opt-btn" data-ctrl="undo"
         onclick="if((!gameOver||puzzleUndoOK())&&undoStack.length)undo()">戻す ↩</button>
@@ -2667,6 +2669,8 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.7 / 2.12.7</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない</li></ul></div>
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.6 / 2.12.6</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中にほかの機能を押すと壊れることがあったのを修正。「地形のみ」「ミノ順のみ」は同じ問題を出し直す（これまでは地形だけ消えたり、ツモが尽きて即失敗になっていた）。DPCセット・ミノ欠け・復元・TD対策・地形取り込み・せりあがりは、先にパズルを抜けてから始める（これまではパズルの盤面と混ざった状態になっていた）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.5 / 2.12.5</span><span class="vl-date">2026-11-16</span></div><ul><li>開幕パフェ積みの地形を、1巡目を積み終えた形に戻した（2.13.3で毎回ちがう形にしたが、ここは固定でよいとのこと）。そのかわり、埋め方と手順は集めきってから均等に選ぶようにして、配られるミノと解き筋が偏らないようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.4 / 2.12.4</span><span class="vl-date">2026-11-16</span></div><ul><li>やさしい・ふつう・むずかしいでも、どの列も底まで空いた長方形の穴ばかり出ていたのを直した（むずかしいでは4問に1問ほど同じ長方形だった）。ぴったりの幅は長方形にしかならないので、そこを控えめに選ぶようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.3 / 2.12.3</span><span class="vl-date">2026-11-16</span></div><ul><li>開幕パフェ積みの地形を、毎回ちがう積み方で作るようにした。これまでは1つの形（と左右反転）だけだったので、似た問題ばかり出ていた。「地形が1巡目の7種のミノちょうどで組める」「残りが配るミノで重力どおりに置けてパフェになる」の2つを満たす形だけを出すので、積み方が変わっても必ず解ける（Iミノホールドのときは、Iを除く6種で組める形から作る）</li></ul></div>
@@ -4960,6 +4964,8 @@ function puzzleHud(kind){
     else if(kind==='none'){ msg.textContent='問題が作れませんでした。もう一度押してください'; msg.style.color='#f87171'; }
     else { msg.textContent=''; }   // 打っている間は何も出さない
   }
+  // パズル中は使えないボタンを薄くして、押せないことが分かるようにする
+  document.querySelectorAll('.no-puzzle').forEach(b=>{ b.disabled=puzzleMode; b.style.opacity=puzzleMode?'0.35':''; });
   const prev=document.getElementById('puzzlePrevBtn');
   if(prev){ const ok=puzzleAt>0; prev.style.opacity=ok?'':'0.45'; prev.disabled=!ok; }
   renderPuzzleLevels();
@@ -6304,6 +6310,7 @@ function loadDigSetting(){
   updateDigIntervalDisplay();
 }
 function toggleDigMode(){
+  if(puzzleMode) stopPuzzle();   // 別の練習を始めるので、パフェパズルは抜ける
   digMode=!digMode; digCount=0;
   timeDigLastTs=0;
   pendingDigRows=0;   // 溜まっていたぶんは持ち越さない
@@ -6503,6 +6510,7 @@ function tdRows(r) {
 }
 let tdReadyTimer = null;
 function tdStart() {
+  if(puzzleMode) stopPuzzle();   // 別の練習を始めるので、パフェパズルは抜ける
   closeTd();
   // 毎回おなじ条件から始められるよう、地形もミノ順もまっさらにして回し直す。
   // ゲームオーバーからの再開でもループを張り直したいので startGame() を通す
@@ -6629,6 +6637,7 @@ function tdMsgHide() {
 // ===== 部分リセット =====
 // 地形だけ消す。ミノの順番・HOLD・スコアはそのまま続ける
 function resetTerrainOnly(){
+  if(puzzleMode){ retryPuzzle(); return; }   // パズル中は、同じ問題を出し直す
   for(let r=0;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
   lastGarbageCol=null;
   autoGroup=[];
@@ -6641,6 +6650,7 @@ function resetTerrainOnly(){
 }
 // ミノの順番とHOLDだけ引き直す。盤面・スコアはそのまま
 function resetQueueOnly(){
+  if(puzzleMode){ retryPuzzle(); return; }   // パズル中は、同じ問題を出し直す
   bag=[]; nextQ=[];
   holdType=null; canHold=true;
   undoStack=[];              // ツモが変わるので履歴は捨てる
@@ -6657,7 +6667,10 @@ function resetQueueOnly(){
 }
 
 // ===== ミノを捨てる =====
-function discardPiece(){resetLock();spawn();draw();}
+function discardPiece(){
+  if(puzzleMode) return;   // パフェパズル中は捨てられない（配ったミノが足りなくなる）
+  resetLock();spawn();draw();
+}
 
 // ===== おじゃま =====
 // 積み上がりすぎ判定: 真ん中4列が21段目以上まで到達したら終了
@@ -6728,6 +6741,7 @@ function loadTerrain(){
 // hold は null（入れない）／ミノ種別／HOLD_RANDOM
 function doLoadTerrain(hold){
   if(!savedTerrain) return;
+  if(puzzleMode) stopPuzzle();   // 別の練習を始めるので、パフェパズルは抜ける
   board=savedTerrain.map(r=>[...r]);
   if(hold === HOLD_RANDOM) hold = ALL_TYPES[Math.floor(Math.random()*ALL_TYPES.length)];
   // ミノ欠けと同じ考え方で、1巡目からはそのぶん抜いておく
@@ -7294,6 +7308,7 @@ addDoubleTap(nextCanvas, e => {
   openSwap({ kind:'next', index: Math.max(0, Math.min(NEXT_SHOW - 1, i)) });
 });
 function setDpcHold(type){
+  if(puzzleMode) stopPuzzle();   // 別の練習を始めるので、パフェパズルは抜ける
   lastDpcType=type; updateDpcAgainBtn();   // 「ランダム」は '?' のまま覚えて、↻ で毎回引き直す
   // 地形リセット（せりあがりの穴位置・Undo履歴・RENもここで初期化）
   board=Array.from({length:TROW},()=>new Array(COLS).fill(null));
@@ -7515,6 +7530,7 @@ function restoreMissTerrain(){
 }
 // record: 選択画面から始めたときだけ true。↻ は覚えてある地形をそのまま使い回す
 function applyMissTypes(types, last, record = true){
+  if(puzzleMode) stopPuzzle();   // 別の練習を始めるので、パフェパズルは抜ける
   lastMiss=last; updateMissAgainBtn();
   firstBagTypes=ALL_TYPES.filter(t=>!types.includes(t));
   // 最初からHOLDに入れるミノは、1巡目からも抜く
@@ -9038,7 +9054,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.5';
+const APP_VERSION = '2.13.7';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
