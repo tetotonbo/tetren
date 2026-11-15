@@ -1060,6 +1060,7 @@ const I18N_EN = {
 "スタート画面の「β版」表記を削除（スマホ版・PC版）": "Removed the beta label from the start screen (desktop and mobile).",
 "スティックやトリガーもそのまま覚えられます。左右移動の連打の速さは「その他」のDAS/ARRの設定を使います。": "Sticks and triggers can be assigned too. Auto-shift speed uses the DAS/ARR settings under Other.",
 "スナップ": "Snap",
+"スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）": "Snap pulls harder again: from 24px on desktop and 30px on mobile, up from 16 and 20.",
 "スナップの効きを強くした（吸い付く距離を PC版 8→16px、スマホ版 10→20px）。サイズ変更のとき、すぐそこに同じ寸法のボタンがあっても遠い辺のほうへ持っていかれることがあったのも直した": "Made Snap stronger: it now pulls from 16px on desktop and 20px on mobile, up from 8 and 10. Also fixed resizing being dragged to a distant edge even when a button of the same size sat right there.",
 "スペース　C": "Space　C",
 "スマホを横向きにしたときの並びを作り直した。操作ボタンを盤面の下ではなく左右に置く（左＝移動、右＝回転・HOLD・DROP・ミノ捨てる・戻す）。これまでは横向きにすると操作ボタンがまるごと画面の外に出ていて、スワイプでしか遊べなかった。盤面も画面の高さから決めるようにし、左右のメニューが余った幅を吸って太くなるのもやめた。縦向きとタブレットの並びは変えていない": "Reworked the layout for a phone held sideways. The control buttons now sit on either side of the board instead of below it: moves on the left, rotation, HOLD, DROP, Discard and Undo on the right. Until now, turning the phone sideways pushed every button off the screen, leaving swipes as the only way to play. The board is now sized from the height of the screen, and the side menus no longer soak up the leftover width. The portrait and tablet layouts are unchanged.",
@@ -2618,6 +2619,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.9 / 2.11.9</span><span class="vl-date">2026-11-15</span></div><ul><li>スナップの効きをもう一段強くした（吸い付く距離を PC版 16→24px、スマホ版 20→30px）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.8 / 2.11.8</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.7 / 2.11.7</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.6 / 2.11.6</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで「空になりませんでした」となったあとも、1手戻せるようにした。戻すとその時点から打ち直せる。あわせて、残り手数の表示がミノを置くたびに減るようにした（これまでは出題時のまま変わらなかった）</li></ul></div>
@@ -7946,7 +7948,7 @@ function syncBtnFont(el){
 // ===== スナップ（磁石のようにピタッと合わせる） =====
 // 近くにある「ほかのボタンの辺・中心」「画面の端・中心」へ吸い付かせる。
 // 大きさを変えるときは、ほかのボタンと同じ寸法にもそろえる。
-const SNAP_PX = 20;        // この距離まで近づいたら吸い付く
+const SNAP_PX = 30;        // この距離まで近づいたら吸い付く
 let snapOn = true;
 function loadSnap() {
   let raw = null;
@@ -8825,7 +8827,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.12.8';
+const APP_VERSION = '2.12.9';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
