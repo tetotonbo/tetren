@@ -1306,6 +1306,7 @@ const I18N_EN = {
 "パフェパズル。パフェができる問題を自動で作ります。やさしい（2〜4段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べ、できなければ「答えを見る」で手順が出ます": "PC puzzle. It builds a board that can be cleared completely — Easy (2–4 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). If you get stuck, Show the answer lays out the solution.",
 "パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）": "PC puzzle: Easy now comes in 2, 3 or 4 rows instead of always 2. A four-row problem fills both sides and leaves a narrow gap to be filled with two pieces. Problems are now built by carving the holes first, and the pieces are dealt in the order of the solution that was found, so they can be solved without using hold.",
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
+"パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェ手順を見る": "Show PC steps",
 "パフェ探索": "PC finder",
@@ -3021,6 +3022,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.3 / 2.11.3</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.2 / 2.11.2</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「やさしい」を2〜4段から選んで出すようにした（これまでは2段だけ）。4段のときは両サイドが埋まり、細い縦の空きを2手で埋める形になる。あわせて問題の作り方を「先に穴のほうを決める」方式に変え、見つかった手順の並びでミノを配るようにした（HOLDを使わなくても解ける順番で出る）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.1 / 2.11.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.12.0 / 2.11.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）</li></ul></div>
@@ -8643,7 +8645,13 @@ function puzzleMake(lv) {
         }
       }
       if (!cand.length) { ok = false; break; }
-      cand[Math.random() * cand.length | 0].forEach(([a, b]) => 穴[a][b] = true);
+      // 穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまう。
+      // すでに掘った穴に接する置き方があれば、そちらから選んでつなげる
+      const 接する = cand.filter(put => put.some(([a, b]) =>
+        (a > 0        && 穴[a - 1][b]) || (a < rows - 1 && 穴[a + 1][b]) ||
+        (b > 0        && 穴[a][b - 1]) || (b < COLS - 1 && 穴[a][b + 1])));
+      const 候補 = 接する.length ? 接する : cand;
+      候補[Math.random() * 候補.length | 0].forEach(([a, b]) => 穴[a][b] = true);
     }
     if (!ok) continue;
     // どの行にも穴が要る（穴の無い行は、出した時点で揃ってしまう）
@@ -10741,7 +10749,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.11.2';
+const APP_VERSION = '2.11.3';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
