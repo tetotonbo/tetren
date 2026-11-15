@@ -507,7 +507,9 @@ button, label, .ctrl-lbl, [data-pos] {
    （モード枠のボタンは折り返さない指定なので、ここで打ち消す） */
 #puzzleMsg { font-size:11px; text-align:center; line-height:1.35; color:#d1d5db; }
 #puzzleMsg:empty { display:none; }   /* 何も出さないときは隙間を作らない */
-#puzzlePanel, #puzzlePanel .garb-btn { min-width:0; }
+/* 枠の幅を広げない。width:0 で「幅を要求しない」ことにして、min-width で中身に広げてもらう */
+#puzzlePanel { width:0; min-width:100%; }
+#puzzlePanel .garb-btn { min-width:0; }
 #puzzlePanel .garb-btn { white-space:normal; font-size:11px; height:auto; padding:5px 0; }
 #puzzleLevelRow { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
 #puzzleLevelRow .rand-num.wide { flex:0 0 100%; font-size:10px; letter-spacing:0; }
@@ -774,8 +776,8 @@ input:checked + .tgl::after { transform:translateX(16px); }
 /* 設定モーダルのタブ */
 /* タブが5つあるので、折り返さず収まるよう詰めてある。
    ウィンドウが狭くて入りきらないときは横スクロールで見せる */
-.cfg-tabs { display:flex; gap:2px; margin-bottom:14px; border-bottom:1px solid #374151;
-  overflow-x:auto; scrollbar-width:none; flex:0 0 auto; }
+.cfg-tabs { display:flex; flex-wrap:wrap; gap:2px; margin-bottom:14px;
+  border-bottom:1px solid #374151; flex:0 0 auto; }
 /* タブから下だけがスクロールする */
 .cfg-body { overflow-y:auto; flex:1 1 auto; min-height:0; }
 .cfg-tabs::-webkit-scrollbar { display:none; }
@@ -1349,8 +1351,10 @@ const I18N_EN = {
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
 "パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）": "PC puzzle no longer shows how many pieces are left, and Easy now deals three pieces instead of two, which was too easy. On mobile the DPC setup and Desktop buttons no longer wrap onto two lines (DPC setup is shortened to \"DPC\" in the narrow column, with the full name in its tooltip).",
 "パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
+"パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した": "The PC puzzle settings moved out of the PC finder tab into a tab of their own. On mobile the tabs no longer run off the edge — they wrap onto a second line — and the settings rows stack so the labels are not squeezed. Opening PC puzzle no longer widens the mode panel (the left column on mobile).",
 "パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる": "PC puzzle no longer shows the run of solved problems, and moves on to the next problem by itself once you solve one (after showing \"Solved!\" briefly). A failed attempt still stops, so you can use Again or Show the answer.",
 "パフェパズルの難しさ": "PC puzzle difficulty",
+"パフェパズルの難しさと、開幕パフェ積みの出かた": "PC puzzle difficulty and how the opening stack is dealt",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
 "パフェ手順を見る": "Show PC steps",
@@ -3076,6 +3080,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.1 / 2.12.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.13.0 / 2.12.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルに「開幕パフェ積み」を追加。1巡目を積み終えた形を固定の地形として出し、残りをパフェで消してもらう。設定の「パフェ探索」にパフェパズルの項目を作り、開いたときの難しさ・開幕パフェ積みの左右反転（しない／する／ランダム）・Iミノホールド（なし／あり／ランダム。ありのときは右の壁が1列少なく4手で埋める形）を選べるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.13 / 2.11.13</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで次の問題が出るまでを 0.9秒 → 0.8秒 に縮めた。「クリア！」の文字は1.2秒のままなので、次の問題が出たあと少しだけ重なって消える</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.12 / 2.11.12</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「クリア！」を、盤面の真ん中に重ねて出すようにした。これまでは左右の列にある「ライン消去メッセージ」の場所に出ていて、盤面の外に表示されていた</li></ul></div>
@@ -3328,6 +3333,7 @@ if (document.readyState === 'loading') {
       <button class="cfg-tab"        id="cfgTabSkin" title="ミノの見た目を9種類から選ぶ" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab"        id="cfgTabUi" title="画面に出すメニューを選ぶ" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab"        id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
+      <button class="cfg-tab"        id="cfgTabPuzzle" title="パフェパズルの難しさと、開幕パフェ積みの出かた" onclick="switchConfigTab('puzzle')">パフェパズル</button>
       <button class="cfg-tab"        id="cfgTabMisc" title="ホールド・せりあがり・落下まわりの細かい設定" onclick="switchConfigTab('misc')">その他</button>
     </div>
 
@@ -3690,7 +3696,15 @@ if (document.readyState === 'loading') {
         </label>
       </div>
 
-      <div class="opt-row" style="border-top:1px solid #374151;margin-top:12px;padding-top:12px;">
+
+      <div class="kc-btns">
+        <button onclick="closeConfig()"
+          style="background:#16a34a;color:#fff;">閉じる</button>
+      </div>
+    </div>
+
+    <div class="cfg-pane" id="cfgPanePuzzle">
+      <div class="opt-row">
         <span class="opt-label">パフェパズルの難しさ
           <span class="opt-note">開いたときに選ばれている難しさ。やさしい＝2〜4段を3手／ふつう＝4段を4手／むずかしい＝4段を6手／開幕パフェ積み＝1巡目を積み終えた形から</span></span>
         <div class="opt-step" id="optPuzzleLevelRow"></div>
@@ -10894,7 +10908,8 @@ function switchConfigTab(name) {
                  tablet:['cfgTabTablet','cfgPaneTablet'],
                  skin:['cfgTabSkin','cfgPaneSkin'],
                  ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'],
-                 pc:['cfgTabPc','cfgPanePc'] };
+                 pc:['cfgTabPc','cfgPanePc'],
+                 puzzle:['cfgTabPuzzle','cfgPanePuzzle'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     document.getElementById(tab).classList.toggle('active', k === name);
@@ -10902,7 +10917,8 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'ui')   renderUiList();
-  if (name === 'misc' || name === 'pc' || name === 'ctrl' || name === 'tablet') applyOptions();
+  if (name === 'misc' || name === 'pc' || name === 'ctrl' || name === 'tablet'
+      || name === 'puzzle') applyOptions();
   if (name === 'key' && kcSub === 'pad') buildGpRows();
 }
 
@@ -11020,7 +11036,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.12.0';
+const APP_VERSION = '2.12.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');

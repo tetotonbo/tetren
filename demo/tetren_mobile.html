@@ -423,7 +423,13 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #puzzleLevelRow { display:flex; flex-wrap:wrap; gap:2px; margin-top:2px; }
 #puzzleLevelRow .rand-num.wide { flex:0 0 100%; font-size:8px; }
 #puzzleLevelRow .rand-num { flex:1; min-width:0; padding:4px 0; font-size:8px; }
+#puzzlePanel { width:0; min-width:100%; }   /* 列の幅を広げない */
 #puzzlePanel .side-btn { min-width:0; }
+
+/* 設定の「パフェパズル」は、細い画面だと見出しが潰れるので縦に積む */
+#cfgPanePuzzle .opt-row { flex-direction:column; align-items:stretch; gap:5px; }
+#cfgPanePuzzle .opt-step { width:100%; }
+#cfgPanePuzzle .opt-step .rand-num { flex:1; min-width:0; }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
 #dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay, #tdOverlay, #swapOverlay, #helpOverlay {
@@ -445,8 +451,8 @@ input:checked + .tgl::after { transform:translateX(10px); }
 #cfgOverlay { align-items:flex-start; }
 #cfgPanel { max-height:calc(100% - 4px); display:flex; flex-direction:column; }
 /* タブが5つあるので、はみ出すぶんは横スクロールで見せる */
-.cfg-tabs { display:flex; gap:2px; margin:8px 0 10px; border-bottom:1px solid #374151; flex:0 0 auto;
-  overflow-x:auto; scrollbar-width:none; }
+.cfg-tabs { display:flex; flex-wrap:wrap; gap:2px; margin:8px 0 10px;
+  border-bottom:1px solid #374151; flex:0 0 auto; }
 .cfg-tabs::-webkit-scrollbar { display:none; }
 .cfg-tab {
   background:none; border:none; border-bottom:2px solid transparent;
@@ -1169,8 +1175,10 @@ const I18N_EN = {
 "パフェパズルの手直し。地形をおじゃまの色にした。出題した時点で揃っている行は、あらかじめ消しておくようにした。配るミノは7種1巡の法則にならって、同じミノが重ならないように選ぶようにした。ツモを使い切ってもHOLDにミノが残っていれば、それを出して続けるようにした（これまではHOLDが残っていても、その場で失敗になっていた）": "Fixes to PC puzzle. The board is now drawn in the garbage colour; any row that is already complete is cleared before the problem is shown; the pieces you are dealt follow the 7-bag rule, so no piece is repeated; and when the queue runs out with a piece still in hold, that piece now comes out instead of the puzzle ending as a failure.",
 "パフェパズルの残り手数の表示をやめ、「やさしい」を3手にした（2手は易しすぎたため）。スマホ版の「DPCセット」「🖥 PC版へ」が2行になっていたのを1行に収めた（細い列に入りきらないので、DPCセットは「DPC」表記にして、押したときの説明に元の名前を残した）": "PC puzzle no longer shows how many pieces are left, and Easy now deals three pieces instead of two, which was too easy. On mobile the DPC setup and Desktop buttons no longer wrap onto two lines (DPC setup is shortened to \"DPC\" in the narrow column, with the full name in its tooltip).",
 "パフェパズルの穴を、なるべく一つながりにした。穴が1つずつ独立していると、どのミノがどこに入るか見ただけで分かってしまうため、すでに掘った穴に接するところから掘っていくようにした": "PC puzzle holes are now carved as one connected space wherever possible. Separate one-piece pockets gave the solution away at a glance, so each hole is now dug next to the ones already there.",
+"パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した": "The PC puzzle settings moved out of the PC finder tab into a tab of their own. On mobile the tabs no longer run off the edge — they wrap onto a second line — and the settings rows stack so the labels are not squeezed. Opening PC puzzle no longer widens the mode panel (the left column on mobile).",
 "パフェパズルの連続正解の表示をやめ、クリアしたら自動で次の問題へ進むようにした（「クリア！」を少し見せてから次を出す）。失敗したときはこれまでどおり止まるので、「もう一度」や「答えを見る」で考え直せる": "PC puzzle no longer shows the run of solved problems, and moves on to the next problem by itself once you solve one (after showing \"Solved!\" briefly). A failed attempt still stops, so you can use Again or Show the answer.",
 "パフェパズルの難しさ": "PC puzzle difficulty",
+"パフェパズルの難しさと、開幕パフェ積みの出かた": "PC puzzle difficulty and how the opening stack is dealt",
 "パフェパズルを追加。パフェができる問題を自動で作り、出されたミノだけで盤面を空にしてもらうモード。やさしい（2段・2手）／ふつう（4段・4手）／むずかしい（4段・6手）から選べる。解けたら「次の問題」、詰まったら「もう一度」か「答えを見る」。連続正解の数も出る（PC版・スマホ版とも）": "Added PC puzzle. It builds a board that can be cleared completely and asks you to empty it with the pieces you are given: Easy (2 rows, 2 pieces), Normal (4 rows, 4 pieces) or Hard (4 rows, 6 pieces). Solve it and press New problem; get stuck and press Again or Show the answer. It also counts how many you have solved in a row (desktop and mobile).",
 "パフェパズルを開くとモードの枠が広がっていたのを直した。パネルの中のボタンを縮められるようにして、開いても枠の幅が変わらないようにした": "Opening PC puzzle no longer widens the mode panel: the buttons inside it can now shrink, so the panel keeps its width.",
 "パフェ手順を見る": "Show PC steps",
@@ -2655,6 +2663,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.1 / 2.12.1</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの設定を、「パフェ探索」から独立した「パフェパズル」タブに移した。スマホ版はタブが横に入りきらず見切れていたので、折り返して全部見えるようにし、設定の行も見出しが潰れないよう縦に積む形にした。パフェパズルを開くとモードの枠（スマホ版は左の列）が横に広がっていたのも直した</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.13.0 / 2.12.0</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルに「開幕パフェ積み」を追加。1巡目を積み終えた形を固定の地形として出し、残りをパフェで消してもらう。設定の「パフェ探索」にパフェパズルの項目を作り、開いたときの難しさ・開幕パフェ積みの左右反転（しない／する／ランダム）・Iミノホールド（なし／あり／ランダム。ありのときは右の壁が1列少なく4手で埋める形）を選べるようにした</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.13 / 2.11.13</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルで次の問題が出るまでを 0.9秒 → 0.8秒 に縮めた。「クリア！」の文字は1.2秒のままなので、次の問題が出たあと少しだけ重なって消える</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.12.12 / 2.11.12</span><span class="vl-date">2026-11-15</span></div><ul><li>パフェパズルの「クリア！」を、盤面の真ん中に重ねて出すようにした。これまでは左右の列にある「ライン消去メッセージ」の場所に出ていて、盤面の外に表示されていた</li></ul></div>
@@ -2889,6 +2898,7 @@ if (document.readyState === 'loading') {
       <button class="cfg-tab" id="cfgTabSkin" onclick="switchConfigTab('skin')">スキン</button>
       <button class="cfg-tab" id="cfgTabUi" onclick="switchConfigTab('ui')">表示</button>
       <button class="cfg-tab" id="cfgTabPc" title="パフェ探索の動きを決める" onclick="switchConfigTab('pc')">パフェ探索</button>
+      <button class="cfg-tab" id="cfgTabPuzzle" title="パフェパズルの難しさと、開幕パフェ積みの出かた" onclick="switchConfigTab('puzzle')">パフェパズル</button>
       <button class="cfg-tab" id="cfgTabMisc" onclick="switchConfigTab('misc')">その他</button>
     </div>
     <div class="cfg-body">
@@ -3212,7 +3222,10 @@ if (document.readyState === 'loading') {
           </label>
         </div>
 
-        <div class="opt-row" style="border-top:1px solid #374151;margin-top:10px;padding-top:10px;">
+</div>
+
+      <div class="cfg-pane" id="cfgPanePuzzle">
+        <div class="opt-row">
           <span class="opt-label">パフェパズルの難しさ
             <span class="opt-note">開いたときに選ばれている難しさ。やさしい＝2〜4段を3手／ふつう＝4段を4手／むずかしい＝4段を6手／開幕パフェ積み＝1巡目を積み終えた形から</span></span>
           <span class="opt-step" id="optPuzzleLevelRow"></span>
@@ -3227,7 +3240,7 @@ if (document.readyState === 'loading') {
             <span class="opt-note">「あり」はIミノをホールドに持った形から始めます（右の壁が1列少なく、4手で埋めます）。「ランダム」なら問題ごとに決めます</span></span>
           <span class="opt-step" id="optPuzzleIHoldRow"></span>
         </div>
-</div>
+      </div>
     </div>
     <div class="cfg-btns">
       <button onclick="closeConfig()" style="background:#16a34a;color:#fff;">閉じる</button>
@@ -8851,7 +8864,8 @@ function switchConfigTab(name) {
   const TABS = { key:['cfgTabKey','cfgPaneKey'], ctrl:['cfgTabCtrl','cfgPaneCtrl'],
                  skin:['cfgTabSkin','cfgPaneSkin'],
                  ui:['cfgTabUi','cfgPaneUi'], misc:['cfgTabMisc','cfgPaneMisc'],
-                 pc:['cfgTabPc','cfgPanePc'] };
+                 pc:['cfgTabPc','cfgPanePc'],
+                 puzzle:['cfgTabPuzzle','cfgPanePuzzle'] };
   for (const k in TABS) {
     const [tab, pane] = TABS[k];
     const t = document.getElementById(tab), p = document.getElementById(pane);
@@ -8860,7 +8874,7 @@ function switchConfigTab(name) {
   }
   if (name === 'skin') renderSkinList();
   if (name === 'ui')   renderUiList();
-  if (name === 'misc' || name === 'pc' || name === 'ctrl') applyOptions();
+  if (name === 'misc' || name === 'pc' || name === 'ctrl' || name === 'puzzle') applyOptions();
   if (name === 'key')  { buildKcRows(); if (kcSub === 'pad') buildGpRows(); }
 }
 
@@ -9006,7 +9020,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.13.0';
+const APP_VERSION = '2.13.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;

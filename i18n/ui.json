@@ -474,5 +474,6 @@
  "開幕パフェ積みの左右反転": "Mirror the opening stack",
  "「する」で左右を入れ替えた形にします。「ランダム」なら問題ごとに決めます": "On gives you the mirrored shape; Random decides for each problem.",
  "開幕パフェ積みのIミノホールド": "I piece in hold (opening stack)",
- "「あり」はIミノをホールドに持った形から始めます（右の壁が1列少なく、4手で埋めます）。「ランダム」なら問題ごとに決めます": "With it on you start holding an I, so the right wall is one column shorter and four pieces are needed. Random decides for each problem."
+ "「あり」はIミノをホールドに持った形から始めます（右の壁が1列少なく、4手で埋めます）。「ランダム」なら問題ごとに決めます": "With it on you start holding an I, so the right wall is one column shorter and four pieces are needed. Random decides for each problem.",
+ "パフェパズルの難しさと、開幕パフェ積みの出かた": "PC puzzle difficulty and how the opening stack is dealt"
 }
