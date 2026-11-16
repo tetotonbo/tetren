@@ -481,5 +481,7 @@
  "画面の高さに合わせて縮める": "Shrink to fit the window height",
  "画面が低くて下のボタンが切れるときに、全体を縮めて1画面に収めます。配置編集でボタンを動かしているあいだは働きません": "When the window is too short and the lower buttons are cut off, the whole screen is scaled down to fit. It does not apply while you have moved buttons with Edit layout.",
  "前の問題": "Previous",
- "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. It also snaps to even spacing between buttons, and resizing snaps to a nearby button’s size."
+ "ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. It also snaps to even spacing between buttons, and resizing snaps to a nearby button’s size.",
+ "地形編集・⇄ 反転・記録・復元 … 地形まわり": "Edit board, ⇄ Mirror, Save, Load — working with the board",
+ "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード。TD対策は「せりあがり」の中にあります": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W, Garbage — practice modes. TD defense is inside Garbage."
 }

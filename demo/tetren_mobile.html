@@ -178,7 +178,7 @@ canvas { display:block; }
 .side-btn:active { background:#374151; }
 /* せりあがりは「▼」のぶんだけ長いので、1行に収まるよう少し詰める
    （JS側で style.cssText を書き換えるため、ここはCSSで指定する） */
-#digBtn { margin-top:2px; white-space:nowrap; letter-spacing:-0.6px; padding-left:0; padding-right:0; }
+#digOpenBtn { white-space:nowrap; letter-spacing:-0.6px; padding-left:0; padding-right:0; }
 /* 「🖥 PC版へ」「パフェパズル」も1行に収める */
 #verSwitchBtn, #puzzleBtn { white-space:nowrap; letter-spacing:-0.6px; padding-left:0; padding-right:0; }
 /* リセット系は見た目をほかのボタンと同じにそろえてある（.side-btn のまま） */
@@ -563,7 +563,9 @@ input:checked + .tgl::after { transform:translateX(8px); }
   background:#0d1117; border:1px solid #374151; border-radius:6px;
   padding:5px 0; font-size:9px; color:#9ca3af; cursor:pointer;
 }
-.dig-type input { margin:0; width:10px; height:10px; }
+.dig-type label { white-space:nowrap; position:relative; }
+.dig-type input { position:absolute; opacity:0; pointer-events:none; }
+.dig-type label:has(input:checked) { background:#1e3a5f; border-color:#3b82f6; color:#fff; }
 /* せりあがり予告（盤面の下） */
 #digPreview {
   display:flex; align-items:center; justify-content:space-between;
@@ -744,6 +746,7 @@ const I18N_EN = {
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, Big pieces, C4W and Garbage — the practice modes.",
 "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
+"DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード。TD対策は「せりあがり」の中にあります": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W, Garbage — practice modes. TD defense is inside Garbage.",
 "DPCセット再": "DPC setup again",
 "DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた": "The DROP button now fires the moment you press it, not when you lift your finger (same as rotate left / rotate right / HOLD). Rotate, HOLD and DROP also no longer fire while you are dragging a button in layout edit mode.",
 "DT砲": "DT Cannon",
@@ -1127,6 +1130,7 @@ const I18N_EN = {
 "スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま": "Phone widths (375×812) are unchanged: full-width buttons, with HOLD and NEXT at side-column width.",
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
+"スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
 "スマホ版へ": "Mobile version",
@@ -1458,6 +1462,7 @@ const I18N_EN = {
 "地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正": "Fixed the Edit board checkbox not reflecting the setting when you came back from the settings.",
 "地形編集の入り切りが保存されないのを修正": "Fixed the Edit board switch not being saved.",
 "地形編集の入切": "Toggle Edit board",
+"地形編集・⇄ 反転・記録・復元 … 地形まわり": "Edit board, ⇄ Mirror, Save, Load — working with the board",
 "地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)",
 "多くするほど探索に時間がかかります": "More solutions take longer to search.",
 "大きさも変えられるようにした": "You can resize it too.",
@@ -1783,6 +1788,7 @@ const I18N_EN = {
 "配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう": "Added a Snap switch to Edit layout. With it on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen like a magnet, and resizing snaps to the other buttons’ dimensions as well.",
 "配置編集のスイッチを左上の「デザイン」の枠へ移動した": "Moved the Edit layout switch into the Display panel at the top left.",
 "配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる": "Snap in Edit layout now also sticks to evenly spaced positions: where the gap to the next button matches the gap between other buttons, and exactly halfway between two buttons. Resizing stops where the gap to the neighbour matches too.",
+"配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う": "Snap in Edit layout now prefers putting buttons flush against each other. Bring a button close to its neighbour and it sticks with no gap; hold it a little further away and it settles at the even spacing.",
 "配置編集をONにすると出ます。盤面・NEXT/HOLD・左のボタンの大きさを変えられます": "These appear when Edit layout is on. They change the size of the board, NEXT/HOLD and the buttons on the left.",
 "配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した": "Moved the Edit layout switch outside the on-screen buttons, where it is always visible.",
 "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
@@ -2124,8 +2130,6 @@ if (document.readyState === 'loading') {
           ontouchstart="event.preventDefault();startRepeat(()=>changeGravSpeed(+1))" ontouchend="stopRepeat()">›</button>
       </div>
     </div>
-    <button class="side-btn" id="tdBtn" data-ui="dig" onclick="openTd()" style="margin-top:2px;"
-      title="相手のTST→TSD→RENを再現して、受け方を練習します">TD対策</button>
     <button class="side-btn" id="terrainBtn" data-ui="terrain" onclick="toggleTerrainMode()" style="margin-top:2px;">地形編集</button>
     <button class="side-btn" data-ui="mirror" onclick="if(!gameOver)mirrorTerrain()" style="margin-top:2px;"
       title="地形を左右反転します。鏡像の関係にある L↔J・S↔Z は色も入れ替わります">⇄ 反転</button>
@@ -2174,10 +2178,20 @@ if (document.readyState === 'loading') {
     </div>
     <button class="side-btn" id="dekaModeBtn" data-ui="deka" onclick="toggleDekaMode()" style="margin-top:2px;">デカミノ</button>
     <button class="side-btn" id="renModeBtn" data-ui="ren" onclick="toggleRenMode()" style="margin-top:2px;">REN</button>
-    <button class="side-btn" id="digBtn" data-ui="dig" onclick="toggleDigMode()">せりあがり▼</button>
-    <div id="dig-info"></div>
-    <div id="digTypeRow" style="display:none;width:100%;">
-      <div class="m-lbl" style="margin:4px 0 0;">せりあがり方</div>
+    <!-- せりあがり。PC版と同じで、普段は畳んでおき、このボタンで設定とスタートを出す -->
+    <div data-ui="dig" style="width:100%;margin-top:2px;">
+    <button class="side-btn" id="digOpenBtn" style="width:100%;"
+      title="せりあがりの設定とスタートボタンを開きます"
+      onclick="toggleDigPanel()">せりあがり<span id="digToggleArrow">▼</span></button>
+    <div id="digPanel" style="display:none;">
+    <button class="side-btn" id="digBtn" style="width:100%;margin-top:2px;"
+      title="設定した間隔でおじゃまを自動でせり上げる"
+      onclick="toggleDigMode()">スタート</button>
+    <button class="side-btn" id="tdBtn" style="width:100%;margin-top:2px;"
+      title="相手のTST→TSD→RENを再現して、受け方を練習します"
+      onclick="openTd()">TD対策</button>
+    <div id="digTypeRow" style="width:100%;">
+      <div class="m-lbl" style="margin:4px 0 0;letter-spacing:0;white-space:nowrap;">せりあがり方</div>
       <div class="dig-type">
         <label><input type="radio" name="digTriggerType" id="digTypeMino"
           onchange="setDigTriggerType('mino')"><span>ミノ</span></label>
@@ -2185,22 +2199,26 @@ if (document.readyState === 'loading') {
           onchange="setDigTriggerType('time')" checked><span>秒</span></label>
       </div>
     </div>
-    <div class="di-row" id="diRow" style="display:none;">
+    <div class="m-lbl" style="margin:4px 0 0;letter-spacing:0;"><span id="digIntervalUnit">個ごと</span></div>
+    <div class="di-row" id="diRow" style="margin-top:0;">
       <button class="di-btn"
         onmousedown="startRepeat(()=>changeDigInterval(-1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
         ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(-1))" ontouchend="stopRepeat()">‹</button>
-      <div class="di-val"><span id="digIntervalVal">3</span><br><span id="digIntervalUnit" class="di-unit">個ごと</span></div>
+      <div class="di-val"><span id="digIntervalVal">3</span></div>
       <button class="di-btn"
         onmousedown="startRepeat(()=>changeDigInterval(1))" onmouseup="stopRepeat()" onmouseleave="stopRepeat()"
         ontouchstart="event.preventDefault();startRepeat(()=>changeDigInterval(1))" ontouchend="stopRepeat()">›</button>
     </div>
-    <div id="holeRow" style="display:none;width:100%;">
+    <div id="holeRow" style="width:100%;">
       <div class="m-lbl" style="margin:4px 0 0;">穴継続率</div>
       <div class="di-row" style="margin-top:0;">
         <button class="di-btn" onclick="stepOption('holeKeep',-1)">‹</button>
         <div class="di-val"><span id="optHoleKeepVal">40</span> %</div>
         <button class="di-btn" onclick="stepOption('holeKeep',1)">›</button>
       </div>
+    </div>
+    <div id="dig-info"></div>
+    </div>
     </div>
     <button class="side-btn" data-ui="shot" onclick="openShot()" style="margin-top:2px;white-space:nowrap;">カンペ画像</button>
     <button class="side-btn" data-ui="reset" onclick="startGame()"
@@ -2546,8 +2564,8 @@ if (document.readyState === 'loading') {
         <li>HOLD … 預けているミノ。2回タップで好きなミノに変えられます</li>
         <li>ゴースト・軸表示・グリッド・配置編集 … 画面の見た目とボタンの配置</li>
         <li>落下設定 … 自然に落ちる速さ（0G＝落ちない、20G＝一瞬で下まで）</li>
-        <li>TD対策・地形編集・⇄ 反転・記録・復元 … 地形まわり</li>
-        <li>DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード</li>
+        <li>地形編集・⇄ 反転・記録・復元 … 地形まわり</li>
+        <li>DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード。TD対策は「せりあがり」の中にあります</li>
         <li>カンペ画像 … 参考画像や開幕テンプレートを画面に重ねて出します</li>
         <li>リセット・地形のみ・ミノ順のみ … やり直し</li>
         <li>⚙ 設定 … スキン・操作まわりの細かい設定、画面に出すボタンの選択</li>
@@ -2608,8 +2626,6 @@ if (document.readyState === 'loading') {
             <td>自然に落ちる速さを決めます（0G＝落ちない、20G＝1フレームで最下段）</td></tr>
         <tr><th>落下設定 ▶ / ⏸</th>
             <td>押すたびに、自由落下を動かす／止める（落下設定の値はそのまま）。開いた直後は止まっています</td></tr>
-        <tr><th>TD対策</th>
-            <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
         <tr><th>地形編集</th>
             <td>押している間だけ、盤面のタップ・なぞりでブロックを置けます。もう一度押すと切れます</td></tr>
         <tr><th>色（A・おじゃま・各ミノ）</th>
@@ -2638,6 +2654,10 @@ if (document.readyState === 'loading') {
             <td>盤面の左右におじゃまの壁を作り、4列だけで練習する</td></tr>
         <tr><th>せりあがり</th>
             <td>せりあがりの設定とスタートボタンを開きます</td></tr>
+        <tr><th>スタート</th>
+            <td>設定した間隔でおじゃまを自動でせり上げる</td></tr>
+        <tr><th>TD対策</th>
+            <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
         <tr><th>ミノ設置／時間経過</th>
             <td>せりあがるきっかけを、置いたミノの数にするか、経過した秒数にするかを選びます</td></tr>
         <tr><th>間隔 ‹ ›</th>
@@ -2715,6 +2735,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.16.0 / 2.15.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる</li><li>配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.15.0 / 2.14.0</span><span class="vl-date">2026-11-16</span></div><ul><li>配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる</li><li>動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.14.1 / 2.13.1</span><span class="vl-date">2026-11-16</span></div><ul><li>PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.14.0 / 2.13.0</span><span class="vl-date">2026-11-16</span></div><ul><li>落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した</li><li>薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした</li><li>PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない</li><li>PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした</li><li>スマホ版：落下設定は、見出しの行のどこを押しても止める／動かすが切り替わるようにした（これまでは 14px の小さなマークだった）。‹ › のボタンも大きくした</li><li>スマホ版：左の列に続きがあるときは ▲ ▼ を出して、押すとその方向へ送るようにした。パフェパズルを開いたときは、難しさや「次の問題」が見えるところまで自動で送る</li><li>スマホ版：「パフェパズル」のボタンを1行に収め、難しさのボタンは縦に並べた（横に3つ並べると1文字ずつの縦書きになっていた）</li><li>使い方の説明を今の画面に合わせて直した（パフェパズルの「もう一度」、PC版の「デザイン」「地形操作」、落下設定の ⏸ の説明）</li></ul></div>
@@ -5048,6 +5069,7 @@ function setPuzzleLevel(id){
 
 // モードの出入り
 function togglePuzzle(){
+  closeDigPanel();
   if(puzzleMode){ stopPuzzle(); return; }
   puzzleId=opts.puzzleLevel||'normal';   // 設定で決めた難しさから始める
   // ほかのモードとは同時に使えない
@@ -6367,14 +6389,8 @@ function toggleDigMode(){
   timeDigLastTs=0;
   pendingDigRows=0;   // 溜まっていたぶんは持ち越さない
   digStaged=false;
-  const btn=document.getElementById('digBtn');
-  const diRow=document.getElementById('diRow');
+  syncDigBtn();
   if(digMode){
-    btn.textContent='せりあがり▲';   // 設定の行が出ている間は▲
-    btn.style.cssText='background:#0891b2;border-color:#06b6d4;color:#fff;';
-    diRow.style.display='flex';
-    document.getElementById('digTypeRow').style.display='block';
-    document.getElementById('holeRow').style.display='block';
     if(renMode){
       renMode=false;
       const rb=document.getElementById('renModeBtn');
@@ -6389,16 +6405,38 @@ function toggleDigMode(){
       for(let r=BUF;r<TROW;r++) for(let c=0;c<COLS;c++) board[r][c]=null;
       spawn(); draw();
     }
-  } else {
-    btn.textContent='せりあがり▼';
-    btn.style.cssText='';
-    diRow.style.display='none';
-    document.getElementById('digTypeRow').style.display='none';
-    document.getElementById('holeRow').style.display='none';
   }
   updateDigCounter();
   drawDigPreview();
 }
+// 「スタート」の色。動いている間は緑（PC版と同じ）
+function syncDigBtn(){
+  const b=document.getElementById('digBtn');
+  if(!b) return;
+  b.style.background  = digMode ? '#16a34a' : '';
+  b.style.borderColor = digMode ? '#22c55e' : '';
+  b.style.color       = digMode ? '#fff' : '';
+}
+// せりあがり設定の開閉（PC版と同じ動き）
+function setDigPanelOpen(open){
+  const box=document.getElementById('digPanel');
+  if(!box) return;
+  // '' だと「閉じている」と区別できないので、必ず値を入れる
+  box.style.display = open ? 'block' : 'none';
+  const btn=document.getElementById('digOpenBtn');
+  if(btn) btn.style.background = open ? '#374151' : '';
+  const arrow=document.getElementById('digToggleArrow');
+  if(arrow) arrow.textContent = open ? '▲' : '▼';
+  // 列の下のほうに出るので、画面の外なら見えるところまで送る
+  if(open && box.scrollIntoView) box.scrollIntoView({block:'nearest'});
+}
+function digPanelOpen(){
+  const box=document.getElementById('digPanel');
+  return !!box && box.style.display === 'block';
+}
+function toggleDigPanel(){ setDigPanelOpen(!digPanelOpen()); }
+// 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
+function closeDigPanel(){ setDigPanelOpen(false); }
 function updateDigCounter(remainSecOverride){
   const el=document.getElementById('dig-info');
   if(tdRun){ updateTdStatus(Math.max(0, tdRun.at - performance.now())); return; }
@@ -7020,6 +7058,7 @@ function restoreRenWalls(){
   for(let r=REN_WALL_TOP;r<TROW;r++) for(const c of REN_WALL_COLS) board[r][c]=GARBAGE_COLOR;
 }
 function toggleDekaMode(){
+  closeDigPanel();
   if(puzzleMode) stopPuzzle();   // パフェパズルとは同時に使えない
   dekaMode=!dekaMode;
   const btn=document.getElementById('dekaModeBtn');
@@ -7030,8 +7069,7 @@ function toggleDekaMode(){
     if(renMode){renMode=false;document.getElementById('renModeBtn').style.background='';}
     if(digMode){
       digMode=false;digCount=0;
-      document.getElementById('digBtn').textContent='せりあがり▼';
-      document.getElementById('digBtn').style.cssText='';
+      syncDigBtn();
       updateDigCounter();
     }
   } else {
@@ -7040,6 +7078,7 @@ function toggleDekaMode(){
   spawn(); draw();
 }
 function toggleRenMode(){
+  closeDigPanel();
   if(puzzleMode) stopPuzzle();   // パフェパズルとは同時に使えない
   renMode=!renMode;
   const btn=document.getElementById('renModeBtn');
@@ -7047,10 +7086,7 @@ function toggleRenMode(){
     btn.style.background='#16a34a'; btn.style.borderColor='#22c55e'; btn.style.color='#fff';
     if(digMode){
       digMode=false; digCount=0;
-      const db=document.getElementById('digBtn');
-      db.textContent='せりあがり▼'; db.style.cssText='';
-      document.getElementById('diRow').style.display='none';
-      document.getElementById('holeRow').style.display='none';
+      syncDigBtn();
       updateDigCounter();
     }
     // デカミノモードを強制OFF
@@ -7216,6 +7252,7 @@ const DPC_ROWS = [['I','T','O'], ['J','L','S','Z']];
 let lastDpcType = null;   // ↻ボタン用：直前に選んだミノ
 
 function openDpc(){
+  closeDigPanel();
   document.getElementById('dpcOverlay').classList.add('open');
   renderDpcGrid();
 }
@@ -7392,6 +7429,7 @@ let lastMiss=null;                              // {multi:false,type} か {multi
 const missPick={ multi:true, sel:new Set() };  // 選択画面の状態
 
 function openMiss(){
+  closeDigPanel();
   const ks = document.getElementById('missKeepSw'); if(ks) ks.checked = !!opts.missKeep;
   missPick.sel.clear();
   const rr=document.getElementById('missRandRow'); if(rr) rr.style.display='none';
@@ -8290,6 +8328,10 @@ function snapEven(exclude, x, y, w, h) {
   const row = rs.filter(r => r.top < y + h && r.bottom > y);
   const col = rs.filter(r => r.left < x + w && r.right > x);
   const xs = [], ys = [], rxs = [], bys = [];
+  // すき間なしで付く位置（txs/tys は移動用、trxs/tbys は大きさ変更用）
+  const txs = [], tys = [], trxs = [], tbys = [];
+  for (const r of row) { txs.push(r.right, r.left - w); if (r.left > x) trxs.push(r.left); }
+  for (const r of col) { tys.push(r.bottom, r.top - h); if (r.top > y) tbys.push(r.top); }
   for (const g of gaps) {
     for (const r of row) { xs.push(r.right + g, r.left - g - w); if (r.left > x) rxs.push(r.left - g); }
     for (const r of col) { ys.push(r.bottom + g, r.top - g - h); if (r.top > y) bys.push(r.top - g); }
@@ -8297,7 +8339,20 @@ function snapEven(exclude, x, y, w, h) {
   // 2つのボタンのちょうど真ん中（両側のすき間が同じになる）
   for (const a of row) for (const b of row) if (b.left - a.right >= w) xs.push(a.right + (b.left - a.right - w) / 2);
   for (const a of col) for (const b of col) if (b.top - a.bottom >= h) ys.push(a.bottom + (b.top - a.bottom - h) / 2);
-  return { xs, ys, rxs, bys };
+  return { xs, ys, rxs, bys, txs, tys, trxs, tbys };
+}
+// ぴったり付く位置が近くにあれば、そこまでのずれを返す（無ければ null）。
+// 等間隔や辺そろえより先に見る。範囲はスナップの3分の1にして、
+// そこより離したときは等間隔のほうに合うようにしてある
+// （広げすぎると、すき間の狭い等間隔にはどうやっても合わせられなくなる）
+const SNAP_TOUCH = Math.round(SNAP_PX / 3);
+function snapTouch(a, lines) {
+  let gap = null, best = SNAP_TOUCH + 1;
+  for (const l of lines) {
+    const d = Math.abs(l - a);
+    if (d < best) { best = d; gap = l - a; }
+  }
+  return gap;
 }
 // 「基準点の配列, 合わせ先の線の配列」の組をいくつか渡し、
 // いちばん近い組のずれを返す。どれも遠ければ0（吸い付かない）。
@@ -8380,8 +8435,9 @@ function resetCtrlPos(){
         // いっぺんに比べて、近いほうを採る。片方を優先すると、
         // すぐそこに同じ寸法があっても遠い線に負けて効かなくなる。
         const ev = snapEven(target, r.left, r.top, w, h);   // となりとの間隔がそろう位置
-        w = Math.max(MIN, Math.min(MAX, w + snapGap([[[r.left + w], g.xs], [[w], g.ws], [[r.left + w], ev.rxs, 0.5]])));
-        h = Math.max(MIN, Math.min(MAX, h + snapGap([[[r.top  + h], g.ys], [[h], g.hs], [[r.top  + h], ev.bys, 0.5]])));
+        const tw = snapTouch(r.left + w, ev.trxs), th = snapTouch(r.top + h, ev.tbys);   // まず「ぴったり」
+        w = Math.max(MIN, Math.min(MAX, w + (tw !== null ? tw : snapGap([[[r.left + w], g.xs], [[w], g.ws], [[r.left + w], ev.rxs, 0.5]]))));
+        h = Math.max(MIN, Math.min(MAX, h + (th !== null ? th : snapGap([[[r.top  + h], g.ys], [[h], g.hs], [[r.top  + h], ev.bys, 0.5]]))));
       }
       target.style.width = Math.round(w) + 'px';
       target.style.height = Math.round(h) + 'px';
@@ -8393,10 +8449,12 @@ function resetCtrlPos(){
     let x = pt.clientX - dx, y = pt.clientY - dy;
     if(snapOn){   // 左辺・中心・右辺のどれかが線に近ければ、そこへ寄せる
       const g = snapGuides(target);
-      // 等間隔になる位置も候補に入れて、いちばん近いところへ寄せる
+      // となりにぴったり付く位置が近ければ、まずそこへ。
+      // 無ければ、等間隔・辺・中心のうちいちばん近いところへ寄せる
       const ev = snapEven(target, x, y, w, h);
-      x += snapGap([[[x, x + w], g.xs], [[x + w / 2], g.cxs], [[x], ev.xs, 0.5]]);
-      y += snapGap([[[y, y + h], g.ys], [[y + h / 2], g.cys], [[y], ev.ys, 0.5]]);
+      const tx = snapTouch(x, ev.txs), ty = snapTouch(y, ev.tys);
+      x += tx !== null ? tx : snapGap([[[x, x + w], g.xs], [[x + w / 2], g.cxs], [[x], ev.xs, 0.5]]);
+      y += ty !== null ? ty : snapGap([[[y, y + h], g.ys], [[y + h / 2], g.cys], [[y], ev.ys, 0.5]]);
     }
     x = Math.max(0, Math.min(window.innerWidth  - w, x));
     y = Math.max(0, Math.min(window.innerHeight - h, y));
@@ -9082,6 +9140,7 @@ function applyUiHidden() {
     el.style.display = (map[el.dataset.ui] && !keep) ? 'none' : '';
     if (el.__ph) el.__ph.style.display = el.style.display;   // 場所取りも一緒に
   });
+  if (map.dig) closeDigPanel();   // 隠したボタンから開いた設定が置き去りにならないように
   // 「ミノ捨てる・戻す」を隠すと中央カラムの高さが変わるので組み直す
   initLayout(); applyCtrlPos();
   if (board) draw();
@@ -9155,7 +9214,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.15.0';
+const APP_VERSION = '2.16.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
