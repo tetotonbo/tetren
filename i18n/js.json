@@ -263,5 +263,6 @@
  "Iミノをホールドに持った、4手で埋める形にします": "You hold an I and four pieces fill the gap",
  "問題ごとに決めます": "Decided for each problem",
  "ゴースト・軸表示・グリッド・配置編集": "Ghost, axis, grid, edit layout",
- "地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)"
+ "地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)",
+ "次 {0}段": "Next: {0} row(s)"
 }

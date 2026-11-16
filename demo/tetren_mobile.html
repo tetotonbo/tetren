@@ -458,18 +458,18 @@ input:checked + .tgl::after { transform:translateX(8px); }
 #cfgPanePuzzle .opt-step .rand-num { flex:1; min-width:0; }
 
 /* DPCセット（ミノを選んでHOLDに入れ、ツモを引き直す） */
-#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay, #tdOverlay, #swapOverlay, #helpOverlay {
+#dpcOverlay, #missOverlay, #aboutOverlay, #cfgOverlay, #tdOverlay, #digMultiOverlay, #swapOverlay, #helpOverlay {
   display:none; position:fixed; inset:0; z-index:30;
   background:rgba(4,6,12,0.88); align-items:center; justify-content:center; padding:14px;
 }
-#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open, #tdOverlay.open, #swapOverlay.open, #helpOverlay.open { display:flex; }
+#dpcOverlay.open, #missOverlay.open, #aboutOverlay.open, #cfgOverlay.open, #tdOverlay.open, #digMultiOverlay.open, #swapOverlay.open, #helpOverlay.open { display:flex; }
 /* 設定だけは、カンペ画像・パフェ手順・テンプレートの窓（300〜）より前に出す */
 #cfgOverlay { z-index:2000; }
-#dpcPanel, #missPanel, #aboutPanel, #cfgPanel, #tdPanel, #swapPanel, #helpPanel {
+#dpcPanel, #missPanel, #aboutPanel, #cfgPanel, #tdPanel, #digMultiPanel, #swapPanel, #helpPanel {
   background:#161c27; border:1px solid #374151; border-radius:10px;
   padding:12px; width:100%; max-width:340px;
 }
-#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2, #tdPanel h2, #swapPanel h2, #helpPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
+#dpcPanel h2, #missPanel h2, #aboutPanel h2, #cfgPanel h2, #tdPanel h2, #digMultiPanel h2, #swapPanel h2, #helpPanel h2 { font-size:14px; color:#e5e7eb; text-align:center; margin-bottom:4px; }
 /* ===== 設定モーダル（PC版と同じ構成） ===== */
 /* 画面が狭いので、中身が増えたらパネルの中だけスクロールさせる */
 /* 設定だけは上端を固定して、中身が増えたぶんは下へ伸ばす。
@@ -659,6 +659,26 @@ input:checked + .tgl::after { transform:translateX(8px); }
 .dpc-btn.dpc-rand.on { border-color:#6366f1 !important; background:#1e243a !important; }
 
 .dpc-name { display:block; font-size:10px; font-weight:bold; color:#9ca3af; margin-top:2px; text-align:center; }
+/* ライン設定（複数段せりあがりの割合入力） */
+#digMultiPanel { max-height:92vh; overflow-y:auto; }
+#digMultiRows { display:grid; grid-template-columns:repeat(2,1fr); gap:5px 12px; }
+.dm-row { display:flex; align-items:center; gap:5px; font-size:12px; color:#d1d5db; }
+.dm-row span.dm-lbl { flex:0 0 34px; color:#9ca3af; }
+.dm-row input {
+  flex:1; min-width:0; background:#0d1117; color:#e5e7eb;
+  border:1px solid #374151; border-radius:5px;
+  padding:6px; font-size:14px; text-align:right;
+  user-select:text; -webkit-user-select:text;
+}
+.dm-total {
+  display:flex; align-items:center; justify-content:flex-end; gap:10px;
+  margin-top:8px; font-size:12px; color:#d1d5db;
+}
+.dm-total.ng { color:#f87171; }
+.dm-total button {
+  background:#374151; color:#e5e7eb; border:none; border-radius:6px;
+  padding:6px 10px; font-size:11px; font-weight:bold;
+}
 .dpc-close {
   width:100%; margin-top:6px; padding:9px 0; border:none; border-radius:7px;
   background:#16a34a; color:#fff; font-size:13px; font-weight:bold; cursor:pointer;
@@ -1008,6 +1028,7 @@ const I18N_EN = {
 "せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます": "With timed garbage, nothing rises when the timer fires; it all rises the moment you lock a piece. What is pending is shown under the board.",
 "せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）": "Renamed the Multi-row garbage button to Line settings, and the dialog heading with it.",
 "せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）": "Renamed the garbage triggers (per piece → on lock, seconds → over time).",
+"せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正": "Fixed the garbage preview (“Next N rows”) staying in Japanese in English mode when it was two rows or more.",
 "せりあがりの入切": "Toggle garbage",
 "せりあがりの穴継続率": "Garbage hole repeat",
 "せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）": "Changed the default garbage hole repeat from 10% to 40% (saved settings keep their value).",
@@ -1131,6 +1152,7 @@ const I18N_EN = {
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
 "スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",
+"スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通": "Mobile: added Line settings under Garbage, the same as on desktop. Set how many rows rise each time as a percentage per row count, with a separate hole-repeat rate for multi-row rises. The setting is shared with the desktop version.",
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
 "スマホ版へ": "Mobile version",
@@ -1571,6 +1593,7 @@ const I18N_EN = {
 "欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。": "Click a field, then press a button on your gamepad. Sticks and triggers can be assigned too.",
 "次": "Next",
 "次 1段": "Next 1 row",
+"次 {0}段": "Next: {0} row(s)",
 "次 ▶": "Next ▶",
 "次の候補": "Next solution",
 "次の問題": "New problem",
@@ -2187,6 +2210,9 @@ if (document.readyState === 'loading') {
     <button class="side-btn" id="digBtn" style="width:100%;margin-top:2px;"
       title="設定した間隔でおじゃまを自動でせり上げる"
       onclick="toggleDigMode()">スタート</button>
+    <button class="side-btn" id="digMultiBtn" style="width:100%;margin-top:2px;white-space:nowrap;"
+      title="1回のせりあがりで何段上げるかを、段数ごとの割合で決めます"
+      onclick="openDigMulti()">ライン設定</button>
     <button class="side-btn" id="tdBtn" style="width:100%;margin-top:2px;"
       title="相手のTST→TSD→RENを再現して、受け方を練習します"
       onclick="openTd()">TD対策</button>
@@ -2424,6 +2450,40 @@ if (document.readyState === 'loading') {
   </div>
 </div>
 
+<!-- ライン設定: 1回のせりあがりで何段上げるかを、段数ごとの割合で決める（PC版と同じ） -->
+<div id="digMultiOverlay" onclick="if(event.target===this)closeDigMulti()">
+  <div id="digMultiPanel">
+    <h2>ライン設定</h2>
+    <div class="opt-row">
+      <span class="opt-label">複数段にする
+        <span class="opt-note">ONにすると、1回のせりあがりで下の割合に従って段数を決めます</span></span>
+      <label class="cfg-tgl">
+        <input type="checkbox" id="digMultiSw" onchange="setDigMultiOn(this.checked)">
+        <span class="tgl"></span>
+      </label>
+    </div>
+    <div class="cfg-hint" style="margin:8px 0;">
+      1回のせりあがりで何段上がるかの割合です。合計が100％になるように決めてください。
+    </div>
+    <div id="digMultiRows"></div>
+    <div class="dm-total">
+      合計 <span id="digMultiTotal">100</span>％
+      <button onclick="normalizeDigMulti()" title="合計がちょうど100％になるように割り振り直します">100％にそろえる</button>
+    </div>
+    <div class="opt-row" style="margin-top:8px;border-top:1px solid #374151;">
+      <span class="opt-label">複数段のときの穴継続率
+        <span class="opt-note">複数段で上がるとき、直前の穴と同じ列になる確率（10％＝完全ランダム）</span></span>
+      <span class="opt-step">
+        <button class="di-btn" onclick="stepDigMultiHole(-1)">‹</button>
+        <span class="opt-val"><span id="digMultiHoleVal">40</span><span class="opt-unit"> %</span></span>
+        <button class="di-btn" onclick="stepDigMultiHole(1)">›</button>
+      </span>
+    </div>
+    <button class="dpc-close" style="background:#374151;" onclick="resetDigMulti()">初期値に戻す</button>
+    <button class="dpc-close" onclick="closeDigMulti()">閉じる</button>
+  </div>
+</div>
+
 <!-- TD中空け対策: 相手の TST → TSD → REN を再現する -->
 <div id="tdOverlay">
   <div id="tdPanel">
@@ -2656,6 +2716,8 @@ if (document.readyState === 'loading') {
             <td>せりあがりの設定とスタートボタンを開きます</td></tr>
         <tr><th>スタート</th>
             <td>設定した間隔でおじゃまを自動でせり上げる</td></tr>
+        <tr><th>ライン設定</th>
+            <td>1回のせりあがりで何段上げるかを、段数ごとの割合で決めます</td></tr>
         <tr><th>TD対策</th>
             <td>相手のTST→TSD→RENを再現して、受け方を練習します</td></tr>
         <tr><th>ミノ設置／時間経過</th>
@@ -2735,6 +2797,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.17.0 / 2.16.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通</li><li>せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.16.0 / 2.15.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる</li><li>配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.15.0 / 2.14.0</span><span class="vl-date">2026-11-16</span></div><ul><li>配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる</li><li>動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.14.1 / 2.13.1</span><span class="vl-date">2026-11-16</span></div><ul><li>PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）</li></ul></div>
@@ -6389,6 +6452,7 @@ function toggleDigMode(){
   timeDigLastTs=0;
   pendingDigRows=0;   // 溜まっていたぶんは持ち越さない
   digStaged=false;
+  nextDigRows = pickDigRows();   // 予告する段数を引き直す
   syncDigBtn();
   if(digMode){
     if(renMode){
@@ -6435,6 +6499,112 @@ function digPanelOpen(){
   return !!box && box.style.display === 'block';
 }
 function toggleDigPanel(){ setDigPanelOpen(!digPanelOpen()); }
+
+// ===== ライン設定（複数段せりあがり） =====
+// 1回のせりあがりで何段上げるかを、段数ごとの割合（合計100％）で決める。
+// 複数段のときは穴の続きやすさも別に持てる。保存先はPC版と同じなので、設定は共通になる。
+const DIG_MULTI_DEFAULT = { on:false, w:[100,0,0,0,0,0,0,0,0,0], hole:40 };
+let digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+let nextDigRows = 1;    // 次のせりあがりで上がる段数（予告）
+function loadDigMulti(){
+  let raw = null;
+  try { raw = localStorage.getItem('tetren_digmulti'); } catch(e) {}
+  if(raw){
+    try {
+      const v = JSON.parse(raw);
+      if(v && Array.isArray(v.w) && v.w.length === 10) digMulti = v;
+    } catch(e) {}
+  }
+  renderDigMulti();
+  updateDigMultiBtn();
+  nextDigRows = pickDigRows();
+}
+function saveDigMulti(){
+  try { localStorage.setItem('tetren_digmulti', JSON.stringify(digMulti)); } catch(e) {}
+}
+function openDigMulti(){ document.getElementById('digMultiOverlay').classList.add('open'); renderDigMulti(); }
+function closeDigMulti(){ document.getElementById('digMultiOverlay').classList.remove('open'); }
+function setDigMultiOn(on){ digMulti.on = on; saveDigMulti(); updateDigMultiBtn(); }
+function stepDigMultiHole(d){
+  digMulti.hole = Math.max(10, Math.min(100, digMulti.hole + d * 10));
+  saveDigMulti(); renderDigMulti();
+}
+function resetDigMulti(){
+  digMulti = JSON.parse(JSON.stringify(DIG_MULTI_DEFAULT));
+  saveDigMulti(); renderDigMulti(); updateDigMultiBtn();
+}
+function digMultiTotal(){ return digMulti.w.reduce((a,b)=>a+b, 0); }
+// 合計が100になるよう、いまの比率のまま割り振り直す
+function normalizeDigMulti(){
+  const t = digMultiTotal();
+  if(t <= 0){ digMulti.w = [100,0,0,0,0,0,0,0,0,0]; }
+  else {
+    const scaled = digMulti.w.map(v => v * 100 / t);
+    const floored = scaled.map(v => Math.floor(v));
+    const rest = 100 - floored.reduce((a,b)=>a+b, 0);
+    // 端数が大きい順に1ずつ配る
+    const order = scaled.map((v,i)=>[v - Math.floor(v), i]).sort((a,b)=>b[0]-a[0]);
+    for(let k = 0; k < rest; k++) floored[order[k % 10][1]]++;
+    digMulti.w = floored;
+  }
+  saveDigMulti(); renderDigMulti();
+}
+function renderDigMulti(){
+  const box = document.getElementById('digMultiRows');
+  if(!box) return;
+  box.innerHTML = '';
+  digMulti.w.forEach((v, i) => {
+    const row = document.createElement('div');
+    row.className = 'dm-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'dm-lbl';
+    lbl.textContent = (i + 1) + '段';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min = '0'; inp.max = '100'; inp.value = v;
+    inp.inputMode = 'numeric';   // スマホでは数字のキーボードを出す
+    inp.addEventListener('input', () => {
+      const n = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));
+      digMulti.w[i] = n;
+      saveDigMulti();
+      updateDigMultiTotal();
+    });
+    const pct = document.createElement('span');
+    pct.textContent = '％';
+    row.appendChild(lbl); row.appendChild(inp); row.appendChild(pct);
+    box.appendChild(row);
+  });
+  const sw = document.getElementById('digMultiSw'); if(sw) sw.checked = digMulti.on;
+  const hv = document.getElementById('digMultiHoleVal'); if(hv) hv.textContent = digMulti.hole;
+  updateDigMultiTotal();
+}
+function updateDigMultiTotal(){
+  const t = digMultiTotal();
+  const el = document.getElementById('digMultiTotal');
+  if(el) el.textContent = t;
+  const box = el && el.parentElement;
+  if(box) box.classList.toggle('ng', t !== 100);
+}
+// ONのあいだは「ライン設定」を緑にする（PC版と同じ）
+function updateDigMultiBtn(){
+  const b = document.getElementById('digMultiBtn');
+  if(!b) return;
+  b.style.background  = digMulti.on ? '#16a34a' : '';
+  b.style.borderColor = digMulti.on ? '#22c55e' : '';
+  b.style.color       = digMulti.on ? '#fff' : '';
+}
+// 割合に従って段数を1つ引く。合計が100でなくても、その比率で扱う
+function pickDigRows(){
+  if(!digMulti.on) return 1;
+  const t = digMultiTotal();
+  if(t <= 0) return 1;
+  let r = Math.random() * t;
+  for(let i = 0; i < 10; i++){
+    r -= digMulti.w[i];
+    if(r < 0) return i + 1;
+  }
+  return 1;
+}
+function rollNextDigRows(){ nextDigRows = pickDigRows(); updateDigCounter(); drawDigPreview(); }
 // 他のモードを触ったら畳む（開きっぱなしで縦に伸びるのを防ぐ）
 function closeDigPanel(){ setDigPanelOpen(false); }
 function updateDigCounter(remainSecOverride){
@@ -6478,7 +6648,7 @@ function drawDigPreview(){
   const tdOn = tdActive;
   if(!tdOn && (!digMode || digTriggerType !== 'time')){ box.style.display='none'; return; }
   box.style.display='flex';
-  document.getElementById('digPreviewNext').textContent = tdOn ? 'TD対策' : '次 1段';
+  document.getElementById('digPreviewNext').textContent = tdOn ? 'TD対策' : TF('次 {0}段', nextDigRows);
   const pend=document.getElementById('digPreviewPending');
   // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
   if(tdFinishing)          pend.textContent='あと1手';
@@ -6489,13 +6659,20 @@ function drawDigPreview(){
   updateDigTimer();
 }
 // 時間経過ぶんを溜める（せりあがりの1秒前に積む）
-function queueDigRows(){ pendingDigRows += 1; }
+function queueDigRows(){ pendingDigRows += Math.max(1, nextDigRows); rollNextDigRows(); }
+// 自動せりあがり（ミノごと）の入り口。予告した段数ぶん積んでから、次の段数を引き直す
+function addGarbageRows(){
+  const n = Math.max(1, nextDigRows);
+  for(let i=0;i<n;i++) addGarbage(false, n > 1 ? digMulti.hole : undefined);
+  rollNextDigRows();
+}
 // 溜まっているぶんをまとめて上げる
 function flushPendingDig(){
   if(!pendingDigRows) return;
   const n=pendingDigRows;
   pendingDigRows=0;
-  for(let i=0;i<n;i++) addGarbage(false);
+  // 「ライン設定」で複数段にしているときは、まとめて上がるぶんの穴の続きやすさを別に持つ
+  for(let i=0;i<n;i++) addGarbage(false, (n > 1 && digMulti.on) ? digMulti.hole : undefined);
   updateDigCounter();
   drawDigPreview();
 }
@@ -6919,7 +7096,7 @@ function lock(){
   // せりあがり（ミノごと）。TD中空け対策の最中は止めておく
   if(digMode && digTriggerType==='mino' && !tdActive){
     digCount++; updateDigCounter();
-    if(digCount%digInterval===0) addGarbage(false);
+    if(digCount%digInterval===0) addGarbageRows();
   }
   // TD中空け対策は、設定にかかわらず「相殺あり・ミノ設置直後にせりあがり」で動かす
   if(tdRun || tdQueue.length || tdFinishing){
@@ -8102,6 +8279,8 @@ function stopSoftDropBtn(){ softHeld = false; }
 document.addEventListener('keydown',e=>{
   // 設定画面を開いている間はゲーム操作を止める
   if(document.getElementById('cfgOverlay').classList.contains('open')) return;
+  // ライン設定で数字を打っている間も止める（キーに割り当てた操作が先に走ってしまう）
+  if(document.getElementById('digMultiOverlay').classList.contains('open')) return;
   // リスタートとミノ欠けはゲームを始め直す操作なので、ゲームオーバー中も効かせる
   if(kcMatch('restart',   e.code)){e.preventDefault();if(!e.repeat)startGame();return;}
   if(kcMatch('missAgain', e.code)){e.preventDefault();if(!e.repeat)repeatMiss();return;}
@@ -9214,7 +9393,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.16.0';
+const APP_VERSION = '2.17.0';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
@@ -9428,6 +9607,7 @@ initKeyConfig();
 loadGamepadConfig();
 loadSkin();
 loadTd();         // TD中空け対策の設定を復元する
+loadDigMulti();   // ライン設定（複数段せりあがり）を復元する
 loadTplUser();    // 自分で登録したテンプレートを復元する
 loadOptions();
 loadGravSpeed();

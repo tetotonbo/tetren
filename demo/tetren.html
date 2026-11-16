@@ -1158,6 +1158,7 @@ const I18N_EN = {
 "せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます": "With timed garbage, nothing rises when the timer fires; it all rises the moment you lock a piece. What is pending is shown under the board.",
 "せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）": "Renamed the Multi-row garbage button to Line settings, and the dialog heading with it.",
 "せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）": "Renamed the garbage triggers (per piece → on lock, seconds → over time).",
+"せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正": "Fixed the garbage preview (“Next N rows”) staying in Japanese in English mode when it was two rows or more.",
 "せりあがりの入切": "Toggle garbage",
 "せりあがりの穴継続率": "Garbage hole repeat",
 "せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）": "Changed the default garbage hole repeat from 10% to 40% (saved settings keep their value).",
@@ -1281,6 +1282,7 @@ const I18N_EN = {
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
 "スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",
+"スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通": "Mobile: added Line settings under Garbage, the same as on desktop. Set how many rows rise each time as a percentage per row count, with a separate hole-repeat rate for multi-row rises. The setting is shared with the desktop version.",
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
 "スマホ版へ": "Mobile version",
@@ -1721,6 +1723,7 @@ const I18N_EN = {
 "欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。": "Click a field, then press a button on your gamepad. Sticks and triggers can be assigned too.",
 "次": "Next",
 "次 1段": "Next 1 row",
+"次 {0}段": "Next: {0} row(s)",
 "次 ▶": "Next ▶",
 "次の候補": "Next solution",
 "次の問題": "New problem",
@@ -3109,6 +3112,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.17.0 / 2.16.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通</li><li>せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.16.0 / 2.15.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる</li><li>配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.15.0 / 2.14.0</span><span class="vl-date">2026-11-16</span></div><ul><li>配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる</li><li>動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.14.1 / 2.13.1</span><span class="vl-date">2026-11-16</span></div><ul><li>PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）</li></ul></div>
@@ -6063,7 +6067,7 @@ function drawDigPreview() {
   if (!digMode && !tdActive) { box.style.display = 'none'; return; }
   box.style.display = 'flex';
   document.getElementById('digPreviewNext').textContent =
-    tdActive ? 'TD対策' : ('次 ' + nextDigRows + '段');
+    tdActive ? 'TD対策' : TF('次 {0}段', nextDigRows);
   const pend = document.getElementById('digPreviewPending');
   // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
   if (tdFinishing)             pend.textContent = 'あと1手';
@@ -11213,7 +11217,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.15.0';
+const APP_VERSION = '2.16.0';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
