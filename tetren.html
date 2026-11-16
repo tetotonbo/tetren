@@ -896,6 +896,7 @@ const I18N_EN = {
 "DPCセットの選択画面に 「ランダム」 を追加し、ミノ欠けと同じ 2×4 の並びにした": "Added Random to the DPC setup picker and laid it out 2×4, the same as Custom bag.",
 "DPCセット・ミノ欠け・パフェ探索・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, Big pieces, C4W and Garbage — the practice modes.",
 "DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W and Garbage — the practice modes.",
+"DPCセット・ミノ欠け・パフェ探索・パフェパズル・デカミノ・REN・せりあがり … 練習のモード。TD対策は「せりあがり」の中にあります": "DPC setup, Custom bag, PC finder, PC puzzle, Big pieces, C4W, Garbage — practice modes. TD defense is inside Garbage.",
 "DPCセット再": "DPC setup again",
 "DROPボタンを、指を離した瞬間でなく押した瞬間に効くようにした（左回転・右回転・HOLD と同じ）。あわせて、配置編集でボタンをつかんだときに回転・HOLD・DROP が効いてしまうのをやめた": "The DROP button now fires the moment you press it, not when you lift your finger (same as rotate left / rotate right / HOLD). Rotate, HOLD and DROP also no longer fire while you are dragging a button in layout edit mode.",
 "DT砲": "DT Cannon",
@@ -951,7 +952,7 @@ const I18N_EN = {
 "ONにすると、1回のせりあがりで下の割合に従って段数を決めます": "When on, the number of rows per rise follows the chances below",
 "ONにすると、「復元」を押したときにミノの選択画面が出ます。選んだミノが最初からHOLDに入り、1巡目からはそのぶん抜かれます（ランダムも選べます）": "When on, pressing Restore opens the piece picker. The piece you choose starts in Hold and is removed from the first bag (Random is also available).",
 "ONにすると、テンプレートの窓とは別に、左右反転した形の窓も出します。OFFのあいだは、窓の中の ⇄ 反転 を押せばその場で出せます": "Turn it on and the mirrored shape appears in its own window beside the template. While it is off, ⇄ Mirror inside the window opens it on the spot.",
-"ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. Resizing also snaps to a nearby button’s size.",
+"ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます": "With this on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen. It also snaps to even spacing between buttons, and resizing snaps to a nearby button’s size.",
 "ONにすると、手順と同じ置き方をしたときだけ、自動で次の手順へ進みます。違う置き方をしたときはそのままです（‹ › で自分でも動かせます）": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves (you can still step with ‹ ›).",
 "ONにすると、手順と同じ置き方をしたときだけ自動で次の手順へ進みます。違う置き方をしたときはそのままです": "When on, the steps advance automatically only when you place a piece as the step shows. If you place it differently, nothing moves.",
 "ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます": "When on, you can drag the on-screen buttons and panels. The handle at the bottom right resizes them",
@@ -1157,6 +1158,7 @@ const I18N_EN = {
 "せりあがりの「秒」のとき、時間が来てもすぐには上げず、ミノを置いた瞬間にまとめて上げます。溜まっているぶんは盤面下の予告に出ます": "With timed garbage, nothing rises when the timer fires; it all rises the moment you lock a piece. What is pending is shown under the board.",
 "せりあがりの「複数段」ボタンを 「ライン設定」 にした（開く画面の見出しも同じ）": "Renamed the Multi-row garbage button to Line settings, and the dialog heading with it.",
 "せりあがりのトリガー種別のラベルを変更（ミノごと → ミノ設置、秒数 → 時間経過）": "Renamed the garbage triggers (per piece → on lock, seconds → over time).",
+"せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正": "Fixed the garbage preview (“Next N rows”) staying in Japanese in English mode when it was two rows or more.",
 "せりあがりの入切": "Toggle garbage",
 "せりあがりの穴継続率": "Garbage hole repeat",
 "せりあがりの穴継続率の初期値を 10% → 40% にした（すでに設定を保存している場合はその値のまま）": "Changed the default garbage hole repeat from 10% to 40% (saved settings keep their value).",
@@ -1279,6 +1281,9 @@ const I18N_EN = {
 "スマホ幅（375×812）は従来どおり。ボタンは横いっぱい、HOLD/NEXT はサイドカラム幅のまま": "Phone widths (375×812) are unchanged: full-width buttons, with HOLD and NEXT at side-column width.",
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
+"スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",
+"スマホ版のせりあがりで、2段以上まとめて上がるときの穴継続率をPC版と同じにした。「複数段にする」がOFFでも、ライン設定の「複数段のときの穴継続率」を使う": "Mobile: when two or more garbage rows rise at once, the hole-repeat rate now matches the desktop version. The multi-row rate from Line settings is used even when Multi-row rise is off.",
+"スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通": "Mobile: added Line settings under Garbage, the same as on desktop. Set how many rows rise each time as a percentage per row count, with a separate hole-repeat rate for multi-row rises. The setting is shared with the desktop version.",
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
 "スマホ版へ": "Mobile version",
@@ -1558,6 +1563,7 @@ const I18N_EN = {
 "前回選んだミノで、もう一度セットし直します": "Sets it up again with the pieces you chose last time.",
 "前回選んだミノで、もう一度ミノ欠けで始めます": "Run the custom bag again with the same pieces",
 "割り当てを変えたい欄を押してから、コントローラのボタンを押してください。": "Click the field you want to change, then press a button on your gamepad.",
+"動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）": "Fixed snapping not working between buttons that had already been moved (edges, centres and sizes only snapped to buttons still in their original place and to the screen edges).",
 "動き出したあと1マス進むごとの間隔。": "Interval per cell once it starts moving.",
 "十字 上": "D-pad up",
 "十字 下": "D-pad down",
@@ -1609,6 +1615,7 @@ const I18N_EN = {
 "地形編集のチェックボックスが、設定から戻したときに見た目へ反映されていなかったのを修正": "Fixed the Edit board checkbox not reflecting the setting when you came back from the settings.",
 "地形編集の入り切りが保存されないのを修正": "Fixed the Edit board switch not being saved.",
 "地形編集の入切": "Toggle Edit board",
+"地形編集・⇄ 反転・記録・復元 … 地形まわり": "Edit board, ⇄ Mirror, Save, Load — working with the board",
 "地形編集（カラー・せり上げ・取り込み）": "Edit board (colour, shift, import)",
 "多くするほど探索に時間がかかります": "More solutions take longer to search.",
 "大きさも変えられるようにした": "You can resize it too.",
@@ -1717,6 +1724,7 @@ const I18N_EN = {
 "欄を押してから、コントローラのボタンを押してください。スティックやトリガーもそのまま覚えられます。": "Click a field, then press a button on your gamepad. Sticks and triggers can be assigned too.",
 "次": "Next",
 "次 1段": "Next 1 row",
+"次 {0}段": "Next: {0} row(s)",
 "次 ▶": "Next ▶",
 "次の候補": "Next solution",
 "次の問題": "New problem",
@@ -1933,6 +1941,8 @@ const I18N_EN = {
 "配置編集で動かす単位をグループからボタン1個ずつに変更": "Edit layout now moves one button at a time instead of whole groups.",
 "配置編集に 「スナップ」スイッチ を追加。ONにすると、ボタンを動かすときにほかのボタンの辺や中心、画面の端へ磁石のようにピタッと吸い付く。大きさを変えるときは、ほかのボタンと同じ寸法にもそろう": "Added a Snap switch to Edit layout. With it on, a button you drag sticks to the edges and centres of the other buttons and to the edges of the screen like a magnet, and resizing snaps to the other buttons’ dimensions as well.",
 "配置編集のスイッチを左上の「デザイン」の枠へ移動した": "Moved the Edit layout switch into the Display panel at the top left.",
+"配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる": "Snap in Edit layout now also sticks to evenly spaced positions: where the gap to the next button matches the gap between other buttons, and exactly halfway between two buttons. Resizing stops where the gap to the neighbour matches too.",
+"配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う": "Snap in Edit layout now prefers putting buttons flush against each other. Bring a button close to its neighbour and it sticks with no gap; hold it a little further away and it settles at the even spacing.",
 "配置編集をONにすると出ます。盤面・NEXT/HOLD・左のボタンの大きさを変えられます": "These appear when Edit layout is on. They change the size of the board, NEXT/HOLD and the buttons on the left.",
 "配置編集スイッチを 「ボタン操作」の外（常に見える位置） へ移した": "Moved the Edit layout switch outside the on-screen buttons, where it is always visible.",
 "重力の何倍で落ちるか。41は∞で、押した瞬間に最下段まで落ちます。落下設定が0Gのときは1G相当を下敷きにします。": "How many times gravity the piece falls. 41 is infinite: it drops to the bottom the moment you press. When gravity is 0G, 1G is used as the base.",
@@ -2254,7 +2264,7 @@ if (document.readyState === 'loading') {
         </label>
         <!-- スナップ。ほかのボタンや画面の端にピタッと合わせる -->
         <label class="tgl-row" id="snapRow" style="display:none;margin-top:3px;"
-          title="ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます">
+          title="ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます">
           <span>スナップ</span>
           <input type="checkbox" id="snapSw" checked onchange="setSnap(this.checked)">
           <span class="tgl"></span>
@@ -3005,7 +3015,7 @@ if (document.readyState === 'loading') {
         <tr><th>配置編集</th>
             <td>ONにすると、操作ボタンや枠をドラッグで動かせます。右下のつまみで大きさも変えられます</td></tr>
         <tr><th>スナップ</th>
-            <td>ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。大きさも近いボタンにそろいます</td></tr>
+            <td>ONにすると、動かしたときにほかのボタンの辺や中心、画面の端にピタッと吸い付きます。ボタンどうしの間隔も等間隔にそろい、大きさも近いボタンにそろいます</td></tr>
         <tr><th>元に戻す</th>
             <td>配置編集で動かしたボタンを、元の位置と大きさに戻します</td></tr>
         <tr><th>地形編集</th>
@@ -3103,6 +3113,10 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.17.1 / 2.16.1</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりで、2段以上まとめて上がるときの穴継続率をPC版と同じにした。「複数段にする」がOFFでも、ライン設定の「複数段のときの穴継続率」を使う</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.17.0 / 2.16.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通</li><li>せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.16.0 / 2.15.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる</li><li>配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う</li></ul></div>
+<div class="vl-item"><div class="vl-head"><span class="vl-no">v2.15.0 / 2.14.0</span><span class="vl-date">2026-11-16</span></div><ul><li>配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる</li><li>動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.14.1 / 2.13.1</span><span class="vl-date">2026-11-16</span></div><ul><li>PC版の設定で、「タブレット」のタブを「その他」の手前に移した（キーコンフィグ・操作・スキン・表示・パフェ探索・パフェパズル・タブレット・その他の順）</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.14.0 / 2.13.0</span><span class="vl-date">2026-11-16</span></div><ul><li>落下設定の速さを変えたら、止めていても動き出すようにした。開いた直後は止めてあるので、速さを上げてもミノが落ちてこなかった。PC版のマラソンも、止めたままだと始まらなかったのを直した</li><li>薄くて読みにくかった灰色の文字（HOLD・NEXT・落下設定の見出し、操作ボタンの下の説明、バージョンなど）を明るくし、小さすぎた文字を一回り大きくした</li><li>PC版：画面が低くて下のボタンが切れるとき、全体を縮めて1画面に収めるようにした。設定の「表示」でOFFにできる。配置編集でボタンを動かしているあいだは働かない</li><li>PC版：色のパレットと、落下設定の ▶ / ⏸ を大きくした</li><li>スマホ版：落下設定は、見出しの行のどこを押しても止める／動かすが切り替わるようにした（これまでは 14px の小さなマークだった）。‹ › のボタンも大きくした</li><li>スマホ版：左の列に続きがあるときは ▲ ▼ を出して、押すとその方向へ送るようにした。パフェパズルを開いたときは、難しさや「次の問題」が見えるところまで自動で送る</li><li>スマホ版：「パフェパズル」のボタンを1行に収め、難しさのボタンは縦に並べた（横に3つ並べると1文字ずつの縦書きになっていた）</li><li>使い方の説明を今の画面に合わせて直した（パフェパズルの「もう一度」、PC版の「デザイン」「地形操作」、落下設定の ⏸ の説明）</li></ul></div>
 <div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.13.7 / 2.12.7</span><span class="vl-date">2026-11-16</span></div><ul><li>パフェパズル中は「ミノを捨てる」と、地形の ↑ ↓（せり上げ・下げ）を押せないようにした。押すと配ったミノが足りなくなったり地形が変わったりして、解けなくなるため。パズル中はボタンが薄くなり、キーやコントローラからも効かない</li></ul></div>
@@ -6055,7 +6069,7 @@ function drawDigPreview() {
   if (!digMode && !tdActive) { box.style.display = 'none'; return; }
   box.style.display = 'flex';
   document.getElementById('digPreviewNext').textContent =
-    tdActive ? 'TD対策' : ('次 ' + nextDigRows + '段');
+    tdActive ? 'TD対策' : TF('次 {0}段', nextDigRows);
   const pend = document.getElementById('digPreviewPending');
   // ONのときは溜まりを常に出す。OFFのときは相殺できる1秒間だけ「まもなく」と出す。
   if (tdFinishing)             pend.textContent = 'あと1手';
@@ -7725,7 +7739,9 @@ function snapGuides(exclude) {
   const ys = [0, window.innerHeight], cys = [Math.round(window.innerHeight / 2)];
   const ws = [], hs = [];
   document.querySelectorAll('[data-pos]').forEach(el => {
-    if (el === exclude || !el.offsetParent) return;
+    // 隠れているものは大きさが0になるので、それで見分ける。
+    // offsetParent で見ると、動かして position:fixed になったボタンまで外れてしまう
+    if (el === exclude) return;
     const r = el.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) return;
     xs.push(r.left, r.right);   cxs.push(r.left + r.width / 2);
@@ -7734,18 +7750,74 @@ function snapGuides(exclude) {
   });
   return { xs, ys, cxs, cys, ws, hs };
 }
+// 等間隔のスナップ。動かしているボタン（左上 x,y・大きさ w,h）を、
+// まわりのボタンどうしと同じ間隔に置ける位置を集める。
+//   xs/ys   … 左辺・上辺を合わせる先（移動用）
+//   rxs/bys … 右辺・下辺を合わせる先（大きさ変更用）
+// 間隔は、いま画面に並んでいるボタンの「隣どうしのすき間」から拾う。
+// 横と縦は分けずにまとめて持つ（縦横とも同じ間隔にそろえたいので）。
+const SNAP_GAP_MAX = 60;   // これより広いすき間は「間隔」とは見なさない
+function snapEven(exclude, x, y, w, h) {
+  const rs = [];
+  document.querySelectorAll('[data-pos]').forEach(el => {
+    if (el === exclude) return;
+    const r = el.getBoundingClientRect();
+    if (r.width >= 1 && r.height >= 1) rs.push(r);   // 隠れているものは大きさが0
+  });
+  const gaps = new Set();
+  for (const a of rs) {
+    let gx = Infinity, gy = Infinity;   // 右隣・下隣までのすき間
+    for (const b of rs) {
+      if (a === b) continue;
+      if (b.left >= a.right - 0.5 && b.top < a.bottom && b.bottom > a.top) gx = Math.min(gx, b.left - a.right);
+      if (b.top >= a.bottom - 0.5 && b.left < a.right && b.right > a.left) gy = Math.min(gy, b.top - a.bottom);
+    }
+    for (const g of [gx, gy]) if (g > 0.5 && g <= SNAP_GAP_MAX) gaps.add(Math.round(g * 2) / 2);   // 0.5px刻みでまとめる
+  }
+  // 同じ段（縦に重なる）・同じ列（横に重なる）にいるボタンだけを相手にする
+  const row = rs.filter(r => r.top < y + h && r.bottom > y);
+  const col = rs.filter(r => r.left < x + w && r.right > x);
+  const xs = [], ys = [], rxs = [], bys = [];
+  // すき間なしで付く位置（txs/tys は移動用、trxs/tbys は大きさ変更用）
+  const txs = [], tys = [], trxs = [], tbys = [];
+  for (const r of row) { txs.push(r.right, r.left - w); if (r.left > x) trxs.push(r.left); }
+  for (const r of col) { tys.push(r.bottom, r.top - h); if (r.top > y) tbys.push(r.top); }
+  for (const g of gaps) {
+    for (const r of row) { xs.push(r.right + g, r.left - g - w); if (r.left > x) rxs.push(r.left - g); }
+    for (const r of col) { ys.push(r.bottom + g, r.top - g - h); if (r.top > y) bys.push(r.top - g); }
+  }
+  // 2つのボタンのちょうど真ん中（両側のすき間が同じになる）
+  for (const a of row) for (const b of row) if (b.left - a.right >= w) xs.push(a.right + (b.left - a.right - w) / 2);
+  for (const a of col) for (const b of col) if (b.top - a.bottom >= h) ys.push(a.bottom + (b.top - a.bottom - h) / 2);
+  return { xs, ys, rxs, bys, txs, tys, trxs, tbys };
+}
+// ぴったり付く位置が近くにあれば、そこまでのずれを返す（無ければ null）。
+// 等間隔や辺そろえより先に見る。範囲はスナップの3分の1にして、
+// そこより離したときは等間隔のほうに合うようにしてある
+// （広げすぎると、すき間の狭い等間隔にはどうやっても合わせられなくなる）
+const SNAP_TOUCH = Math.round(SNAP_PX / 3);
+function snapTouch(a, lines) {
+  let gap = null, best = SNAP_TOUCH + 1;
+  for (const l of lines) {
+    const d = Math.abs(l - a);
+    if (d < best) { best = d; gap = l - a; }
+  }
+  return gap;
+}
 // 「基準点の配列, 合わせ先の線の配列」の組をいくつか渡し、
 // いちばん近い組のずれを返す。どれも遠ければ0（吸い付かない）。
 // 辺と中心を別の組にしておくことで、「右辺が隣のボタンの中心」のような
 // 意図しない吸い付きを起こさないようにしている。
+// 組の3つ目は重み（省略は1）。小さいほど優先される。等間隔の候補は 0.5 で渡して、
+// 離れたボタンとたまたま辺がそろう位置に負けないようにしている。
 function snapGap(pairs) {
-  let gap = 0, best = SNAP_PX + 1;
-  for (const [anchors, lines] of pairs)
+  let gap = 0, best = Infinity;
+  for (const [anchors, lines, k = 1] of pairs)
     for (const a of anchors) for (const l of lines) {
       const d = Math.abs(l - a);
-      if (d < best) { best = d; gap = l - a; }
+      if (d <= SNAP_PX && d * k < best) { best = d * k; gap = l - a; }
     }
-  return best <= SNAP_PX ? gap : 0;
+  return gap;
 }
 
 function setLayoutEdit(on) {
@@ -7802,8 +7874,10 @@ function resetPanelPos() {
         // 「右辺・下辺を線に合わせる」と「ほかの枠と同じ寸法にそろえる」を
         // いっぺんに比べて、近いほうを採る。片方を優先すると、
         // すぐそこに同じ寸法があっても遠い線に負けて効かなくなる。
-        w = Math.max(MIN, Math.min(MAX, w + snapGap([[[r.left + w], g.xs], [[w], g.ws]])));
-        h = Math.max(MIN, Math.min(MAX, h + snapGap([[[r.top  + h], g.ys], [[h], g.hs]])));
+        const ev = snapEven(target, r.left, r.top, w, h);   // となりとの間隔がそろう位置
+        const tw = snapTouch(r.left + w, ev.trxs), th = snapTouch(r.top + h, ev.tbys);   // まず「ぴったり」
+        w = Math.max(MIN, Math.min(MAX, w + (tw !== null ? tw : snapGap([[[r.left + w], g.xs], [[w], g.ws], [[r.left + w], ev.rxs, 0.5]]))));
+        h = Math.max(MIN, Math.min(MAX, h + (th !== null ? th : snapGap([[[r.top  + h], g.ys], [[h], g.hs], [[r.top  + h], ev.bys, 0.5]]))));
       }
       target.style.width = Math.round(w) + 'px';
       target.style.height = Math.round(h) + 'px';
@@ -7815,8 +7889,12 @@ function resetPanelPos() {
     let x = e.clientX - dx, y = e.clientY - dy;
     if (snapOn) {   // 左辺・中心・右辺のどれかが線に近ければ、そこへ寄せる
       const g = snapGuides(target);
-      x += snapGap([[[x, x + w], g.xs], [[x + w / 2], g.cxs]]);
-      y += snapGap([[[y, y + h], g.ys], [[y + h / 2], g.cys]]);
+      // となりにぴったり付く位置が近ければ、まずそこへ。
+      // 無ければ、等間隔・辺・中心のうちいちばん近いところへ寄せる
+      const ev = snapEven(target, x, y, w, h);
+      const tx = snapTouch(x, ev.txs), ty = snapTouch(y, ev.tys);
+      x += tx !== null ? tx : snapGap([[[x, x + w], g.xs], [[x + w / 2], g.cxs], [[x], ev.xs, 0.5]]);
+      y += ty !== null ? ty : snapGap([[[y, y + h], g.ys], [[y + h / 2], g.cys], [[y], ev.ys, 0.5]]);
     }
     x = Math.max(0, Math.min(window.innerWidth  - w, x));
     y = Math.max(0, Math.min(window.innerHeight - h, y));
@@ -11141,7 +11219,7 @@ function kcMatch(id, code) {
 //   MINOR … 後方互換のある機能追加
 //   PATCH … 不具合修正・数値調整
 // 変更履歴は CHANGELOG.md を参照。
-const APP_VERSION = '2.13.1';
+const APP_VERSION = '2.16.1';
 
 (function showVersion(){
   const el = document.getElementById('verLabel');
