@@ -1,4 +1,5 @@
 {
+ "スマホ版のせりあがりで、2段以上まとめて上がるときの穴継続率をPC版と同じにした。「複数段にする」がOFFでも、ライン設定の「複数段のときの穴継続率」を使う": "Mobile: when two or more garbage rows rise at once, the hole-repeat rate now matches the desktop version. The multi-row rate from Line settings is used even when Multi-row rise is off.",
  "スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通": "Mobile: added Line settings under Garbage, the same as on desktop. Set how many rows rise each time as a percentage per row count, with a separate hole-repeat rate for multi-row rises. The setting is shared with the desktop version.",
  "せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正": "Fixed the garbage preview (“Next N rows”) staying in Japanese in English mode when it was two rows or more.",
  "スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",

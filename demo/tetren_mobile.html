@@ -1152,6 +1152,7 @@ const I18N_EN = {
 "スマホ版": "Mobile",
 "スマホ版に構造化データ（JSON-LD）を追加": "Added structured data (JSON-LD) to the mobile version.",
 "スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる": "Mobile: Garbage now works like the desktop version. Tapping Garbage ▼ opens its settings, and Start inside begins it (it used to begin the moment you tapped). TD defense has moved in there too. The settings close when you pick another mode.",
+"スマホ版のせりあがりで、2段以上まとめて上がるときの穴継続率をPC版と同じにした。「複数段にする」がOFFでも、ライン設定の「複数段のときの穴継続率」を使う": "Mobile: when two or more garbage rows rise at once, the hole-repeat rate now matches the desktop version. The multi-row rate from Line settings is used even when Multi-row rise is off.",
 "スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通": "Mobile: added Line settings under Garbage, the same as on desktop. Set how many rows rise each time as a percentage per row count, with a separate hole-repeat rate for multi-row rises. The setting is shared with the desktop version.",
 "スマホ版のゲームオーバー画面に出ていた「スマホ版 (β)」の表記を削除": "Removed the \"mobile (beta)\" label from the mobile game-over screen.",
 "スマホ版の細い列で「カンペ画像」がはみ出していたのを短い表記にした。「PC版へ」が「Desktop to」と出ていたのも直した": "Shortened Reference image, which overflowed the narrow mobile column, and fixed the version switch reading \"Desktop to\".",
@@ -2797,6 +2798,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="cfg-pane" id="aboutPaneLog">
     <div class="ver-log">
+<div class="vl-item vl-patch"><div class="vl-head"><span class="vl-no">v2.17.1 / 2.16.1</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりで、2段以上まとめて上がるときの穴継続率をPC版と同じにした。「複数段にする」がOFFでも、ライン設定の「複数段のときの穴継続率」を使う</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.17.0 / 2.16.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版のせりあがりに「ライン設定」を追加。PC版と同じもので、1回のせりあがりで何段上げるかを段数ごとの割合で決められる。複数段のときの穴継続率も別に決められる。設定はPC版と共通</li><li>せりあがりの予告「次 ○段」が、英語表示で2段以上のとき日本語のまま出ていたのを修正</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.16.0 / 2.15.0</span><span class="vl-date">2026-11-16</span></div><ul><li>スマホ版の「せりあがり」をPC版と同じ作りにした。「せりあがり▼」を押すと設定が開き、中の「スタート」で始める（これまでは押した時点で始まっていた）。「TD対策」もこの中に移した。ほかのモードを押すと設定は閉じる</li><li>配置編集のスナップは、ボタンどうしをぴったり付けるほうを優先するようにした。となりのボタンに近づけるとまず すき間なしで付き、少し離すと等間隔の位置に合う</li></ul></div>
 <div class="vl-item"><div class="vl-head"><span class="vl-no">v2.15.0 / 2.14.0</span><span class="vl-date">2026-11-16</span></div><ul><li>配置編集のスナップで、ボタンどうしが等間隔になる位置にも吸い付くようにした。となりのボタンとの間隔が、ほかのボタンどうしの間隔と同じになる位置と、2つのボタンのちょうど真ん中に合う。大きさを変えるときも、となりとの間隔がそろうところで止まる</li><li>動かしたあとのボタンどうしには、スナップが効いていなかったのを修正（辺・中心・大きさがそろうのは、まだ動かしていないボタンと画面の端だけだった）</li></ul></div>
@@ -6671,8 +6673,8 @@ function flushPendingDig(){
   if(!pendingDigRows) return;
   const n=pendingDigRows;
   pendingDigRows=0;
-  // 「ライン設定」で複数段にしているときは、まとめて上がるぶんの穴の続きやすさを別に持つ
-  for(let i=0;i<n;i++) addGarbage(false, (n > 1 && digMulti.on) ? digMulti.hole : undefined);
+  // 2段以上まとめて上がるときは、複数段用の穴継続率を使う（PC版と同じ。「複数段にする」がOFFでも同じ）
+  for(let i=0;i<n;i++) addGarbage(false, n > 1 ? digMulti.hole : undefined);
   updateDigCounter();
   drawDigPreview();
 }
@@ -9393,7 +9395,7 @@ function switchAboutTab(name){
   }
 }
 function closeAbout(){ document.getElementById('aboutOverlay').classList.remove('open'); }
-const APP_VERSION = '2.17.0';
+const APP_VERSION = '2.17.1';
 (function showVersion(){
   const el = document.getElementById('verLabel');
   if(!el) return;
